@@ -8,7 +8,8 @@ import functools
 import copy
 import glob
 import json
-from create_tubes_from_boxes import create_tube
+from itertools import groupby
+from create_tubes_from_boxes import create_tube_list
 
 np.random.seed(42)
 
@@ -214,57 +215,66 @@ class Video(data.Dataset):
         rois = self.data[index]['rois']
         action_exist = self.data[index]['action_exist']
         print(name)
-        print('action_exist: ',action_exist)
-        print('rois :', rois)
+        # print('action_exist: ',action_exist)
+        # print('rois :', rois)
         n_frames = self.data[index]['n_frames']
         each_frame = self.data[index]['each_frame']
 
         # print(list(enumerate(each_frame)))
-        print(each_frame)
-        # get 8 random frames from the video
+        # print(each_frame)
+        ## get 8 random frames from the video
         time_index = np.random.randint(
             0, n_frames - self.sample_duration - 1) + 1
 
         frame_indices = list(
             range(time_index, time_index + self.sample_duration))  # get the corresponding frames
 
-        # print('frame_indices :', frame_indices)
         if self.temporal_transform is not None:
             frame_indices = self.temporal_transform(frame_indices)
         clip = self.loader(path, frame_indices)
         # print('clip.shape :',clip[0].shape )
-        print(len(clip))
-        print(clip[0].size)
-        # get original height and width
+        # print(len(clip))
+        # print(clip[0].size)
+
+        ## get original height and width
         w, h = clip[0].size
         if self.spatial_transform is not None:
             clip = [self.spatial_transform(img) for img in clip]
         clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
         
-        # get bbox
-        # cls = self.data[index]['class']
-        # name = self.data[index]['video']
-        # json_key = os.path.join(cls, name)
+        ## get bboxes and create gt tubes
+        rois_Tensor = torch.Tensor(rois)
+        print('rois_Tensor.shape :', rois_Tensor.shape)
+        rois_sample = rois_Tensor[:,np.array(frame_indices),:].tolist()
+        
+        rois_fr = [[z+[j] for j,z in enumerate(rois_sample[i])] for i in range(len(rois_sample))]
+        
+        rois_gp =[[[list(g),i] for i,g in groupby(w, key=lambda x: x[:][4])] for w in rois_fr] # [person, [action, class]
 
-        # frames = list(range(time_index, ))
+        final_rois = []
+        for p in rois_gp: # for each person
+            for r in p:
+                if r[1] > -1 :
+                    final_rois.append(r)
+        # print('frame_indices :', frame_indices)
+        # print('final_rois :', final_rois)
+        
+        gt_tubes = create_tube_list(rois_gp,[w,h], self.sample_duration)
+        
+        # class_int = self.classes_idx[cls.lower().replace('_','').replace(' ','')]
 
-        boxes = [each_frame[i-1]+[i] for i in frame_indices]
-        print(boxes)
-        print(frame_indices)
-        # print('len(boxes) {}, len(boxes[0] {}'.format(
-        #     len(boxes), len(boxes[0])))
-
-        class_int = self.classes_idx[cls]
-        target = torch.IntTensor([class_int])
-        print('target : ', target)
-        # gt_bboxes = torch.Tensor([boxes[i] + [frame_indices[i]] + [class_int]
-        #                           for i in range(len(boxes))])
-        print('gt_bboxes ', gt_bboxes)
-        print('gt_bboxes.shape ', gt_bboxes.shape)
+        print(gt_tubes)
+        if final_rois == []: # empty ==> only background, no gt_tube exists
+            print('rois_gp :',rois_gp)
+            final_rois = [0] * 7
+            gt_tubes = torch.Tensor([[0,0,0,0,0,0,0]])
+        print(' final_rois: ', final_rois)
+        print('gt_tubes :', gt_tubes )
+        print('Sending...')
         if self.mode == 'train':
-            return clip, target, (h, w),  gt_bboxes
+            return clip,  (h, w),  gt_tubes, final_rois
         else:
-            return clip, target, (h, w),  gt_bboxes, self.data[index]['abs_path']
+            return clip,  (h, w),  gt_tubes, final_rois,  self.data[index]['abs_path']
 
     def __len__(self):
         return len(self.data)
@@ -375,7 +385,8 @@ class Pics(data.Dataset):
         print('target : ', target)
         gt_bboxes = torch.Tensor([boxes[i] + [class_int]
                                   for i in range(len(boxes))])
-        # print('gt_bboxes ', gt_bboxes)
+
+        print('gt_bboxes ', gt_bboxes)
         if self.mode == 'train':
             return clip, target, (h, w),  gt_bboxes
         else:
