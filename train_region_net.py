@@ -36,8 +36,8 @@ if __name__ == '__main__':
 
     # # get mean
     # mean =  [103.75581543 104.79421473  91.16894564] # jhmdb
-    mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
-
+    # mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
+    mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
     # generate model
     last_fc = False
 
@@ -105,20 +105,20 @@ if __name__ == '__main__':
             inputs = Variable(clips, requires_grad=True)
             outputs = model(inputs)
             print('step {}'.format(step))
-            rois, rpn_loss_cls, rpn_loss_box = rpn_model(outputs,
-                                                         torch.Tensor(
-                                                             [[h, w]] * gt_tubes.size(1)).cuda(),
-                                                         gt_tubes.cuda(), len(gt_tubes))
-            loss = rpn_loss_cls.mean() # + rpn_loss_box.mean() 
-            loss_temp += loss.item()
+        #     rois, rpn_loss_cls, rpn_loss_box = rpn_model(outputs,
+        #                                                  torch.Tensor(
+        #                                                      [[h, w]] * gt_tubes.size(1)).cuda(),
+        #                                                  gt_tubes.cuda(), len(gt_tubes))
+        #     loss = rpn_loss_cls.mean() # + rpn_loss_box.mean() 
+        #     loss_temp += loss.item()
 
-            # backw\ard
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+        #     # backw\ard
+        #     optimizer.zero_grad()
+        #     loss.backward()
+        #     optimizer.step()
 
-        print('Train Epoch: {} \tLoss: {:.6f}\t'.format(
-            epoch,loss_temp/step))
-        # if ( epoch + 1 ) % 5 == 0:
-        #     torch.save(rpn_model.state_dict(), "rpn_model_{0:03d}.pwf".format(epoch))
-        torch.save(rpn_model.state_dict(), "rpn_model_{0:03d}.pwf".format(epoch))
+        # print('Train Epoch: {} \tLoss: {:.6f}\t'.format(
+        #     epoch,loss_temp/step))
+        # # if ( epoch + 1 ) % 5 == 0:
+        # #     torch.save(rpn_model.state_dict(), "rpn_model_{0:03d}.pwf".format(epoch))
+        # torch.save(rpn_model.state_dict(), "rpn_model_{0:03d}.pwf".format(epoch))

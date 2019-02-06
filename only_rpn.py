@@ -54,52 +54,24 @@ if __name__ == '__main__':
     data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file=boxes_file,
                  mode='train', classes_idx=cls2idx)
-    # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
-    #                                           shuffle=True, num_workers=n_threads, pin_memory=True)
 
-
-    # for i in range(700,850):
-    #     k = data[i]
-    #     print('abs path :',k[4], ' i :',i)
-    
-    
-    # clips,  (h, w), gt_tubes, final_rois = data[906]
-    # clips,  (h, w), gt_tubes, final_rois = data[905]
     clips,  (h, w), gt_tubes, gt_rois = data[0]
 
     print('clips.shape :',clips.shape)
     clips = clips.unsqueeze(0)
     gt_tubes = gt_tubes.unsqueeze(0)
     print('gt_rois.shape :',gt_rois.shape)
-    # print('h :', h, ' w :', w)
-    # print('gt_tubes :', gt_tubes)
-    # print('final_rois :', final_rois)
-    # print('type final_rois: ', type(final_rois))
 
-    n_classes = len(classes)
-    resnet_shortcut = 'A'
-
-    model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
-                     sample_size=sample_size, sample_duration=sample_duration,
-                     last_fc=last_fc)
-    model = model.cuda()
-    model = nn.DataParallel(model, device_ids=None)
-
-    model_data = torch.load('./resnet-34-kinetics.pth')
-    model.load_state_dict(model_data['state_dict'])
-    model.eval()
-
-    lr = 0.001
-    rpn_model = _RPN(256).cuda()
-    # rpn_model = _RPN(512).cuda()
-
-    inputs = Variable(clips)
-    outputs = model(inputs)
-    outputs_list = outputs.tolist()
-
-    # with open('./outputs.json', 'w') as fp:
-    #     json.dump(outputs_list, fp)
+    clis = clips.cuda()
+    gt_tubes = gt_tubes.cuda()
+    gt_rois = gt_rois.cuda()
     
+    rpn_model = _RPN(256).cuda()
+
+    with open('./outputs.json', 'r') as fp:
+        data = json.load( fp)
+        outputs = torch.Tensor(data).cuda()
+
     rois, rpn_loss_cls, rpn_loss_box = rpn_model(outputs,
                                                  torch.Tensor(
                                                      [[h, w]] * gt_tubes.size(1)).cuda(),

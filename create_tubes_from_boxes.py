@@ -96,13 +96,12 @@ def create_tube_list(rois, im_info_3d, sample_duration):
             t2 = t2.cpu().numpy().tolist()
 
 
-            print('x1 {} y1 {} t1 {} x2 {} y2 {} t2 {} label {}'.format(
-                x1, y1, t1, x2, y2, t2,labels))
+            # print('x1 {} y1 {} t1 {} x2 {} y2 {} t2 {} label {}'.format(
+            #     x1, y1, t1, x2, y2, t2,labels))
             # print('shapes :x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(
             #     x1.shape, y1.shape, t1.shape, x2.shape, y2.shape, t2.shape))
             tmp_ret = [x1, y1, t1, x2, y2, t2, labels]
             ret.append(tmp_ret)
-            print(tmp_ret)
     ret = torch.Tensor(ret)
     return ret
 

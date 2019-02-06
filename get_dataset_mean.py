@@ -8,9 +8,9 @@ from PIL import Image
 def get_dataset_mean(datasetname):
 
     if dataset_name == 'jhmdb':
-
         return [103.75581543, 104.79421473,  91.16894564]
-
+    elif dataset_name = 'ucf-24':
+        return [112.07945832, 112.87372333, 106.90993363]
 
 if __name__ == '__main__':
 

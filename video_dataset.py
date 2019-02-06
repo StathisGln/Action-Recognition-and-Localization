@@ -208,34 +208,28 @@ class Video(data.Dataset):
         Returns:
             tuple: (image, target) where target is class_index of the target class.
         """
-        # print(self.data[index]['video'])
         name = self.data[index]['video_name']   # video path
         cls  = self.data[index]['class']
         path = self.data[index]['abs_path']
         rois = self.data[index]['rois']
         action_exist = self.data[index]['action_exist']
-        print(name)
-        # print('action_exist: ',action_exist)
-        # print('rois :', rois)
-        n_frames = self.data[index]['n_frames']
+
+        n_frames = len(glob.glob(path+ '/*.jpg'))
+
+        # print('path :',path,  ' n_frames :', n_frames)        
         each_frame = self.data[index]['each_frame']
 
-        # print(list(enumerate(each_frame)))
-        # print(each_frame)
-        ## get 8 random frames from the video
+        ## get  random frames from the video 
         time_index = np.random.randint(
             0, n_frames - self.sample_duration - 1) + 1
 
         frame_indices = list(
             range(time_index, time_index + self.sample_duration))  # get the corresponding frames
-
+        # print('frame_indices :', frame_indices)
         if self.temporal_transform is not None:
             frame_indices = self.temporal_transform(frame_indices)
         clip = self.loader(path, frame_indices)
-        # print('clip.shape :',clip[0].shape )
-        # print(len(clip))
-        # print(clip[0].size)
-
+        # print('clip : ',len(clip))
         ## get original height and width
         w, h = clip[0].size
         if self.spatial_transform is not None:
@@ -244,33 +238,52 @@ class Video(data.Dataset):
         
         ## get bboxes and create gt tubes
         rois_Tensor = torch.Tensor(rois)
-        print('rois_Tensor.shape :', rois_Tensor.shape)
-        rois_sample = rois_Tensor[:,np.array(frame_indices),:].tolist()
-        
+        # print('rois_Tensor.shape :',rois_Tensor.shape)
+        rois_sample_tensor = rois_Tensor[:,np.array(frame_indices),:]
+        rois_sample = rois_sample_tensor.tolist()
+
         rois_fr = [[z+[j] for j,z in enumerate(rois_sample[i])] for i in range(len(rois_sample))]
-        
         rois_gp =[[[list(g),i] for i,g in groupby(w, key=lambda x: x[:][4])] for w in rois_fr] # [person, [action, class]
 
-        final_rois = []
+        # print('rois_gp :',rois_gp)
+        # print('len(rois_gp) :',len(rois_gp))
+
+        final_rois_list = []
         for p in rois_gp: # for each person
             for r in p:
                 if r[1] > -1 :
-                    final_rois.append(r)
-        # print('frame_indices :', frame_indices)
-        # print('final_rois :', final_rois)
-        
-        gt_tubes = create_tube_list(rois_gp,[w,h], self.sample_duration)
-        
-        # class_int = self.classes_idx[cls.lower().replace('_','').replace(' ','')]
+                    final_rois_list.append(r[0])
 
-        print(gt_tubes)
-        if final_rois == []: # empty ==> only background, no gt_tube exists
-            print('rois_gp :',rois_gp)
-            final_rois = [0] * 7
-            gt_tubes = torch.Tensor([[0,0,0,0,0,0,0]])
-        print(' final_rois: ', final_rois)
-        print('gt_tubes :', gt_tubes )
-        print('Sending...')
+        # print('final_rois_list :',final_rois_list)
+        # print('len(final_rois_list) :',len(final_rois_list))
+
+        # if final_rois == []: # empty ==> only background, no gt_tube exists
+        #     final_rois = [0] * 7
+        #     gt_tubes = torch.Tensor([[0,0,0,0,0,0,0]])
+
+
+        num_actions = len(final_rois_list)
+
+
+        if num_actions == 0:
+            final_rois = torch.zeros(1,16,5)
+            gt_tubes = torch.zeros(1,7)
+        else:
+            final_rois = torch.zeros((num_actions,16,5)) # num_actions x [x1,y1,x2,y2,label]
+            for i in range(num_actions):
+                # for every action:
+                for j in range(len(final_rois_list[i])):
+                    # for every rois
+                    # print('final_rois_list[i][j][:5] :',final_rois_list[i][j][:5])
+                    pos = final_rois_list[i][j][5]
+                    final_rois[i,pos,:]= torch.Tensor(final_rois_list[i][j][:5])
+
+            # print('final_rois :',final_rois)
+            gt_tubes = create_tube_list(rois_gp,[w,h], self.sample_duration)
+
+        # print('gt_tubes :',gt_tubes)
+        # print('gt_tubes.shape :',gt_tubes.shape)
+        # print('final_rois.shape :', final_rois.shape)
         if self.mode == 'train':
             return clip,  (h, w),  gt_tubes, final_rois
         else:
@@ -358,6 +371,7 @@ class Pics(data.Dataset):
         # print('frame_indices :', frame_indices)
         if self.temporal_transform is not None:
             frame_indices = self.temporal_transform(frame_indices)
+
         clip = self.loader(path, frame_indices)
 
         # get original height and width
@@ -382,11 +396,11 @@ class Pics(data.Dataset):
 
         class_int = self.classes_idx[cls]
         target = torch.IntTensor([class_int])
-        print('target : ', target)
+        # print('target : ', target)
         gt_bboxes = torch.Tensor([boxes[i] + [class_int]
                                   for i in range(len(boxes))])
 
-        print('gt_bboxes ', gt_bboxes)
+        # print('gt_bboxes ', gt_bboxes)
         if self.mode == 'train':
             return clip, target, (h, w),  gt_bboxes
         else:

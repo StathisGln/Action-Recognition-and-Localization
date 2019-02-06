@@ -71,11 +71,11 @@ def save_checkpoint(state, filename):
 
 def _smooth_l1_loss(bbox_pred, bbox_targets, bbox_inside_weights, bbox_outside_weights, sigma=1.0, dim=[1]):
 
-    print('-----\nInside _smooth_l1_loss')
+    # print('-----\nInside _smooth_l1_loss')
     sigma_2 = sigma ** 2
     box_diff = bbox_pred - bbox_targets
-    print('box_diff :', box_diff)
-    print('box_diff.shape :', box_diff.shape)
+    # print('box_diff :', box_diff)
+    # print('box_diff.shape :', box_diff.shape)
     in_box_diff = bbox_inside_weights * box_diff
     abs_in_box_diff = torch.abs(in_box_diff)
     smoothL1_sign = (abs_in_box_diff < 1. / sigma_2).detach().float()
