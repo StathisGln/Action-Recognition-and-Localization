@@ -70,7 +70,7 @@ class _ProposalLayer(nn.Module):
         im_info = input[2]
         cfg_key = input[3]
         time_dim = input[4]
-        print('bbox_frame.shape :',bbox_frame.shape)
+        # print('bbox_frame.shape :',bbox_frame.shape)
 
         batch_size = bbox_frame.size(0)
         # pre_nms_topN  = cfg[cfg_key].RPN_PRE_NMS_TOP_N
@@ -167,51 +167,54 @@ class _ProposalLayer(nn.Module):
         # proposals_keep = proposals.view(-1, 4)[keep_idx, :].contiguous().view(batch_size, trim_size, 4)
         
         # _, order = torch.sort(scores_keep, 1, True)
-        
+        # print('proposals.shape :',proposals.shape)
         proposals_reshaped = proposals.view(batch_size,time_dim, K*A,4)
-        proposals_keep = proposals_reshaped
+        proposals_reshaped = proposals_reshaped.permute(0,2,1,3).contiguous()
+        proposals_reshaped = proposals_reshaped.view(batch_size,K*A,time_dim*4)
+        proposals_reshaped = proposals_reshaped.view(-1,time_dim*4)
+        # print('reshaped_proposals.shape :',proposals_reshaped.shape)        
 
-        scores_keep = scores
-        _, order = torch.sort(scores_keep, 1, True)
+        scores_single = scores.view(-1)
+        # print('scores_single.shape :',scores_single.shape)
+        _, order_single = torch.sort(scores_single, 0, True)
 
         
-        output = scores.new(batch_size, time_dim, post_nms_topN, 5).zero_()
-        for i in range(batch_size):
-            for j in range(time_dim):
+        output = scores.new(post_nms_topN, 4*time_dim + 1).zero_()
 
-                # # 3. remove predicted boxes with either height or width < threshold
-                # # (NOTE: convert min_size to input image scale stored in im_info[2])
-                proposals_single = proposals_keep[i,j]
-                scores_single = scores_keep[i]
+        # # 3. remove predicted boxes with either height or width < threshold
+        # # (NOTE: convert min_size to input image scale stored in im_info[2])
+        # # 4. sort all (proposal, score) pairs by score from highest to lowest
+        # # 5. take top pre_nms_topN (e.g. 6000)
 
-                # # 4. sort all (proposal, score) pairs by score from highest to lowest
-                # # 5. take top pre_nms_topN (e.g. 6000)
-                order_single = order[i]
+        if pre_nms_topN > 0 and pre_nms_topN < scores_single.numel():
+            order_single = order_single[:pre_nms_topN]
 
-                if pre_nms_topN > 0 and pre_nms_topN < scores_keep.numel():
-                    order_single = order_single[:pre_nms_topN]
+        proposals_reshaped = proposals_reshaped[order_single, :]
+        scores_single = scores_single[order_single].view(-1,1)
 
-                proposals_single = proposals_single[order_single, :]
-                scores_single = scores_single[order_single].view(-1,1)
+        # 6. apply nms (e.g. threshold = 0.7)
+        # 7. take after_nms_topN (e.g. 300)
+        # 8. return the top proposals (-> RoIs top)
 
-                # 6. apply nms (e.g. threshold = 0.7)
-                # 7. take after_nms_topN (e.g. 300)
-                # 8. return the top proposals (-> RoIs top)
+        keep_idx_i = nms(torch.cat((proposals_reshaped, scores_single), 1), nms_thresh, force_cpu=not cfg.USE_GPU_NMS)
+        # keep_idx_i = nms(torch.cat((proposals_reshaped, scores_single), 1), nms_thresh, force_cpu=True)
+        keep_idx_i = keep_idx_i.long().view(-1)
 
-                keep_idx_i = nms(torch.cat((proposals_single, scores_single), 1), nms_thresh, force_cpu=not cfg.USE_GPU_NMS)
-                # keep_idx_i = nms(torch.cat((proposals_single, scores_single), 1), nms_thresh, force_cpu=True)
-                keep_idx_i = keep_idx_i.long().view(-1)
+        if post_nms_topN > 0:
+            keep_idx_i = keep_idx_i[:post_nms_topN]
+        proposals_reshaped = proposals_reshaped[keep_idx_i, :]
+        scores_single = scores_single[keep_idx_i, :]
+        # print('scores_single.shape :',scores_single.shape)
+        # # padding 0 at the end.
+        # print(' scores_single[:,0].shape :', scores_single[:,0].shape)
+        # print('output[:,0].shape :',output[:,0].shape)
+        num_proposal = proposals_reshaped.size(0)
+        output[:num_proposal,0] = scores_single[:,0]
+        output[:num_proposal,1:] = proposals_reshaped
 
-                if post_nms_topN > 0:
-                    keep_idx_i = keep_idx_i[:post_nms_topN]
-                proposals_single = proposals_single[keep_idx_i, :]
-                scores_single = scores_single[keep_idx_i, :]
 
-                # padding 0 at the end.
-                num_proposal = proposals_single.size(0)
-                output[i,j,:,0] = i
-                output[i,j,:num_proposal,1:] = proposals_single
-
+        # print('output.shape :',output.shape)
+        # print('output :',output)
         return output
 
     def backward(self, top, propagate_down, bottom):

@@ -26,8 +26,11 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_folder = '/gpu-data/sgal/UCF-101-frames'
-    boxes_file = '/gpu-data/sgal/UCF-bboxes.json'
+    # dataset_folder = '/gpu-data/sgal/UCF-101-frames'
+    # boxes_file = '/gpu-data/sgal/UCF-bboxes.json'
+    dataset_folder = '../UCF-101-frames'
+    boxes_file = '../UCF-101-frames/UCF-bboxes.json'
+
     sample_size = 112
     sample_duration = 16  # len(images)
 
@@ -101,24 +104,24 @@ if __name__ == '__main__':
         rpn_model.train()
         model.eval()
 
-        for step, (    clips,  (h, w), gt_tubes, final_rois) in enumerate(data_loader):
+        for step, (    clips,  (h, w), gt_tubes, gt_rois) in enumerate(data_loader):
             inputs = Variable(clips, requires_grad=True)
             outputs = model(inputs)
             print('step {}'.format(step))
-        #     rois, rpn_loss_cls, rpn_loss_box = rpn_model(outputs,
-        #                                                  torch.Tensor(
-        #                                                      [[h, w]] * gt_tubes.size(1)).cuda(),
-        #                                                  gt_tubes.cuda(), len(gt_tubes))
-        #     loss = rpn_loss_cls.mean() # + rpn_loss_box.mean() 
-        #     loss_temp += loss.item()
+            rois, rpn_loss_cls, rpn_loss_box = rpn_model(outputs,
+                                                         torch.Tensor(
+                                                             [[h, w]] * gt_tubes.size(1)).cuda(),
+                                                         gt_tubes.cuda(), gt_rois, len(gt_tubes))
+            loss = rpn_loss_cls.mean() + rpn_loss_box.mean() 
+            loss_temp += loss.item()
 
-        #     # backw\ard
-        #     optimizer.zero_grad()
-        #     loss.backward()
-        #     optimizer.step()
+            # backw\ard
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-        # print('Train Epoch: {} \tLoss: {:.6f}\t'.format(
-        #     epoch,loss_temp/step))
-        # # if ( epoch + 1 ) % 5 == 0:
-        # #     torch.save(rpn_model.state_dict(), "rpn_model_{0:03d}.pwf".format(epoch))
-        # torch.save(rpn_model.state_dict(), "rpn_model_{0:03d}.pwf".format(epoch))
+        print('Train Epoch: {} \tLoss: {:.6f}\t'.format(
+            epoch,loss_temp/step))
+        # if ( epoch + 1 ) % 5 == 0:
+        #     torch.save(rpn_model.state_dict(), "rpn_model_{0:03d}.pwf".format(epoch))
+        torch.save(rpn_model.state_dict(), "rpn_model_{0:03d}.pwf".format(epoch))

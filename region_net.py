@@ -38,8 +38,8 @@ class _RPN(nn.Module):
         self.nc_score_out = len(self.anchor_scales) * len(self.anchor_ratios) * 2 # 2(bg/fg) * 9 (anchors)
 
         self.RPN_cls_score_16 = nn.Conv2d(512, self.nc_score_out, 1, 1, 0).cuda()
-        self.RPN_cls_score_8 = nn.Conv2d(512, self.nc_score_out, 1, 1, 0).cuda()
-        self.RPN_cls_score_4 = nn.Conv2d(512, self.nc_score_out, 1, 1, 0).cuda()
+        self.RPN_cls_score_8  = nn.Conv2d(512, self.nc_score_out, 1, 1, 0).cuda()
+        self.RPN_cls_score_4  = nn.Conv2d(512, self.nc_score_out, 1, 1, 0).cuda()
 
         # define anchor box offset prediction layer
         self.nc_bbox_out = len(self.anchor_scales) * len(self.anchor_ratios) * 4 # 4(coords) * 9 (anchors)
@@ -78,7 +78,7 @@ class _RPN(nn.Module):
 
         rpn_conv1 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
 
-        print('rpn_conv1.shape :', rpn_conv1.shape)
+        # print('rpn_conv1.shape :', rpn_conv1.shape)
 
         feat_time_16 = F.relu(self.RPN_time_16(rpn_conv1), inplace=True)
         feat_time_8 = F.relu(self.RPN_time_8(rpn_conv1), inplace=True)
@@ -86,9 +86,9 @@ class _RPN(nn.Module):
 
         # get bbox regression for each frame of the tubes
 
-        print('feat_time_16.shape :',feat_time_16.shape)
-        print('feat_time_8.shape :',feat_time_8.shape)
-        print('feat_time_4.shape :',feat_time_4.shape)
+        # print('feat_time_16.shape :',feat_time_16.shape)
+        # print('feat_time_8.shape :',feat_time_8.shape)
+        # print('feat_time_4.shape :',feat_time_4.shape)
 
         # ## permute features to the batch_size
 
@@ -96,23 +96,22 @@ class _RPN(nn.Module):
         feat_time_8 = feat_time_8.permute(0,2,1,3,4).contiguous().view(-1,512,7,7)
         feat_time_4 = feat_time_4.permute(0,2,1,3,4).contiguous().view(-1,512,7,7)
 
-        print('feat_time_16.shape :',feat_time_16.shape)
-        print('feat_time_8.shape :',feat_time_8.shape)
-        print('feat_time_4.shape :',feat_time_4.shape)
-
+        # print('feat_time_16.shape :',feat_time_16.shape)
+        # print('feat_time_8.shape :',feat_time_8.shape)
+        # print('feat_time_4.shape :',feat_time_4.shape)
 
         rpn_bbox_frame_16 = self.RPN_bbox_frame_pred_16(feat_time_16)
         rpn_bbox_frame_8 = self.RPN_bbox_frame_pred_8(feat_time_8)
         rpn_bbox_frame_4 = self.RPN_bbox_frame_pred_4(feat_time_4)
 
-        print('bbox_frame_16.shape :',rpn_bbox_frame_16.shape)
-        print('bbox_frame_8.shape  :',rpn_bbox_frame_8.shape)
-        print('bbox_frame_4.shape  :',rpn_bbox_frame_4.shape)
-
+        # print('bbox_frame_16.shape :',rpn_bbox_frame_16.shape)
+        # print('bbox_frame_8.shape  :',rpn_bbox_frame_8.shape)
+        # print('bbox_frame_4.shape  :',rpn_bbox_frame_4.shape)
 
         # get rpn classification score
         rpn_cls_score_16 = self.RPN_cls_score_16(feat_time_16)
         rpn_cls_score_8 = self.RPN_cls_score_16(feat_time_8)
+        # print('rpn_cls_score_8.shape :',rpn_cls_score_8.shape)
         rpn_cls_score_4 = self.RPN_cls_score_16(feat_time_4)
 
         rpn_cls_score_reshape_16 = self.reshape(rpn_cls_score_16, 2)
@@ -132,13 +131,13 @@ class _RPN(nn.Module):
 
         rois_16 = self.RPN_proposal((rpn_cls_prob_16.data, rpn_bbox_frame_16.data,
                                      im_info, cfg_key,16))
-        rois_8 = self.RPN_proposal((rpn_cls_prob_8.data, rpn_bbox_frame_8.data,
-                                    im_info, cfg_key,8))
-        rois_4 = self.RPN_proposal((rpn_cls_prob_4.data, rpn_bbox_frame_4.data,
-                                    im_info, cfg_key,4))
-        print('rois_16.shape :',rois_16.shape)
-        print('rois_8.shape :',rois_8.shape)
-        print('rois_4.shape :',rois_4.shape)
+        # rois_8 = self.RPN_proposal((rpn_cls_prob_8.data, rpn_bbox_frame_8.data,
+        #                             im_info, cfg_key,8))
+        # rois_4 = self.RPN_proposal((rpn_cls_prob_4.data, rpn_bbox_frame_4.data,
+        #                             im_info, cfg_key,4))
+        # print('rois_16.shape :',rois_16.shape)
+        # print('rois_8.shape :',rois_8.shape)
+        # print('rois_4.shape :',rois_4.shape)
         self.rpn_loss_cls_16 = 0
         self.rpn_loss_box_16 = 0
 
@@ -148,12 +147,15 @@ class _RPN(nn.Module):
             assert gt_boxes is not None
 
             duration = (gt_boxes[:,:,5] - gt_boxes[:,:,2] + 1).tolist()
-            print(duration)
-            for tube_idx in range(len(duration)): # only for 1 video until now
+
+            print('duration :',duration)
+
+
+            for tube_idx in range(1): # only for 1 video until now
 
                 gt_tube =  gt_boxes[0,tube_idx,:].unsqueeze(0).unsqueeze(0)
                 tube_rois = rois[tube_idx,:,:].unsqueeze(1)
-                print('tube_rois.shape :,', tube_rois.shape)
+                # print('tube_rois.shape :,', tube_rois.shape)
 
                 # ### for 16 frames tube
 
@@ -166,8 +168,12 @@ class _RPN(nn.Module):
                 rpn_keep_16 = Variable(rpn_label_16.view(-1).ne(-1).nonzero().view(-1))
 
                 rpn_cls_score_16 = torch.index_select(rpn_cls_score_16.view(-1,2), 0, rpn_keep_16)
+
                 rpn_label_16 = torch.index_select(rpn_label_16.view(-1), 0, rpn_keep_16.data)
                 rpn_label_16 = Variable(rpn_label_16.long())
+
+                # print('rpn_cls_score_16.shape :',rpn_cls_score_16.shape)
+                # print('rpn_label_16.shape :',rpn_label_16.shape)
 
                 self.rpn_loss_cls_16 =  F.cross_entropy(rpn_cls_score_16, rpn_label_16)
 
@@ -180,78 +186,79 @@ class _RPN(nn.Module):
                 rpn_bbox_targets_16 = Variable(rpn_bbox_frame_targets_16)
 
                 self.rpn_loss_box_16 =  _smooth_l1_loss(rpn_bbox_frame_16, rpn_bbox_frame_targets_16, rpn_bbox_inside_weights_16,
-                                                    rpn_bbox_outside_weights_16, sigma=3, dim=[1,2,3])
+                                                                   rpn_bbox_outside_weights_16, sigma=3, dim=[1,2,3])
 
-                print('self.rpn_loss_box_16 :',self.rpn_loss_box_16)
+                # print('self.rpn_loss_box_16 :',self.rpn_loss_box_16)
 
-                print('----------\nEKSWWWW 16\n----------')
-                # #### for 8 frames tube
+                # print('----------\nEKSWWWW 16\n----------')
+                # # #### for 8 frames tube
 
-                rpn_data_8  = self.RPN_anchor_target((rpn_cls_score_8.data , gt_tube, im_info, tube_rois, num_boxes,  8))
+                # rpn_data_8  = self.RPN_anchor_target((rpn_cls_score_8.data , gt_tube, im_info, tube_rois, num_boxes,  8))
 
-                rpn_cls_score_8 = rpn_cls_score_reshape_8.permute(0, 2, 3, 1).contiguous()
-                rpn_cls_score_8 = rpn_cls_score_8.view(batch_size, -1, 2) ## exw [1, 441, 2]
+                # rpn_cls_score_8 = rpn_cls_score_reshape_8.permute(0, 2, 3, 1).contiguous()
+                # rpn_cls_score_8 = rpn_cls_score_8.view(batch_size, -1, 2) ## exw [1, 441, 2]
 
-                rpn_label_8 = rpn_data_8[0].view(batch_size, -1)
-                rpn_keep_8 = Variable(rpn_label_8.view(-1).ne(-1).nonzero().view(-1))
+                # rpn_label_8 = rpn_data_8[0].view(batch_size, -1)
+                # rpn_keep_8 = Variable(rpn_label_8.view(-1).ne(-1).nonzero().view(-1))
 
-                rpn_cls_score_8 = torch.index_select(rpn_cls_score_8.view(-1,2), 0, rpn_keep_8)
-                rpn_label_8 = torch.index_select(rpn_label_8.view(-1), 0, rpn_keep_8.data)
-                rpn_label_8 = Variable(rpn_label_8.long())
+                # rpn_cls_score_8 = torch.index_select(rpn_cls_score_8.view(-1,2), 0, rpn_keep_8)
+                # rpn_label_8 = torch.index_select(rpn_label_8.view(-1), 0, rpn_keep_8.data)
+                # rpn_label_8 = Variable(rpn_label_8.long())
 
-                self.rpn_loss_cls_8  =  F.cross_entropy(rpn_cls_score_8, rpn_label_8)
+                # self.rpn_loss_cls_8  =  F.cross_entropy(rpn_cls_score_8, rpn_label_8)
 
-                fg_cnt_8  = torch.sum(rpn_label_8.data.ne(0))
+                # fg_cnt_8  = torch.sum(rpn_label_8.data.ne(0))
 
-                rpn_bbox_frame_targets_8 , rpn_bbox_frame_inside_weights_8 , rpn_bbox_frame_outside_weights_8  = rpn_data_8[1:]              
+                # rpn_bbox_frame_targets_8 , rpn_bbox_frame_inside_weights_8 , rpn_bbox_frame_outside_weights_8  = rpn_data_8[1:]              
 
-                rpn_bbox_inside_weights_8 = Variable(rpn_bbox_frame_inside_weights_8)
-                rpn_bbox_outside_weights_8 = Variable(rpn_bbox_frame_outside_weights_8)
-                rpn_bbox_targets_8 = Variable(rpn_bbox_frame_targets_8)
+                # rpn_bbox_inside_weights_8 = Variable(rpn_bbox_frame_inside_weights_8)
+                # rpn_bbox_outside_weights_8 = Variable(rpn_bbox_frame_outside_weights_8)
+                # rpn_bbox_targets_8 = Variable(rpn_bbox_frame_targets_8)
 
-                self.rpn_loss_box_8  =  _smooth_l1_loss(rpn_bbox_frame_8, rpn_bbox_frame_targets_8, rpn_bbox_inside_weights_8,
-                                                    rpn_bbox_outside_weights_8, sigma=3, dim=[1,2,3])
+                # self.rpn_loss_box_8  =  _smooth_l1_loss(rpn_bbox_frame_8, rpn_bbox_frame_targets_8, rpn_bbox_inside_weights_8,
+                #                                     rpn_bbox_outside_weights_8, sigma=3, dim=[1,2,3])
 
-                print('self.rpn_loss_box_8 :',self.rpn_loss_box_8)
+                # print('self.rpn_loss_box_8 :',self.rpn_loss_box_8)
 
-                print('----------\nEKSWWWW 8\n----------')
-                # #### for 4 frames tube
+                # print('----------\nEKSWWWW 8\n----------')
+                # # #### for 4 frames tube
 
-                rpn_data_4  = self.RPN_anchor_target((rpn_cls_score_4.data , gt_tube, im_info, tube_rois, num_boxes,  4))
+                # rpn_data_4  = self.RPN_anchor_target((rpn_cls_score_4.data , gt_tube, im_info, tube_rois, num_boxes,  4))
 
-                rpn_cls_score_4 = rpn_cls_score_reshape_4.permute(0, 2, 3, 1).contiguous()
-                rpn_cls_score_4 = rpn_cls_score_4.view(batch_size, -1, 2) ## exw [1, 441, 2]
+                # rpn_cls_score_4 = rpn_cls_score_reshape_4.permute(0, 2, 3, 1).contiguous()
+                # rpn_cls_score_4 = rpn_cls_score_4.view(batch_size, -1, 2) ## exw [1, 441, 2]
 
-                rpn_label_4 = rpn_data_4[0].view(batch_size, -1)
-                rpn_keep_4 = Variable(rpn_label_4.view(-1).ne(-1).nonzero().view(-1))
+                # rpn_label_4 = rpn_data_4[0].view(batch_size, -1)
+                # rpn_keep_4 = Variable(rpn_label_4.view(-1).ne(-1).nonzero().view(-1))
 
-                rpn_cls_score_4 = torch.index_select(rpn_cls_score_4.view(-1,2), 0, rpn_keep_4)
-                rpn_label_4 = torch.index_select(rpn_label_4.view(-1), 0, rpn_keep_4.data)
-                rpn_label_4 = Variable(rpn_label_4.long())
+                # rpn_cls_score_4 = torch.index_select(rpn_cls_score_4.view(-1,2), 0, rpn_keep_4)
+                # rpn_label_4 = torch.index_select(rpn_label_4.view(-1), 0, rpn_keep_4.data)
+                # rpn_label_4 = Variable(rpn_label_4.long())
 
-                self.rpn_loss_cls_4  =  F.cross_entropy(rpn_cls_score_4, rpn_label_4)
+                # self.rpn_loss_cls_4  =  F.cross_entropy(rpn_cls_score_4, rpn_label_4)
 
-                fg_cnt_4  = torch.sum(rpn_label_4.data.ne(0))
+                # fg_cnt_4  = torch.sum(rpn_label_4.data.ne(0))
 
-                rpn_bbox_frame_targets_4 , rpn_bbox_frame_inside_weights_4 , rpn_bbox_frame_outside_weights_4  = rpn_data_4[1:]
+                # rpn_bbox_frame_targets_4 , rpn_bbox_frame_inside_weights_4 , rpn_bbox_frame_outside_weights_4  = rpn_data_4[1:]
 
-                rpn_bbox_inside_weights_4 = Variable(rpn_bbox_frame_inside_weights_4)
-                rpn_bbox_outside_weights_4 = Variable(rpn_bbox_frame_outside_weights_4)
-                rpn_bbox_targets_4 = Variable(rpn_bbox_frame_targets_4)
+                # rpn_bbox_inside_weights_4 = Variable(rpn_bbox_frame_inside_weights_4)
+                # rpn_bbox_outside_weights_4 = Variable(rpn_bbox_frame_outside_weights_4)
+                # rpn_bbox_targets_4 = Variable(rpn_bbox_frame_targets_4)
 
-                self.rpn_loss_box_4  =  _smooth_l1_loss(rpn_bbox_frame_4, rpn_bbox_frame_targets_4, rpn_bbox_inside_weights_4,
-                                                    rpn_bbox_outside_weights_4, sigma=3, dim=[1,2,3])
+                # self.rpn_loss_box_4  =  _smooth_l1_loss(rpn_bbox_frame_4, rpn_bbox_frame_targets_4, rpn_bbox_inside_weights_4,
+                #                                     rpn_bbox_outside_weights_4, sigma=3, dim=[1,2,3])
 
-                print('self.rpn_loss_box_4 :',self.rpn_loss_box_4)
+                # print('self.rpn_loss_box_4 :',self.rpn_loss_box_4)
 
-                print('----------\nEKSWWWW 4\n----------')
+                # print('----------\nEKSWWWW 4\n----------')
 
-                self.rpn_loss_cls = self.rpn_loss_cls_16 + self.rpn_loss_cls_8 + self.rpn_loss_cls_4
-                self.rpn_loss_box = self.rpn_loss_box_16 + self.rpn_loss_box_8 + self.rpn_loss_box_4
+                # self.rpn_loss_cls = self.rpn_loss_cls_16 + self.rpn_loss_cls_8 + self.rpn_loss_cls_4
+                # self.rpn_loss_box = self.rpn_loss_box_16 + self.rpn_loss_box_8 + self.rpn_loss_box_4
 
                 # # compute bbox regression loss
-                print('self.rpn_loss_cls :',self.rpn_loss_cls)
-                print('self.rpn_loss_box :',self.rpn_loss_box)
+                # print('self.rpn_loss_cls :',self.rpn_loss_cls)
+                # print('self.rpn_loss_box :',self.rpn_loss_box)
+
         return rois_16, self.rpn_loss_cls_16, self.rpn_loss_box_16
 
 

@@ -21,7 +21,7 @@ from bbox_transform import clip_boxes, bbox_overlaps_time, bbox_transform_batch,
 import pdb
 
 DEBUG = False
-torch.set_printoptions(profile="full")
+
 
 try:
     long        # Python 2
@@ -65,7 +65,7 @@ class _AnchorTargetLayer(nn.Module):
 
         ### Not sure about that
         # print('$$$$$$$$$$')
-        print('time_limit :',time_limit)
+        # print('time_limit :',time_limit)
         height, width = rpn_cls_score.size(2), rpn_cls_score.size(3)
         gt_tube_batch_size = gt_tubes.size(0)
         gt_rois_batch_size = time_limit
