@@ -51,6 +51,7 @@ if __name__ == '__main__':
 
     cls2idx = {actions[i]: i for i in range(0, len(actions))}
 
+    scale_size = [sample_size,sample_size]
     spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
                                  ToTensor(),
                                  Normalize(mean, [1, 1, 1])])
@@ -58,7 +59,7 @@ if __name__ == '__main__':
 
     data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file=boxes_file,
-                 mode='test', classes_idx=cls2idx)
+                 mode='test', classes_idx=cls2idx, scale_size = scale_size)
     # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
     #                                           shuffle=True, num_workers=n_threads, pin_memory=True)
 
@@ -70,52 +71,52 @@ if __name__ == '__main__':
     
     # clips,  (h, w), gt_tubes, final_rois = data[906]
     # clips,  (h, w), gt_tubes, final_rois = data[905]
-    clips,  (h, w), gt_tubes, gt_rois, path,frame_indices = data[608]
+    clips, (h,w,scale), gt_tubes, gt_rois, path,frame_indices = data[1024]
 
-    print('path :',path)
-    print('clips.shape :',clips.shape)
-    clips = clips.unsqueeze(0)
-    gt_tubes = gt_tubes.unsqueeze(0)
-    print('gt_rois.shape :',gt_rois.shape)
-    print('gt_rois :', gt_rois)
+    # print('path :',path)
+    # print('clips.shape :',clips.shape)
+    # clips = clips.unsqueeze(0)
+    # gt_tubes = gt_tubes.unsqueeze(0)
+    # print('gt_rois.shape :',gt_rois.shape)
+    # print('gt_rois :', gt_rois)
 
-    # print('h :', h, ' w :', w)
-    # print('gt_tubes :', gt_tubes)
-    # print('final_rois :', final_rois)
-    # print('type final_rois: ', type(final_rois))
+    # # print('h :', h, ' w :', w)
+    # # print('gt_tubes :', gt_tubes)
+    # # print('final_rois :', final_rois)
+    # # print('type final_rois: ', type(final_rois))
 
-    # n_classes = len(classes)
-    n_classes = len(actions)
-    resnet_shortcut = 'A'
+    # # n_classes = len(classes)
+    # n_classes = len(actions)
+    # resnet_shortcut = 'A'
 
-    model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
-                     sample_size=sample_size, sample_duration=sample_duration,
-                     last_fc=last_fc)
-    model = model.cuda()
-    model = nn.DataParallel(model, device_ids=None)
+    # model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
+    #                  sample_size=sample_size, sample_duration=sample_duration,
+    #                  last_fc=last_fc)
+    # model = model.cuda()
+    # model = nn.DataParallel(model, device_ids=None)
 
-    model_data = torch.load('./resnet-34-kinetics.pth')
-    model.load_state_dict(model_data['state_dict'])
-    model.eval()
+    # model_data = torch.load('../temporal_localization/resnet-34-kinetics.pth')
+    # model.load_state_dict(model_data['state_dict'])
+    # model.eval()
 
-    lr = 0.001
-    rpn_model = _RPN(256).cuda()
-    rpn_data = torch.load('./rpn_model_000.pwf')
-    rpn_model.load_state_dict(rpn_data)
-    rpn_model.eval()
-    # rpn_model = _RPN(512).cuda()
+    # lr = 0.001
+    # rpn_model = _RPN(256).cuda()
+    # rpn_data = torch.load('./rpn_model_pre_004.pwf')
+    # rpn_model.load_state_dict(rpn_data)
+    # rpn_model.eval()
+    # # rpn_model = _RPN(512).cuda()
 
-    inputs = Variable(clips).cuda()
-    outputs = model(inputs)
-    outputs_list = outputs.tolist()
+    # inputs = Variable(clips).cuda()
+    # outputs = model(inputs)
+    # outputs_list = outputs.tolist()
 
-    with open('./outputs.json', 'w') as fp:
-        json.dump(outputs_list, fp)
+    # with open('./outputs.json', 'w') as fp:
+    #     json.dump(outputs_list, fp)
     
-    rois, rpn_loss_cls, rpn_loss_box = rpn_model(outputs,
-                                                 torch.Tensor(
-                                                     [[h, w]] * gt_tubes.size(1)).cuda(),
-                                                 None,None,None)
+    # rois, rpn_loss_cls, rpn_loss_box = rpn_model(outputs,
+    #                                              torch.Tensor(
+    #                                                  [[h, w]] * gt_tubes.size(1)).cuda(),
+    #                                              None,None,None)
     print('h %d w %d ' % (h,w))
     rois[:,[0,2]] =rois[:,[0,2]].clamp_(min=0, max=w)
     rois[:,[1,3]] =rois[:,[1,3]].clamp_(min=0, max=h)
@@ -124,15 +125,24 @@ if __name__ == '__main__':
     print('rois.shape :',rois.shape)
 
     rois = rois.view(300,16,-1).permute(1,0,2).cpu().numpy()
-    print('rois :', rois.tolist())
     colors = [ (255,0,0), (0,255,0), (0,0,255)]
     print('rois.shape :',rois.shape)
     for i in range(len(frame_indices)):
         img = cv2.imread(os.path.join(path, 'image_{:0>5}.jpg'.format(frame_indices[i])))
+        img_tmp = img.copy()
         if img.all():
             print('Image {} not found '.format(os.path.join(path, 'image_{:0>5}.jpg'.format(frame_indices[i]))))
             break
-        for j in range(300):
-            cv2.rectangle(img,(int(rois[i,j,0]),int(rois[i,j,1])),(int(rois[i,j,2]),int(rois[i,j,3])), (255,0,0),3)
+        for j in range(10):
+            cv2.rectangle(img_tmp,(int(rois[i,j,0]),int(rois[i,j,1])),(int(rois[i,j,2]),int(rois[i,j,3])), (255,0,0),3)
         # print('out : ./out/{:0>3}.jpg'.format(i))
-        cv2.imwrite('./out_frames/action_{:0>3}.jpg'.format(i), img)
+        cv2.imwrite('./out_frames/action_{:0>3}.jpg'.format(i), img_tmp)
+        img_tmp = img.copy()
+        print('rois.shape :',gt_rois.shape)
+        cv2.rectangle(img_tmp,(int(gt_rois[0,i,0]),int(gt_rois[0,i,1])),(int(gt_rois[0,i,2]),int(gt_rois[0,i,3])), (255,0,0),5)
+        # cv2.imwrite('./out_frames/gt_rois_{:0>3}.jpg'.format(i), img_tmp)
+        # img_tmp = img.copy()
+        # print('gt_tubes :',gt_tubes)
+        cv2.rectangle(img_tmp,(int(gt_tubes[0,0,0]),int(gt_tubes[0,0,1])),(int(gt_tubes[0,0,3]),int(gt_tubes[0,0,4])), (0,255,0),3)
+        cv2.imwrite('./out_frames/gt_both_{:0>3}.jpg'.format(i), img_tmp)
+

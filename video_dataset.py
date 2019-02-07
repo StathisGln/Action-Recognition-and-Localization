@@ -201,7 +201,7 @@ def make_dataset(dataset_path,  boxes_file, mode='train'):
 class Video(data.Dataset):
     def __init__(self, video_path, frames_dur=8, 
                  spatial_transform=None, temporal_transform=None, json_file=None,
-                 sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None):
+                 sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None, scale_size=None):
 
         self.mode = mode
         self.data = make_correct_ucf_dataset(
@@ -213,6 +213,7 @@ class Video(data.Dataset):
         self.sample_duration = frames_dur
         self.json_file = json_file
         self.classes_idx = classes_idx
+        self.scale_size = scale_size
 
     def __getitem__(self, index):
         """
@@ -247,6 +248,7 @@ class Video(data.Dataset):
         w, h = clip[0].size
         if self.spatial_transform is not None:
             clip = [self.spatial_transform(img) for img in clip]
+
         clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
         # print('clip :', clip.shape)
         ## get bboxes and create gt tubes

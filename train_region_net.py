@@ -15,7 +15,7 @@ from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
 from region_net import _RPN
-
+from resize_rpn import resize_rpn, resize_tube
 import pdb
 
 np.random.seed(42)
@@ -118,6 +118,13 @@ if __name__ == '__main__':
             clips = clips.cuda()
             gt_tubes = gt_tubes.cuda()
             gt_rois =  gt_rois.squeeze(0).cuda()
+            h = h.cuda()
+            w = w.cuda()
+            # print('gt_tubes.shape :',gt_tubes.shape )
+            # print('gt_rois.shape :',gt_rois.shape)
+
+            gt_tubes_r = resize_tube(gt_tubes, h,w,sample_size)
+            gt_rois_r = resize_rpn(gt_rois, h,w,112)
 
             inputs = Variable(clips)
             # print('gt_tubes.shape :',gt_tubes.shape )
@@ -126,7 +133,7 @@ if __name__ == '__main__':
             # print('step {}'.format(step))
             rois, rpn_loss_cls, rpn_loss_box = rpn_model(outputs,
                                                          torch.Tensor(
-                                                             [[h, w]] * gt_tubes.size(1)).cuda(),
+                                                             [[sample_size, sample_size]] * gt_tubes.size(1)).cuda(),
                                                          gt_tubes, gt_rois, len(gt_tubes))
 
             loss = rpn_loss_cls.mean() + rpn_loss_box.mean()
