@@ -15,7 +15,7 @@ import numpy as np
 import math
 import yaml
 from config import cfg
-from generate_anchors import generate_anchors
+from generate_3d_anchors import generate_anchors
 from bbox_transform import bbox_transform_inv, clip_boxes, clip_boxes_batch, bbox_frames_transform_inv
 from nms.nms_wrapper import nms
 
@@ -29,12 +29,13 @@ class _ProposalLayer(nn.Module):
     transformations to a set of regular boxes (called "anchors").
     """
 
-    def __init__(self, feat_stride, scales, ratios):
+    def __init__(self, feat_stride, scales, ratios, time_dim):
         super(_ProposalLayer, self).__init__()
 
         self._feat_stride = feat_stride
         self._anchors = torch.from_numpy(generate_anchors(scales=np.array(scales), 
-            ratios=np.array(ratios))).float()
+                                                          ratios=np.array(ratios),
+                                                          time_dim=np.array(time_dim)).float()
         self._num_anchors = self._anchors.size(0)
 
         # rois blob: holds R regions of interest, each is a 5-tuple
@@ -101,13 +102,10 @@ class _ProposalLayer(nn.Module):
                                   shift_x.ravel(), shift_y.ravel())).transpose())
         shifts = shifts.contiguous().type_as(scores).float()
 
-        
         A = self._num_anchors
         K = shifts.size(0)
 
         self._anchors = self._anchors.type_as(scores)
-
-        # print('self._anchors.shape :',self._anchors.shape)
 
         anchors = self._anchors.view(1, A, 4) + shifts.view(K, 1, 4)
         anchors = anchors.view(1, K * A, 4)
