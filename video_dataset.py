@@ -229,7 +229,7 @@ class Video(data.Dataset):
 
         n_frames = len(glob.glob(path+ '/*.jpg'))
         # print('n_frames :',n_frames, ' files ', sorted(glob.glob(path+ '/*.jpg')))
-        print('path :',path,  ' n_frames :', n_frames, 'index :',index)        
+        # print('path :',path,  ' n_frames :', n_frames, 'index :',index)        
 
         ## get  random frames from the video 
         time_index = np.random.randint(

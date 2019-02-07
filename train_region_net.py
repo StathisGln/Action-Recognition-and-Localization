@@ -102,9 +102,9 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(params)
 
     # epochs = 20
-    epochs = 10
+    epochs = 5
     for epoch in range(epochs):
-        print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch, epochs))
+        print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
 
         loss_temp = 0
         # start = time.time()
@@ -112,7 +112,7 @@ if __name__ == '__main__':
         model.eval()
 
         ## 2 rois : 1450
-        for step, (    clips,  (h, w), gt_tubes, gt_rois) in enumerate(data_loader):
+        for step, (    clips,  (h, w), gt_tubes, gt_rois) in tqdm(enumerate(data_loader)):
         # (    clips,  (h, w), gt_tubes, gt_rois) = next(data_loader.__iter__())
         # (    clips,  (h, w), gt_tubes, gt_rois) = data[525]
             clips = clips.cuda()
@@ -123,14 +123,14 @@ if __name__ == '__main__':
             # print('gt_tubes.shape :',gt_tubes.shape )
             # print('gt_rois.shape :',gt_rois.shape)
             outputs = model(inputs)
-            print('step {}'.format(step))
+            # print('step {}'.format(step))
             rois, rpn_loss_cls, rpn_loss_box = rpn_model(outputs,
                                                          torch.Tensor(
                                                              [[h, w]] * gt_tubes.size(1)).cuda(),
                                                          gt_tubes, gt_rois, len(gt_tubes))
-            print('rpn_loss_cls {}, rpn_loss_box {}'.format(rpn_loss_cls, rpn_loss_box))
+
             loss = rpn_loss_cls.mean() + rpn_loss_box.mean()
-            print('loss :', loss)
+            # print(' rpn_loss_cls {}, rpn_loss_box {} ==> loss : {}'.format(rpn_loss_cls, rpn_loss_box,loss))
             loss_temp += loss.item()
 
             # backw\ard
@@ -138,9 +138,9 @@ if __name__ == '__main__':
             loss.backward()
             optimizer.step()
 
-        print('loss_temp :',loss_temp)
+        # print('loss_temp :',loss_temp)
         print('Train Epoch: {} \tLoss: {:.6f}\t'.format(
             epoch,loss_temp/step))
         if ( epoch + 1 ) % 5 == 0:
             torch.save(rpn_model.state_dict(), "rpn_model_{0:03d}.pwf".format(epoch+1))
-        # torch.save(rpn_model.state_dict(), "rpn_model_pre_{0:03d}.pwf".format(epoch))
+        torch.save(rpn_model.state_dict(), "rpn_model_pre_{0:03d}.pwf".format(epoch))

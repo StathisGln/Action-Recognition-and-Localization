@@ -144,14 +144,14 @@ class _RPN(nn.Module):
 
             duration = (gt_boxes[:,:,5] - gt_boxes[:,:,2] + 1).tolist()
 
-            print('duration :',duration)
+            # print('duration :',duration)
 
 
             for tube_idx in range(1): # only for 1 video until now
                 
                 gt_tube =  gt_boxes[0,tube_idx,:].unsqueeze(0).unsqueeze(0)
                 tube_rois = rois[tube_idx,:,:].unsqueeze(1)
-                print('tube_rois.shape :,', tube_rois.shape)
+                # print('tube_rois.shape :,', tube_rois.shape)
 
                 # ### for 16 frames tube
 
@@ -184,8 +184,8 @@ class _RPN(nn.Module):
                 self.rpn_loss_box_16 =  _smooth_l1_loss(rpn_bbox_frame_16, rpn_bbox_frame_targets_16, rpn_bbox_inside_weights_16,
                                                                    rpn_bbox_outside_weights_16, sigma=3, dim=[1,2,3])
 
-                print('self.rpn_loss_box_16 :',self.rpn_loss_box_16)
-                print('self.rpn_loss_cls_16 :',self.rpn_loss_cls_16)
+                # print('self.rpn_loss_box_16 :',self.rpn_loss_box_16)
+                # print('self.rpn_loss_cls_16 :',self.rpn_loss_cls_16)
                 
                 # print('----------\nEKSWWWW 16\n----------')
                 # # #### for 8 frames tube
