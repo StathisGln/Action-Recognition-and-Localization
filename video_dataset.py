@@ -226,9 +226,10 @@ class Video(data.Dataset):
         path = self.data[index]['abs_path']
         rois = self.data[index]['rois']
 
+
         n_frames = len(glob.glob(path+ '/*.jpg'))
         # print('n_frames :',n_frames, ' files ', sorted(glob.glob(path+ '/*.jpg')))
-        # print('path :',path,  ' n_frames :', n_frames, 'index :',index)        
+        print('path :',path,  ' n_frames :', n_frames, 'index :',index)        
 
         ## get  random frames from the video 
         time_index = np.random.randint(
@@ -250,10 +251,16 @@ class Video(data.Dataset):
         # print('clip :', clip.shape)
         ## get bboxes and create gt tubes
         rois_Tensor = torch.Tensor(rois)
+        # print('rois_Tensor.shape:',rois_Tensor.shape)
+        # print('rois_Tensor :',rois_Tensor)
+        # rois_Tensor[ += 
         # print('rois.shape :',rois.shape)
         # print('rois :', rois)
         # print('rois_Tensor.shape :',rois_Tensor.shape)
+
         rois_sample_tensor = rois_Tensor[:,np.array(frame_indices),:]
+        rois_sample_tensor[:,:,2] = rois_sample_tensor[:,:,2] + rois_sample_tensor[:,:,0]
+        rois_sample_tensor[:,:,3] = rois_sample_tensor[:,:,3] + rois_sample_tensor[:,:,1]
         rois_sample = rois_sample_tensor.tolist()
 
         rois_fr = [[z+[j] for j,z in enumerate(rois_sample[i])] for i in range(len(rois_sample))]

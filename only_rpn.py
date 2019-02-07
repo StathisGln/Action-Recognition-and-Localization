@@ -15,6 +15,8 @@ from spatial_transforms import (
 from temporal_transforms import LoopPadding
 from region_net import _RPN
 
+torch.set_printoptions(profile="full")
+
 if __name__ == '__main__':
 
     # torch.cuda.device_count()
@@ -58,7 +60,8 @@ if __name__ == '__main__':
 
     clips,  (h, w), gt_tubes, gt_rois = data[1450]
 
-    # print('clips.shape :',clips.shape)
+    print('gt_rois :',gt_rois)
+    print('clips.shape :',clips.shape)
     clips = clips.unsqueeze(0)
     gt_tubes = gt_tubes.unsqueeze(0)
     print('gt_tubes.shape :',gt_tubes.shape)

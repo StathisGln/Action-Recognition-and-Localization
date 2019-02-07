@@ -206,6 +206,8 @@ class _AnchorTargetLayer(nn.Module):
         rois_offset = torch.arange(0, gt_rois_batch_size)*gt_rois.size(1)
         rois_argmax_overlaps = rois_argmax_overlaps + rois_offset.view(gt_rois_batch_size, 1).type_as(rois_argmax_overlaps)
         rois_bbox_targets = _compute_targets_batch(anchors, gt_rois.view(-1,5)[rois_argmax_overlaps.view(-1), :].view(gt_rois_batch_size, -1, 5))
+        # print('rois_bbox_targets :',rois_bbox_targets)
+        # print('rois_bbox_targets.shape :',rois_bbox_targets.shape)
         # print('tube_labels==1 :',tube_labels==1)
         # print('tube_labels==1.shape :',(tube_labels.expand((gt_rois_batch_size,-1))==1).shape)
         rois_bbox_inside_weights[tube_labels.expand((gt_rois_batch_size,-1))==1] = cfg.TRAIN.RPN_BBOX_INSIDE_WEIGHTS[0]
@@ -297,6 +299,10 @@ def _compute_targets_batch(ex_rois, gt_rois):
     """Compute bounding-box regression targets for an image."""
 
     # return bbox_transform_time(ex_rois, gt_rois[:,:, :6])
-    # print('gt_rois[:,:, [0,1,3,4] :',gt_rois[:,:, [0,1,3,4]])
+    # print('gt_rois :',gt_rois)
+    # print('gt_rois.shape :',gt_rois.shape)
+    # print('gt_rois[:,:, :4] :',gt_rois[:,:, :4])
+    # print('gt_rois[:,:, :4] :',gt_rois[:,:, :4].shape)
     # print('ex_rois.shape :',ex_rois.shape)
+    
     return bbox_transform_batch(ex_rois, gt_rois[:,:, :4])

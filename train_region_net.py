@@ -79,7 +79,7 @@ if __name__ == '__main__':
     model = model.cuda()
     model = nn.DataParallel(model, device_ids=None)
 
-    model_data = torch.load('./resnet-34-kinetics.pth')
+    model_data = torch.load('../temporal_localization/resnet-34-kinetics.pth')
     model.load_state_dict(model_data['state_dict'])
     model.eval()
 

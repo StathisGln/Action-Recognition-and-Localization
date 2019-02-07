@@ -73,6 +73,8 @@ def _smooth_l1_loss(bbox_pred, bbox_targets, bbox_inside_weights, bbox_outside_w
 
     # print('-----\nInside _smooth_l1_loss')
     sigma_2 = sigma ** 2
+    # print('bbox_pred :',bbox_pred)
+    # print('bbox_targets :',bbox_targets)
     box_diff = bbox_pred - bbox_targets
     # print('box_diff :', box_diff)
     # print('box_diff.shape :', box_diff.shape)

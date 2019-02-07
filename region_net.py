@@ -74,13 +74,11 @@ class _RPN(nn.Module):
 
         batch_size = base_feat.size(0)
 
-        rpn_conv1 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
-
         # print('rpn_conv1.shape :', rpn_conv1.shape)
 
-        feat_time_16 = F.relu(self.RPN_time_16(rpn_conv1), inplace=True)
-        feat_time_8 = F.relu(self.RPN_time_8(rpn_conv1), inplace=True)
-        feat_time_4 = F.relu(self.RPN_time_4(rpn_conv1), inplace=True)
+        feat_time_16 = F.relu(self.RPN_time_16(base_feat), inplace=True)
+        feat_time_8 = F.relu(self.RPN_time_8(base_feat), inplace=True)
+        feat_time_4 = F.relu(self.RPN_time_4(base_feat), inplace=True)
 
         # get bbox regression for each frame of the tubes
 
@@ -150,10 +148,10 @@ class _RPN(nn.Module):
 
 
             for tube_idx in range(1): # only for 1 video until now
-
+                
                 gt_tube =  gt_boxes[0,tube_idx,:].unsqueeze(0).unsqueeze(0)
                 tube_rois = rois[tube_idx,:,:].unsqueeze(1)
-                # print('tube_rois.shape :,', tube_rois.shape)
+                print('tube_rois.shape :,', tube_rois.shape)
 
                 # ### for 16 frames tube
 
@@ -186,8 +184,9 @@ class _RPN(nn.Module):
                 self.rpn_loss_box_16 =  _smooth_l1_loss(rpn_bbox_frame_16, rpn_bbox_frame_targets_16, rpn_bbox_inside_weights_16,
                                                                    rpn_bbox_outside_weights_16, sigma=3, dim=[1,2,3])
 
-                # print('self.rpn_loss_box_16 :',self.rpn_loss_box_16)
-
+                print('self.rpn_loss_box_16 :',self.rpn_loss_box_16)
+                print('self.rpn_loss_cls_16 :',self.rpn_loss_cls_16)
+                
                 # print('----------\nEKSWWWW 16\n----------')
                 # # #### for 8 frames tube
 
