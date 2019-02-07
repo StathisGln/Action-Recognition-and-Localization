@@ -31,15 +31,11 @@ class _RPN(nn.Module):
 
         ## convolutions with kernels 16,8,4
         self.RPN_time_16 = nn.Conv3d(512, 512, (16,3,3), stride=1, padding=(0,1,1), bias=True).cuda()
-        self.RPN_time_8  = nn.Conv3d(512, 512, (8,3,3),  stride=1, padding=(0,1,1), bias=True).cuda()
-        self.RPN_time_4  = nn.Conv3d(512, 512, (4,3,3),  stride=1, padding=(0,1,1), bias=True).cuda()
 
         # define bg/fg classifcation score layer for each kernel 
         self.nc_score_out = len(self.anchor_scales) * len(self.anchor_ratios) * 2 # 2(bg/fg) * 9 (anchors)
 
         self.RPN_cls_score_16 = nn.Conv2d(512, self.nc_score_out, 1, 1, 0).cuda()
-        self.RPN_cls_score_8  = nn.Conv2d(512, self.nc_score_out, 1, 1, 0).cuda()
-        self.RPN_cls_score_4  = nn.Conv2d(512, self.nc_score_out, 1, 1, 0).cuda()
 
         # define anchor box offset prediction layer
         self.nc_bbox_out = len(self.anchor_scales) * len(self.anchor_ratios) * 4 # 4(coords) * 9 (anchors)
@@ -47,8 +43,6 @@ class _RPN(nn.Module):
         # this convolutions are for each frame regression
         ## it is 4(coords for each frame) * 9 (anchors) * 1/9/13 map
         self.RPN_bbox_frame_pred_16 = nn.Conv2d(512, self.nc_bbox_out * 16, 1, stride=1, padding=0).cuda()
-        self.RPN_bbox_frame_pred_8  = nn.Conv2d(512, self.nc_bbox_out *  8, 1, stride=1, padding=0).cuda()
-        self.RPN_bbox_frame_pred_4  = nn.Conv2d(512, self.nc_bbox_out *  4, 1, stride=1, padding=0).cuda()
 
         ## temporal regression
         # self.RPN_temporal_pred = nn.Conv3d(
@@ -81,8 +75,6 @@ class _RPN(nn.Module):
         # print('rpn_conv1.shape :', rpn_conv1.shape)
 
         feat_time_16 = F.relu(self.RPN_time_16(rpn_conv1), inplace=True)
-        feat_time_8 = F.relu(self.RPN_time_8(rpn_conv1), inplace=True)
-        feat_time_4 = F.relu(self.RPN_time_4(rpn_conv1), inplace=True)
 
         # get bbox regression for each frame of the tubes
 
@@ -93,16 +85,12 @@ class _RPN(nn.Module):
         # ## permute features to the batch_size
 
         feat_time_16 = feat_time_16.permute(0,2,1,3,4).contiguous().view(-1,512,7,7)
-        feat_time_8 = feat_time_8.permute(0,2,1,3,4).contiguous().view(-1,512,7,7)
-        feat_time_4 = feat_time_4.permute(0,2,1,3,4).contiguous().view(-1,512,7,7)
 
         # print('feat_time_16.shape :',feat_time_16.shape)
         # print('feat_time_8.shape :',feat_time_8.shape)
         # print('feat_time_4.shape :',feat_time_4.shape)
 
         rpn_bbox_frame_16 = self.RPN_bbox_frame_pred_16(feat_time_16)
-        rpn_bbox_frame_8 = self.RPN_bbox_frame_pred_8(feat_time_8)
-        rpn_bbox_frame_4 = self.RPN_bbox_frame_pred_4(feat_time_4)
 
         # print('bbox_frame_16.shape :',rpn_bbox_frame_16.shape)
         # print('bbox_frame_8.shape  :',rpn_bbox_frame_8.shape)
@@ -110,34 +98,19 @@ class _RPN(nn.Module):
 
         # get rpn classification score
         rpn_cls_score_16 = self.RPN_cls_score_16(feat_time_16)
-        rpn_cls_score_8 = self.RPN_cls_score_16(feat_time_8)
-        # print('rpn_cls_score_8.shape :',rpn_cls_score_8.shape)
-        rpn_cls_score_4 = self.RPN_cls_score_16(feat_time_4)
 
         rpn_cls_score_reshape_16 = self.reshape(rpn_cls_score_16, 2)
         rpn_cls_prob_reshape_16 = F.softmax(rpn_cls_score_reshape_16, 1)
         rpn_cls_prob_16 = self.reshape(rpn_cls_prob_reshape_16, self.nc_score_out)
 
-        rpn_cls_score_reshape_8 = self.reshape(rpn_cls_score_8, 2)
-        rpn_cls_prob_reshape_8 = F.softmax(rpn_cls_score_reshape_8, 1)
-        rpn_cls_prob_8 = self.reshape(rpn_cls_prob_reshape_8, self.nc_score_out)
-
-        rpn_cls_score_reshape_4 = self.reshape(rpn_cls_score_4, 2)
-        rpn_cls_prob_reshape_4 = F.softmax(rpn_cls_score_reshape_4, 1)
-        rpn_cls_prob_4 = self.reshape(rpn_cls_prob_reshape_4, self.nc_score_out)
 
         # proposal layer
         cfg_key = 'TRAIN' if self.training else 'TEST'
 
         rois_16 = self.RPN_proposal((rpn_cls_prob_16.data, rpn_bbox_frame_16.data,
                                      im_info, cfg_key,16))
-        # rois_8 = self.RPN_proposal((rpn_cls_prob_8.data, rpn_bbox_frame_8.data,
-        #                             im_info, cfg_key,8))
-        # rois_4 = self.RPN_proposal((rpn_cls_prob_4.data, rpn_bbox_frame_4.data,
-        #                             im_info, cfg_key,4))
         # print('rois_16.shape :',rois_16.shape)
-        # print('rois_8.shape :',rois_8.shape)
-        # print('rois_4.shape :',rois_4.shape)
+
         self.rpn_loss_cls_16 = 0
         self.rpn_loss_box_16 = 0
 
@@ -176,7 +149,7 @@ class _RPN(nn.Module):
                 # print('rpn_label_16.shape :',rpn_label_16.shape)
 
                 self.rpn_loss_cls_16 =  F.cross_entropy(rpn_cls_score_16, rpn_label_16)
-
+                print('self.rpn_loss_cls_16 :',self.rpn_loss_cls_16)
                 fg_cnt_16 = torch.sum(rpn_label_16.data.ne(0))
 
                 rpn_bbox_frame_targets_16, rpn_bbox_frame_inside_weights_16, rpn_bbox_frame_outside_weights_16 = rpn_data_16[1:]
@@ -184,10 +157,13 @@ class _RPN(nn.Module):
                 rpn_bbox_inside_weights_16 = Variable(rpn_bbox_frame_inside_weights_16)
                 rpn_bbox_outside_weights_16 = Variable(rpn_bbox_frame_outside_weights_16)
                 rpn_bbox_targets_16 = Variable(rpn_bbox_frame_targets_16)
-
+                # print('rpn_bbox_frame_16.shape ',rpn_bbox_frame_16.shape)
+                # print('rpn_bbox_frame_targets_16.shape ',rpn_bbox_frame_targets_16.shape)
+                # print('rpn_bbox_frame_inside_weights_16.shape :',rpn_bbox_frame_inside_weights_16.shape)
+                # print('rpn_bbox_frame_outside_weights_16.shape :',rpn_bbox_frame_outside_weights_16.shape)
                 self.rpn_loss_box_16 =  _smooth_l1_loss(rpn_bbox_frame_16, rpn_bbox_frame_targets_16, rpn_bbox_inside_weights_16,
                                                                    rpn_bbox_outside_weights_16, sigma=3, dim=[1,2,3])
-
+                # print('self.rpn_loss_box_16 :',self.rpn_loss_box_16)
                 # print('self.rpn_loss_box_16 :',self.rpn_loss_box_16)
 
                 # print('----------\nEKSWWWW 16\n----------')

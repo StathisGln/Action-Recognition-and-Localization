@@ -26,16 +26,17 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    # dataset_folder = '/gpu-data/sgal/UCF-101-frames'
+    dataset_folder = '/gpu-data/sgal/UCF-101-frames'
+    boxes_file = './pyannot.pkl'
     # boxes_file = '/gpu-data/sgal/UCF-bboxes.json'
-    dataset_folder = '../UCF-101-frames'
-    boxes_file = '../UCF-101-frames/UCF-bboxes.json'
+    # dataset_folder = '../UCF-101-frames'
+    # boxes_file = '../UCF-101-frames/UCF-bboxes.json'
 
     sample_size = 112
     sample_duration = 16  # len(images)
 
     batch_size = 1
-    n_threads = 0
+    n_threads = 4
 
     # # get mean
     # mean =  [103.75581543 104.79421473  91.16894564] # jhmdb
@@ -44,12 +45,18 @@ if __name__ == '__main__':
     # generate model
     last_fc = False
 
-    classes = ['basketballdunk', 'basketballshooting','cliffdiving', 'cricketbowling', 'fencing', 'floorgymnastics',
-               'icedancing', 'longjump', 'polevault', 'ropeclimbing', 'salsaspin', 'skateboarding',
-               'skiing', 'skijet', 'surfing', 'biking', 'diving', 'golfswing', 'horseriding',
-               'soccerjuggling', 'tennisswing', 'trampolinejumping', 'volleyballspiking', 'walking']
+    # classes = ['basketballdunk', 'basketballshooting','cliffdiving', 'cricketbowling', 'fencing', 'floorgymnastics',
+    #            'icedancing', 'longjump', 'polevault', 'ropeclimbing', 'salsaspin', 'skateboarding',
+    #            'skiing', 'skijet', 'surfing', 'biking', 'diving', 'golfswing', 'horseriding',
+    #            'soccerjuggling', 'tennisswing', 'trampolinejumping', 'volleyballspiking', 'walking']
 
-    cls2idx = {classes[i]: i for i in range(0, len(classes))}
+    actions = ['Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
+               'Diving','Fencing','FloorGymnastics','GolfSwing','HorseRiding','IceDancing',
+               'LongJump','PoleVault','RopeClimbing','SalsaSpin','SkateBoarding','Skiing',
+               'Skijet','SoccerJuggling','Surfing','TennisSwing','TrampolineJumping',
+               'VolleyballSpiking','WalkingWithDog']
+
+    cls2idx = {actions[i]: i for i in range(0, len(actions))}
 
     spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
                                  ToTensor(),
@@ -62,7 +69,7 @@ if __name__ == '__main__':
     data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
                                               shuffle=True, num_workers=n_threads, pin_memory=True)
 
-    n_classes = len(classes)
+    n_classes = len(actions)
     resnet_shortcut = 'A'
 
     ## ResNet 34 init
@@ -95,7 +102,7 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(params)
 
     # epochs = 20
-    epochs = 1
+    epochs = 10
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch, epochs))
 
@@ -104,15 +111,26 @@ if __name__ == '__main__':
         rpn_model.train()
         model.eval()
 
+        ## 2 rois : 1450
         for step, (    clips,  (h, w), gt_tubes, gt_rois) in enumerate(data_loader):
-            inputs = Variable(clips, requires_grad=True)
+        # (    clips,  (h, w), gt_tubes, gt_rois) = next(data_loader.__iter__())
+        # (    clips,  (h, w), gt_tubes, gt_rois) = data[525]
+            clips = clips.cuda()
+            gt_tubes = gt_tubes.cuda()
+            gt_rois =  gt_rois.squeeze(0).cuda()
+
+            inputs = Variable(clips)
+            # print('gt_tubes.shape :',gt_tubes.shape )
+            # print('gt_rois.shape :',gt_rois.shape)
             outputs = model(inputs)
             print('step {}'.format(step))
             rois, rpn_loss_cls, rpn_loss_box = rpn_model(outputs,
                                                          torch.Tensor(
                                                              [[h, w]] * gt_tubes.size(1)).cuda(),
-                                                         gt_tubes.cuda(), gt_rois, len(gt_tubes))
-            loss = rpn_loss_cls.mean() + rpn_loss_box.mean() 
+                                                         gt_tubes, gt_rois, len(gt_tubes))
+            print('rpn_loss_cls {}, rpn_loss_box {}'.format(rpn_loss_cls, rpn_loss_box))
+            loss = rpn_loss_cls.mean() + rpn_loss_box.mean()
+            print('loss :', loss)
             loss_temp += loss.item()
 
             # backw\ard
@@ -120,8 +138,9 @@ if __name__ == '__main__':
             loss.backward()
             optimizer.step()
 
+        print('loss_temp :',loss_temp)
         print('Train Epoch: {} \tLoss: {:.6f}\t'.format(
             epoch,loss_temp/step))
-        # if ( epoch + 1 ) % 5 == 0:
-        #     torch.save(rpn_model.state_dict(), "rpn_model_{0:03d}.pwf".format(epoch))
-        torch.save(rpn_model.state_dict(), "rpn_model_{0:03d}.pwf".format(epoch))
+        if ( epoch + 1 ) % 5 == 0:
+            torch.save(rpn_model.state_dict(), "rpn_model_{0:03d}.pwf".format(epoch+1))
+        # torch.save(rpn_model.state_dict(), "rpn_model_pre_{0:03d}.pwf".format(epoch))

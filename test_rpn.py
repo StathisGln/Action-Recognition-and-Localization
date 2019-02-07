@@ -14,10 +14,10 @@ from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
 from region_net import _RPN
+import cv2
 
 if __name__ == '__main__':
 
-    # torch.cuda.device_count()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
@@ -28,7 +28,6 @@ if __name__ == '__main__':
     # boxes_file = '../UCF-101-frames/UCF-bboxes.json'
 
     sample_size = 112
-    # sample_duration = 8 #16  # len(images)
     sample_duration = 16  # len(images)
     batch_size = 1
     n_threads = 0
@@ -59,7 +58,7 @@ if __name__ == '__main__':
 
     data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file=boxes_file,
-                 mode='train', classes_idx=cls2idx)
+                 mode='test', classes_idx=cls2idx)
     # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
     #                                           shuffle=True, num_workers=n_threads, pin_memory=True)
 
@@ -71,12 +70,15 @@ if __name__ == '__main__':
     
     # clips,  (h, w), gt_tubes, final_rois = data[906]
     # clips,  (h, w), gt_tubes, final_rois = data[905]
-    clips,  (h, w), gt_tubes, gt_rois = data[0]
+    clips,  (h, w), gt_tubes, gt_rois, path,frame_indices = data[608]
 
+    print('path :',path)
     print('clips.shape :',clips.shape)
     clips = clips.unsqueeze(0)
     gt_tubes = gt_tubes.unsqueeze(0)
     print('gt_rois.shape :',gt_rois.shape)
+    print('gt_rois :', gt_rois)
+
     # print('h :', h, ' w :', w)
     # print('gt_tubes :', gt_tubes)
     # print('final_rois :', final_rois)
@@ -98,6 +100,9 @@ if __name__ == '__main__':
 
     lr = 0.001
     rpn_model = _RPN(256).cuda()
+    rpn_data = torch.load('./rpn_model_000.pwf')
+    rpn_model.load_state_dict(rpn_data)
+    rpn_model.eval()
     # rpn_model = _RPN(512).cuda()
 
     inputs = Variable(clips).cuda()
@@ -107,7 +112,27 @@ if __name__ == '__main__':
     with open('./outputs.json', 'w') as fp:
         json.dump(outputs_list, fp)
     
-    # rois, rpn_loss_cls, rpn_loss_box = rpn_model(outputs,
-    #                                              torch.Tensor(
-    #                                                  [[h, w]] * gt_tubes.size(1)).cuda(),
-    #                                              gt_tubes.cuda(), gt_rois, len(gt_tubes))
+    rois, rpn_loss_cls, rpn_loss_box = rpn_model(outputs,
+                                                 torch.Tensor(
+                                                     [[h, w]] * gt_tubes.size(1)).cuda(),
+                                                 None,None,None)
+    print('h %d w %d ' % (h,w))
+    rois[:,[0,2]] =rois[:,[0,2]].clamp_(min=0, max=w)
+    rois[:,[1,3]] =rois[:,[1,3]].clamp_(min=0, max=h)
+    print('rois.shape :',rois.shape)
+    rois = rois[:,:-1]
+    print('rois.shape :',rois.shape)
+
+    rois = rois.view(300,16,-1).permute(1,0,2).cpu().numpy()
+    print('rois :', rois.tolist())
+    colors = [ (255,0,0), (0,255,0), (0,0,255)]
+    print('rois.shape :',rois.shape)
+    for i in range(len(frame_indices)):
+        img = cv2.imread(os.path.join(path, 'image_{:0>5}.jpg'.format(frame_indices[i])))
+        if img.all():
+            print('Image {} not found '.format(os.path.join(path, 'image_{:0>5}.jpg'.format(frame_indices[i]))))
+            break
+        for j in range(300):
+            cv2.rectangle(img,(int(rois[i,j,0]),int(rois[i,j,1])),(int(rois[i,j,2]),int(rois[i,j,3])), (255,0,0),3)
+        # print('out : ./out/{:0>3}.jpg'.format(i))
+        cv2.imwrite('./out_frames/action_{:0>3}.jpg'.format(i), img)

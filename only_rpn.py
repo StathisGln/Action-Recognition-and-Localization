@@ -21,10 +21,11 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    # dataset_folder = '/gpu-data/sgal/UCF-101-frames'
+    dataset_folder = '/gpu-data/sgal/UCF-101-frames'
+    boxes_file = './pyannot.pkl'
     # boxes_file = '/gpu-data/sgal/UCF-bboxes.json'
-    dataset_folder = '../UCF-101-frames'
-    boxes_file = '../UCF-101-frames/UCF-bboxes.json'
+    # dataset_folder = '../UCF-101-frames'
+    # boxes_file = '../UCF-101-frames/UCF-bboxes.json'
 
     sample_size = 112
     # sample_duration = 8 #16  # len(images)
@@ -55,12 +56,14 @@ if __name__ == '__main__':
                  temporal_transform=temporal_transform, json_file=boxes_file,
                  mode='train', classes_idx=cls2idx)
 
-    clips,  (h, w), gt_tubes, gt_rois = data[0]
+    clips,  (h, w), gt_tubes, gt_rois = data[1450]
 
-    print('clips.shape :',clips.shape)
+    # print('clips.shape :',clips.shape)
     clips = clips.unsqueeze(0)
     gt_tubes = gt_tubes.unsqueeze(0)
+    print('gt_tubes.shape :',gt_tubes.shape)
     print('gt_rois.shape :',gt_rois.shape)
+
 
     clis = clips.cuda()
     gt_tubes = gt_tubes.cuda()
