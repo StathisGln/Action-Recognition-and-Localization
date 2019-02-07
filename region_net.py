@@ -27,12 +27,10 @@ class _RPN(nn.Module):
 
         # # define the convrelu layers processing input feature map
 
-        self.RPN_Conv = nn.Conv3d(self.din, 512, 3, stride=1, padding=1, bias=True).cuda()
-
         ## convolutions with kernels 16,8,4
-        self.RPN_time_16 = nn.Conv3d(512, 512, (16,3,3), stride=1, padding=(0,1,1), bias=True).cuda()
-        self.RPN_time_8  = nn.Conv3d(512, 512, (8,3,3),  stride=1, padding=(0,1,1), bias=True).cuda()
-        self.RPN_time_4  = nn.Conv3d(512, 512, (4,3,3),  stride=1, padding=(0,1,1), bias=True).cuda()
+        self.RPN_time_16 = nn.Conv3d(self.din, 512, (16,3,3), stride=1, padding=(0,1,1), bias=True).cuda()
+        self.RPN_time_8  = nn.Conv3d(self.din, 512, (8,3,3),  stride=1, padding=(0,1,1), bias=True).cuda()
+        self.RPN_time_4  = nn.Conv3d(self.din, 512, (4,3,3),  stride=1, padding=(0,1,1), bias=True).cuda()
 
         # define bg/fg classifcation score layer for each kernel 
         self.nc_score_out = len(self.anchor_scales) * len(self.anchor_ratios) * 2 # 2(bg/fg) * 9 (anchors)

@@ -21,10 +21,11 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    # dataset_folder = '/gpu-data/sgal/UCF-101-frames'
+    dataset_folder = '/gpu-data/sgal/UCF-101-frames'
+    boxes_file = './pyannot.pkl'
     # boxes_file = '/gpu-data/sgal/UCF-bboxes.json'
-    dataset_folder = '../UCF-101-frames'
-    boxes_file = '../UCF-101-frames/UCF-bboxes.json'
+    # dataset_folder = '../UCF-101-frames'
+    # boxes_file = '../UCF-101-frames/UCF-bboxes.json'
 
     sample_size = 112
     # sample_duration = 8 #16  # len(images)
@@ -39,12 +40,17 @@ if __name__ == '__main__':
     # generate model
     last_fc = False
 
-    classes = ['basketballdunk', 'basketballshooting','cliffdiving', 'cricketbowling', 'fencing', 'floorgymnastics',
-               'icedancing', 'longjump', 'polevault', 'ropeclimbing', 'salsaspin', 'skateboarding',
-               'skiing', 'skijet', 'surfing', 'biking', 'diving', 'golfswing', 'horseriding',
-               'soccerjuggling', 'tennisswing', 'trampolinejumping', 'volleyballspiking', 'walking']
+    # classes = ['basketballdunk', 'basketballshooting','cliffdiving', 'cricketbowling', 'fencing', 'floorgymnastics',
+    #            'icedancing', 'longjump', 'polevault', 'ropeclimbing', 'salsaspin', 'skateboarding',
+    #            'skiing', 'skijet', 'surfing', 'biking', 'diving', 'golfswing', 'horseriding',
+    #            'soccerjuggling', 'tennisswing', 'trampolinejumping', 'volleyballspiking', 'walking']
+    actions = ['Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
+               'Diving','Fencing','FloorGymnastics','GolfSwing','HorseRiding','IceDancing',
+               'LongJump','PoleVault','RopeClimbing','SalsaSpin','SkateBoarding','Skiing',
+               'Skijet','SoccerJuggling','Surfing','TennisSwing','TrampolineJumping',
+               'VolleyballSpiking','WalkingWithDog']
 
-    cls2idx = {classes[i]: i for i in range(0, len(classes))}
+    cls2idx = {actions[i]: i for i in range(0, len(actions))}
 
     spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
                                  ToTensor(),
@@ -76,7 +82,8 @@ if __name__ == '__main__':
     # print('final_rois :', final_rois)
     # print('type final_rois: ', type(final_rois))
 
-    n_classes = len(classes)
+    # n_classes = len(classes)
+    n_classes = len(actions)
     resnet_shortcut = 'A'
 
     model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
@@ -93,14 +100,14 @@ if __name__ == '__main__':
     rpn_model = _RPN(256).cuda()
     # rpn_model = _RPN(512).cuda()
 
-    inputs = Variable(clips)
+    inputs = Variable(clips).cuda()
     outputs = model(inputs)
     outputs_list = outputs.tolist()
 
-    # with open('./outputs.json', 'w') as fp:
-    #     json.dump(outputs_list, fp)
+    with open('./outputs.json', 'w') as fp:
+        json.dump(outputs_list, fp)
     
-    rois, rpn_loss_cls, rpn_loss_box = rpn_model(outputs,
-                                                 torch.Tensor(
-                                                     [[h, w]] * gt_tubes.size(1)).cuda(),
-                                                 gt_tubes.cuda(), gt_rois, len(gt_tubes))
+    # rois, rpn_loss_cls, rpn_loss_box = rpn_model(outputs,
+    #                                              torch.Tensor(
+    #                                                  [[h, w]] * gt_tubes.size(1)).cuda(),
+    #                                              gt_tubes.cuda(), gt_rois, len(gt_tubes))
