@@ -1,0 +1,12 @@
+*.pyc
+*.pyx
+/__pycache__/
+/nms/
+/roi_crop/
+/out_frames/
+*~
+*#
+*.json
+*.pth
+*.pwf
+*.pkl
