@@ -34,7 +34,8 @@ class _ProposalLayer(nn.Module):
 
         self._feat_stride = feat_stride
         self._anchors = torch.from_numpy(generate_anchors(scales=np.array(scales), 
-            ratios=np.array(ratios))).float()
+                                                          ratios=np.array(ratios),
+                                                          base_size = 14)).float()
         self._num_anchors = self._anchors.size(0)
 
         # rois blob: holds R regions of interest, each is a 5-tuple

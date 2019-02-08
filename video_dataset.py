@@ -291,6 +291,8 @@ class Video(data.Dataset):
         if num_actions == 0:
             final_rois = torch.zeros(1,16,5)
             gt_tubes = torch.zeros(1,7)
+            # gt_tubes = None
+
         else:
             final_rois = torch.zeros((num_actions,16,5)) # num_actions x [x1,y1,x2,y2,label]
             for i in range(num_actions):

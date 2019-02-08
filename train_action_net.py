@@ -14,7 +14,7 @@ from video_dataset import Video
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
-from region_net import _RPN
+from action_net import ACT_net
 from resize_rpn import resize_rpn, resize_tube
 import pdb
 
@@ -72,24 +72,13 @@ if __name__ == '__main__':
     n_classes = len(actions)
     resnet_shortcut = 'A'
 
-    ## ResNet 34 init
-    model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
-                     sample_size=sample_size, sample_duration=sample_duration,
-                     last_fc=last_fc)
-    model = model.cuda()
-    model = nn.DataParallel(model, device_ids=None)
-
-    model_data = torch.load('../temporal_localization/resnet-34-kinetics.pth')
-    model.load_state_dict(model_data['state_dict'])
-    model.eval()
-
     lr = 0.001
 
-    # Init rpn1
-    rpn_model = _RPN(128).cuda()
+    # Init action_net
+    model = ACT_net(actions).cuda()
 
     params = []
-    for key, value in dict(rpn_model.named_parameters()).items():
+    for key, value in dict(model.named_parameters()).items():
         # print(key, value.requires_grad)
         if value.requires_grad:
             if 'bias' in key:
@@ -108,15 +97,28 @@ if __name__ == '__main__':
 
         loss_temp = 0
         # start = time.time()
-        rpn_model.train()
-        model.eval()
+
 
         ## 2 rois : 1450
         for step, (    clips,  (h, w), gt_tubes, gt_rois) in tqdm(enumerate(data_loader)):
+        # for step, (    clips,  (h, w), gt_tubes, gt_rois) in enumerate(data_loader):
         # (    clips,  (h, w), gt_tubes, gt_rois) = next(data_loader.__iter__())
         # (    clips,  (h, w), gt_tubes, gt_rois) = data[525]
+            # print('&&&&&&&&&&')
             clips = clips.cuda()
-            gt_tubes = gt_tubes.cuda()
+            # print('gt_tubes : ',gt_tubes)
+            # print('gt_rois.shape : ',gt_rois.shape)
+            gt_tubes = gt_tubes[:,0,:].unsqueeze(1).cuda()
+            gt_rois = gt_rois[:,0,:,:].unsqueeze(1).cuda()
+            # print('gt_tubes : ',gt_tubes)
+            # print('gt_tubes.shape : ',gt_tubes.shape)
+            # print('gt_tubes[0,0,5] - gt_tube[0,0,2]+1 :',gt_tubes[0,0,5] - gt_tubes[0,0,2]+1)
+            # print('gt_tubes[0,0,5] - gt_tube[0,0,2]+1 != 16 :',gt_tubes[0,0,5] - gt_tubes[0,0,2]+1 != 16)
+            if (gt_tubes[0,0,5] - gt_tubes[0,0,2]+1 != 16):
+                # print('Only background, continue...')
+                continue
+            
+            # print('gt_tubes :',gt_tubes)
             gt_rois =  gt_rois.squeeze(0).cuda()
             h = h.cuda()
             w = w.cuda()
@@ -129,15 +131,13 @@ if __name__ == '__main__':
             inputs = Variable(clips)
             # print('gt_tubes.shape :',gt_tubes.shape )
             # print('gt_rois.shape :',gt_rois.shape)
-            outputs = model(inputs)
-            # print('step {}'.format(step))
-            rois, rpn_loss_cls, rpn_loss_box = rpn_model(outputs,
-                                                         torch.Tensor(
-                                                             [[sample_size, sample_size]] * gt_tubes.size(1)).cuda(),
-                                                         gt_tubes, gt_rois, len(gt_tubes))
+            rois,  bbox_pred, rpn_loss_cls, \
+            rpn_loss_bbox,  act_loss_bbox, rois_label = model(inputs,
+                                                              torch.Tensor([[h, w]] * gt_tubes.size(1)).cuda(),
+                                                              gt_tubes.cuda(), gt_rois.cuda(),
+                                                              torch.Tensor(len(gt_tubes)).cuda())
 
-            loss = rpn_loss_cls.mean() + rpn_loss_box.mean()
-            # print(' rpn_loss_cls {}, rpn_loss_box {} ==> loss : {}'.format(rpn_loss_cls, rpn_loss_box,loss))
+            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean()
             loss_temp += loss.item()
 
             # backw\ard
@@ -149,5 +149,5 @@ if __name__ == '__main__':
         print('Train Epoch: {} \tLoss: {:.6f}\t'.format(
             epoch,loss_temp/step))
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(rpn_model.state_dict(), "rpn_model_{0:03d}.pwf".format(epoch+1))
-        torch.save(rpn_model.state_dict(), "rpn_model_pre_{0:03d}.pwf".format(epoch))
+            torch.save(model.state_dict(), "action_model_{0:03d}.pwf".format(epoch+1))
+        torch.save(model.state_dict(), "action_model_pre_{0:03d}.pwf".format(epoch))
