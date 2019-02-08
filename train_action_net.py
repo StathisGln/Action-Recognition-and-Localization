@@ -75,7 +75,14 @@ if __name__ == '__main__':
     lr = 0.001
 
     # Init action_net
-    model = ACT_net(actions).cuda()
+    model = ACT_net(actions)
+
+    if torch.cuda.device_count() > 1:
+        print('Using {} GPUs!'.format(torch.cuda.device_count()))
+
+        model = nn.DataParallel(model)
+
+    model.to(device)
 
     params = []
     for key, value in dict(model.named_parameters()).items():
@@ -90,8 +97,8 @@ if __name__ == '__main__':
     lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
 
-    # epochs = 20
-    epochs = 5
+    epochs = 20
+    # epochs = 5
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
 
@@ -100,16 +107,16 @@ if __name__ == '__main__':
 
 
         ## 2 rois : 1450
-        for step, (    clips,  (h, w), gt_tubes, gt_rois) in tqdm(enumerate(data_loader)):
+        for step,     data in enumerate(data_loader):
         # for step, (    clips,  (h, w), gt_tubes, gt_rois) in enumerate(data_loader):
         # (    clips,  (h, w), gt_tubes, gt_rois) = next(data_loader.__iter__())
         # (    clips,  (h, w), gt_tubes, gt_rois) = data[525]
             # print('&&&&&&&&&&')
-            clips = clips.cuda()
+            clips,  (h, w), gt_tubes, gt_rois = data
             # print('gt_tubes : ',gt_tubes)
             # print('gt_rois.shape : ',gt_rois.shape)
-            gt_tubes = gt_tubes[:,0,:].unsqueeze(1).cuda()
-            gt_rois = gt_rois[:,0,:,:].unsqueeze(1).cuda()
+            gt_tubes = gt_tubes[:,0,:].unsqueeze(1).to(device)
+            gt_rois = gt_rois[:,0,:,:].unsqueeze(1).to(device)
             # print('gt_tubes : ',gt_tubes)
             # print('gt_tubes.shape : ',gt_tubes.shape)
             # print('gt_tubes[0,0,5] - gt_tube[0,0,2]+1 :',gt_tubes[0,0,5] - gt_tubes[0,0,2]+1)
@@ -119,23 +126,23 @@ if __name__ == '__main__':
                 continue
             
             # print('gt_tubes :',gt_tubes)
-            gt_rois =  gt_rois.squeeze(0).cuda()
-            h = h.cuda()
-            w = w.cuda()
+            gt_rois =  gt_rois.squeeze(0)
+            h = h.to(device)
+            w = w.to(device)
             # print('gt_tubes.shape :',gt_tubes.shape )
             # print('gt_rois.shape :',gt_rois.shape)
 
-            gt_tubes_r = resize_tube(gt_tubes, h,w,sample_size)
-            gt_rois_r = resize_rpn(gt_rois, h,w,112)
+            # gt_tubes_r = resize_tube(gt_tubes, h,w,sample_size)
+            # gt_rois_r = resize_rpn(gt_rois, h,w,112)
 
-            inputs = Variable(clips)
+            # inputs = Variable(clips)
             # print('gt_tubes.shape :',gt_tubes.shape )
             # print('gt_rois.shape :',gt_rois.shape)
             rois,  bbox_pred, rpn_loss_cls, \
-            rpn_loss_bbox,  act_loss_bbox, rois_label = model(inputs,
-                                                              torch.Tensor([[h, w]] * gt_tubes.size(1)).cuda(),
-                                                              gt_tubes.cuda(), gt_rois.cuda(),
-                                                              torch.Tensor(len(gt_tubes)).cuda())
+            rpn_loss_bbox,  act_loss_bbox, rois_label = model(clips,
+                                                              torch.Tensor([[h, w]] * gt_tubes.size(1)).to(device),
+                                                              gt_tubes, gt_rois,
+                                                              torch.Tensor(len(gt_tubes)).to(device))
 
             loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean()
             loss_temp += loss.item()
