@@ -7,49 +7,85 @@ import json
 import cv2
 
 
-def create_tube(boxes, im_info_3d):
+# def create_tube(boxes, im_info_3d):
+
+#     batch_size = boxes.size(0)
+
+#     print(boxes.shape)
+#     labels = boxes[:, 0, 0, 5].unsqueeze(1).cpu().numpy()
+#     print('labels.shape :', labels.shape)
+#     mins, _ = torch.min(boxes, 1)
+#     print('mins :', mins)
+#     x1 = mins[:, :, 0]
+#     y1 = mins[:, :, 1]
+#     t1 = mins[:, :, 4]
+
+#     maxs, _ = torch.max(boxes, 1)
+#     print('maxs :', maxs)
+#     x2 = maxs[:, :, 2]
+#     y2 = maxs[:, :, 3]
+#     t2 = maxs[:, :, 4]
+#     print('t2 :', t2)
+#     for i in range(batch_size):
+#         x1 = x1.clamp_(min=0, max=im_info_3d[i, 1]-1)
+#         y1 = y1.clamp_(min=0, max=im_info_3d[i, 0]-1)
+#         t1 = t1.clamp_(min=im_info_3d[i, 2], max=im_info_3d[i, 3])
+#         x2 = x2.clamp_(min=0, max=im_info_3d[i, 1]-1)
+#         y2 = y2.clamp_(min=0, max=im_info_3d[i, 0]-1)
+#         t2 = t2.clamp_(min=im_info_3d[i, 2], max=im_info_3d[i, 3])
+#     print('t2 :', t2)
+#     x1 = x1[:].cpu().numpy()
+#     y1 = y1[:].cpu().numpy()
+#     print('t1 :', t1, 'im_info_3d.shape ', im_info_3d.shape)
+#     t1 = (t1 - im_info_3d)[:, 2].unsqueeze(1).cpu().numpy()
+#     print('t1 :', t1)
+#     x2 = x2[:].cpu().numpy()
+#     y2 = y2[:].cpu().numpy()
+#     print('t2 :', t2, 't2  - im_info_3d ', t2 - im_info_3d)
+#     t2 = (t2 - im_info_3d)[:, 2].unsqueeze(1).cpu().numpy()
+#     print('t2 :', t2, 'im_info_3d.shape ', im_info_3d.shape)
+
+#     print('x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(x1, y1, t1, x2, y2, t2))
+#     print('shapes :x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(
+#         x1.shape, y1.shape, t1.shape, x2.shape, y2.shape, t2.shape))
+#     ret = torch.Tensor([x1, y1, t1, x2, y2, t2, labels]
+#                        ).permute(1, 2, 0).cuda()
+#     return ret
+
+
+def create_tube(boxes, im_info_3d, sample_duration):
 
     batch_size = boxes.size(0)
 
-    print(boxes.shape)
-    labels = boxes[:, 0, 0, 5].unsqueeze(1).cpu().numpy()
-    print('labels.shape :', labels.shape)
+    labels = boxes[:, 0, :, 5]
+
     mins, _ = torch.min(boxes, 1)
-    print('mins :', mins)
+
     x1 = mins[:, :, 0]
     y1 = mins[:, :, 1]
     t1 = mins[:, :, 4]
 
     maxs, _ = torch.max(boxes, 1)
-    print('maxs :', maxs)
+
     x2 = maxs[:, :, 2]
     y2 = maxs[:, :, 3]
     t2 = maxs[:, :, 4]
-    print('t2 :', t2)
+
     for i in range(batch_size):
         x1 = x1.clamp_(min=0, max=im_info_3d[i, 1]-1)
         y1 = y1.clamp_(min=0, max=im_info_3d[i, 0]-1)
-        t1 = t1.clamp_(min=im_info_3d[i, 2], max=im_info_3d[i, 3])
+        t1 = t1.clamp_(min=0, max=im_info_3d[i, 3])
         x2 = x2.clamp_(min=0, max=im_info_3d[i, 1]-1)
         y2 = y2.clamp_(min=0, max=im_info_3d[i, 0]-1)
-        t2 = t2.clamp_(min=im_info_3d[i, 2], max=im_info_3d[i, 3])
-    print('t2 :', t2)
-    x1 = x1[:].cpu().numpy()
-    y1 = y1[:].cpu().numpy()
-    print('t1 :', t1, 'im_info_3d.shape ', im_info_3d.shape)
-    t1 = (t1 - im_info_3d)[:, 2].unsqueeze(1).cpu().numpy()
-    print('t1 :', t1)
-    x2 = x2[:].cpu().numpy()
-    y2 = y2[:].cpu().numpy()
-    print('t2 :', t2, 't2  - im_info_3d ', t2 - im_info_3d)
-    t2 = (t2 - im_info_3d)[:, 2].unsqueeze(1).cpu().numpy()
-    print('t2 :', t2, 'im_info_3d.shape ', im_info_3d.shape)
+        t2 = t2.clamp_(min=0, max=im_info_3d[i, 3])
 
-    print('x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(x1, y1, t1, x2, y2, t2))
-    print('shapes :x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(
-        x1.shape, y1.shape, t1.shape, x2.shape, y2.shape, t2.shape))
-    ret = torch.Tensor([x1, y1, t1, x2, y2, t2, labels]
-                       ).permute(1, 2, 0).cuda()
+    # print('x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(x1, y1, t1, x2, y2, t2))
+    # print('shapes :x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(
+        # x1.shape, y1.shape, t1.shape, x2.shape, y2.shape, t2.shape))
+    ret = torch.cat((x1, y1, t1, x2, y2, t2, labels)).permute(1,0)
+                       
+    # print('ret.shape :',ret.shape)
+    # print('ret :',ret)
     return ret
 
 

@@ -141,7 +141,7 @@ class _RPN(nn.Module):
         if self.training:
 
             assert gt_boxes is not None
-
+            # print('gt_boxes.shape :',gt_boxes.shape)
             duration = (gt_boxes[:,:,5] - gt_boxes[:,:,2] + 1).tolist()
 
             # print('duration :',duration)

@@ -117,6 +117,7 @@ if __name__ == '__main__':
             # print('gt_rois.shape : ',gt_rois.shape)
             gt_tubes = gt_tubes[:,0,:].unsqueeze(1).to(device)
             gt_rois = gt_rois[:,0,:,:].unsqueeze(1).to(device)
+
             # print('gt_tubes : ',gt_tubes)
             # print('gt_tubes.shape : ',gt_tubes.shape)
             # print('gt_tubes[0,0,5] - gt_tube[0,0,2]+1 :',gt_tubes[0,0,5] - gt_tubes[0,0,2]+1)
@@ -138,6 +139,12 @@ if __name__ == '__main__':
             # inputs = Variable(clips)
             # print('gt_tubes.shape :',gt_tubes.shape )
             # print('gt_rois.shape :',gt_rois.shape)
+            print('gt_rois.shape : ',gt_rois.shape)
+            print('gt_rois : ',gt_rois)
+            print('gt_tubes.shape :',gt_tubes.shape)
+            print('gt_tubes :',gt_tubes)
+            print('torch.Tensor([[h, w]] * gt_tubes.size(1)).to(device).shape :',torch.Tensor([[h, w]] * gt_tubes.size(1)).to(device))
+
             rois,  bbox_pred, rpn_loss_cls, \
             rpn_loss_bbox,  act_loss_bbox, rois_label = model(clips,
                                                               torch.Tensor([[h, w]] * gt_tubes.size(1)).to(device),

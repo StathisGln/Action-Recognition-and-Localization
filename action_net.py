@@ -99,10 +99,11 @@ class ACT_net(nn.Module):
         n_rois = pooled_feat.size(0)
         # print('n_rois :',n_rois)
         # print('pooled_feat.view(n_rois,-1).shape :',pooled_feat.view(n_rois,-1).shape)
-        # compute bbox offset
+        # # compute bbox offset
         bbox_pred = self.act_bbox_pred(pooled_feat.view(n_rois,-1))
         if self.training:
-            # select the corresponding columns according to roi labels
+            # # select the corresponding columns according to roi labels
+            # print('bbox_pred.shape :',bbox_pred.shape)
             bbox_pred_view = bbox_pred.view(bbox_pred.size(0), int(bbox_pred.size(1) / 4), 4)
             bbox_pred_select = torch.gather(bbox_pred_view, 1, rois_label.view(rois_label.size(0), 1, 1).expand(rois_label.size(0), 1, 4))
             bbox_pred = bbox_pred_select.squeeze(1)
@@ -164,7 +165,7 @@ class ACT_net(nn.Module):
 
         self.act_top = nn.Sequential(model.module.layer4)
 
-        self.act_bbox_pred = nn.Linear(2048, 65 * self.n_classes)
+        self.act_bbox_pred = nn.Linear(2048, self.time_dim * 4 * self.n_classes)
 
         # Fix blocks
         for p in self.act_base[0].parameters(): p.requires_grad=False

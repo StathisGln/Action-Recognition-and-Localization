@@ -232,11 +232,17 @@ class Video(data.Dataset):
         print('path :',path,  ' n_frames :', n_frames, 'index :',index)        
 
         ## get  random frames from the video 
-        time_index = np.random.randint(
-            0, n_frames - self.sample_duration - 1) + 1
+        if n_frames < 17:
+            time_index  = 0
+            frame_indices = list(
+            range(time_index, n_frames))  # get the corresponding frames
+        else:
+            time_index = np.random.randint(
+                0, n_frames - self.sample_duration - 1) + 1
+            frame_indices = list(
+                range(time_index, time_index + self.sample_duration))  # get the corresponding frames
 
-        frame_indices = list(
-            range(time_index, time_index + self.sample_duration))  # get the corresponding frames
+
         # print('frame_indices :', frame_indices)
 
         if self.temporal_transform is not None:
@@ -256,6 +262,7 @@ class Video(data.Dataset):
         # print('rois_Tensor :',rois_Tensor)
         # rois_Tensor[ += 
         # print('rois.shape :',rois.shape)
+
         # print('rois :', rois)
         # print('rois_Tensor.shape :',rois_Tensor.shape)
 
@@ -433,3 +440,41 @@ class Pics(data.Dataset):
 
     def __len__(self):
         return len(self.data)
+
+if __name__ == "__main__":
+
+    classes = ['brush_hair', 'clap', 'golf', 'kick_ball', 'pour',
+               'push', 'shoot_ball', 'shoot_gun', 'stand', 'throw', 'wave',
+               'catch','climb_stairs', 'jump', 'pick', 'pullup', 'run', 'shoot_bow', 'sit',
+               'swing_baseball', 'walk'
+               ]
+    cls2idx = { classes[i] : i for i in range(0, len(classes)) }
+
+
+    dataset_folder = '/gpu-data/sgal/JHMDB-act-detector-frames'
+    splt_txt_path =  '/gpu-data/sgal/splits'
+    boxes_file = './poses.json'
+    sample_size = 112
+    sample_duration = 16 #len(images)
+
+    batch_size = 1
+    n_threads = 2
+    
+    mean = [103.29825354, 104.63845484,  90.79830328] # jhmdb from .png
+
+    spatial_transform = Compose([Scale(sample_size), # [Resize(sample_size),
+                                 # CenterCrop(sample_size),
+                                 ToTensor(),
+                                 Normalize(mean, [1, 1, 1])])
+    temporal_transform = LoopPadding(sample_duration)
+
+    
+    
+
+
+    data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
+                 temporal_transform=temporal_transform, json_file = boxes_file,
+                 split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
+    data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
+                                              shuffle=True, num_workers=n_threads, pin_memory=True)
+    clips, (h,w), gt_tubes, gt_bboxes = next(data_loader.__iter__())
