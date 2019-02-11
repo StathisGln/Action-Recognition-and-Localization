@@ -10,7 +10,8 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from resnet_3D import resnet34
-from video_dataset import Video
+from jhmdb_dataset import Video
+
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
@@ -26,56 +27,49 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_folder = '/gpu-data/sgal/UCF-101-frames'
-    boxes_file = './pyannot.pkl'
-    # boxes_file = '/gpu-data/sgal/UCF-bboxes.json'
-    # dataset_folder = '../UCF-101-frames'
-    # boxes_file = '../UCF-101-frames/UCF-bboxes.json'
+    dataset_folder = '/gpu-data/sgal/JHMDB-act-detector-frames'
+    splt_txt_path =  '/gpu-data/sgal/splits'
+    boxes_file = './poses.json'
 
     sample_size = 112
     sample_duration = 16  # len(images)
 
-    batch_size = 8
+    batch_size = 4
     n_threads = 2
 
     # # get mean
     # mean =  [103.75581543 104.79421473  91.16894564] # jhmdb
-    # mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
-    mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
+    mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
+    # mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
     # generate model
-    last_fc = False
 
-    # classes = ['basketballdunk', 'basketballshooting','cliffdiving', 'cricketbowling', 'fencing', 'floorgymnastics',
-    #            'icedancing', 'longjump', 'polevault', 'ropeclimbing', 'salsaspin', 'skateboarding',
-    #            'skiing', 'skijet', 'surfing', 'biking', 'diving', 'golfswing', 'horseriding',
-    #            'soccerjuggling', 'tennisswing', 'trampolinejumping', 'volleyballspiking', 'walking']
+    classes = ['brush_hair', 'clap', 'golf', 'kick_ball', 'pour',
+               'push', 'shoot_ball', 'shoot_gun', 'stand', 'throw', 'wave',
+               'catch','climb_stairs', 'jump', 'pick', 'pullup', 'run', 'shoot_bow', 'sit',
+               'swing_baseball', 'walk' ]
 
-    actions = ['Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
-               'Diving','Fencing','FloorGymnastics','GolfSwing','HorseRiding','IceDancing',
-               'LongJump','PoleVault','RopeClimbing','SalsaSpin','SkateBoarding','Skiing',
-               'Skijet','SoccerJuggling','Surfing','TennisSwing','TrampolineJumping',
-               'VolleyballSpiking','WalkingWithDog']
 
-    cls2idx = {actions[i]: i for i in range(0, len(actions))}
+    cls2idx = {classes[i]: i for i in range(0, len(classes))}
 
     spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
                                  ToTensor(),
                                  Normalize(mean, [1, 1, 1])])
     temporal_transform = LoopPadding(sample_duration)
 
+
     data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
-                 temporal_transform=temporal_transform, json_file=boxes_file,
-                 mode='train', classes_idx=cls2idx)
+                 temporal_transform=temporal_transform, json_file = boxes_file,
+                 split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
                                               shuffle=True, num_workers=n_threads, pin_memory=True)
 
-    n_classes = len(actions)
+    n_classes = len(classes)
     resnet_shortcut = 'A'
 
     lr = 0.001
 
     # Init action_net
-    model = ACT_net(actions)
+    model = ACT_net(classes)
 
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
@@ -98,32 +92,32 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(params)
 
     epochs = 20
-    # epochs = 5
+    #epochs = 5
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
 
         loss_temp = 0
         # start = time.time()
 
+
         ## 2 rois : 1450
-        for step,     data in enumerate(data_loader):
+        for step, data  in enumerate(data_loader):
             # print('&&&&&&&&&&')
-            # clips,  h, w, gt_tubes, gt_rois = data
-            print(step)
-            clips,  h, w, gt_tubes, n_acts = data
-            # print('n_acts :', n_acts)
-            # print('gt_tubes : ',gt_tubes.shape)
 
-            im_info = torch.stack((h.float(),w.float(),torch.Tensor([sample_duration] * batch_size).float()),dim=1).to(device)
+            clips,  (h, w), gt_tubes, gt_rois = data
+
+            h = h.to(device)
+            w = w.to(device)
             gt_tubes = gt_tubes.to(device)
-            n_acts = n_acts.to(device)
 
+            gt_tubes_r = resize_tube(gt_tubes, h,w,sample_size).to(device)
+
+            print('gt_tubes_r.shape :',gt_tubes_r.shape )
             rois,  bbox_pred, rpn_loss_cls, \
             rpn_loss_bbox,  act_loss_bbox, rois_label = model(clips,
-                                                              im_info,
-                                                              gt_tubes, None,
-                                                              n_acts)
-
+                                                              torch.Tensor([[sample_size, sample_size]] * gt_tubes_r.size(1)).to(device),
+                                                              gt_tubes_r, None,
+                                                              torch.Tensor(len(gt_tubes)).to(device))
             loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean()
             loss_temp += loss.item()
 
@@ -136,5 +130,6 @@ if __name__ == '__main__':
         print('Train Epoch: {} \tLoss: {:.6f}\t'.format(
             epoch,loss_temp/step))
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(model.state_dict(), "action_model_{0:03d}.pwf".format(epoch+1))
-        torch.save(model.state_dict(), "action_model_pre_{0:03d}.pwf".format(epoch))
+            torch.save(model.state_dict(), "jmdb_model_{0:03d}.pwf".format(epoch+1))
+        # torch.save(model.state_dict(), "jmdb_model_pre_{0:03d}.pwf".format(epoch))
+

@@ -36,15 +36,20 @@ class _ProposalTargetLayer(nn.Module):
         self.BBOX_NORMALIZE_STDS  = self.BBOX_NORMALIZE_STDS.type_as(gt_boxes)
         self.BBOX_INSIDE_WEIGHTS  = self.BBOX_INSIDE_WEIGHTS.type_as(gt_boxes)
 
+        num_boxes = num_boxes.long()
         gt_boxes_append = gt_boxes.new(gt_boxes.size()).zero_()
         # print('gt_boxes_append.shape :',gt_boxes_append.shape)
         # print('gt_boxes :',gt_boxes)
+
         # print('gt_boxes.shape :',gt_boxes.shape)
         # print('all_rois[0] :',all_rois[0])
         # print('all_rois.shape :',all_rois.shape)
         gt_boxes_append[:,:,1:] = gt_boxes[:,:,:6] # in pos 0 is the score
-        
+
+        num_rois_pre = all_rois.size(1)
         # print('all_rois.shape :',all_rois.shape )
+        # print('nu_rois_pre :', num_rois_pre )
+
         # print('gt_boxes_append.shape :',gt_boxes_append.shape)
         # print('gt_boxes_append :',gt_boxes_append)
         # Include ground-truth boxes in the set of candidate rois
@@ -58,7 +63,7 @@ class _ProposalTargetLayer(nn.Module):
 
         labels, rois, bbox_targets, bbox_inside_weights = self._sample_rois_pytorch(
             all_rois, gt_boxes, fg_rois_per_image,
-            rois_per_image, self._num_classes)
+            rois_per_image, self._num_classes, num_boxes, num_rois_pre)
 
         bbox_outside_weights = (bbox_inside_weights > 0).float()
 
@@ -123,7 +128,7 @@ class _ProposalTargetLayer(nn.Module):
         return targets
 
 
-    def _sample_rois_pytorch(self, all_rois, gt_boxes, fg_rois_per_image, rois_per_image, num_classes):
+    def _sample_rois_pytorch(self, all_rois, gt_boxes, fg_rois_per_image, rois_per_image, num_classes,num_boxes, num_rois_pre):
         """Generate a random sample of RoIs comprising foreground and background
         examples.
         """
@@ -151,19 +156,23 @@ class _ProposalTargetLayer(nn.Module):
         # foreground RoIs
 
         for i in range(batch_size):
-            # print('max_overlaps :',max_overlaps)
-            fg_inds = torch.nonzero(max_overlaps[i] >= cfg.TRAIN.FG_THRESH).view(-1)
+            gt_boxes_single = gt_boxes[i,:num_boxes[i]]
+            # print(gt_boxes_single.shape)
+            # print('gt_boxes[:num_boxes[i]] :',gt_boxes_single)
+            if gt_boxes_single.cpu().tolist() == [[0,0,0,0,0,0,0,]]:
+                print('no rois')
+                continue
+
+            max_overlaps_single =max_overlaps[i][:num_boxes[i]+num_rois_pre]
+            # print('max_overlaps_single.shape :',max_overlaps_single.shape)
+            fg_inds = torch.nonzero(max_overlaps_single >= cfg.TRAIN.FG_THRESH).view(-1)
             fg_num_rois = fg_inds.numel()
 
             # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
-            bg_inds = torch.nonzero((max_overlaps[i] < cfg.TRAIN.BG_THRESH_HI) &
-                                    (max_overlaps[i] >= cfg.TRAIN.BG_THRESH_LO)).view(-1)
+            bg_inds = torch.nonzero((max_overlaps_single < cfg.TRAIN.BG_THRESH_HI) &
+                                    (max_overlaps_single >= cfg.TRAIN.BG_THRESH_LO)).view(-1)
             bg_num_rois = bg_inds.numel()
 
-            ## If no action
-            if gt_boxes[i].cpu().tolist() == [[0,0,0,0,0,0,0,]]:
-                print('no rois')
-                continue
             
             if fg_num_rois > 0 and bg_num_rois > 0:
                 # sampling fg

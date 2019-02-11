@@ -131,11 +131,14 @@ def make_correct_ucf_dataset(dataset_path,  boxes_file, mode='train'):
 
     assert classes != (None), 'classes must not be None, Check dataset path'
 
+    max_sim_actions = -1
     for vid, values in boxes_data.items():
         name = vid.split('/')[-1]
         n_frames = values['numf']
         annots = values['annotations']
         n_actions = len(annots)
+        if n_actions > max_sim_actions:
+            max_sim_actions = n_actions
         rois = np.zeros((n_actions,n_frames,5))
         rois[:,:,4] = -1 
         cls = values['label']
@@ -160,7 +163,8 @@ def make_correct_ucf_dataset(dataset_path,  boxes_file, mode='train'):
         dataset.append(video_sample)
 
     print('len(dataset) :',len(dataset))
-    return dataset
+    print('max_sim_actions :',max_sim_actions)
+    return dataset, max_sim_actions
 
 
 def make_dataset(dataset_path,  boxes_file, mode='train'):
@@ -204,7 +208,7 @@ class Video(data.Dataset):
                  sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None):
 
         self.mode = mode
-        self.data = make_correct_ucf_dataset(
+        self.data, self.max_sim_actions = make_correct_ucf_dataset(
                     video_path, json_file, self.mode)
 
         self.spatial_transform = spatial_transform
@@ -226,6 +230,7 @@ class Video(data.Dataset):
         path = self.data[index]['abs_path']
         rois = self.data[index]['rois']
 
+        
         n_frames = len(glob.glob(path+ '/*.jpg'))
         # print('n_frames :',n_frames, ' files ', sorted(glob.glob(path+ '/*.jpg')))
         # print('path :',path,  ' n_frames :', n_frames, 'index :',index)        
@@ -284,20 +289,31 @@ class Video(data.Dataset):
 
 
         if num_actions == 0:
-            # final_rois = torch.zeros(1,16,5)
+            final_rois = torch.zeros(1,16,5)
             gt_tubes = torch.zeros(1,7)
         else:
-            # final_rois = torch.zeros((num_actions,16,5)) # num_actions x [x1,y1,x2,y2,label]
-            # for i in range(num_actions):
-            #     # for every action:
-            #     for j in range(len(final_rois_list[i])):
-            #         # for every rois
-            #         # print('final_rois_list[i][j][:5] :',final_rois_list[i][j][:5])
-            #         pos = final_rois_list[i][j][5]
-            #         final_rois[i,pos,:]= torch.Tensor(final_rois_list[i][j][:5])
+            final_rois = torch.zeros((num_actions,16,5)) # num_actions x [x1,y1,x2,y2,label]
+            for i in range(num_actions):
+                # for every action:
+                for j in range(len(final_rois_list[i])):
+                    # for every rois
+                    # print('final_rois_list[i][j][:5] :',final_rois_list[i][j][:5])
+                    pos = final_rois_list[i][j][5]
+                    final_rois[i,pos,:]= torch.Tensor(final_rois_list[i][j][:5])
 
             # # print('final_rois :',final_rois)
-            gt_tubes = create_tube_list(rois_gp,[w,h], self.sample_duration)[0].unsqueeze(0) ## problem when having 2 actions simultaneously
+            gt_tubes = create_tube_list(rois_gp,[w,h], self.sample_duration) ## problem when having 2 actions simultaneously
+
+
+        ret_tubes = torch.zeros(self.max_sim_actions,7)
+        n_acts = gt_tubes.size(0)
+        ret_tubes[:n_acts,:] = gt_tubes
+
+        # print('ret_tubes :',ret_tubes)
+        # print('ret_tubes.shape :',ret_tubes.shape)
+        ## f_rois
+        f_rois = torch.zeros(self.max_sim_actions,self.sample_duration,5)
+        f_rois[:n_acts,:,:] = final_rois[:n_acts]
 
         # print('gt_tubes :',gt_tubes)
         # print(type(gt_tubes))
@@ -308,7 +324,7 @@ class Video(data.Dataset):
             # print('h {} w{}'.format(h,w))
             # print('gt_tubes :',gt_tubes)
             # return clip,  h, w,  gt_tubes, final_rois
-            return clip,  h, w,  gt_tubes
+            return clip,  h, w,  ret_tubes, n_acts
         else:
             # return clip,  (h, w),  gt_tubes, final_rois,  self.data[index]['abs_path']
             return clip,  h, w,  gt_tubes, final_rois,  self.data[index]['abs_path'], frame_indices

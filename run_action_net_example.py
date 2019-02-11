@@ -36,7 +36,7 @@ if __name__ == '__main__':
     sample_duration = 16  # len(images)
 
     batch_size = 1
-    n_threads = 4
+    n_threads = 0
 
     # # get mean
     # mean =  [103.75581543 104.79421473  91.16894564] # jhmdb
@@ -76,12 +76,35 @@ if __name__ == '__main__':
 
     model.to(device)
 
-    clips,  (h, w), gt_tubes, gt_rois = data[1451]
-    clips = clips.unsqueeze(0)
-    gt_tubes = gt_tubes.unsqueeze(0).to(device)
-    gt_rois = gt_rois.unsqueeze(0).to(device)
+    clips, h, w, gt_tubes, n_actions = data[1451]
+    clips2, h2, w2, gt_tubes2, n_actions2 = data[1450]
 
-    # print('gt_tubes.shape :',gt_tubes.shape )
+
+    # clips = clips.unsqueeze(0)
+    # gt_tubes = gt_tubes.unsqueeze(0).to(device)
+    # n_actions = torch.Tensor(n_actions).unsqueeze(0).to(device)
+    # # gt_rois = gt_rois.unsqueeze(0).to(device)
+
+    # im_info = torch.Tensor([h,w,sample_duration]).unsqueeze(0).to(device)
+
+    clips = torch.stack((clips,clips),dim=0).to(device)
+    h = torch.Tensor((h,h2)).to(device)
+    w = torch.Tensor((w,w2)).to(device)
+
+    gt_tubes = torch.stack((gt_tubes,gt_tubes2),dim=0).to(device)
+    n_actions = torch.Tensor((n_actions,n_actions2)).to(device)
+
+    im_info = torch.stack((h.float(),w.float(),torch.Tensor([sample_duration] * 2).cuda().float()),dim=1).to(device)
+
+    print('gt_tubes.shape :',gt_tubes.shape )
+    print('gt_tubes :',gt_tubes )
+
+    print('im_info :',im_info)
+    print('im_info.shape :',im_info.shape)
+
+    print('n_actions :',n_actions)
+    print('n_actions.shape :',n_actions.shape)
+
     # print('gt_rois.shape :',gt_rois.shape)
 
     # gt_tubes_r = resize_tube(gt_tubes, h,w,sample_size)
@@ -89,12 +112,12 @@ if __name__ == '__main__':
 
     # inputs = Variable(clips)
     print('gt_tubes.shape :',gt_tubes.shape )
-    print('gt_rois.shape :',gt_rois.shape)
+    # print('gt_rois.shape :',gt_rois.shape)
     rois,  bbox_pred, rpn_loss_cls, \
     rpn_loss_bbox,  act_loss_bbox, rois_label = model(clips,
-                                                      torch.Tensor([[h, w, sample_duration]] * gt_tubes.size(1)).to(device),
-                                                      gt_tubes, gt_rois,
-                                                      torch.Tensor(len(gt_tubes)).to(device))
+                                                      im_info,
+                                                      gt_tubes, None,
+                                                      n_actions)
     print('**********VGIKE**********')
     print('rois.shape :',rois.shape)
 
