@@ -71,7 +71,7 @@ class _ProposalLayer(nn.Module):
         im_info = input[2]
         cfg_key = input[3]
         time_dim = input[4]
-        print('bbox_frame.shape :',bbox_frame.shape)
+        # print('bbox_frame.shape :',bbox_frame.shape)
 
         batch_size = bbox_frame.size(0)
 
@@ -94,7 +94,7 @@ class _ProposalLayer(nn.Module):
         # Create anchors #
         ##################
 
-        print('batch_size :', batch_size)
+        # print('batch_size :', batch_size)
         feat_height, feat_width,  feat_time= scores.size(2), scores.size(3), scores.size(4) # (batch_size, 512/256, 7,7, 16/8)
         shift_x = np.arange(0, feat_width) * self._feat_stride
         shift_y = np.arange(0, feat_height) * self._feat_stride
@@ -103,7 +103,7 @@ class _ProposalLayer(nn.Module):
         shifts = torch.from_numpy(np.vstack((shift_x.ravel(), shift_y.ravel(), shift_z.ravel(),
                                              shift_x.ravel(), shift_y.ravel(), shift_z.ravel())).transpose())
         shifts = shifts.contiguous().type_as(scores).float()
-        print('shifts.shape :',shifts.shape)
+        # print('shifts.shape :',shifts.shape)
         # print('shift_x {} shift_y {} shift_z {}'.format(shift_x , shift_y ,shift_z ))
         A = self._num_anchors
         K = shifts.size(0)
@@ -112,26 +112,26 @@ class _ProposalLayer(nn.Module):
 
         anchors = self._anchors.view(1, A, 6) + shifts.view(K, 1, 6)
         anchors = anchors.view(1, K * A, 6)
-        print('anchors.shape :', anchors.shape)
+        # print('anchors.shape :', anchors.shape)
         anchors = anchors.expand(batch_size, K * A, 6)
 
-        print('anchors.shape :', anchors.shape)
+        # print('anchors.shape :', anchors.shape)
 
         # Transpose and reshape predicted bbox transformations to get them
         # into the same order as the anchors:
-        print('bbox_frame.shape :', bbox_frame.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
+        # print('bbox_frame.shape :', bbox_frame.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
 
         bbox_frame = bbox_frame.permute(0, 2, 3, 4, 1).contiguous()
-        print('bbox_frame.shape :', bbox_frame.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
+        # print('bbox_frame.shape :', bbox_frame.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
         bbox_frame = bbox_frame.view(batch_size, -1, 6)
-        print('bbox_frame.shape :', bbox_frame.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
+        # print('bbox_frame.shape :', bbox_frame.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
 
         # Same story for the scores:
-        print('scores.shape :', scores.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
+        # print('scores.shape :', scores.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
         scores = scores.permute(0, 2, 3, 4, 1).contiguous()
-        print('scores.shape :', scores.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
+        # print('scores.shape :', scores.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
         scores = scores.view(batch_size, -1)
-        print('scores.shape :', scores.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
+        # print('scores.shape :', scores.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
         ###############################
         # Until now, everything is ok #
         ###############################
@@ -149,8 +149,8 @@ class _ProposalLayer(nn.Module):
 
         proposals = clip_boxes_3d(proposals, torch.Tensor(im_info.tolist() * 1).cuda(), 1)
 
-        print('proposals.shape :',proposals.shape)
-        print('proposals :',proposals)
+        # print('proposals.shape :',proposals.shape)
+        # print('proposals :',proposals)
 
         # assign the score to 0 if it's non keep.
         # keep = self._filter_boxes(proposals, min_size * im_info[:, 2])
@@ -172,7 +172,7 @@ class _ProposalLayer(nn.Module):
         _, order = torch.sort(scores, 0, True)
         
         output = scores.new(batch_size, post_nms_topN, 7).zero_()
-        print('output.shape :',output.shape)
+        # print('output.shape :',output.shape)
         for i in range(batch_size):
             # # 3. remove predicted boxes with either height or width < threshold
             # # (NOTE: convert min_size to input image scale stored in im_info[2])
@@ -201,13 +201,13 @@ class _ProposalLayer(nn.Module):
                 keep_idx_i = keep_idx_i[:post_nms_topN]
             proposals_single = proposals_single[keep_idx_i, :]
             scores_single = scores_single[keep_idx_i, :]
-            print('scores_single.shape :',scores_single.shape)
+            # print('scores_single.shape :',scores_single.shape)
             # padding 0 at the end.
             num_proposal = proposals_single.size(0)
             output[i,:num_proposal,0] = scores_single[:,0]
             output[i,:num_proposal,1:] = proposals_single
 
-        print('output.shape :',output.shape)
+        # print('output.shape :',output.shape)
         return output
 
     def backward(self, top, propagate_down, bottom):

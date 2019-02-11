@@ -254,6 +254,10 @@ class Video(data.Dataset):
         # print('rois :', rois)
         # print('rois_Tensor.shape :',rois_Tensor.shape)
         rois_sample_tensor = rois_Tensor[:,np.array(frame_indices),:]
+        # print('rois_sample_tensor :',rois_sample_tensor)
+        # print('rois_sample_tensor.shape :',rois_sample_tensor.shape)
+        rois_sample_tensor[:,:,2] = rois_sample_tensor[:,:,0] + rois_sample_tensor[:,:,2]
+        rois_sample_tensor[:,:,3] = rois_sample_tensor[:,:,1] + rois_sample_tensor[:,:,3]
         rois_sample = rois_sample_tensor.tolist()
 
         rois_fr = [[z+[j] for j,z in enumerate(rois_sample[i])] for i in range(len(rois_sample))]
@@ -280,29 +284,34 @@ class Video(data.Dataset):
 
 
         if num_actions == 0:
-            final_rois = torch.zeros(1,16,5)
+            # final_rois = torch.zeros(1,16,5)
             gt_tubes = torch.zeros(1,7)
         else:
-            final_rois = torch.zeros((num_actions,16,5)) # num_actions x [x1,y1,x2,y2,label]
-            for i in range(num_actions):
-                # for every action:
-                for j in range(len(final_rois_list[i])):
-                    # for every rois
-                    # print('final_rois_list[i][j][:5] :',final_rois_list[i][j][:5])
-                    pos = final_rois_list[i][j][5]
-                    final_rois[i,pos,:]= torch.Tensor(final_rois_list[i][j][:5])
+            # final_rois = torch.zeros((num_actions,16,5)) # num_actions x [x1,y1,x2,y2,label]
+            # for i in range(num_actions):
+            #     # for every action:
+            #     for j in range(len(final_rois_list[i])):
+            #         # for every rois
+            #         # print('final_rois_list[i][j][:5] :',final_rois_list[i][j][:5])
+            #         pos = final_rois_list[i][j][5]
+            #         final_rois[i,pos,:]= torch.Tensor(final_rois_list[i][j][:5])
 
-            # print('final_rois :',final_rois)
-            gt_tubes = create_tube_list(rois_gp,[w,h], self.sample_duration)
+            # # print('final_rois :',final_rois)
+            gt_tubes = create_tube_list(rois_gp,[w,h], self.sample_duration)[0].unsqueeze(0) ## problem when having 2 actions simultaneously
 
         # print('gt_tubes :',gt_tubes)
+        # print(type(gt_tubes))
         # print('gt_tubes.shape :',gt_tubes.shape)
         # print('final_rois.shape :', final_rois.shape)
         if self.mode == 'train':
-            return clip,  (h, w),  gt_tubes, final_rois
+            # print('clips.shape :',clip.shape)
+            # print('h {} w{}'.format(h,w))
+            # print('gt_tubes :',gt_tubes)
+            # return clip,  h, w,  gt_tubes, final_rois
+            return clip,  h, w,  gt_tubes
         else:
             # return clip,  (h, w),  gt_tubes, final_rois,  self.data[index]['abs_path']
-            return clip,  (h, w),  gt_tubes, final_rois,  self.data[index]['abs_path'], frame_indices
+            return clip,  h, w,  gt_tubes, final_rois,  self.data[index]['abs_path'], frame_indices
 
     def __len__(self):
         return len(self.data)

@@ -15,9 +15,9 @@ import numpy as np
 import numpy.random as npr
 
 from config import cfg
-from generate_anchors import generate_anchors  
+from generate_3d_anchors import generate_anchors
 # from bbox_transform import clip_boxes, bbox_overlaps_batch, bbox_overlaps_time, bbox_transform_batch
-from bbox_transform import clip_boxes, bbox_overlaps_time, bbox_transform_batch, bbox_overlaps_rois
+from bbox_transform import clip_boxes, bbox_overlaps_time, bbox_transform_batch_3d, bbox_overlaps_batch_3d
 import pdb
 
 DEBUG = False
@@ -34,14 +34,16 @@ class _AnchorTargetLayer(nn.Module):
         Assign anchors to ground-truth targets. Produces anchor classification
         labels and bounding-box regression targets.
     """
-    def __init__(self, feat_stride, scales, ratios):
+    def __init__(self, feat_stride, scales, ratios, anchor_duration):
         super(_AnchorTargetLayer, self).__init__()
 
         self._feat_stride = feat_stride
         self._scales = scales
         anchor_scales = scales
-        self._anchors = torch.from_numpy(generate_anchors(scales=np.array(anchor_scales), ratios=np.array(ratios))).float()
+        self.anchor_duration = anchor_duration
+        self._anchors = torch.from_numpy(generate_anchors(scales=np.array(anchor_scales), ratios=np.array(ratios), time_dim=anchor_duration)).float()
         self._num_anchors = self._anchors.size(0)
+
 
         # allow boxes to sit over the edge by a small amount
         self._allowed_border = 0  # default is 0
@@ -65,23 +67,18 @@ class _AnchorTargetLayer(nn.Module):
 
         ### Not sure about that
         # print('$$$$$$$$$$')
+        batch_size = gt_tubes.size(0)
+
         # print('time_limit :',time_limit)
-        height, width = rpn_cls_score.size(2), rpn_cls_score.size(3)
-        gt_tube_batch_size = gt_tubes.size(0)
-        gt_rois_batch_size = time_limit
+        height, width, time = rpn_cls_score.size(2), rpn_cls_score.size(3), rpn_cls_score.size(4)
 
-        # print('gt_tubes.shape :', gt_tubes.shape)
-        # print('gt_tubes :', gt_tubes)
-
-        # print('gt_rois.shape :', gt_rois.shape)
-        # print('gt_rois :', gt_rois.squeeze())
-
-        feat_height, feat_width = rpn_cls_score.size(2), rpn_cls_score.size(3)
+        feat_height, feat_width, feat_time = rpn_cls_score.size(2), rpn_cls_score.size(3), rpn_cls_score.size(4)
         shift_x = np.arange(0, feat_width) * self._feat_stride
         shift_y = np.arange(0, feat_height) * self._feat_stride
-        shift_x, shift_y = np.meshgrid(shift_x, shift_y)
-        shifts = torch.from_numpy(np.vstack((shift_x.ravel(), shift_y.ravel(),
-                                  shift_x.ravel(), shift_y.ravel())).transpose())
+        shift_z = np.arange(0, feat_time) 
+        shift_x, shift_y, shift_z = np.meshgrid(shift_x, shift_y, shift_z)
+        shifts = torch.from_numpy(np.vstack((shift_x.ravel(), shift_y.ravel(), shift_z.ravel(),
+                                             shift_x.ravel(), shift_y.ravel(), shift_z.ravel())).transpose())
         shifts = shifts.contiguous().type_as(rpn_cls_score).float()
 
         A = self._num_anchors
@@ -89,17 +86,20 @@ class _AnchorTargetLayer(nn.Module):
         # print("A {}, K {}".format(A,K))
 
         self._anchors = self._anchors.type_as(gt_tubes) # move to specific gpu.
-        all_anchors = self._anchors.view(1, A, 4) + shifts.view(K, 1, 4)
-        all_anchors = all_anchors.view(K * A, 4)
-        # print('all_anchors.shape :', all_anchors.shape)
-        # print('all_anchors[0] :', all_anchors[0])
+        # print('self._anchors.shape :',self._anchors.shape)
+        all_anchors = self._anchors.view(1, A, 6) + shifts.view(K, 1, 6)
+        all_anchors = all_anchors.view(K * A, 6)
+
+        # print('all_anchors :', all_anchors.shape)
 
         total_anchors = int(K * A)
         
         keep = ((all_anchors[:, 0] >= -self._allowed_border) &
                 (all_anchors[:, 1] >= -self._allowed_border) &
-                (all_anchors[:, 2] < long(im_info[0][1]) + self._allowed_border) &
-                (all_anchors[:, 3] < long(im_info[0][0]) + self._allowed_border))
+                (all_anchors[:, 2] >= -self._allowed_border) &
+                (all_anchors[:, 3] < long(im_info[0][1]) + self._allowed_border) &
+                (all_anchors[:, 4] < long(im_info[0][0]) + self._allowed_border) &
+                (all_anchors[:, 5] < long(im_info[0][2]) + self._allowed_border))
 
         inds_inside = torch.nonzero(keep).view(-1)
 
@@ -107,15 +107,19 @@ class _AnchorTargetLayer(nn.Module):
         anchors = all_anchors[inds_inside, :]
 
         # label: 1 is positive, 0 is negative, -1 is dont care
-        tube_labels = gt_tubes.new(gt_tube_batch_size, inds_inside.size(0)).fill_(-1)
-        rois_labels = gt_tubes.new(gt_rois_batch_size, inds_inside.size(0)).fill_(-1)
-
-        rois_bbox_inside_weights = gt_rois.new(gt_rois_batch_size, inds_inside.size(0)).zero_()
-        rois_bbox_outside_weights = gt_rois.new(gt_rois_batch_size, inds_inside.size(0)).zero_()
-
+        labels = gt_tubes.new(batch_size, inds_inside.size(0)).fill_(-1)
+        # print('labels.shape :',labels.shape)
+        
+        # bbox_inside_weights = gt_rois.new(batch_size, inds_inside.size(0)).zero_()
+        # bbox_outside_weights = gt_rois.new(batch_size, inds_inside.size(0)).zero_()
+        bbox_inside_weights = gt_tubes.new(batch_size, inds_inside.size(0)).zero_()
+        bbox_outside_weights = gt_tubes.new(batch_size, inds_inside.size(0)).zero_()
         # count tube ovelaps
-        tube_overlaps = bbox_overlaps_time(anchors, gt_tubes, time_limit)
-        rois_overlaps = bbox_overlaps_rois(anchors, gt_rois, time_limit)
+        # print('gt_tubes :',gt_tubes)
+        # print('gt_tubes.shape :',gt_tubes.shape)
+        # print('anchrs.shape :',anchors.shape)
+        overlaps = bbox_overlaps_batch_3d(anchors, gt_tubes)
+        # print('overlaps.shape :',overlaps.shape)
 
         # print('rois_overlaps.shape :',rois_overlaps.shape)
 
@@ -123,152 +127,105 @@ class _AnchorTargetLayer(nn.Module):
         # Until now, we have calculate overlaps for gt_tubes and anchors #
         ##################################################################
 
-        tube_max_overlaps, tube_argmax_overlaps = torch.max(tube_overlaps, 2)
-        rois_max_overlaps = tube_max_overlaps.expand(gt_rois_batch_size,-1)
-        rois_argmax_overlaps = tube_argmax_overlaps.expand(gt_rois_batch_size,-1)
+        max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
+        gt_max_overlaps, _ = torch.max(overlaps, 1)
 
-        gt_tube_max_overlaps, _ = torch.max(tube_overlaps, 1) ## contains the anchor closer to the gt_tube
-        gt_rois_max_overlaps, _ = torch.max(rois_overlaps, 1)  
-
-        # print('gt_rois_max_overlaps.shape :',gt_rois_max_overlaps.shape)
-        # print('gt_rois_max_overlaps :',gt_rois_max_overlaps)
         if not cfg.TRAIN.RPN_CLOBBER_POSITIVES:
-            tube_labels[tube_max_overlaps < cfg.TRAIN.RPN_NEGATIVE_OVERLAP] = 0
-            rois_labels[rois_max_overlaps < cfg.TRAIN.RPN_NEGATIVE_OVERLAP] = 0
+            labels[max_overlaps < cfg.TRAIN.RPN_NEGATIVE_OVERLAP] = 0
 
-        gt_tube_max_overlaps[gt_tube_max_overlaps==0] = 1e-5
+        gt_max_overlaps[gt_max_overlaps==0] = 1e-5
+        keep = torch.sum(overlaps.eq(gt_max_overlaps.view(batch_size,1,-1).expand_as(overlaps)), 2)
 
-        tube_keep = torch.sum(tube_overlaps.eq(gt_tube_max_overlaps.view(gt_tube_batch_size,1,-1).expand_as(tube_overlaps)), 2)
-        if torch.sum(tube_keep) > 0: # check if there is any 1,
-            tube_labels[tube_keep>0] = 1
+        if torch.sum(keep) > 0:
+            labels[keep>0] = 1
 
         # fg label: above threshold IOU
-        tube_labels[tube_max_overlaps >= cfg.TRAIN.RPN_POSITIVE_OVERLAP] = 1
+        labels[max_overlaps >= cfg.TRAIN.RPN_POSITIVE_OVERLAP] = 1
 
         if cfg.TRAIN.RPN_CLOBBER_POSITIVES:
-            tube_labels[tube_max_overlaps < cfg.TRAIN.RPN_NEGATIVE_OVERLAP] = 0
+            labels[max_overlaps < cfg.TRAIN.RPN_NEGATIVE_OVERLAP] = 0
 
-        tube_num_fg = int(cfg.TRAIN.RPN_FG_FRACTION * cfg.TRAIN.RPN_BATCHSIZE)
+        num_fg = int(cfg.TRAIN.RPN_FG_FRACTION * cfg.TRAIN.RPN_BATCHSIZE)
 
-        tube_sum_fg = torch.sum((tube_labels == 1).int(), 1)
-        tube_sum_bg = torch.sum((tube_labels == 0).int(), 1)
+        sum_fg = torch.sum((labels == 1).int(), 1)
+        sum_bg = torch.sum((labels == 0).int(), 1)
 
-        ## this loop in only for subsampling if we have too many background and foreground samples
-        for i in range(gt_tube_batch_size):
+        for i in range(batch_size):
             # subsample positive labels if we have too many
-            if tube_sum_fg[i] > tube_num_fg:
-                tube_fg_inds = torch.nonzero(tube_labels[i] == 1).view(-1)
+            if sum_fg[i] > num_fg:
+                fg_inds = torch.nonzero(labels[i] == 1).view(-1)
                 # torch.randperm seems has a bug on multi-gpu setting that cause the segfault.
                 # See https://github.com/pytorch/pytorch/issues/1868 for more details.
                 # use numpy instead.
-                #rand_num = torch.randperm(fg_inds.size(0)).type_as(gt_tubes).long()
-                tube_rand_num = torch.from_numpy(np.random.permutation(tube_fg_inds.size(0))).type_as(gt_tubes).long()
-                tube_disable_inds = tube_fg_inds[tube_rand_num[:tube_fg_inds.size(0)-tube_num_fg]]
-                tube_labels[i][tube_disable_inds] = -1
+                #rand_num = torch.randperm(fg_inds.size(0)).type_as(gt_boxes).long()
+                rand_num = torch.from_numpy(np.random.permutation(fg_inds.size(0))).type_as(gt_tubes).long()
+                disable_inds = fg_inds[rand_num[:fg_inds.size(0)-num_fg]]
+                labels[i][disable_inds] = -1
 
-            tube_num_bg = cfg.TRAIN.RPN_BATCHSIZE - torch.sum((tube_labels == 1).int(), 1)[i]
+#           num_bg = cfg.TRAIN.RPN_BATCHSIZE - sum_fg[i]
+            num_bg = cfg.TRAIN.RPN_BATCHSIZE - torch.sum((labels == 1).int(), 1)[i]
 
             # subsample negative labels if we have too many
-            if tube_sum_bg[i] > tube_num_bg:
-                tube_bg_inds = torch.nonzero(tube_labels[i] == 0).view(-1)
+            if sum_bg[i] > num_bg:
+                bg_inds = torch.nonzero(labels[i] == 0).view(-1)
+                #rand_num = torch.randperm(bg_inds.size(0)).type_as(gt_boxes).long()
 
-                tube_rand_num = torch.from_numpy(np.random.permutation(tube_bg_inds.size(0))).type_as(gt_rois).long()
-                tube_disable_inds = tube_bg_inds[tube_rand_num[:tube_bg_inds.size(0)-tube_num_bg]]
-                tube_labels[i][tube_disable_inds] = -1
+                rand_num = torch.from_numpy(np.random.permutation(bg_inds.size(0))).type_as(gt_tubes).long()
+                disable_inds = bg_inds[rand_num[:bg_inds.size(0)-num_bg]]
+                labels[i][disable_inds] = -1
 
-        # for i in range(gt_rois_batch_size):
-        #     # subsample positive labels if we have too many
-        #     if rois_sum_fg[i] > rois_num_fg:
-        #         rois_fg_inds = torch.nonzero(rois_labels[i] == 1).view(-1)
-        #         # torch.randperm seems has a bug on multi-gpu setting that cause the segfault.
-        #         # See https://github.com/pytorch/pytorch/issues/1868 for more details.
-        #         # use numpy instead.
-        #         #rand_num = torch.randperm(fg_inds.size(0)).type_as(gt_tubes).long()
-        #         rois_rand_num = torch.from_numpy(np.random.permutation(rois_fg_inds.size(0))).type_as(gt_rois).long()
-        #         rois_disable_inds = rois_fg_inds[rois_rand_num[:rois_fg_inds.size(0)-rois_num_fg]]
-        #         rois_labels[i][rois_disable_inds] = -1
+        offset = torch.arange(0, batch_size)*gt_tubes.size(1)
 
-        #     rois_num_bg = cfg.TRAIN.RPN_BATCHSIZE - torch.sum((rois_labels == 1).int(), 1)[i]
-
-        #     # subsample negative labels if we have too many
-        #     if rois_sum_bg[i] > rois_num_bg:
-        #         rois_bg_inds = torch.nonzero(rois_labels[i] == 0).view(-1)
-
-        #         rois_rand_num = torch.from_numpy(np.random.permutation(rois_bg_inds.size(0))).type_as(gt_rois).long()
-        #         rois_disable_inds = rois_bg_inds[rois_rand_num[:rois_bg_inds.size(0)-rois_num_bg]]
-        #         rois_labels[i][rois_disable_inds] = -1
-
-
-        ##################################################################################################################
-        # MEXRI EDW EXW ALLAKSEI TON KWDIKA, NA ton dw vima vima
-        ##################################################################################################################
-
-        rois_offset = torch.arange(0, gt_rois_batch_size)*gt_rois.size(1)
-        rois_argmax_overlaps = rois_argmax_overlaps + rois_offset.view(gt_rois_batch_size, 1).type_as(rois_argmax_overlaps)
-        rois_bbox_targets = _compute_targets_batch(anchors, gt_rois.view(-1,5)[rois_argmax_overlaps.view(-1), :].view(gt_rois_batch_size, -1, 5))
-        # print('tube_labels==1 :',tube_labels==1)
-        # print('tube_labels==1.shape :',(tube_labels.expand((gt_rois_batch_size,-1))==1).shape)
-        rois_bbox_inside_weights[tube_labels.expand((gt_rois_batch_size,-1))==1] = cfg.TRAIN.RPN_BBOX_INSIDE_WEIGHTS[0]
-        # print('bbox_inside_weights after :',bbox_inside_weights)
-        
+        argmax_overlaps = argmax_overlaps + offset.view(batch_size, 1).type_as(argmax_overlaps)
+        bbox_targets = _compute_targets_batch(anchors, gt_tubes.view(-1,7)[argmax_overlaps.view(-1), :].view(batch_size, -1, 7))
+        # print('bbox_targets.shape :',bbox_targets.shape )
+        # use a single value instead of 4 values for easy index.
+        bbox_inside_weights[labels==1] = cfg.TRAIN.RPN_BBOX_INSIDE_WEIGHTS[0]
 
         if cfg.TRAIN.RPN_POSITIVE_WEIGHT < 0:
-            tube_num_examples = torch.sum(tube_labels[0] >= 0)
-            tube_positive_weights = 1.0 / tube_num_examples.item()
-            tube_negative_weights = 1.0 / tube_num_examples.item()
+            num_examples = torch.sum(labels[i] >= 0)
+            positive_weights = 1.0 / num_examples.item()
+            negative_weights = 1.0 / num_examples.item()
         else:
             assert ((cfg.TRAIN.RPN_POSITIVE_WEIGHT > 0) &
                     (cfg.TRAIN.RPN_POSITIVE_WEIGHT < 1))
 
-        if cfg.TRAIN.RPN_POSITIVE_WEIGHT < 0:
-            rois_num_examples = torch.sum(rois_labels[i] >= 0)
-            rois_positive_weights = 1.0 / rois_num_examples.item()
-            rois_negative_weights = 1.0 / rois_num_examples.item()
-        else:
-            assert ((cfg.TRAIN.RPN_POSITIVE_WEIGHT > 0) &
-                    (cfg.TRAIN.RPN_POSITIVE_WEIGHT < 1))
+        bbox_outside_weights[labels == 1] = positive_weights
+        bbox_outside_weights[labels == 0] = negative_weights
 
-        rois_bbox_outside_weights[rois_labels == 1] = rois_positive_weights
-        rois_bbox_outside_weights[rois_labels == 0] = rois_negative_weights
-
-        tube_labels = _unmap(tube_labels, total_anchors, inds_inside, gt_tube_batch_size, fill=-1)
-        rois_labels = _unmap(rois_labels, total_anchors, inds_inside, gt_rois_batch_size, fill=-1)
-
-        rois_bbox_targets = _unmap(rois_bbox_targets, total_anchors, inds_inside, gt_rois_batch_size, fill=0)  
-        rois_bbox_inside_weights = _unmap(rois_bbox_inside_weights, total_anchors, inds_inside, gt_rois_batch_size, fill=0)
-        rois_bbox_outside_weights = _unmap(rois_bbox_outside_weights, total_anchors, inds_inside, gt_rois_batch_size, fill=0)
+        labels = _unmap(labels, total_anchors, inds_inside, batch_size, fill=-1)
+        bbox_targets = _unmap(bbox_targets, total_anchors, inds_inside, batch_size, fill=0)
+        bbox_inside_weights = _unmap(bbox_inside_weights, total_anchors, inds_inside, batch_size, fill=0)
+        bbox_outside_weights = _unmap(bbox_outside_weights, total_anchors, inds_inside, batch_size, fill=0)
 
         outputs = []
 
-        ### tube
+        # print('labels.shape :',labels.shape)
+        labels = labels.view(batch_size, height, width,time, A).permute(0,4,1,2,3).contiguous()
+        labels = labels.view(batch_size, 1, A * height* width,time)
+        # print('labels.shape :',labels.shape)
+        outputs.append(labels)
 
-        tube_labels = tube_labels.view(gt_tube_batch_size, height, width, A).permute(0,3,1,2).contiguous()
-        tube_labels = tube_labels.view(gt_tube_batch_size, 1, A * height, width)
+        # print('bbox_targets.shape :',bbox_targets.shape)
 
-        # print('tube_labels.shape :',tube_labels.shape)
-        outputs.append(tube_labels)
+        bbox_targets = bbox_targets.view(batch_size, height, width, time, A*6).permute(0,4,1,2,3).contiguous()
+        # print('bbox_targets.shape :',bbox_targets.shape)
+        outputs.append(bbox_targets)
 
+        anchors_count = bbox_inside_weights.size(1)
+        bbox_inside_weights = bbox_inside_weights.view(batch_size,anchors_count,1).expand(batch_size, anchors_count, 6)
 
-        #### rois
+        # print('bbox_inside_weights.shape :',bbox_inside_weights.shape)
+        bbox_inside_weights = bbox_inside_weights.contiguous().view(batch_size, height, width, time, A * 6)\
+                            .permute(0,4,1,2,3).contiguous()
+        # print('bbox_inside_weights.shape :',bbox_inside_weights.shape)
+        outputs.append(bbox_inside_weights)
 
-        rois_bbox_targets = rois_bbox_targets.view(gt_rois_batch_size, height, width, A*4).permute(0,3,1,2).contiguous()
-        rois_bbox_targets = rois_bbox_targets.view(-1,7,7)
-        outputs.append(rois_bbox_targets)
-
-        rois_anchors_count = rois_bbox_inside_weights.size(1)
-        rois_bbox_inside_weights = rois_bbox_inside_weights.view(
-            gt_rois_batch_size,rois_anchors_count,1).expand(gt_rois_batch_size, rois_anchors_count, 4)
-        rois_bbox_inside_weights = rois_bbox_inside_weights.contiguous().view(gt_rois_batch_size, height, width, 4*A)\
-                            .permute(0,3,1,2).contiguous()
-        rois_bbox_inside_weights = rois_bbox_inside_weights.view(-1,7,7)
-        outputs.append(rois_bbox_inside_weights)
-
-        rois_bbox_outside_weights = rois_bbox_outside_weights.view(
-            gt_rois_batch_size,rois_anchors_count,1).expand(gt_rois_batch_size, rois_anchors_count, 4)
-        rois_bbox_outside_weights = rois_bbox_outside_weights.contiguous().view(gt_rois_batch_size, height, width, 4*A)\
-                            .permute(0,3,1,2).contiguous()
-        rois_bbox_outside_weights = rois_bbox_outside_weights.view(-1,7,7)
-        outputs.append(rois_bbox_outside_weights)
+        bbox_outside_weights = bbox_outside_weights.view(batch_size,anchors_count,1).expand(batch_size, anchors_count, 6)
+        bbox_outside_weights = bbox_outside_weights.contiguous().view(batch_size, height, width, time, A * 6)\
+                            .permute(0,4,1,2,3).contiguous()
+        # print('bbox_outside_weights.shape :',bbox_outside_weights.shape)
+        outputs.append(bbox_outside_weights)
 
         return outputs
 
@@ -299,4 +256,5 @@ def _compute_targets_batch(ex_rois, gt_rois):
     # return bbox_transform_time(ex_rois, gt_rois[:,:, :6])
     # print('gt_rois[:,:, [0,1,3,4] :',gt_rois[:,:, [0,1,3,4]])
     # print('ex_rois.shape :',ex_rois.shape)
-    return bbox_transform_batch(ex_rois, gt_rois[:,:, :4])
+    # print('gt_rois.shape :',gt_rois.shape)
+    return bbox_transform_batch_3d(ex_rois, gt_rois[:,:, :7])

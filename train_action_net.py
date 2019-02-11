@@ -35,7 +35,7 @@ if __name__ == '__main__':
     sample_size = 112
     sample_duration = 16  # len(images)
 
-    batch_size = 1
+    batch_size = 16
     n_threads = 4
 
     # # get mean
@@ -107,24 +107,24 @@ if __name__ == '__main__':
 
         ## 2 rois : 1450
         for step,     data in enumerate(data_loader):
-            print('&&&&&&&&&&')
-            clips,  (h, w), gt_tubes, gt_rois = data
-            # print('gt_tubes : ',gt_tubes)
-            # print('gt_rois.shape : ',gt_rois.shape)
-            gt_tubes = gt_tubes[:,0,:].unsqueeze(1).to(device)
-            gt_rois = gt_rois[:,0,:,:].unsqueeze(1).to(device)
+            # print('&&&&&&&&&&')
+            # clips,  h, w, gt_tubes, gt_rois = data
+            print(step)
+            clips,  h, w, gt_tubes = data
+            # print('gt_tubes : ',gt_tubes.shape)
+
             # print('gt_tubes : ',gt_tubes)
             # print('gt_tubes.shape : ',gt_tubes.shape)
             # print('gt_tubes[0,0,5] - gt_tube[0,0,2]+1 :',gt_tubes[0,0,5] - gt_tubes[0,0,2]+1)
             # print('gt_tubes[0,0,5] - gt_tube[0,0,2]+1 != 16 :',gt_tubes[0,0,5] - gt_tubes[0,0,2]+1 != 16)
-            if (gt_tubes[0,0,5] - gt_tubes[0,0,2]+1 != 16):
-                # print('Only background, continue...')
-                continue
             
             # print('gt_tubes :',gt_tubes)
-            gt_rois =  gt_rois.squeeze(0)
-            h = h.to(device)
-            w = w.to(device)
+            # print('h :',h)
+            # print('w :',w)
+            # print('gt_tubes:',gt_tubes)
+            # print('gt_tubes.shape:',gt_tubes.shape)
+            im_info = torch.stack((h.float(),w.float(),torch.Tensor([sample_duration] * batch_size).float()),dim=1).to(device)
+            # print('im_info :',im_info)
             # print('gt_tubes.shape :',gt_tubes.shape )
             # print('gt_rois.shape :',gt_rois.shape)
 
@@ -136,8 +136,8 @@ if __name__ == '__main__':
             # print('gt_rois.shape :',gt_rois.shape)
             rois,  bbox_pred, rpn_loss_cls, \
             rpn_loss_bbox,  act_loss_bbox, rois_label = model(clips,
-                                                              torch.Tensor([[h, w]] * gt_tubes.size(1)).to(device),
-                                                              gt_tubes, gt_rois,
+                                                              im_info,
+                                                              gt_tubes, None,
                                                               torch.Tensor(len(gt_tubes)).to(device))
 
             loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean()

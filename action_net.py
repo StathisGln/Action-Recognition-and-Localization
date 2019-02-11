@@ -32,7 +32,8 @@ class ACT_net(nn.Module):
         pooling_size = 7
         # define rpng
         self.act_rpn = _RPN(256)
-        self.act_proposal_target = _ProposalTargetLayer(self.n_classes)
+        # self.act_proposal_target = _ProposalTargetLayer(self.n_classes)
+        self.act_proposal_target = _ProposalTargetLayer(2) ## background/ foreground
         self.time_dim =16
         self.act_roi_align = RoIAlignAvg(pooling_size, pooling_size, 1.0/28.0, self.time_dim)
         # self.act_roi_align = RoIAlignAvg(pooling_size, pooling_size, 1.0/16.0)
@@ -42,35 +43,22 @@ class ACT_net(nn.Module):
 
     def forward(self, im_data, im_info, gt_tubes, gt_rois, num_boxes):
 
+        # print('----------Inside----------')
         batch_size = im_data.size(0)
-        # print('batch_size :', batch_size)
-        n_rois_batch = gt_rois.size(0)
-        # print('n_rois_batch :', n_rois_batch)
-        # print('gt_tubes :', gt_tubes.shape)
-        # print('gt_tubes :', gt_tubes)
         im_info = im_info.data
         gt_tubes = gt_tubes.data
-        gt_rois = gt_rois.data
+        # print('gt_tubes.shape :',gt_tubes.shape)
         num_boxes = num_boxes.data
 
         # feed image data to base model to obtain base feature map
         base_feat = self.act_base(im_data)
-
         # feed base feature map tp RPN to obtain rois
-        rois, rpn_loss_cls, rpn_loss_bbox = self.act_rpn(base_feat, im_info, gt_tubes, gt_rois, num_boxes)
+        rois, rpn_loss_cls, rpn_loss_bbox = self.act_rpn(base_feat, im_info, gt_tubes, None, num_boxes)
 
         # if it is training phrase, then use ground trubut bboxes for refining
         if self.training:
-            # print('gt_rois.shape :',gt_rois.shape)
-            # print('gt_rois[0,:,:4] :',gt_rois)
-            # print('gt_rois[0,:,:4].contiguous().view(n_rois_batch,-1) :',gt_rois[:,:,:4].contiguous().view(n_rois_batch,-1))
-            # print('gt_rois[0,:,:4].contiguous().view(n_rois_batch,-1).shape :',gt_rois[:,:,:4].contiguous().view(n_rois_batch,-1).shape)
-            # print('gt_rois[:,0,4] :',gt_tubes[:,:,6])
-            # print('gt_rois[:,0,4] :',gt_tubes[:,:,6].permute(1,0).shape)
+            roi_data = self.act_proposal_target(rois, gt_tubes, num_boxes)
 
-            gt_rois_reshaped = torch.cat((gt_rois[:,:,:4].contiguous().view(n_rois_batch,-1) , gt_tubes[:,:,6].permute(1,0)),dim=1).unsqueeze(0)
-            # print('gt_rois_reshaped.shape :',gt_rois_reshaped.shape)
-            roi_data = self.act_proposal_target(rois.unsqueeze(0), gt_rois_reshaped, num_boxes)
             rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = roi_data
 
             rois_label = Variable(rois_label.view(-1).long())
@@ -100,11 +88,13 @@ class ACT_net(nn.Module):
         # print('n_rois :',n_rois)
         # print('pooled_feat.view(n_rois,-1).shape :',pooled_feat.view(n_rois,-1).shape)
         # compute bbox offset
+
         bbox_pred = self.act_bbox_pred(pooled_feat.view(n_rois,-1))
+        # print('bbox_pred :', bbox_pred.shape)
         if self.training:
             # select the corresponding columns according to roi labels
-            bbox_pred_view = bbox_pred.view(bbox_pred.size(0), int(bbox_pred.size(1) / 4), 4)
-            bbox_pred_select = torch.gather(bbox_pred_view, 1, rois_label.view(rois_label.size(0), 1, 1).expand(rois_label.size(0), 1, 4))
+            bbox_pred_view = bbox_pred.view(bbox_pred.size(0), int(bbox_pred.size(1) / 6), 6)
+            bbox_pred_select = torch.gather(bbox_pred_view, 1, rois_label.view(rois_label.size(0), 1, 1).expand(rois_label.size(0), 1, 6))
             bbox_pred = bbox_pred_select.squeeze(1)
 
         act_loss_cls = 0
@@ -113,8 +103,9 @@ class ACT_net(nn.Module):
         if self.training:
             # bounding box regression L1 loss
             act_loss_bbox = _smooth_l1_loss(bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
-
+            # print('act_loss_bbox :',act_loss_bbox)
         bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
+
         # return 0,0,0,0,0,0
         return rois,  bbox_pred, rpn_loss_cls, rpn_loss_bbox,  act_loss_bbox, rois_label
 
@@ -131,15 +122,9 @@ class ACT_net(nn.Module):
                 m.bias.data.zero_()
 
         truncated = False
-        normal_init(self.act_rpn.RPN_time_16, 0, 0.01, truncated)
-        normal_init(self.act_rpn.RPN_time_8, 0, 0.01, truncated)
-        normal_init(self.act_rpn.RPN_time_4, 0, 0.01, truncated)
-        normal_init(self.act_rpn.RPN_cls_score_16, 0, 0.01, truncated)
-        normal_init(self.act_rpn.RPN_cls_score_8, 0, 0.01, truncated)
-        normal_init(self.act_rpn.RPN_cls_score_4, 0, 0.01, truncated)
-        normal_init(self.act_rpn.RPN_bbox_frame_pred_16, 0, 0.01, truncated)
-        normal_init(self.act_rpn.RPN_bbox_frame_pred_16, 0, 0.01, truncated)
-        normal_init(self.act_rpn.RPN_bbox_frame_pred_16, 0, 0.01, )
+        normal_init(self.act_rpn.RPN_Conv, 0, 0.01, truncated)
+        normal_init(self.act_rpn.RPN_cls_score, 0, 0.01, truncated)
+        normal_init(self.act_rpn.RPN_bbox_pred, 0, 0.01, truncated)
         normal_init(self.act_bbox_pred, 0, 0.001, truncated)
 
     def _init_modules(self):

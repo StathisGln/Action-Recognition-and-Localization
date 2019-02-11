@@ -10,6 +10,7 @@ import cv2
 import pdb
 import random
 
+np.set_printoptions(threshold=np.nan)
 def save_net(fname, net):
     import h5py
     h5f = h5py.File(fname, mode='w')
@@ -73,9 +74,14 @@ def _smooth_l1_loss(bbox_pred, bbox_targets, bbox_inside_weights, bbox_outside_w
 
     # print('-----\nInside _smooth_l1_loss')
     sigma_2 = sigma ** 2
+    # nan_values = bbox_targets != bbox_targets
+    # bbox_targets[nan_values] = 1e-5 ## because nan appears
+
     box_diff = bbox_pred - bbox_targets
-    nan_values = box_diff != box_diff
-    box_diff[nan_values] = 1e-5 ## because nan appears
+
+    # print(box_diff.detach().cpu().numpy())
+    # nan_values = box_diff != box_diff
+    # box_diff[nan_values] = 1e-5 ## because nan appears
 
     in_box_diff = bbox_inside_weights * box_diff
     # print('in_box_diff :',in_box_diff)
