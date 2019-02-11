@@ -133,7 +133,7 @@ if __name__ == '__main__':
         if img.all():
             print('Image {} not found '.format(os.path.join(path, 'image_{:0>5}.jpg'.format(frame_indices[i]))))
             break
-        for j in range(10):
+        for j in range(100):
             cv2.rectangle(img_tmp,(int(rois[i,j,0]),int(rois[i,j,1])),(int(rois[i,j,2]),int(rois[i,j,3])), (255,0,0),3)
         # print('out : ./out/{:0>3}.jpg'.format(i))
         cv2.imwrite('./out_frames/action_{:0>3}.jpg'.format(i), img_tmp)

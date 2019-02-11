@@ -91,8 +91,8 @@ if __name__ == '__main__':
     lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
 
-    # epochs = 20
-    epochs = 1
+    epochs = 20
+    #epochs = 5
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
 
@@ -111,14 +111,17 @@ if __name__ == '__main__':
             gt_tubes = gt_tubes.to(device)
             gt_rois = gt_rois.to(device)
 
+            gt_tubes_r = resize_tube(gt_tubes, h,w,sample_size).to(device)
+            gt_rois_r = resize_rpn(gt_rois, h,w,sample_size).to(device)
+
             if (gt_tubes[0,0,5] - gt_tubes[0,0,2]+1 != 16):
                 # print('Only background, continue...')
                 continue
 
             rois,  bbox_pred, rpn_loss_cls, \
             rpn_loss_bbox,  act_loss_bbox, rois_label = model(clips,
-                                                              torch.Tensor([[h, w]] * gt_tubes.size(1)).to(device),
-                                                              gt_tubes, gt_rois,
+                                                              torch.Tensor([[sample_size, sample_size]] * gt_tubes_r.size(1)).to(device),
+                                                              gt_tubes_r, gt_rois_r,
                                                               torch.Tensor(len(gt_tubes)).to(device))
             loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean()
             loss_temp += loss.item()
@@ -133,4 +136,5 @@ if __name__ == '__main__':
             epoch,loss_temp/step))
         if ( epoch + 1 ) % 5 == 0:
             torch.save(model.state_dict(), "jmdb_model_{0:03d}.pwf".format(epoch+1))
-        torch.save(model.state_dict(), "jmdb_model_pre_{0:03d}.pwf".format(epoch))
+        # torch.save(model.state_dict(), "jmdb_model_pre_{0:03d}.pwf".format(epoch))
+

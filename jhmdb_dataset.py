@@ -210,7 +210,7 @@ class Video(data.Dataset):
                 0, n_frames - self.sample_duration+1 ) + 1
             frame_indices = list(
                 range(time_index, time_index + self.sample_duration))  # get the corresponding frames
-        print('path :',path ,' n_frames :',n_frames, ' index :', index, ' time_index :', time_index)
+        # print('path :',path ,' n_frames :',n_frames, ' index :', index, ' time_index :', time_index)
 
 
         # print(frame_indices)
@@ -255,7 +255,7 @@ class Video(data.Dataset):
         if self.mode == 'train':
             return clip, (h,w), gt_tubes, gt_bboxes
         else:
-            return clip, (h,w), gt_tubes, gt_bboxes, self.data[index]['abs_path']
+            return clip, (h,w), gt_tubes, gt_bboxes, self.data[index]['abs_path'], frame_indices
         
         
     def __len__(self):

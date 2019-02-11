@@ -58,7 +58,7 @@ class ACT_net(nn.Module):
 
         # feed base feature map tp RPN to obtain rois
         rois, rpn_loss_cls, rpn_loss_bbox = self.act_rpn(base_feat, im_info, gt_tubes, gt_rois, num_boxes)
-
+        # print('rois.shape :',rois.shape)
         # if it is training phrase, then use ground trubut bboxes for refining
         if self.training:
             # print('gt_rois.shape :',gt_rois.shape)
@@ -78,6 +78,7 @@ class ACT_net(nn.Module):
             rois_inside_ws = Variable(rois_inside_ws.view(-1, rois_inside_ws.size(2)))
             rois_outside_ws = Variable(rois_outside_ws.view(-1, rois_outside_ws.size(2)))
         else:
+            rois= rois.unsqueeze(0)
             rois_label = None
             rois_target = None
             rois_inside_ws = None
@@ -88,9 +89,10 @@ class ACT_net(nn.Module):
         rois = Variable(rois)
         # do roi pooling based on predicted rois
 
-        # print('rois.shape :',rois.shape)
+        # print('rois.shape edwwww :',rois.shape)
         # print('rois.size(2) :',rois.size(2))
         n_dim = rois.size(2)
+        # print('n_dim :',n_dim)
         pooled_feat = self.act_roi_align(base_feat, rois.view(-1, n_dim))
 
         # # feed pooled features to top model
@@ -116,8 +118,12 @@ class ACT_net(nn.Module):
             act_loss_bbox = _smooth_l1_loss(bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
 
         bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
+        # print('rois.shape edwwww 2:',rois.shape)
+        # print('rois.shape edwwww 2:',bbox_pred.shape)
         # return 0,0,0,0,0,0
-        return rois,  bbox_pred, rpn_loss_cls, rpn_loss_bbox,  act_loss_bbox, rois_label
+        return rois,  bbox_pred, torch.Tensor([0]).cuda(),torch.Tensor([0]).cuda(),torch.Tensor([0]).cuda(),torch.Tensor([0]).cuda()
+        # return rois,  bbox_pred, rpn_loss_cls, rpn_loss_bbox,  act_loss_bbox, rois_label
+        # return torch.Tensor([0,0,0,0,0,0]).cuda()
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):
