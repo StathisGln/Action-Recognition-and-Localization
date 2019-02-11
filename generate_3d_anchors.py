@@ -49,18 +49,21 @@ def generate_anchors(base_size=16, ratios=[0.5, 1, 2],
     Generate anchor (reference) windows by enumerating aspect ratios X
     scales wrt a reference (0, 0, 15, 15) window.
     """
-    t = time_dim[0]
-    anchors_tmp = np.array(_generate_anchors(base_size,ratios,scales))
-    n_anchors = anchors_tmp.shape[0]
-    print('n_anchors :',n_anchors)
-    print('anchors_tmp :',anchors_tmp)
-    print('anchors_tmp[:,:2].shape :',anchors_tmp[:,:2].shape)
-    print('np.zeros(n_anchors).shape :',np.zeros((n_anchors,1)).shape)
-    print('anchors_tmp[:,2:].shape :',anchors_tmp[:,2:].shape)
-    print('np.ones(n_anchors)* t).shape :',(np.ones((n_anchors,1))* t).shape)
-    anchors  = np.concatenate((anchors_tmp[:,:2], np.zeros((n_anchors,1)), anchors_tmp[:,2:],np.ones((n_anchors,1))* t), axis =1)
-    print('anchors.shape :',anchors.shape)
-    print('anchors :',anchors)
+    anchors = np.zeros((len(time_dim),9,6))
+    for i in range(len(time_dim)):
+        t = time_dim[i]
+        anchors_tmp = np.array(_generate_anchors(base_size,ratios,scales))
+        n_anchors = anchors_tmp.shape[0]
+        anchors[i,:,:] = np.concatenate((anchors_tmp[:,:2], np.zeros((n_anchors,1)),anchors_tmp[:,2:],np.ones((n_anchors,1))*t), axis = 1)
+        # print('n_anchors :',n_anchors)
+
+
+        # print('anchors_tmp[:,2:].shape :',anchors_tmp[:,2:].shape)
+        # print('np.ones(n_anchors)* t).shape :',(np.ones((n_anchors,1))* t).shape)
+        # anchors_tmp = np.stack([anchors_tmp.tolist() for i in range(t)], axis=1).reshape(9,-1)
+        # anchors  = np.concatenate((anchors_tmp[:,:2], np.zeros((n_anchors,1)), anchors_tmp[:,2:],np.ones((n_anchors,1))* t), axis =1)
+        # anchors.append(anchors_tmp)
+    anchors = np.vstack(anchors)
     return anchors
 
 
@@ -129,7 +132,7 @@ def _scale_enum(anchor, scales):
 if __name__ == '__main__':
     import time
     t = time.time()
-    a = generate_anchors(time_dim=[16])
+    a = generate_anchors(time_dim=[16,8,4,3])
     print(time.time() - t)
     print(a)
     # from IPython import embed; embed()

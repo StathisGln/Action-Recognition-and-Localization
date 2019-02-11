@@ -56,11 +56,13 @@ if __name__ == '__main__':
                  temporal_transform=temporal_transform, json_file=boxes_file,
                  mode='train', classes_idx=cls2idx)
 
-    clips,  (h, w), gt_tubes, gt_rois = data[1450]
+    clips,  (h, w), gt_tubes, gt_rois = data[1451]
 
     # print('clips.shape :',clips.shape)
     clips = clips.unsqueeze(0)
+
     gt_tubes = gt_tubes.unsqueeze(0)
+    gt_rois = gt_rois.unsqueeze(0)
     print('gt_tubes.shape :',gt_tubes.shape)
     print('gt_rois.shape :',gt_rois.shape)
 
@@ -77,5 +79,5 @@ if __name__ == '__main__':
 
     rois, rpn_loss_cls, rpn_loss_box = rpn_model(outputs,
                                                  torch.Tensor(
-                                                     [[h, w]] * gt_tubes.size(1)).cuda(),
+                                                     [[h, w, sample_duration]] * gt_tubes.size(1)).cuda(),
                                                  gt_tubes.cuda(), gt_rois, len(gt_tubes))
