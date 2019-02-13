@@ -31,7 +31,7 @@ extern "C" {
             int c  = (index / aligned_width / aligned_height / time_dim) % channels;
             int n  =  index / aligned_width / aligned_height / time_dim  / channels;
 
-            // bottom_rois += n * 5;
+            // bottom_rois += n * 7;
             float roi_batch_ind = bottom_rois[n * 7 + 0];
             float roi_start_w = bottom_rois[n * 7 + 1] * spatial_scale;
             float roi_start_h = bottom_rois[n * 7 + 2] * spatial_scale;
@@ -153,7 +153,7 @@ extern "C" {
 	    float roi_time = fmaxf(roi_end_t - roi_start_t + 1., 0.);
             float bin_size_h = roi_height / (aligned_height - 1.);
             float bin_size_w = roi_width / (aligned_width - 1.);
-	    float bin_size_t = roi_width / (time_dim - 1.);
+	    float bin_size_t = roi_time / (time_dim - 1.);
 
             float h = (float)(ph) * bin_size_h + roi_start_h;
             float w = (float)(pw) * bin_size_w + roi_start_w;
