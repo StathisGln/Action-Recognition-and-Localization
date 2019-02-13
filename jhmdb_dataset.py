@@ -253,7 +253,8 @@ class Video(data.Dataset):
         
         # print(gt_bboxes)
         if self.mode == 'train':
-            return clip, (h,w), gt_tubes, gt_bboxes
+            # return clip, (h,w), gt_tubes, gt_bboxes
+            return clip, (h,w), gt_tubes, torch.Tensor([1.])
         else:
             return clip, (h,w), gt_tubes, gt_bboxes, self.data[index]['abs_path'], frame_indices
         

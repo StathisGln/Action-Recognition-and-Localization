@@ -34,7 +34,8 @@ if __name__ == '__main__':
     sample_size = 112
     sample_duration = 16  # len(images)
 
-    batch_size = 4
+    batch_size = 8
+    # batch_size = 1
     n_threads = 2
 
     # # get mean
@@ -103,21 +104,23 @@ if __name__ == '__main__':
         ## 2 rois : 1450
         for step, data  in enumerate(data_loader):
             # print('&&&&&&&&&&')
-
-            clips,  (h, w), gt_tubes, gt_rois = data
-
-            h = h.to(device)
-            w = w.to(device)
-            gt_tubes = gt_tubes.to(device)
-
+            print('step -->\t',step)
+            # clips,  (h, w), gt_tubes, gt_rois = data
+            clips,  (h, w), gt_tubes, n_actions = data
+            clips = clips.to(device)
+            # h = h.to(device)
+            # w = w.to(device)
+            # gt_tubes = gt_tubes.to(device)
             gt_tubes_r = resize_tube(gt_tubes, h,w,sample_size).to(device)
-
-            print('gt_tubes_r.shape :',gt_tubes_r.shape )
+            # print(' gt_tubes_r.shape :', gt_tubes_r.shape)
+            n_actions = n_actions.to(device)
+            im_info = torch.Tensor([[sample_size, sample_size, sample_duration]] * gt_tubes_r.size(1)).to(device)
+            # print('gt_tubes_r.shape :',gt_tubes_r.shape )
             rois,  bbox_pred, rpn_loss_cls, \
             rpn_loss_bbox,  act_loss_bbox, rois_label = model(clips,
-                                                              torch.Tensor([[sample_size, sample_size]] * gt_tubes_r.size(1)).to(device),
+                                                              im_info,
                                                               gt_tubes_r, None,
-                                                              torch.Tensor(len(gt_tubes)).to(device))
+                                                              n_actions)
             loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean()
             loss_temp += loss.item()
 

@@ -38,14 +38,7 @@ class _ProposalTargetLayer(nn.Module):
 
         num_boxes = num_boxes.long()
         gt_boxes_append = gt_boxes.new(gt_boxes.size()).zero_()
-        # print('gt_boxes_append.shape :',gt_boxes_append.shape)
-        # print('gt_boxes :',gt_boxes)
-
-        # print('gt_boxes.shape :',gt_boxes.shape)
-        # print('all_rois[0] :',all_rois[0])
-        # print('all_rois.shape :',all_rois.shape)
         gt_boxes_append[:,:,1:] = gt_boxes[:,:,:6] # in pos 0 is the score
-
         num_rois_pre = all_rois.size(1)
         # print('all_rois.shape :',all_rois.shape )
         # print('nu_rois_pre :', num_rois_pre )
@@ -175,6 +168,7 @@ class _ProposalTargetLayer(nn.Module):
 
             
             if fg_num_rois > 0 and bg_num_rois > 0:
+                # print('1')
                 # sampling fg
                 fg_rois_per_this_image = min(fg_rois_per_image, fg_num_rois)
 
@@ -196,6 +190,7 @@ class _ProposalTargetLayer(nn.Module):
                 bg_inds = bg_inds[rand_num]
 
             elif fg_num_rois > 0 and bg_num_rois == 0:
+                # print('2')
                 # sampling fg
                 #rand_num = torch.floor(torch.rand(rois_per_image) * fg_num_rois).long().cuda()
                 rand_num = np.floor(np.random.rand(rois_per_image) * fg_num_rois)
@@ -204,6 +199,7 @@ class _ProposalTargetLayer(nn.Module):
                 fg_rois_per_this_image = rois_per_image
                 bg_rois_per_this_image = 0
             elif bg_num_rois > 0 and fg_num_rois == 0:
+                # print('3')
                 # sampling bg
                 #rand_num = torch.floor(torch.rand(rois_per_image) * bg_num_rois).long().cuda()
                 rand_num = np.floor(np.random.rand(rois_per_image) * bg_num_rois)

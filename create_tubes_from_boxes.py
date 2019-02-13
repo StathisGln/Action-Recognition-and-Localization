@@ -70,11 +70,11 @@ def create_tube(boxes, im_info_3d, sample_duration):
     t2 = maxs[:, :, 4]
 
     for i in range(batch_size):
-        x1 = x1.clamp_(min=0, max=im_info_3d[i, 1]-1)
-        y1 = y1.clamp_(min=0, max=im_info_3d[i, 0]-1)
+        x1 = x1.clamp_(min=0, max=im_info_3d[i, 0]-1)
+        y1 = y1.clamp_(min=0, max=im_info_3d[i, 1]-1)
         t1 = t1.clamp_(min=0, max=im_info_3d[i, 3])
-        x2 = x2.clamp_(min=0, max=im_info_3d[i, 1]-1)
-        y2 = y2.clamp_(min=0, max=im_info_3d[i, 0]-1)
+        x2 = x2.clamp_(min=0, max=im_info_3d[i, 0]-1)
+        y2 = y2.clamp_(min=0, max=im_info_3d[i, 1]-1)
         t2 = t2.clamp_(min=0, max=im_info_3d[i, 3])
 
     # print('x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(x1, y1, t1, x2, y2, t2))

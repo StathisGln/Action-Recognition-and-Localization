@@ -204,7 +204,7 @@ class _ProposalLayer(nn.Module):
             # print('scores_single.shape :',scores_single.shape)
             # padding 0 at the end.
             num_proposal = proposals_single.size(0)
-            output[i,:num_proposal,0] = scores_single[:,0]
+            output[i,:num_proposal,0] = i
             output[i,:num_proposal,1:] = proposals_single
 
         # print('output.shape :',output.shape)

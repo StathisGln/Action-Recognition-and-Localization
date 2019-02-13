@@ -97,8 +97,8 @@ if __name__ == '__main__':
     lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
 
-    epochs = 20
-    # epochs = 5
+    # epochs = 20
+    epochs = 2
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
 
@@ -113,8 +113,8 @@ if __name__ == '__main__':
             clips,  h, w, gt_tubes, n_acts = data
             # print('n_acts :', n_acts)
             # print('gt_tubes : ',gt_tubes.shape)
-
-            im_info = torch.stack((h.float(),w.float(),torch.Tensor([sample_duration] * batch_size).float()),dim=1).to(device)
+            clips = clips.to(device)
+            im_info = torch.stack((h.float(),w.float(),torch.Tensor([sample_duration] * h.size(0)).float()),dim=1).to(device)
             gt_tubes = gt_tubes.to(device)
             n_acts = n_acts.to(device)
 

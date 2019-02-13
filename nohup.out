@@ -1,8 +1,1 @@
-Device being used: cuda:0
-len(dataset) : 3194
-max_sim_actions : 10
-Loading pretrained weights from ../temporal_localization/resnet-34-kinetics.pth
-Using 2 GPUs!
- ============
-| Epoch 01/20 |
- ============
+660

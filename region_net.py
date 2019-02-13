@@ -88,6 +88,7 @@ class _RPN(nn.Module):
 
         batch_size = base_feat.size(0)
 
+        # print('Inside region net')
         rpn_conv1 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
         rpn_conv1 = rpn_conv1.permute(0,1,3,4,2) # move time dim as last dim
         # print('rpn_conv1.shape :',rpn_conv1.shape)
@@ -109,6 +110,7 @@ class _RPN(nn.Module):
         rois = self.RPN_proposal((rpn_cls_prob.data, rpn_bbox_pred.data,
                                      im_info, cfg_key,16))
 
+        # print('rois.shape :',rois.shape)
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0
 

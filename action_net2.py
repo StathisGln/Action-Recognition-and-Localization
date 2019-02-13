@@ -7,7 +7,6 @@ import glob
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn.functional import avg_pool3d
 from torch.autograd import Variable
 
 from resnet_3D import resnet34
@@ -30,15 +29,14 @@ class ACT_net(nn.Module):
         self.act_loss_bbox = 0
 
         # cfg.POOLING_SIZE
-        self.pooling_size = 7
-        self.spatial_scale = 1.0/16.0
+        pooling_size = 7
         # define rpng
         self.act_rpn = _RPN(256)
         # self.act_proposal_target = _ProposalTargetLayer(self.n_classes)
         self.act_proposal_target = _ProposalTargetLayer(2) ## background/ foreground
         self.time_dim =16
-        self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale)
-        # self.act_roi_align = RoIAlignAvg(pooling_size, pooling_size, 1.0/16.0)
+        # self.act_roi_align = RoIAlignAvg(pooling_size, pooling_size, self.time_dim, 1.0/28.0, 1.0/1.0)
+        self.act_roi_align = RoIAlignAvg(pooling_size, pooling_size, 1.0/16.0, self.time_dim)
 
         self._init_modules()
         self._init_weights()
@@ -48,21 +46,21 @@ class ACT_net(nn.Module):
         # print('----------Inside----------')
         batch_size = im_data.size(0)
         im_info = im_info.data
-        if self.training:
-            gt_tubes = gt_tubes.data
-            # print('gt_tubes.shape :',gt_tubes.shape)
-            num_boxes = num_boxes.data
+        gt_tubes = gt_tubes.data
+        # print('gt_tubes.shape :',gt_tubes.shape)
+        num_boxes = num_boxes.data
 
         # feed image data to base model to obtain base feature map
         base_feat = self.act_base(im_data)
         # feed base feature map tp RPN to obtain rois
         rois, rpn_loss_cls, rpn_loss_bbox = self.act_rpn(base_feat, im_info, gt_tubes, None, num_boxes)
-        
+        print('Out rois.shape :', rois.shape)
         # if it is training phrase, then use ground trubut bboxes for refining
         if self.training:
             roi_data = self.act_proposal_target(rois, gt_tubes, num_boxes)
 
             rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = roi_data
+
             rois_label = Variable(rois_label.view(-1).long())
             rois_target = Variable(rois_target.view(-1, rois_target.size(2)))
             rois_inside_ws = Variable(rois_inside_ws.view(-1, rois_inside_ws.size(2)))
@@ -75,71 +73,38 @@ class ACT_net(nn.Module):
             rpn_loss_cls = 0
             rpn_loss_bbox = 0
 
-        # rois = Variable(rois)
-
-        # do roi pooling based on predicted rois
-        # print('rois.shape :', rois[:,:,[0,1,2,4,5]].shape)
-        # print('rois.shape :', rois[:,:,[0,1,2,4,5]].view(-1,5).shape)
-        rois_xy = rois[:,:,[0,1,2,4,5]].contiguous()
-        pooled_feat = self.act_roi_align(base_feat, rois_xy.view(-1, 5))
-        # print('pooled_feat.shape :',pooled_feat.shape)
+        rois = Variable(rois)
+        print('rois.shape :',rois.shape)
+        print('rois.view(-1,7).shape :',rois.view(-1,7).shape)
+        pooled_feat = self.act_roi_align(base_feat, rois.view(-1, 7))
         # # feed pooled features to top model
         pooled_feat = self._head_to_tail(pooled_feat)
-        # print('pooled_feat.shape :',pooled_feat.shape)
-
+        print('pooled_feat.shape :',pooled_feat.shape)
         n_rois = pooled_feat.size(0)
-        # print('n_rois :',n_rois)
+        print('New rois.shape :', rois.shape)
+        print('n_rois :',n_rois)
         # print('pooled_feat.view(n_rois,-1).shape :',pooled_feat.view(n_rois,-1).shape)
         # compute bbox offset
-        # print('pooled_feat.view(n_rois,-1).shape :',pooled_feat.view(n_rois,-1).shape)
-        bbox_pred = self.act_bbox_pred(pooled_feat.view(n_rois,-1))
+        
+        bbox_pred = self.act_bbox_pred(pooled_feat)
+        print('bbox_pred :', bbox_pred.shape)
         if self.training:
             # select the corresponding columns according to roi labels
-            rois_label = rois_label.ne(0).long()
             bbox_pred_view = bbox_pred.view(bbox_pred.size(0), int(bbox_pred.size(1) / 6), 6)
             bbox_pred_select = torch.gather(bbox_pred_view, 1, rois_label.view(rois_label.size(0), 1, 1).expand(rois_label.size(0), 1, 6))
             bbox_pred = bbox_pred_select.squeeze(1)
 
+        act_loss_cls = 0
         act_loss_bbox = 0
 
         if self.training:
             # bounding box regression L1 loss
             act_loss_bbox = _smooth_l1_loss(bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
+            # print('act_loss_bbox :',act_loss_bbox)
         bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
-        # print('bbox_pred :',bbox_pred)
+
         # return 0,0,0,0,0,0
-        # return rois,  bbox_pred, rpn_loss_cls, rpn_loss_bbox,  act_loss_bbox, rois_label
-        if self.training:
-            return rois,  bbox_pred, rpn_loss_cls, rpn_loss_bbox,  act_loss_bbox, rois_label
-
-
-        return rois,  bbox_pred,None,None,None,None
-
-    # def roi_pooling(self, base_feat, rois, size=(16,7,7), spatial_scale=1.0/16.0, time_scale=1.0):
-
-    #     print('rois.shape inside roi pooling :',rois.shape)
-    #     # assert(rois.dim() == 2)
-    #     # assert(rois.size(1) == 7)
-    #     output = []
-    #     rois = rois.data.float()
-    #     batch_size = rois.size(0)
-    #     num_rois = rois.size(1)
-
-    #     rois[:,:,[1,2,4,5]] =rois[:,:,[1,2,4,5]].mul_(spatial_scale)
-    #     rois[:,:,[3,6]] = rois[:,:,[3,6]].mul_(time_scale)
-
-    #     rois = rois.long()
-    #     for b in range(batch_size):
-    #         out_batch = []
-    #         for i in range(num_rois):
-    #             roi = rois[b,i].clamp_(min=0)
-    #             im_idx = roi[0]
-    #             im = base_feat[b, ... , roi[3]:(roi[6]+1), roi[2]:(roi[5]+1), roi[1]:(roi[4]+1)]
-    #             print('im.shape :',im.shape)
-    #             out_batch.append(F.adaptive_max_pool3d(im, size))
-    #         output.append(torch.cat(out_batch,0).unsqueeze(0))
-            
-    #     return torch.cat(output, 0)
+        return rois,  bbox_pred, rpn_loss_cls, rpn_loss_bbox,  act_loss_bbox, rois_label
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):
@@ -181,7 +146,7 @@ class ACT_net(nn.Module):
 
         self.act_top = nn.Sequential(model.module.layer4)
 
-        self.act_bbox_pred = nn.Linear(512, 6 * 2 ) # 2 classes bg/ fg
+        self.act_bbox_pred = nn.Linear(2048, 65 * self.n_classes)
 
         # Fix blocks
         for p in self.act_base[0].parameters(): p.requires_grad=False
@@ -205,13 +170,11 @@ class ACT_net(nn.Module):
 
 
     def _head_to_tail(self, pool5):
-        # print('pool5.shape :',pool5.shape)
+        print('pool5.shape :',pool5.shape)
         fc7 = self.act_top(pool5)
-        # print('fc7.shape :',fc7.shape)
-        fc7 = fc7.mean(4)
-        # print('fc7.shape :',fc7.shape)
+        print('fc7.shape :',fc7.shape)
         fc7 = fc7.mean(3)
-        # print('fc7.shape :',fc7.shape)
+        print('fc7.shape :',fc7.shape)
         fc7 = fc7.mean(2)
         return fc7
 
