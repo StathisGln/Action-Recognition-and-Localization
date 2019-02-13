@@ -10,7 +10,7 @@ int roi_align_forward_cuda(int aligned_height, int aligned_width, int time_dim, 
     // Grab the input tensor
     float * data_flat = THCudaTensor_data(state, features);
     float * rois_flat = THCudaTensor_data(state, rois);
-nn
+
     float * output_flat = THCudaTensor_data(state, output);
 
     // Number of ROIs
