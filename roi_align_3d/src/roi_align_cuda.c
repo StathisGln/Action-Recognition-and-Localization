@@ -1,19 +1,16 @@
 #include <THC/THC.h>
 #include <math.h>
 #include "roi_align_kernel.h"
-#include <stdio.h>
 
 extern THCState *state;
 
-int roi_align_forward_cuda(int aligned_height, int aligned_width, int time_dim, float spatial_scale,
+int roi_align_forward_cuda(int aligned_height, int aligned_width, int time_dim, float spatial_scale, float temp_scale,
                         THCudaTensor * features, THCudaTensor * rois, THCudaTensor * output)
 {
     // Grab the input tensor
-  /* printf(' aligned_height %d aligned_widht %d spatial_scale %d',aligned_height, aligned_width, spatial_scale); */
-
     float * data_flat = THCudaTensor_data(state, features);
     float * rois_flat = THCudaTensor_data(state, rois);
-
+nn
     float * output_flat = THCudaTensor_data(state, output);
 
     // Number of ROIs
@@ -21,10 +18,10 @@ int roi_align_forward_cuda(int aligned_height, int aligned_width, int time_dim, 
     int size_rois = THCudaTensor_size(state, rois, 1);
     if (size_rois != 7)
     {
-      return 0;
+        return 0;
     }
 
-    // data time
+    // data height
     int data_time = THCudaTensor_size(state, features, 2);
     // data height
     int data_height = THCudaTensor_size(state, features, 3);
@@ -36,15 +33,15 @@ int roi_align_forward_cuda(int aligned_height, int aligned_width, int time_dim, 
     cudaStream_t stream = THCState_getCurrentStream(state);
 
     ROIAlignForwardLaucher(
-			   data_flat, spatial_scale, num_rois, data_time, data_height,
-			   data_width, num_channels, aligned_height,
-			   aligned_width, rois_flat,
+			   data_flat, spatial_scale, temp_scale, num_rois, data_height,
+			   data_width, data_time, num_channels, aligned_height,
+			   aligned_width, time_dim, rois_flat,
 			   output_flat, stream);
 
     return 1;
 }
 
-int roi_align_backward_cuda(int aligned_height, int aligned_width, int time_dim, float spatial_scale,
+int roi_align_backward_cuda(int aligned_height, int aligned_width,  int time_dim, float spatial_scale, float temp_scale,
                         THCudaTensor * top_grad, THCudaTensor * rois, THCudaTensor * bottom_grad)
 {
     // Grab the input tensor
@@ -63,7 +60,7 @@ int roi_align_backward_cuda(int aligned_height, int aligned_width, int time_dim,
 
     // batch size
     int batch_size = THCudaTensor_size(state, bottom_grad, 0);
-    // data time
+    // data height
     int data_time = THCudaTensor_size(state, bottom_grad, 2);
     // data height
     int data_height = THCudaTensor_size(state, bottom_grad, 3);
@@ -74,9 +71,9 @@ int roi_align_backward_cuda(int aligned_height, int aligned_width, int time_dim,
 
     cudaStream_t stream = THCState_getCurrentStream(state);
     ROIAlignBackwardLaucher(
-			    top_grad_flat, spatial_scale, batch_size, num_rois, data_time, data_height,
-			    data_width, num_channels, aligned_height,
-			    aligned_width, rois_flat,
+			    top_grad_flat, spatial_scale, temp_scale, batch_size, num_rois, data_height,
+			    data_width, data_time, num_channels, aligned_height,
+			    aligned_width, time_dim, rois_flat,
 			    bottom_grad_flat, stream);
 
     return 1;
