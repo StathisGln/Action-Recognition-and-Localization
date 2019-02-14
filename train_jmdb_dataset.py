@@ -34,7 +34,7 @@ if __name__ == '__main__':
     sample_size = 112
     sample_duration = 16  # len(images)
 
-    batch_size = 8
+    batch_size = 1
     # batch_size = 1
     n_threads = 2
 
@@ -106,13 +106,12 @@ if __name__ == '__main__':
             # print('&&&&&&&&&&')
             print('step -->\t',step)
             # clips,  (h, w), gt_tubes, gt_rois = data
-            clips,  (h, w), gt_tubes, n_actions = data
+            clips,  (h, w), gt_tubes_r, n_actions = data
             clips = clips.to(device)
+            # print('gt_tubes :',gt_tubes)
             # h = h.to(device)
             # w = w.to(device)
             # gt_tubes = gt_tubes.to(device)
-            gt_tubes_r = resize_tube(gt_tubes, h,w,sample_size).to(device)
-            # print(' gt_tubes_r.shape :', gt_tubes_r.shape)
             n_actions = n_actions.to(device)
             im_info = torch.Tensor([[sample_size, sample_size, sample_duration]] * gt_tubes_r.size(1)).to(device)
             # print('gt_tubes_r.shape :',gt_tubes_r.shape )
@@ -134,5 +133,5 @@ if __name__ == '__main__':
             epoch,loss_temp/step))
         if ( epoch + 1 ) % 5 == 0:
             torch.save(model.state_dict(), "jmdb_model_{0:03d}.pwf".format(epoch+1))
-        # torch.save(model.state_dict(), "jmdb_model_pre_{0:03d}.pwf".format(epoch))
+        torch.save(model.state_dict(), "jmdb_model_pre_{0:03d}.pwf".format(epoch))
 

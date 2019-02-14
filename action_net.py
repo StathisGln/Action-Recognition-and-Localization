@@ -75,7 +75,7 @@ class ACT_net(nn.Module):
             rpn_loss_cls = 0
             rpn_loss_bbox = 0
 
-        # rois = Variable(rois)
+        rois = Variable(rois)
 
         # do roi pooling based on predicted rois
         # print('rois.shape :', rois[:,:,[0,1,2,4,5]].shape)

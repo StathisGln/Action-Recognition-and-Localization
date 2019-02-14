@@ -137,22 +137,28 @@ void ROIAlignForwardCpu(const float* bottom_data, const float spatial_scale, con
             float w_ratio = w - (float)(wstart);
 	    float t_ratio = t - (float)(tstart);
 
-            int upleftfront = img_start + ((c * time + tstart) * width + wstart ) * height + wstart; // point (0,0)
+            int upleftfront = img_start + ((c * time + tstart) * height + hstart ) * width + wstart; // point (0,0)
             int uprightfront = upleftfront+ 1;
 
-            /* int downleftfront = upleftfront + width; */
-            /* int downright = downleftfron + 1; */
+            int downleftfront = upleftfront + width;
+            int downright = downleftfron + 1;
 
-	    /* int upleftback = upleftfront + time; */
-	    /* int uprightback = upleftback + 1; */
+	    int upleftback = upleftfront + width*height; // move in time_dim
+	    int uprightback = upleftback + 1;
 
-	    /* int downleftback = upleftback + width; */
-	    /* int downrightback = downleftback + 1; */
+	    int downleftback = upleftback + width;
+	    int downrightback = downleftback + 1;
 	      
-            top_data[idx] = bottom_data[upleft] * (1. - h_ratio) * (1. - w_ratio) * ( 1 - 
+            front_point = bottom_data[upleft] * (1. - h_ratio) * (1. - w_ratio) * ( 1 - 
                 + bottom_data[upright] * (1. - h_ratio) * w_ratio
                 + bottom_data[downleft] * h_ratio * (1. - w_ratio)
                 + bottom_data[downright] * h_ratio * w_ratio;
+
+            rear_point = bottom_data[upleft] * (1. - h_ratio) * (1. - w_ratio) * ( 1 - 
+                + bottom_data[upright] * (1. - h_ratio) * w_ratio
+                + bottom_data[downleft] * h_ratio * (1. - w_ratio)
+                + bottom_data[downright] * h_ratio * w_ratio;
+
         }
     }
 }

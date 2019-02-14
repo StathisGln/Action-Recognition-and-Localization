@@ -107,7 +107,7 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    model_data = torch.load('./jmdb_model_020.pwf')
+    model_data = torch.load('./jmdb_model_010.pwf')
     model.load_state_dict(model_data)
     model.eval()
 
@@ -139,6 +139,7 @@ if __name__ == '__main__':
     colors = [ (255,0,0), (0,255,0), (0,0,255)]
     clips = clips.squeeze().permute(1,2,3,0)
     print('rois.shape :',rois.shape)
+    print('rois[:10] :',rois[:10])
     for i in range(len(frame_indices)):
         # img = cv2.imread(os.path.join(path, 'image_{:0>5}.jpg'.format(frame_indices[i])))
         # img = cv2.imread(os.path.join(path, '{:0>5}.png'.format(frame_indices[i])))
@@ -148,8 +149,8 @@ if __name__ == '__main__':
         # if img.all():
         #     print('Image {} not found '.format(os.path.join(path, 'image_{:0>5}.jpg'.format(frame_indices[i]))))
         #     break
-        for j in range(10):
-            cv2.rectangle(img_tmp,(int(rois[0,j,0]),int(rois[0,j,1])),(int(rois[0,j,3]),int(rois[0,j,4])), (255,0,0),3)
+        for j in range(128):
+            cv2.rectangle(img_tmp,(int(rois[0,j,1]),int(rois[0,j,0])),(int(rois[0,j,4]),int(rois[0,j,3])), (255,0,0),3)
         # print('out : ./out/{:0>3}.jpg'.format(i))
         cv2.imwrite('./out_frames/action_{:0>3}.jpg'.format(i), img_tmp)
         for j in range(10):

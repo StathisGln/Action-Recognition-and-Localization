@@ -5,9 +5,6 @@ def resize_rpn(gt_rois, h,w, sample_size):
     Input: a torch.Tensor
     size shape is [h,w]
     '''
-    h = h.float()
-    w = w.float()
-
     target_h = sample_size
     target_w = sample_size
 
@@ -26,13 +23,13 @@ def resize_rpn(gt_rois, h,w, sample_size):
     # left = int(max(0, np.round((w - sample_size) / 2)))
     # bottom = height - top - target_h
     # right = width - left - target_w
-
+    print('gt_rois.shape :',gt_rois.shape)
     # print('top {}, left {}'.format(top,left))
     # print('w {}, h {}, sample {} w.type {} h.type {}'.format(w, h, sample_size, w.type(), h.type()))
-    gt_rois[i,:,0] = (np.round(gt_rois[i,:,0]  * scale) + left)
-    gt_rois[i,:,1] = (np.round(gt_rois[i,:,1]  * scale) + top )
-    gt_rois[i,:,3] = (np.round(gt_rois[i,:,3]  * scale) + left)
-    gt_rois[i,:,4] = (np.round(gt_rois[i,:,4]  * scale) + top)
+    gt_rois[:,0] = (np.round(gt_rois[:,0]  * scale) + left)
+    gt_rois[:,1] = (np.round(gt_rois[:,1]  * scale) + top )
+    gt_rois[:,2] = (np.round(gt_rois[:,2]  * scale) + left)
+    gt_rois[:,3] = (np.round(gt_rois[:,3]  * scale) + top)
 
     return gt_rois
 
@@ -81,8 +78,8 @@ def resize_tube(gt_rois, h_tensor,w_tensor, sample_size):
 
         gt_rois[i,:,0] = gt_rois[i,:,0].clamp_(min = 0, max=w)
         gt_rois[i,:,1] = gt_rois[i,:,1].clamp_(min = 0, max=h)
-        gt_rois[i,:,2] = gt_rois[i,:,2].clamp_(min = 0, max=w)
-        gt_rois[i,:,3] = gt_rois[i,:,3].clamp_(min = 0, max=h)
+        gt_rois[i,:,3] = gt_rois[i,:,3].clamp_(min = 0, max=w)
+        gt_rois[i,:,4] = gt_rois[i,:,4].clamp_(min = 0, max=h)
         target_h = sample_size
         target_w = sample_size
         w_bigger_h = w > h

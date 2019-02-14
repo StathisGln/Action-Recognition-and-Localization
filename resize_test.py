@@ -91,58 +91,21 @@ if __name__ == '__main__':
     # clips,  (h, w), gt_tubes, final_rois = data[906]
     # clips,  (h, w), gt_tubes, final_rois = data[905]
     # clips, (h,w), gt_tubes, gt_rois, path,frame_indices = data[1024]
-    clips, (h,w), gt_tubes,n_actions, path,frame_indices = data[100]
-    clips2, (h,w), gt_tubes,n_actions, path,frame_indices = data2[100]
-    print(h,w)
-    print('path :',path)
-    print('clips.shape :',clips.shape)
-    print('clips2.shape :',clips2.shape)
-    clips = clips.unsqueeze(0)
-    gt_tubes = gt_tubes.unsqueeze(0)
-    print('gt_tubes.shape :',gt_tubes.shape )
-    print('gt_tubes :',gt_tubes)
-    clips = clips.to(device)
-    gt_tubes_new = gt_tubes.clone()
-    gt_tubes_r = resize_tube(gt_tubes_new, torch.Tensor([h]),torch.Tensor([w]),sample_size).to(device)
-    gt_tubes_r = gt_tubes_r.to(device)
+    clips, (h,w), gt_tubes_r,n_actions, path,frame_indices = data[150]
+    clips2, (h,w), gt_tubes_r,n_actions, path,frame_indices = data2[150]
+    # print(h,w)
+    # print('path :',path)
+    # print('clips.shape :',clips.shape)
+    # print('clips2.shape :',clips2.shape)
+    # clips = clips.unsqueeze(0)
+    # gt_tubes = gt_tubes.unsqueeze(0)
+    # print('gt_tubes.shape :',gt_tubes.shape )
+    # print('gt_tubes :',gt_tubes)
+    # clips = clips.to(device)
+    # gt_tubes_new = gt_tubes.clone()
+    # gt_tubes_r = resize_tube(gt_tubes_new, torch.Tensor([h]),torch.Tensor([w]),sample_size).to(device)
+    # gt_tubes_r = gt_tubes_r.to(device)
     im_info = torch.Tensor([[sample_size, sample_size, sample_duration]] * gt_tubes_r.size(1)).to(device)
-
-    # n_classes = len(classes)
-    # resnet_shortcut = 'A'
-
-    # # Init action_net
-    # model = ACT_net(classes)
-    # model = nn.DataParallel(model)
-    # model.to(device)
-
-    # model_data = torch.load('./jmdb_model_020.pwf')
-    # model.load_state_dict(model_data)
-    # model.eval()
-
-
-    # rois,  bbox_pred, rpn_loss_cls, \
-    # rpn_loss_bbox,  act_loss_bbox, rois_label = model(clips,
-    #                                                   im_info,
-    #                                                   None, None, None)
-    # # rpn_loss_bbox,  act_loss_bbox, rois_label = model(clips,
-    # #                                                   torch.Tensor([[h,w]] * gt_tubes.size(1)).to(device),
-    # #                                                   gt_tubes, gt_rois,
-    # #                                                   torch.Tensor(len(gt_tubes)).to(device))
-    # rois = rois[:,:,1:]
-    # print('bbox_pred.shape :',bbox_pred.shape)
-    # pred_boxes = bbox_transform_inv_3d(rois, bbox_pred, 1)
-    # print('pred_boxes.shape :',pred_boxes.shape)
-    # pred_boxes = clip_boxes_3d(pred_boxes, im_info.data, 1)
-    # print('pred_boxes.shape :',pred_boxes.shape)
-    # rois = pred_boxes[:,:,6:]
-    # print('h %d w %d ' % (h,w))
-    # rois[:,[0,2]] =rois[:,[0,2]].clamp_(min=0, )
-    # rois[:,[1,3]] =rois[:,[1,3]].clamp_(min=0,)
-    # print('rois.shape :',rois.shape)
-    # print('rois :',rois[0][0])
-    # rois = rois[:,:,1:]
-    # print('rois.shape :',rois.shape)
-    # print('rois :',rois)
 
     colors = [ (255,0,0), (0,255,0), (0,0,255)]
     clips = clips.squeeze().permute(1,2,3,0)
