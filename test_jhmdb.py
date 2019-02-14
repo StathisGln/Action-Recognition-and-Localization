@@ -66,7 +66,7 @@ if __name__ == '__main__':
 
     dataset_folder = '/gpu-data/sgal/JHMDB-act-detector-frames'
     splt_txt_path =  '/gpu-data/sgal/splits'
-    boxes_file = './poses.json'
+    boxes_file = '../temporal_localization/poses.json'
 
     classes = ['brush_hair', 'clap', 'golf', 'kick_ball', 'pour',
                'push', 'shoot_ball', 'shoot_gun', 'stand', 'throw', 'wave',
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    model_data = torch.load('./jmdb_model_020.pwf')
+    model_data = torch.load('../temporal_localization/jmdb_model_005.pwf')
     model.load_state_dict(model_data)
     model.eval()
 
@@ -120,25 +120,27 @@ if __name__ == '__main__':
     #                                                   torch.Tensor([[h,w]] * gt_tubes.size(1)).to(device),
     #                                                   gt_tubes, gt_rois,
     #                                                   torch.Tensor(len(gt_tubes)).to(device))
-    rois = rois[:,:,1:]
-    print('bbox_pred.shape :',bbox_pred.shape)
-    pred_boxes = bbox_transform_inv_3d(rois, bbox_pred, 1)
-    print('pred_boxes.shape :',pred_boxes.shape)
-    pred_boxes = clip_boxes_3d(pred_boxes, im_info.data, 1)
-    print('pred_boxes.shape :',pred_boxes.shape)
-    rois = pred_boxes[:,:,6:]
-    print('h %d w %d ' % (h,w))
-    rois[:,[0,2]] =rois[:,[0,2]].clamp_(min=0, )
-    rois[:,[1,3]] =rois[:,[1,3]].clamp_(min=0,)
-    print('rois.shape :',rois.shape)
-    print('rois :',rois[0][0])
-    rois = rois[:,:,1:]
-    print('rois.shape :',rois.shape)
     print('rois :',rois)
+    rois = rois[:,:,1:]
+    # print('bbox_pred.shape :',bbox_pred.shape)
+    # pred_boxes = bbox_transform_inv_3d(rois, bbox_pred, 1)
+    # print('pred_boxes.shape :',pred_boxes.shape)
+    # pred_boxes = clip_boxes_3d(pred_boxes, im_info.data, 1)
+    # print('pred_boxes.shape :',pred_boxes.shape)
+    # rois = pred_boxes[:,:,6:]
+    # print('h %d w %d ' % (h,w))
+    # rois[:,[0,2]] =rois[:,[0,2]].clamp_(min=0, )
+    # rois[:,[1,3]] =rois[:,[1,3]].clamp_(min=0,)
+    # print('rois.shape :',rois.shape)
+    # print('rois :',rois[0][0])
+    # rois = rois[:,:,1:]
+    # print('rois.shape :',rois.shape)
+    # print('rois :',rois)
 
     colors = [ (255,0,0), (0,255,0), (0,0,255)]
     clips = clips.squeeze().permute(1,2,3,0)
     print('rois.shape :',rois.shape)
+    print('rois :',rois)
     for i in range(len(frame_indices)):
         # img = cv2.imread(os.path.join(path, 'image_{:0>5}.jpg'.format(frame_indices[i])))
         # img = cv2.imread(os.path.join(path, '{:0>5}.png'.format(frame_indices[i])))

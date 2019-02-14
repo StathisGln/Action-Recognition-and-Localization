@@ -10,8 +10,8 @@ void ROIAlignForwardCpu(const float* bottom_data, const float spatial_scale, con
 
 void ROIAlignBackwardCpu(const float* top_diff, const float spatial_scale, const float temp_scale, const int num_rois,
 			 const int height, const int width, const int time, const int channels, const int aligned_height,
-			 const int aligned_width, const float * bottom_rois,
-			 float* top_data);
+			 const int aligned_width, const int time_dim, const float * bottom_rois,
+			 float* bottom_diff);
 
 int roi_align_forward(int aligned_height, int aligned_width, int time_dim, float spatial_scale, float temp_scale,
                      THFloatTensor * features, THFloatTensor * rois, THFloatTensor * output)
@@ -160,15 +160,15 @@ void ROIAlignForwardCpu(const float* bottom_data, const float spatial_scale, con
 	      + bottom_data[downleftback] * h_ratio * (1. - w_ratio)
 	      + bottom_data[downrightback] * h_ratio * w_ratio;
 
-	    top_data[index] = front_data * (1 - t_ratio) + read_data * t_ratio;
+	    top_data[idx] = front_data * (1 - t_ratio) + read_data * t_ratio;
         }
     }
 }
 
 void ROIAlignBackwardCpu(const float* top_diff, const float spatial_scale, const float temp_scale, const int num_rois,
 			 const int height, const int width, const int time, const int channels, const int aligned_height,
-			 const int aligned_width, const float * bottom_rois,
-			 float* top_data)
+			 const int aligned_width, const int time_dim, const float * bottom_rois,
+			 float* bottom_diff)
 {
     const int output_size = num_rois * aligned_height * aligned_width * channels;
 
@@ -242,7 +242,7 @@ void ROIAlignBackwardCpu(const float* top_diff, const float spatial_scale, const
             bottom_diff[upleftback] += top_diff[idx] * (1. - h_ratio) * (1. - w_ratio) * t_ratio;
             bottom_diff[uprightback] += top_diff[idx] * (1. - h_ratio) *  w_ratio * t_ratio;
             bottom_diff[downleftback] += top_diff[idx] * h_ratio * (1. - w_ratio) * t_ratio;
-            bottom_diff[downrightback] += top_diff[idx] * h_ratio * w_ratio * t_ratiog;
+            bottom_diff[downrightback] += top_diff[idx] * h_ratio * w_ratio * t_ratio;
 
         }
     }

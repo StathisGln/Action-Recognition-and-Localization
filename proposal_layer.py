@@ -16,7 +16,7 @@ import math
 import yaml
 from config import cfg
 from generate_3d_anchors import generate_anchors
-from bbox_transform import bbox_transform_inv, clip_boxes_3d, clip_boxes_batch, bbox_transform_inv_3d
+from bbox_transform import  clip_boxes_3d, bbox_transform_inv_3d
 from nms.nms_wrapper import nms
 
 import pdb
@@ -112,7 +112,7 @@ class _ProposalLayer(nn.Module):
 
         anchors = self._anchors.view(1, A, 6) + shifts.view(K, 1, 6)
         anchors = anchors.view(1, K * A, 6)
-        # print('anchors.shape :', anchors.shape)
+        print('anchors.shape :', anchors.shape)
         anchors = anchors.expand(batch_size, K * A, 6)
 
         # print('anchors.shape :', anchors.shape)

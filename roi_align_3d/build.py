@@ -14,15 +14,15 @@ with_cuda = False
 this_file = os.path.dirname(os.path.realpath(__file__))
 print(this_file)
 
-# if torch.cuda.is_available():
-#     print('Including CUDA code.')
-#     sources += ['src/roi_align_cuda.c']
-#     headers += ['src/roi_align_cuda.h']
-#     defines += [('WITH_CUDA', None)]
-#     with_cuda = True
+if torch.cuda.is_available():
+    print('Including CUDA code.')
+    sources += ['src/roi_align_cuda.c']
+    headers += ['src/roi_align_cuda.h']
+    defines += [('WITH_CUDA', None)]
+    with_cuda = True
     
-#     extra_objects = ['src/roi_align_kernel.cu.o']
-#     extra_objects = [os.path.join(this_file, fname) for fname in extra_objects]
+    extra_objects = ['src/roi_align_kernel.cu.o']
+    extra_objects = [os.path.join(this_file, fname) for fname in extra_objects]
 
 ffi = create_extension(
     '_ext.roi_align',

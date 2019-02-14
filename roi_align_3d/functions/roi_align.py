@@ -5,11 +5,12 @@ import json
 
 # TODO use save_for_backward instead
 class RoIAlignFunction(Function):
-    def __init__(self, aligned_height, aligned_width, time_dim, spatial_scale ):
+    def __init__(self, aligned_height, aligned_width, time_dim, spatial_scale, temp_scale):
         self.aligned_width = int(aligned_width)
         self.aligned_height = int(aligned_height)
         self.time_dim = int(time_dim)
         self.spatial_scale = float(spatial_scale)
+        self.temp_scale = float(temp_scale)
         print('self.time_dim :',self.time_dim)
         self.rois = None
         self.feature_size = None
@@ -29,17 +30,18 @@ class RoIAlignFunction(Function):
         # with open('../feats.json', 'w') as fp:
         #     json.dump(dict({'aligned_height':self.aligned_height, 'aligned_width' : self.aligned_width, 'spatial_scale': self.spatial_scale, 'features' :features.cpu().tolist(), 'rois' : rois.cpu().tolist()}), fp)
 
-        # if features.is_cuda:
-        #     roi_align.roi_align_forward_cuda(self.aligned_height,
-        #                                      self.aligned_width,
-        #                                      self.time_dim,
-        #                                      self.spatial_scale, features,
-        #                                      rois, output)
-        # else:
-        roi_align.roi_align_forward(self.aligned_height,
-                                    self.aligned_width,
-                                    self.spatial_scale, features,
-                                    rois, output)
+        if features.is_cuda:
+            roi_align.roi_align_forward_cuda(self.aligned_height,
+                                             self.aligned_width,
+                                             self.time_dim,
+                                             self.spatial_scale, self.temp_scale, features,
+                                             rois, output)
+        else:
+            roi_align.roi_align_forward(self.aligned_height,
+                                        self.aligned_width,
+                                        self.time_dim,
+                                        self.spatial_scale, self._temp_scale, features,
+                                        rois, output)
 #            raise NotImplementedError
         print('Eksww output.shape :', output.shape)
         return output
@@ -51,18 +53,18 @@ class RoIAlignFunction(Function):
 
         grad_input = self.rois.new(batch_size, num_channels, data_height,
                                   data_width).zero_()
-        # if features.is_cuda:
-        #     roi_align.roi_align_backward_cuda(self.aligned_height,
-        #                                   self.aligned_width,
-        #                                   self.time_dim
-        #                                   self.spatial_scale, grad_output,
-        #                                   self.rois, grad_input)
-        # else:
-        roi_align.roi_align_backward(self.aligned_height,
-                                     self.aligned_width,
-                                     self.time_dim
-                                     self.spatial_scale, grad_output,
-                                     self.rois, grad_input)
+        if features.is_cuda:
+            roi_align.roi_align_backward_cuda(self.aligned_height,
+                                              self.aligned_width,
+                                              self.time_dim,
+                                              self.spatial_scale, self.temp_scale, grad_output,
+                                              self.rois, grad_input)
+        else:
+            roi_align.roi_align_backward(self.aligned_height,
+                                         self.aligned_width,
+                                         self.time_dim,
+                                         self.spatial_scale, self.temp_scale, grad_output,
+                                         self.rois, grad_input)
 
         # print grad_input
 

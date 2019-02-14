@@ -128,7 +128,8 @@ class _ProposalTargetLayer(nn.Module):
         # overlaps: (rois x gt_boxes)
 
         overlaps = bbox_overlaps_batch_3d(all_rois, gt_boxes)
-        # print('overlaps.shape :',overlaps.shape)
+        # print('overlaps :',overlaps.cpu().tolist())
+        print('overlaps.shape :',overlaps.shape)
         max_overlaps, gt_assignment = torch.max(overlaps, 2)
 
         batch_size = overlaps.size(0)
@@ -157,10 +158,12 @@ class _ProposalTargetLayer(nn.Module):
                 continue
 
             max_overlaps_single =max_overlaps[i][:num_boxes[i]+num_rois_pre]
-            # print('max_overlaps_single.shape :',max_overlaps_single.shape)
+            print('max_overlaps_single.shape :',max_overlaps_single.shape)
+            print('max_overlaps_single :',max_overlaps_single)
             fg_inds = torch.nonzero(max_overlaps_single >= cfg.TRAIN.FG_THRESH).view(-1)
+            print('fg_inds :',fg_inds)
             fg_num_rois = fg_inds.numel()
-
+            print('fg_num_rois :',fg_num_rois)
             # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
             bg_inds = torch.nonzero((max_overlaps_single < cfg.TRAIN.BG_THRESH_HI) &
                                     (max_overlaps_single >= cfg.TRAIN.BG_THRESH_LO)).view(-1)

@@ -54,7 +54,7 @@ def generate_anchors(base_size=16, ratios=[0.5, 1, 2],
         t = time_dim[i]
         anchors_tmp = np.array(_generate_anchors(base_size,ratios,scales))
         n_anchors = anchors_tmp.shape[0]
-        anchors[i,:,:] = np.concatenate((anchors_tmp[:,:2], np.zeros((n_anchors,1)),anchors_tmp[:,2:],np.ones((n_anchors,1))*t), axis = 1)
+        anchors[i,:,:] = np.concatenate((anchors_tmp[:,:2], np.zeros((n_anchors,1)),anchors_tmp[:,2:],np.ones((n_anchors,1))*(t-1)), axis = 1)
         # print('n_anchors :',n_anchors)
 
 

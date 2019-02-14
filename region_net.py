@@ -52,25 +52,6 @@ class _RPN(nn.Module):
 
         # self.init_rpn()
         
-    # def init_rpn(self):
-
-    #     def normal_init(m, mean, stddev, truncated=False):
-    #         """
-    #         weight initalizer: truncated normal and random normal.
-    #         """
-    #         # x is a parameter
-    #         if truncated:
-    #             m.weight.data.normal_().fmod_(2).mul_(stddev).add_(mean) # not a perfect approximation
-    #         else:
-    #             m.weight.data.normal_(mean, stddev)
-    #             m.bias.data.zero_()
-
-    #     truncated = False
-    #     normal_init(self.RPN_Conv, 0, 0.01, truncated)
-    #     normal_init(self.RPN_cls_score, 0, 0.01, truncated)
-    #     normal_init(self.RPN_bbox_pred, 0, 0.001, truncated)
-
-
     @staticmethod
     def reshape(x, d):
         input_shape = x.size()
@@ -104,6 +85,8 @@ class _RPN(nn.Module):
         rpn_cls_prob_reshape = F.softmax(rpn_cls_score_reshape, 1)
         rpn_cls_prob = self.reshape(rpn_cls_prob_reshape, self.nc_score_out)
 
+        # print('rpn_cls_prob :',rpn_cls_prob)
+        # print('rpn_cls_prob.shape :',rpn_cls_prob.shape)
         # proposal layer
         cfg_key = 'TRAIN' if self.training else 'TEST'
 
