@@ -93,7 +93,7 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(params)
 
     epochs = 20
-    #epochs = 5
+    # epochs = 1
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
 
@@ -109,6 +109,7 @@ if __name__ == '__main__':
             clips,  (h, w), gt_tubes_r, n_actions = data
             clips = clips.to(device)
             gt_tubes_r = gt_tubes_r.to(device)
+            print('gt_tubes_r :',gt_tubes_r)
             # print('gt_tubes :',gt_tubes)
             # h = h.to(device)
             # w = w.to(device)
@@ -121,6 +122,9 @@ if __name__ == '__main__':
                                                               im_info,
                                                               gt_tubes_r, None,
                                                               n_actions)
+            # print('rois :',rois)
+            # print('rpn_loss_bbox :',rpn_loss_bbox)
+            # print('rpn_loss_cls :',rpn_loss_cls)
             loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean()
             loss_temp += loss.item()
 

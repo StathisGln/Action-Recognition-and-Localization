@@ -70,17 +70,18 @@ class _AnchorTargetLayer(nn.Module):
         batch_size = gt_tubes.size(0)
 
         # print('time_limit :',time_limit)
-        height, width, time = rpn_cls_score.size(2), rpn_cls_score.size(3), rpn_cls_score.size(4)
-
-        feat_height, feat_width, feat_time = rpn_cls_score.size(2), rpn_cls_score.size(3), rpn_cls_score.size(4)
+        time, height, width  = rpn_cls_score.size(2), rpn_cls_score.size(3), rpn_cls_score.size(4)
+        print('time :', time)
+        feat_time, feat_height, feat_width,  = rpn_cls_score.size(2), rpn_cls_score.size(3), rpn_cls_score.size(4)
         shift_x = np.arange(0, feat_width) * self._feat_stride
         shift_y = np.arange(0, feat_height) * self._feat_stride
-        shift_z = np.arange(0, feat_time) 
+        shift_z = np.arange(0, feat_time)
+        print('shift_z :',shift_z)
         shift_x, shift_y, shift_z = np.meshgrid(shift_x, shift_y, shift_z)
         shifts = torch.from_numpy(np.vstack((shift_x.ravel(), shift_y.ravel(), shift_z.ravel(),
                                              shift_x.ravel(), shift_y.ravel(), shift_z.ravel())).transpose())
         shifts = shifts.contiguous().type_as(rpn_cls_score).float()
-
+        print('shifts :',shifts)
         A = self._num_anchors
         K = shifts.size(0)
         # print("A {}, K {}".format(A,K))
@@ -90,10 +91,10 @@ class _AnchorTargetLayer(nn.Module):
         all_anchors = self._anchors.view(1, A, 6) + shifts.view(K, 1, 6)
         all_anchors = all_anchors.view(K * A, 6)
 
-        # print('all_anchors :', all_anchors.shape)
-
+        print('all_anchors :', all_anchors.shape)
+        print('all_anchors :',all_anchors)
         total_anchors = int(K * A)
-        
+        # print('total_anchor :',total_anchors)
         keep = ((all_anchors[:, 0] >= -self._allowed_border) &
                 (all_anchors[:, 1] >= -self._allowed_border) &
                 (all_anchors[:, 2] >= -self._allowed_border) &
@@ -102,36 +103,49 @@ class _AnchorTargetLayer(nn.Module):
                 (all_anchors[:, 5] < long(im_info[0][2]) + self._allowed_border))
 
         inds_inside = torch.nonzero(keep).view(-1)
-
+        
         # keep only inside anchors
         anchors = all_anchors[inds_inside, :]
 
+        for i in anchors.cpu().tolist():
+            if i[2] ==0 and i[5] ==15:
+                print('epaeee i:',i)
         # label: 1 is positive, 0 is negative, -1 is dont care
         labels = gt_tubes.new(batch_size, inds_inside.size(0)).fill_(-1)
-        # print('labels.shape :',labels.shape)
-        
-        # bbox_inside_weights = gt_rois.new(batch_size, inds_inside.size(0)).zero_()
-        # bbox_outside_weights = gt_rois.new(batch_size, inds_inside.size(0)).zero_()
+
         bbox_inside_weights = gt_tubes.new(batch_size, inds_inside.size(0)).zero_()
         bbox_outside_weights = gt_tubes.new(batch_size, inds_inside.size(0)).zero_()
-        # count tube ovelaps
-        # print('gt_tubes :',gt_tubes)
-        # print('gt_tubes.shape :',gt_tubes.shape)
-        # print('anchrs.shape :',anchors.shape)
+        print('anchors.shape :',anchors.shape)
         overlaps = bbox_overlaps_batch_3d(anchors, gt_tubes)
-        # print('overlaps.shape :',overlaps.shape)
+        print('overlaps.shape :',overlaps.shape)
+
 
         # print('rois_overlaps.shape :',rois_overlaps.shape)
 
         ##################################################################
         # Until now, we have calculate overlaps for gt_tubes and anchors #
         ##################################################################
+        # print('max(overlaps) :',np.max(overlaps.cpu().numpy(),axis=2))
+        # print('max(overlaps) :',np.max(overlaps.cpu().numpy(),axis=2).shape)
+        print('max(overlaps) :',np.max(np.max(overlaps.cpu().numpy(),axis=2),axis=1))
+        print('max(overlaps) :',np.max(np.max(overlaps.cpu().numpy(),axis=2),axis=1).shape)
 
         max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
+        # print('max_overlaps :',max_overlaps.cpu().tolist())
+        # print('argmax_overlaps :',argmax_overlaps.cpu().tolist())
+        # print('argmax_overlaps :',argmax_overlaps.shape)
+        # print('max_overlaps :',max_overlaps.shape)
+        # print('overlaps[1][3099] :',overlaps[1][3099])
         gt_max_overlaps, _ = torch.max(overlaps, 1)
 
+        print('labels.shape :',labels.shape)
+        print('labels :',labels)
+
         if not cfg.TRAIN.RPN_CLOBBER_POSITIVES:
+            print('edwww ', cfg.TRAIN.RPN_NEGATIVE_OVERLAP)
             labels[max_overlaps < cfg.TRAIN.RPN_NEGATIVE_OVERLAP] = 0
+        print('min(labels) :',min(min(labels.cpu().tolist())))
+        print('max(overlaps) :',max(max(max_overlaps.cpu().tolist())))
 
         gt_max_overlaps[gt_max_overlaps==0] = 1e-5
         keep = torch.sum(overlaps.eq(gt_max_overlaps.view(batch_size,1,-1).expand_as(overlaps)), 2)

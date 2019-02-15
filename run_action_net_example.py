@@ -76,7 +76,8 @@ if __name__ == '__main__':
 
     model.to(device)
 
-    clips, h, w, gt_tubes, n_actions = data[1451]
+    # clips, h, w, gt_tubes, n_actions = data[1451]
+    clips, h, w, gt_tubes, n_actions = data[144]
     clips2, h2, w2, gt_tubes2, n_actions2 = data[1450]
 
 
@@ -120,5 +121,5 @@ if __name__ == '__main__':
                                                       n_actions)
     print('**********VGIKE**********')
     print('rois.shape :',rois.shape)
-    print('rois :',rois)
+    # print('rois :',rois)
 
