@@ -11,7 +11,6 @@ class RoIAlignFunction(Function):
         self.time_dim = int(time_dim)
         self.spatial_scale = float(spatial_scale)
         self.temp_scale = float(temp_scale)
-        # print('self.time_dim :',self.time_dim)
         self.rois = None
         self.feature_size = None
 
@@ -27,6 +26,7 @@ class RoIAlignFunction(Function):
             # num_rois, num_channels, data_time, self.aligned_height, self.aligned_width))
         output = features.new( num_rois, num_channels, self.time_dim, self.aligned_height, self.aligned_width).zero_()
         # print('output.shape :', output.shape)
+        # print('self.time_dim :',self.time_dim)
         # print('output.:', output)
         # with open('../feats.json', 'w') as fp:
         #     json.dump(dict({'aligned_height':self.aligned_height, 'aligned_width' : self.aligned_width, 'spatial_scale': self.spatial_scale, 'features' :features.cpu().tolist(), 'rois' : rois.cpu().tolist()}), fp)

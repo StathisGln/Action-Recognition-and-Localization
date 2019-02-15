@@ -37,7 +37,8 @@ class ACT_net(nn.Module):
         # self.act_proposal_target = _ProposalTargetLayer(self.n_classes)
         self.act_proposal_target = _ProposalTargetLayer(2) ## background/ foreground
         self.time_dim =16
-        self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale)
+        self.temp_scale = 1.
+        self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale)
         # self.act_roi_align = RoIAlignAvg(pooling_size, pooling_size, 1.0/16.0)
     def create_architecture(self):
         self._init_modules()

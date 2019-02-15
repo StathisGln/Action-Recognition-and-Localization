@@ -120,4 +120,5 @@ if __name__ == '__main__':
                                                       n_actions)
     print('**********VGIKE**********')
     print('rois.shape :',rois.shape)
+    print('rois :',rois)
 

@@ -100,9 +100,9 @@ extern "C" {
                 float h_ratio = h - (float)(hstart);
                 float w_ratio = w - (float)(wstart);
 		float t_ratio = t - (float)(tstart);
-		if (index == 524225){
-		  printf("index %d h_ratio %f f_ratio %f t_ratio %f\n",index,h_ratio,w_ratio,t_ratio);
-		}
+		// if (index == 524225){
+		//   printf("index %d h_ratio %f f_ratio %f t_ratio %f\n",index,h_ratio,w_ratio,t_ratio);
+		// }
 		// for the front bilinear interpolation
                 int upleftfront = img_start + ((c * time + tstart) *height + hstart) * width + wstart;
                 int uprightfront = upleftfront + 1;
