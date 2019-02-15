@@ -14,7 +14,7 @@ from resnet_3D import resnet34
 from region_net import _RPN
 from proposal_target_layer_cascade import _ProposalTargetLayer
 
-from roi_align.modules.roi_align  import RoIAlignAvg
+from roi_align_3d.modules.roi_align  import RoIAlignAvg
 from net_utils import _smooth_l1_loss
 
 class ACT_net(nn.Module):
@@ -39,7 +39,7 @@ class ACT_net(nn.Module):
         self.time_dim =16
         self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale)
         # self.act_roi_align = RoIAlignAvg(pooling_size, pooling_size, 1.0/16.0)
-
+    def create_architecture(self):
         self._init_modules()
         self._init_weights()
 
@@ -80,9 +80,9 @@ class ACT_net(nn.Module):
         # do roi pooling based on predicted rois
         # print('rois.shape :', rois[:,:,[0,1,2,4,5]].shape)
         # print('rois.shape :', rois[:,:,[0,1,2,4,5]].view(-1,5).shape)
-        rois_xy = rois[:,:,[0,1,2,4,5]].contiguous()
-        pooled_feat = self.act_roi_align(base_feat, rois_xy.view(-1, 5))
+        pooled_feat = self.act_roi_align(base_feat, rois.view(-1,7))
         # print('pooled_feat.shape :',pooled_feat.shape)
+        # print('pooled_feat :',pooled_feat)
         # # feed pooled features to top model
         pooled_feat = self._head_to_tail(pooled_feat)
         # print('pooled_feat.shape :',pooled_feat.shape)

@@ -72,8 +72,9 @@ __C.TRAIN.TRIM_WIDTH = 600
 # Images to use per minibatch
 __C.TRAIN.IMS_PER_BATCH = 1
 
-# Minibatch size (number of regions of interest [ROIs])
-__C.TRAIN.BATCH_SIZE = 128
+# # Minibatch size (number of regions of interest [ROIs])
+# __C.TRAIN.BATCH_SIZE = 128
+__C.TRAIN.BATCH_SIZE = 32
 
 # Fraction of minibatch that is labeled foreground (i.e. class > 0)
 __C.TRAIN.FG_FRACTION = 0.25

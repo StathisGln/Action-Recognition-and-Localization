@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
     # Init action_net
     model = ACT_net(actions)
-
+    model.create_architecture()
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
 

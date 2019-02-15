@@ -31,7 +31,11 @@ extern "C" {
             int c  = (index / aligned_width / aligned_height / time_dim) % channels;
             int n  =  index / aligned_width / aligned_height / time_dim  / channels;
 
+	    // if (n == 1 ){
+	    //   printf("pw %d ph %d pt %d c %d n %d index %d \n",pw,ph,pt,c,n,index);
+	    //   }
             // bottom_rois += n * 7;
+
             float roi_batch_ind = bottom_rois[n * 7 + 0];
             float roi_start_w = bottom_rois[n * 7 + 1] * spatial_scale;
             float roi_start_h = bottom_rois[n * 7 + 2] * spatial_scale;
@@ -40,33 +44,65 @@ extern "C" {
             float roi_end_h = bottom_rois[n * 7 + 5] * spatial_scale;
 	    float roi_end_t = bottom_rois[n * 7 + 6] * temp_scale;
 
+	    // if (index == 100){
+	    //   printf("n == %d\n",n);
+	    // //   printf(" exw %f %f %f %f %f %f %f \t", bottom_rois[0],bottom_rois[1],bottom_rois[2], bottom_rois[3],bottom_rois[4],bottom_rois[5],bottom_rois[6]);
+	    // //   printf("temp_scale %f\n ",temp_scale);
+	    //   printf("roi_batch_ind %f roi_start_w %f roi_start_h %f roi_start_t %f roi_end_w %f roi_end_h %f roi_end_t %f\n",
+	    // 	   roi_batch_ind, roi_start_w, roi_start_h,roi_start_t,roi_end_w,roi_end_h, roi_end_t);
+	    // }
             // Force malformed ROIs to be 1x1
             float roi_width = fmaxf(roi_end_w - roi_start_w + 1., 0.);
             float roi_height = fmaxf(roi_end_h - roi_start_h + 1., 0.);
 	    float roi_time = fmaxf(roi_end_t - roi_start_t + 1., 0.);
-
+	    // if (index == 100){
+	    //   printf("roi_width = %f, roi_height %f, roi_time %f\n",roi_width,roi_height,roi_time);
+	    // }
             float bin_size_h = roi_height / (aligned_height - 1.);
             float bin_size_w = roi_width / (aligned_width - 1.);
-	    float bin_size_t = roi_time / (time_dim - 1.);
+	    float bin_size_t = roi_time / (time_dim - 1);
+	    // if (index == 100){
+	    //   printf("bin_size_h = %f, bin_size_w %f, bin_size_t %f\n",bin_size_h,bin_size_w,bin_size_t);
+	    // }
 
             float h = (float)(ph) * bin_size_h + roi_start_h;
             float w = (float)(pw) * bin_size_w + roi_start_w;
 	    float t = (float)(pt) * bin_size_t + roi_start_t;
+	    // if (index == 100){
+	    //   printf("h = %f, w %f, t %f\n",h,w,t);
+	    // }
 
             int hstart = fminf(floor(h), height - 2);
             int wstart = fminf(floor(w), width - 2);
 	    int tstart = fminf(floor(t), time - 2);
 
-            int img_start = roi_batch_ind * channels * time * height * width;
+	    // if (index == 100){
+	    //   printf("hstart = %d, wstart %d, tstart %d\n",hstart,wstart,tstart);
+	    // }
 
+            int img_start = roi_batch_ind * channels * time * height * width;
+	    // if (index == 100){
+	    //   printf("img_start %d\n",img_start);
+	    // }
+
+
+	    // printf("h %d w %d t %d", h,w,t);
             // trilinear interpolation = 2 bilinear interpolation + 1 linear interpolation
-            if (h < 0 || h >= height || w < 0 || w >= width || t < 0 || w >= time) {
+	    // if( index==100 ) printf("height : %d width %d time %d \n",height,width,time);
+            if (h < 0 || h >= height || w < 0 || w >= width || t < 0 || t >= time) {
+	      // if(index==100)
+	      // 	printf("epaeeeee\n");
                 top_data[index] = 0.;
             } else {
+	      // if (index ==524225)
+		// if (index ==100)
+		// printf("t %f tstart %d\n",t,tstart);
                 float h_ratio = h - (float)(hstart);
                 float w_ratio = w - (float)(wstart);
 		float t_ratio = t - (float)(tstart);
-		
+		if (index == 524225){
+		  printf("index %d h_ratio %f f_ratio %f t_ratio %f\n",index,h_ratio,w_ratio,t_ratio);
+		}
 		// for the front bilinear interpolation
                 int upleftfront = img_start + ((c * time + tstart) *height + hstart) * width + wstart;
                 int uprightfront = upleftfront + 1;
@@ -92,7 +128,9 @@ extern "C" {
                     + bottom_data[downrightback] * h_ratio * w_ratio;
 
 		top_data[index] = front_data * (1 - t_ratio) + read_data * t_ratio;
-
+		// if (index==100)
+		//   printf("top_data[index] %f\n",top_data[index]);
+		
 		  
             }
         }
@@ -107,7 +145,7 @@ extern "C" {
         const int output_size = num_rois * aligned_height * aligned_width * channels;
         cudaError_t err;
 
-
+	// printf("edw exw temp_scale %f \n", temp_scale);
         ROIAlignForward<<<(output_size + kThreadsPerBlock - 1) / kThreadsPerBlock, kThreadsPerBlock, 0, stream>>>(
 														  output_size, bottom_data, spatial_scale, temp_scale, height,
 														  width, time, channels, aligned_height, aligned_width,

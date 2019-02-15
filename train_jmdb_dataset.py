@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
     # Init action_net
     model = ACT_net(classes)
-
+    model.create_architecture()
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
 
@@ -108,6 +108,7 @@ if __name__ == '__main__':
             # clips,  (h, w), gt_tubes, gt_rois = data
             clips,  (h, w), gt_tubes_r, n_actions = data
             clips = clips.to(device)
+            gt_tubes_r = gt_tubes_r.to(device)
             # print('gt_tubes :',gt_tubes)
             # h = h.to(device)
             # w = w.to(device)
