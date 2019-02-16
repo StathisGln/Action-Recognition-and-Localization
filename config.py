@@ -72,7 +72,7 @@ __C.TRAIN.TRIM_WIDTH = 600
 # Images to use per minibatch
 __C.TRAIN.IMS_PER_BATCH = 1
 
-# Minibatch size (number of regions of interest [ROIs])
+# # Minibatch size (number of regions of interest [ROIs])
 # __C.TRAIN.BATCH_SIZE = 128
 __C.TRAIN.BATCH_SIZE = 32
 

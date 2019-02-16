@@ -91,9 +91,14 @@ if __name__ == '__main__':
     # clips,  (h, w), gt_tubes, final_rois = data[906]
     # clips,  (h, w), gt_tubes, final_rois = data[905]
     # clips, (h,w), gt_tubes, gt_rois, path,frame_indices = data[1024]
+
     clips, (h,w), gt_tubes_r,n_actions, path,frame_indices = data[10]
     clips2, (h,w), gt_tubes_r,n_actions, path,frame_indices = data2[10]
     gt_tubes_r = gt_tubes_r.unsqueeze(0)
+
+#     clips, (h,w), gt_tubes_r,n_actions, path,frame_indices = data[150]
+#     clips2, (h,w), gt_tubes_r,n_actions, path,frame_indices = data2[150]
+
     # print(h,w)
     # print('path :',path)
     # print('clips.shape :',clips.shape)

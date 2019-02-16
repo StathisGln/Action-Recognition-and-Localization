@@ -77,7 +77,8 @@ if __name__ == '__main__':
 
     model.to(device)
 
-    clips, h, w, gt_tubes, n_actions = data[1451]
+    # clips, h, w, gt_tubes, n_actions = data[1451]
+    clips, h, w, gt_tubes, n_actions = data[144]
     clips2, h2, w2, gt_tubes2, n_actions2 = data[1450]
 
     for key, value in dict(model.named_parameters()).items():

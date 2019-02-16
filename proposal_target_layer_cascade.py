@@ -72,7 +72,7 @@ class _ProposalTargetLayer(nn.Module):
 
     def _get_bbox_regression_labels_pytorch(self, bbox_target_data, labels_batch, num_classes):
         """Bounding-box regression targets (bbox_target_data) are stored in a
-        compact form b x N x (class, tx, ty, tw, th)
+        compact form b x N x (class, tx, ty, tz, tw, th, tt)
 
         This function expands those targets into the 4-of-4*K representation used
         by the network (i.e. only one class has non-zero targets).
@@ -212,6 +212,13 @@ class _ProposalTargetLayer(nn.Module):
                 bg_rois_per_this_image = rois_per_image
                 fg_rois_per_this_image = 0
             else:
+                print('gt_boxes :',gt_boxes)
+                print('i :',i)
+                print('gt_boxes_single :',gt_boxes_single)
+                print('max_overlaps_single :',max_overlaps_single.cpu().tolist())
+                print('num_boxes[i] :',num_boxes[i])
+                print('num_rois_pre :',num_rois_pre)
+                print('all_rois :',all_rois.cpu().tolist())
                 raise ValueError("bg_num_rois = 0 and fg_num_rois = 0, this should not happen!")
 
             # The indices that we're selecting (both fg and bg)

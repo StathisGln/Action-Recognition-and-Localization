@@ -24,11 +24,12 @@ class _RPN(nn.Module):
         self.anchor_scales = [4, 8, 16 ]
         self.anchor_ratios = [0.5, 1, 2]
         self.feat_stride = [16, ]
+        # self.anchor_duration = [16,8,4,3] # add
         self.anchor_duration = [16,8] # add 
-
+        
         # # define the convrelu layers processing input feature map
 
-        self.RPN_Conv = nn.Conv3d(self.din, 512, 3, stride=1, padding=1, bias=True).cuda()
+        self.RPN_Conv = nn.Conv3d(self.din, 512, 3, stride=1, padding=1, bias=True)
 
         # define bg/fg classifcation score layer for each kernel 
         # 2(bg/fg) * 9  (anchors) * 4 (duration : 16,8,4,3)
@@ -49,9 +50,30 @@ class _RPN(nn.Module):
 
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0
-
-        # self.init_rpn()
+        self.keep=self.RPN_cls_score.weight.data.clone() # modify here
+        self.init_rpn()
         
+
+#     def init_rpn(self):
+
+#         def normal_init(m, mean, stddev, truncated=False):
+#             """
+#             weight initalizer: truncated normal and random normal.
+#             """
+#             # x is a parameter
+#             if truncated:
+#                 m.weight.data.normal_().fmod_(2).mul_(stddev).add_(mean) # not a perfect approximation
+#             else:
+#                 m.weight.data.normal_(mean, stddev)
+#                 m.bias.data.zero_()
+
+#         truncated = False
+#         normal_init(self.RPN_Conv, 0, 0.01, truncated)
+#         normal_init(self.RPN_cls_score, 0, 0.01, truncated)
+#         normal_init(self.RPN_bbox_pred, 0, 0.001, truncated)
+
+
+
     @staticmethod
     def reshape(x, d):
         input_shape = x.size()
@@ -69,6 +91,7 @@ class _RPN(nn.Module):
 
         batch_size = base_feat.size(0)
 
+        if (self.RPN_cls_score.weight.data==self.keep).all(): print('same!')
         # print('Inside region net')
         rpn_conv1 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
         # rpn_conv1 = rpn_conv1.permute(0,1,3,4,2) # move time dim as last dim
@@ -87,12 +110,16 @@ class _RPN(nn.Module):
         rpn_cls_prob_reshape = F.softmax(rpn_cls_score_reshape, 1)
         print('rpn_cls_prob_reshape.shape : ', rpn_cls_prob_reshape.shape)
         rpn_cls_prob = self.reshape(rpn_cls_prob_reshape, self.nc_score_out)
+<<<<<<< HEAD
         print('rpn_cls_prob.shape :',rpn_cls_prob.shape)
         # print('rpn_cls_prob :',rpn_cls_prob)
         # print('rpn_cls_prob.shape :',rpn_cls_prob.shape)
+=======
+>>>>>>> origin/anchors_3d
         # proposal layer
         cfg_key = 'TRAIN' if self.training else 'TEST'
 
+        # print('rpn_cls_prob.shape :',rpn_cls_prob.shape)
         rois = self.RPN_proposal((rpn_cls_prob.data, rpn_bbox_pred.data,
                                      im_info, cfg_key,16))
 
@@ -105,7 +132,7 @@ class _RPN(nn.Module):
 
             assert gt_boxes is not None
 
-            rpn_data = self.RPN_anchor_target((rpn_cls_score.data, gt_boxes, im_info, rois, num_boxes, 16)) # time_limit = 16
+            rpn_data = self.RPN_anchor_target((rpn_cls_score.data, gt_boxes, im_info, gt_rois, num_boxes, 16)) # time_limit = 16
 
             # print('rpn_cls_score.shape :',rpn_cls_score.shape) 
             rpn_cls_score = rpn_cls_score_reshape.permute(0, 2, 3,4, 1).contiguous()
@@ -113,10 +140,13 @@ class _RPN(nn.Module):
             # print('rpn_cls_score.shape :',rpn_cls_score.shape) 
 
             rpn_label = rpn_data[0].view(batch_size, -1)
+            # print('rpn_label :',rpn_label.shape)
             rpn_keep = Variable(rpn_label.view(-1).ne(-1).nonzero().view(-1))
-
+            # print('rpn_label :',rpn_label.view(-1).shape)
             rpn_cls_score = torch.index_select(rpn_cls_score.view(-1,2), 0, rpn_keep)
-
+            # print('rpn_cls_score.shape :',rpn_cls_score.shape)
+            # print('rpn_cls_score :',rpn_cls_score)
+            # print('rpn_labels :',rpn_label)
             rpn_label = torch.index_select(rpn_label.view(-1), 0, rpn_keep.data)
             rpn_label = Variable(rpn_label.long())
 
@@ -131,17 +161,15 @@ class _RPN(nn.Module):
             fg_cnt = torch.sum(rpn_label.data.ne(0))
 
             rpn_bbox_targets, rpn_bbox_inside_weights, rpn_bbox_outside_weights = rpn_data[1:]
-
-
+            # print('rpn_bbox_targets.shape :',rpn_bbox_targets.shape)
+            # print('rpn_bbox_inside_weights.shape :',rpn_bbox_inside_weights.shape)
+            # print('rpn_bbox_outside_weights.shape :',rpn_bbox_outside_weights.shape)
+            
+            
             rpn_bbox_inside_weights = Variable(rpn_bbox_inside_weights)
             rpn_bbox_outside_weights = Variable(rpn_bbox_outside_weights)
             rpn_bbox_targets = Variable(rpn_bbox_targets)
-            # print('rpn_bbox_frame.shape ',rpn_bbox_frame.shape)
-            # print('rpn_bbox_frame_targets.shape ',rpn_bbox_frame_targets.shape)
-            # print('rpn_bbox_frame_inside_weights.shape :',rpn_bbox_frame_inside_weights.shape)
-            # print('rpn_bbox_frame_outside_weights.shape :',rpn_bbox_frame_outside_weights.shape)
-            # print('rpn_bbox_pred.shape :',rpn_bbox_pred.shape)
-            # print('rpn_bbox_frame_targets.shape :',rpn_bbox_targets.shape)
+
             self.rpn_loss_box =  _smooth_l1_loss(rpn_bbox_pred, rpn_bbox_targets, rpn_bbox_inside_weights,
                                                                rpn_bbox_outside_weights, sigma=3, dim=[1,2,3,4])
             # print('self.rpn_loss_box :',self.rpn_loss_box)

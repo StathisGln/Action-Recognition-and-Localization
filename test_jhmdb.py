@@ -115,7 +115,9 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    # model_data = torch.load('./jmdb_model_pre_000.pwf')
+    model_data = torch.load('./jmdb_model_010.pwf')
+    model.load_state_dict(model_data)
+    model.eval()
 
     model.eval()
     print('im_info :',im_info)
@@ -148,6 +150,7 @@ if __name__ == '__main__':
 
     colors = [ (255,0,0), (0,255,0), (0,0,255)]
     clips = clips.squeeze().permute(1,2,3,0)
+
     # print('rois.shape :',rois.shape)
     print('rois :',rois)
     rois = torch.round(rois)
@@ -161,6 +164,7 @@ if __name__ == '__main__':
         # if img.all():
         #     print('Image {} not found '.format(os.path.join(path, 'image_{:0>5}.jpg'.format(frame_indices[i]))))
         #     break
+
         for j in range(10):
             cv2.rectangle(img_tmp,(int(rois[0,j,0]),int(rois[0,j,1])),(int(rois[0,j,3]),int(rois[0,j,4])), (255,0,0),3)
 
