@@ -42,7 +42,7 @@ class ACT_net(nn.Module):
         # self.act_roi_align = RoIAlignAvg(pooling_size, pooling_size, 1.0/16.0)
     def create_architecture(self):
         self._init_modules()
-        # self._init_weights()
+        self._init_weights()
 
     def forward(self, im_data, im_info, gt_tubes, gt_rois, num_boxes):
 
@@ -135,7 +135,6 @@ class ACT_net(nn.Module):
 
 
         return rois,  bbox_pred,None,None,None,None
-    
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):

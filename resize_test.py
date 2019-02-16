@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
     dataset_folder = '/gpu-data/sgal/JHMDB-act-detector-frames'
     splt_txt_path =  '/gpu-data/sgal/splits'
-    boxes_file = '../temporal_localization/poses.json'
+    boxes_file = './poses.json'
 
     classes = ['brush_hair', 'clap', 'golf', 'kick_ball', 'pour',
                'push', 'shoot_ball', 'shoot_gun', 'stand', 'throw', 'wave',
@@ -91,14 +91,8 @@ if __name__ == '__main__':
     # clips,  (h, w), gt_tubes, final_rois = data[906]
     # clips,  (h, w), gt_tubes, final_rois = data[905]
     # clips, (h,w), gt_tubes, gt_rois, path,frame_indices = data[1024]
-
-    clips, (h,w), gt_tubes_r,n_actions, path,frame_indices = data[10]
-    clips2, (h,w), gt_tubes_r,n_actions, path,frame_indices = data2[10]
-    gt_tubes_r = gt_tubes_r.unsqueeze(0)
-
-#     clips, (h,w), gt_tubes_r,n_actions, path,frame_indices = data[150]
-#     clips2, (h,w), gt_tubes_r,n_actions, path,frame_indices = data2[150]
-
+    clips, (h,w), gt_tubes_r,n_actions, path,frame_indices = data[150]
+    clips2, (h,w), gt_tubes_r,n_actions, path,frame_indices = data2[150]
     # print(h,w)
     # print('path :',path)
     # print('clips.shape :',clips.shape)
@@ -135,7 +129,7 @@ if __name__ == '__main__':
         # cv2.imwrite('./out_frames/action_{:0>3}.jpg'.format(i), img_tmp)
         for j in range(10):
             cv2.rectangle(img_tmp,(int(gt_tubes_r[0,0,0]),int(gt_tubes_r[0,0,1])),(int(gt_tubes_r[0,0,3]),int(gt_tubes_r[0,0,4])), (0,255,0),3)
-            # cv2.rectangle(img_tmp2,(int(gt_tubes[0,0,0]),int(gt_tubes[0,0,1])),(int(gt_tubes[0,0,3]),int(gt_tubes[0,0,4])), (0,255,0),3)
+            cv2.rectangle(img_tmp2,(int(gt_tubes[0,0,0]),int(gt_tubes[0,0,1])),(int(gt_tubes[0,0,3]),int(gt_tubes[0,0,4])), (0,255,0),3)
         cv2.imwrite('./out_frames/both_{:0>3}.jpg'.format(i), img_tmp)
         cv2.imwrite('./out_frames/regular_{:0>3}.jpg'.format(i), img_tmp2)
 

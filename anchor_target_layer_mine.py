@@ -17,7 +17,7 @@ import numpy.random as npr
 from config import cfg
 from generate_3d_anchors import generate_anchors
 # from bbox_transform import clip_boxes, bbox_overlaps_batch, bbox_overlaps_time, bbox_transform_batch
-from bbox_transform import bbox_transform_batch_3d, bbox_overlaps_batch_3d
+from bbox_transform import clip_boxes, bbox_overlaps_time, bbox_transform_batch_3d, bbox_overlaps_batch_3d
 import pdb
 
 DEBUG = False
@@ -82,25 +82,20 @@ class _AnchorTargetLayer(nn.Module):
                                              shift_x.ravel(), shift_y.ravel(), shift_z.ravel())).transpose())
         shifts = shifts.contiguous().type_as(rpn_cls_score).float()
 
-        print('shifts :',shifts)
         A = self._num_anchors
         K = shifts.size(0)
         # print("A {}, K {}".format(A,K))
-        
+
         self._anchors = self._anchors.type_as(gt_tubes) # move to specific gpu.
         # print('self._anchors :',self._anchors)
         # print('self._anchors.shape :',self._anchors.shape)
         all_anchors = self._anchors.view(1, A, 6) + shifts.view(K, 1, 6)
         all_anchors = all_anchors.view(K * A, 6)
-        print('all_anchors[0] :',all_anchors[0])
 
         # print('all_anchors :', all_anchors.shape)
         # print('all_anchors :',all_anchors)
         total_anchors = int(K * A)
-
-#         print('long(im_info[0][1]) + self._allowed_border :',long(im_info[0][1]) + self._allowed_border)
-#         print('long(im_info[0][0]) + self._allowed_border :',long(im_info[0][0]) + self._allowed_border)
-#         print('long(im_info[0][2]) + self._allowed_border :',long(im_info[0][2]) + self._allowed_border)
+        # print('total_anchor :',total_anchors)
         keep = ((all_anchors[:, 0] >= -self._allowed_border) &
                 (all_anchors[:, 1] >= -self._allowed_border) &
                 (all_anchors[:, 2] >= -self._allowed_border) &
@@ -112,14 +107,11 @@ class _AnchorTargetLayer(nn.Module):
         
         # keep only inside anchors
         anchors = all_anchors[inds_inside, :]
-        print('mesa  anchors.shape :',anchors.shape)
-        for i in anchors.cpu().tolist():
-            if i[2] == 0.0 and i[5]== 15.0:
-                print(' edwwww :', i)
-
-        # print('anchors :',anchors.cpu().tolist())
 
         # for i in anchors.cpu().tolist():
+        #     if i[2] ==0 and i[5] ==15:
+        #         print('epaeee i:',i)
+
         # label: 1 is positive, 0 is negative, -1 is dont care
         labels = gt_tubes.new(batch_size, inds_inside.size(0)).fill_(-1)
 

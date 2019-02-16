@@ -14,7 +14,7 @@ from video_dataset import Video
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
-from action_net_pre import ACT_net
+from action_net import ACT_net
 from resize_rpn import resize_rpn, resize_tube
 import pdb
 
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     print("Device being used:", device)
 
     dataset_folder = '/gpu-data/sgal/UCF-101-frames'
-    boxes_file = '../temporal_localization/pyannot.pkl'
+    boxes_file = './pyannot.pkl'
     # boxes_file = '/gpu-data/sgal/UCF-bboxes.json'
     # dataset_folder = '../UCF-101-frames'
     # boxes_file = '../UCF-101-frames/UCF-bboxes.json'
@@ -37,7 +37,6 @@ if __name__ == '__main__':
 
     batch_size = 1
     n_threads = 0
-
 
     # # get mean
     # mean =  [103.75581543 104.79421473  91.16894564] # jhmdb
@@ -81,11 +80,7 @@ if __name__ == '__main__':
     clips, h, w, gt_tubes, n_actions = data[144]
     clips2, h2, w2, gt_tubes2, n_actions2 = data[1450]
 
-    for key, value in dict(model.named_parameters()).items():
 
-        if value.requires_grad:
-            print(key)
-    # gt_tubes_r2 = resize_tube(gt_tubes2, torch.Tensor(h),torch.Tensor(w),sample_size).to(device)
     # clips = clips.unsqueeze(0)
     # gt_tubes = gt_tubes.unsqueeze(0).to(device)
     # n_actions = torch.Tensor(n_actions).unsqueeze(0).to(device)
@@ -93,15 +88,14 @@ if __name__ == '__main__':
 
     # im_info = torch.Tensor([h,w,sample_duration]).unsqueeze(0).to(device)
 
-    clips = torch.stack((clips,clips2),dim=0).to(device)
+    clips = torch.stack((clips,clips),dim=0).to(device)
     h = torch.Tensor((h,h2)).to(device)
     w = torch.Tensor((w,w2)).to(device)
 
-    gt_tubes = torch.stack((gt_tubes,gt_tubes),dim=0).to(device)
-    gt_tubes = resize_tube(gt_tubes,h,w,sample_size).to(device)
+    gt_tubes = torch.stack((gt_tubes,gt_tubes2),dim=0).to(device)
     n_actions = torch.Tensor((n_actions,n_actions2)).to(device)
 
-    im_info = torch.Tensor([[sample_size,sample_size,sample_duration]] * 2).cuda().float().to(device)
+    im_info = torch.stack((h.float(),w.float(),torch.Tensor([sample_duration] * 2).cuda().float()),dim=1).to(device)
 
     print('gt_tubes.shape :',gt_tubes.shape )
     print('gt_tubes :',gt_tubes )

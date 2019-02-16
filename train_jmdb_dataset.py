@@ -15,7 +15,7 @@ from jhmdb_dataset import Video
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
-from action_net_pre import ACT_net
+from action_net import ACT_net
 from resize_rpn import resize_rpn, resize_tube
 import pdb
 
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     dataset_folder = '/gpu-data/sgal/JHMDB-act-detector-frames'
     splt_txt_path =  '/gpu-data/sgal/splits'
-    boxes_file = '../temporal_localization/poses.json'
+    boxes_file = './poses.json'
 
     sample_size = 112
     sample_duration = 16  # len(images)
@@ -74,7 +74,6 @@ if __name__ == '__main__':
     # Init action_net
     model = ACT_net(classes)
     model.create_architecture()
-
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
 
@@ -84,8 +83,9 @@ if __name__ == '__main__':
 
     params = []
     for key, value in dict(model.named_parameters()).items():
-
+        # print(key, value.requires_grad)
         if value.requires_grad:
+            print('key :',key)
             if 'bias' in key:
                 params += [{'params':[value],'lr':lr*(True + 1), \
                             'weight_decay': False and 0.0005 or 0}]
@@ -107,10 +107,7 @@ if __name__ == '__main__':
         ## 2 rois : 1450
         for step, data  in enumerate(data_loader):
             # print('&&&&&&&&&&')
-
-            print('step -->\t',step)
-            if step == 10:
-                break
+            # print('step -->\t',step)
             # clips,  (h, w), gt_tubes, gt_rois = data
             clips,  (h, w), gt_tubes_r, n_actions = data
             clips = clips.to(device)
@@ -146,5 +143,5 @@ if __name__ == '__main__':
             epoch,loss_temp/step))
         if ( epoch + 1 ) % 5 == 0:
             torch.save(model.state_dict(), "jmdb_model_{0:03d}.pwf".format(epoch+1))
-        torch.save(model.state_dict(), "jmdb_model_pre_{0:03d}.pwf".format(epoch))
+        # torch.save(model.state_dict(), "jmdb_model_pre_{0:03d}.pwf".format(epoch))
 

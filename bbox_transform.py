@@ -805,10 +805,10 @@ def bbox_overlaps_batch_3d(anchors, gt_boxes):
         else:
             anchors = anchors[:, :, 1:7].contiguous()
 
-        print('anchors.shape: ',anchors.shape)
-        print('gt_boxes :',gt_boxes)
+        # print('anchors.shape: ',anchors.shape)
+        # print('gt_boxes :',gt_boxes)
         gt_boxes = gt_boxes[:, :, :6].contiguous()
-        print('gt_boxes.shape :',gt_boxes.shape)
+
         gt_boxes_x = (gt_boxes[:, :, 3] - gt_boxes[:, :, 0] + 1)
         gt_boxes_y = (gt_boxes[:, :, 4] - gt_boxes[:, :, 1] + 1)
         gt_boxes_t = (gt_boxes[:, :, 5] - gt_boxes[:, :, 2] + 1)
@@ -825,7 +825,6 @@ def bbox_overlaps_batch_3d(anchors, gt_boxes):
         # print('anchors_area.shape :',anchors_area.shape)
         gt_area_zero = (gt_boxes_x == 1) & (gt_boxes_y == 1) & (gt_boxes_t == 1)
         anchors_area_zero = (anchors_boxes_x == 1) & (anchors_boxes_y == 1) & (anchors_boxes_t == 1)
-
 
         boxes = anchors.view(batch_size, N, 1, 6).expand(batch_size, N, K, 6)
         query_boxes = gt_boxes.view(
