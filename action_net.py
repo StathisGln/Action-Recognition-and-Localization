@@ -42,7 +42,7 @@ class ACT_net(nn.Module):
         # self.act_roi_align = RoIAlignAvg(pooling_size, pooling_size, 1.0/16.0)
     def create_architecture(self):
         self._init_modules()
-        self._init_weights()
+        # self._init_weights()
 
     def forward(self, im_data, im_info, gt_tubes, gt_rois, num_boxes):
 
@@ -58,7 +58,7 @@ class ACT_net(nn.Module):
         base_feat = self.act_base(im_data)
         # feed base feature map tp RPN to obtain rois
         rois, rpn_loss_cls, rpn_loss_bbox = self.act_rpn(base_feat, im_info, gt_tubes, None, num_boxes)
-        
+
         # if it is training phrase, then use ground trubut bboxes for refining
         if self.training:
             roi_data = self.act_proposal_target(rois, gt_tubes, num_boxes)
