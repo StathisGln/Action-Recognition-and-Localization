@@ -155,7 +155,7 @@ class _ProposalTargetLayer(nn.Module):
             if gt_boxes_single.cpu().tolist() == [[0,0,0,0,0,0,0,]]:
                 print('no rois')
                 continue
-
+            
             max_overlaps_single =max_overlaps[i][:num_boxes[i]+num_rois_pre]
             # print('max_overlaps_single.shape :',max_overlaps_single.shape)
             fg_inds = torch.nonzero(max_overlaps_single >= cfg.TRAIN.FG_THRESH).view(-1)

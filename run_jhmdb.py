@@ -75,12 +75,21 @@ if __name__ == '__main__':
     clips, (h, w), gt_tubes_r, n_actions = data[144]
     clips2, (h2, w2), gt_tubes2_r, n_actions2 = data[145]
 
-    clips = torch.stack((clips,clips),dim=0).to(device) 
+    # clips = torch.stack((clips,clips),dim=0).to(device) 
 
+    # clips = torch.stack((clips,clips),dim=0).to(device)
+    # gt_tubes = torch.stack((gt_tubes_r,gt_tubes2_r),dim=0).to(device)
+    # n_actions = torch.Tensor((n_actions,n_actions2)).to(device)
+    # im_info = torch.Tensor([[sample_size, sample_size, sample_duration]] * gt_tubes.size(1)).to(device)
+
+    clips = torch.stack((clips,clips),dim=0).to(device)
     gt_tubes = torch.stack((gt_tubes_r,gt_tubes2_r),dim=0).to(device)
-    print('gt_tubes.shape : ',gt_tubes.shape)
     n_actions = torch.Tensor((n_actions,n_actions2)).to(device)
     im_info = torch.Tensor([[sample_size, sample_size, sample_duration]] * gt_tubes.size(1)).to(device)
+
+
+    print('gt_tubes :',gt_tubes)
+    print('gt_tubes.shape :',gt_tubes.shape)
 
     print('im_info :',im_info)
     print('im_info.shape :',im_info.shape)
@@ -88,11 +97,18 @@ if __name__ == '__main__':
     print('n_actions :',n_actions)
     print('n_actions.shape :',n_actions.shape)
 
-    rois,  bbox_pred, rpn_loss_cls, \
-    rpn_loss_bbox,  act_loss_bbox, rois_label = model(clips,
+    # rois,  bbox_pred, rpn_loss_cls, \
+    # rpn_loss_bbox,  act_loss_bbox, rois_label = model(clips,
+    #                                                   im_info,
+    #                                                   gt_tubes, None,
+    #                                                   n_actions)
+
+    rois,  bbox_pred, rpn_loss_cls, rpn_loss_bbox, \
+    act_loss_cls,  act_loss_bbox, rois_label = model(clips,
                                                       im_info,
                                                       gt_tubes, None,
                                                       n_actions)
+
     print('**********VGIKE**********')
     print('rois.shape :',rois.shape)
     print('rois :',rois)

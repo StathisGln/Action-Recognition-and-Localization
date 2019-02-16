@@ -81,12 +81,12 @@ class _ProposalLayer(nn.Module):
         # min_size      = cfg[cfg_key].RPN_MIN_SIZE
         if cfg_key == 'TRAIN':
             pre_nms_topN  = 20000
-            post_nms_topN = 2000
+            post_nms_topN = 50
             nms_thresh    = 0.7
             min_size      = 8
         else:
             pre_nms_topN  = 6000
-            post_nms_topN = 300
+            post_nms_topN = 10
             nms_thresh    = 0.7
             min_size      = 16
 
