@@ -42,7 +42,7 @@ class ACT_net(nn.Module):
         # self.act_roi_align = RoIAlignAvg(pooling_size, pooling_size, 1.0/16.0)
     def create_architecture(self):
         self._init_modules()
-        # self._init_weights()
+        self._init_weights()
 
     def forward(self, im_data, im_info, gt_tubes, gt_rois, num_boxes):
 
@@ -95,19 +95,6 @@ class ACT_net(nn.Module):
         # # print('pooled_feat.view(n_rois,-1).shape :',pooled_feat.view(n_rois,-1).shape)
         # bbox_pred = self.act_bbox_pred(pooled_feat.view(n_rois,-1))
         bbox_pred = self.act_bbox_pred(pooled_feat)
-        if self.training:
-
-            # # select the corresponding columns according to roi labels
-            # rois_label = rois_label.ne(0).long()
-            # bbox_pred_view = bbox_pred.view(bbox_pred.size(0), int(bbox_pred.size(1) / 6), 6)
-            # bbox_pred_select = torch.gather(bbox_pred_view, 1, rois_label.view(rois_label.size(0), 1, 1).expand(rois_label.size(0), 1, 6))
-            # bbox_pred = bbox_pred_select.squeeze(1)
-            # print('rois_label :',rois_label)
-            rois_label = rois_label.ne(0).long()
-            indexes = torch.nonzero(rois_label).view(-1)
-            bbox_pred_fg = bbox_pred[indexes]
-            # print(' bbox_pred_fg :', bbox_pred_fg )
-            # print(' bbox_pred_fg.shape :', bbox_pred_fg.shape )
 
 
         # compute object classification probability

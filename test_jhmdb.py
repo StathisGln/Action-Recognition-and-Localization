@@ -16,7 +16,7 @@ from spatial_transforms import (
 from temporal_transforms import LoopPadding
 from resize_rpn import resize_rpn, resize_tube
 
-from action_net_pre import ACT_net
+from action_net import ACT_net
 from bbox_transform import bbox_transform_inv, clip_boxes_3d, clip_boxes_batch, bbox_transform_inv_3d
 import cv2
 
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     data = model.act_rpn.RPN_cls_score.weight.data.clone()
 
 
-    model_data = torch.load('../temporal_localization/jmdb_model_010.pwf')
+    model_data = torch.load('../temporal_localization/jmdb_model_025.pwf')
     # # model_data = torch.load('../temporal_localization/r')
 
     model.load_state_dict(model_data)
@@ -131,22 +131,22 @@ if __name__ == '__main__':
     print('rois :',rois.shape)
     # print('rois :',rois.)
     rois = rois[:,:,1:]
-    # print('bbox_pred.shape :',bbox_pred.shape)
-    # pred_boxes = bbox_transform_inv_3d(rois, bbox_pred, 1)
-    # print('pred_boxes.shape :',pred_boxes.shape)
-    # pred_boxes = clip_boxes_3d(pred_boxes, im_info.data, 1)
-    # print('pred_boxes.shape :',pred_boxes.shape)
-    # rois = pred_boxes
-    # print('h %d w %d ' % (h,w))
-    # print('rois :',rois)
-    # print('rois.shape :',rois.shape)
-    # rois[:,[0,2]] =rois[:,[0,2]].clamp_(min=0, )
-    # rois[:,[1,3]] =rois[:,[1,3]].clamp_(min=0,)
-    # print('rois.shape :',rois.shape)
-    # print('rois :',rois[0][0])
+    print('bbox_pred.shape :',bbox_pred.shape)
+    pred_boxes = bbox_transform_inv_3d(rois, bbox_pred, 1)
+    print('pred_boxes.shape :',pred_boxes.shape)
+    pred_boxes = clip_boxes_3d(pred_boxes, im_info.data, 1)
+    print('pred_boxes.shape :',pred_boxes.shape)
+    rois = pred_boxes
+    print('h %d w %d ' % (h,w))
+    print('rois :',rois)
+    print('rois.shape :',rois.shape)
+    rois[:,[0,2]] =rois[:,[0,2]].clamp_(min=0, )
+    rois[:,[1,3]] =rois[:,[1,3]].clamp_(min=0,)
+    print('rois.shape :',rois.shape)
+    print('rois :',rois[0][0])
 
-    # print('rois.shape :',rois.shape)
-    # print('rois :',rois)
+    print('rois.shape :',rois.shape)
+    print('rois :',rois)
 
     colors = [ (255,0,0), (0,255,0), (0,0,255)]
     clips = clips.squeeze().permute(1,2,3,0)
