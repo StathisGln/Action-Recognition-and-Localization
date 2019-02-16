@@ -5,7 +5,7 @@ import json
 
 # TODO use save_for_backward instead
 class RoIAlignFunction(Function):
-    def __init__(self, aligned_height, aligned_width, time_dim, spatial_scale, temp_scale):
+    def __init__(self, aligned_height, aligned_width, time_dim, spatial_scale, temp_scale=1):
         self.aligned_width = int(aligned_width)
         self.aligned_height = int(aligned_height)
         self.time_dim = int(time_dim)
@@ -25,8 +25,9 @@ class RoIAlignFunction(Function):
         num_rois = rois.size(0)
         print('num_rois {}, num_channels {}, data_time {}, self.aligned_height {}, self.aligned_width {}'.format(
             num_rois, num_channels, data_time, self.aligned_height, self.aligned_width))
-        output = features.new(batch_size, num_rois, num_channels, self.time_dim, self.aligned_height, self.aligned_width).zero_()
-        print('output.shape :', output.shape)
+        output = features.new( num_rois, num_channels, self.time_dim, self.aligned_height, self.aligned_width).zero_()
+        # print('output.shape :', output.shape)
+        # print('output.:', output)
         # with open('../feats.json', 'w') as fp:
         #     json.dump(dict({'aligned_height':self.aligned_height, 'aligned_width' : self.aligned_width, 'spatial_scale': self.spatial_scale, 'features' :features.cpu().tolist(), 'rois' : rois.cpu().tolist()}), fp)
 
@@ -42,7 +43,8 @@ class RoIAlignFunction(Function):
                                         self.time_dim,
                                         self.spatial_scale, self._temp_scale, features,
                                         rois, output)
-#            raise NotImplementedError
+        # print('output :',output[0][0])
+       
         print('Eksww output.shape :', output.shape)
         return output
 

@@ -22,18 +22,18 @@ class RoIAlignFunction(Function):
         num_rois = rois.size(0)
         # print('num_rois    :',num_rois)
         # print('rois    :',rois.shape)
-        output = features.new(num_rois, num_channels, data_time+1, self.aligned_height, self.aligned_width).zero_()
+        output = features.new(num_rois, num_channels, data_time+1, self.aligned_height, self.aligned_width).zero_() 
         # print('output.shape :', output.shape)
-        if features.is_cuda:
-            roi_align.roi_align_forward_cuda(self.aligned_height,
-                                             self.aligned_width,
-                                             self.spatial_scale, features,
-                                             rois, output)
-        else:
-            roi_align.roi_align_forward(self.aligned_height,
-                                        self.aligned_width,
-                                        self.spatial_scale, features,
-                                        rois, output)
+        # if features.is_cuda:
+        #     roi_align.roi_align_forward_cuda(self.aligned_height,
+        #                                      self.aligned_width,
+        #                                      self.spatial_scale, features,
+        #                                      rois, output)
+        # else:
+        roi_align.roi_align_forward(self.aligned_height,
+                                    self.aligned_width,
+                                    self.spatial_scale, features,
+                                    rois, output)
 #            raise NotImplementedError
 
         return output

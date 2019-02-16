@@ -14,7 +14,7 @@ from resnet_3D import resnet34
 from region_net import _RPN
 from proposal_target_layer_cascade import _ProposalTargetLayer
 
-from roi_align.modules.roi_align  import RoIAlignAvg
+from roi_align_3d.modules.roi_align  import RoIAlignAvg
 from net_utils import _smooth_l1_loss
 
 class ACT_net(nn.Module):
@@ -40,6 +40,8 @@ class ACT_net(nn.Module):
         self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale)
         # self.act_roi_align = RoIAlignAvg(pooling_size, pooling_size, 1.0/16.0)
 
+
+    def create_architecture(self):
         self._init_modules()
         self._init_weights()
 
@@ -57,7 +59,8 @@ class ACT_net(nn.Module):
         base_feat = self.act_base(im_data)
         # feed base feature map tp RPN to obtain rois
         rois, rpn_loss_cls, rpn_loss_bbox = self.act_rpn(base_feat, im_info, gt_tubes, None, num_boxes)
-        
+        # print('rois :',rois)
+        # print('rois :',rois.shape)
         # if it is training phrase, then use ground trubut bboxes for refining
         if self.training:
             roi_data = self.act_proposal_target(rois, gt_tubes, num_boxes)
@@ -75,14 +78,18 @@ class ACT_net(nn.Module):
             rpn_loss_cls = 0
             rpn_loss_bbox = 0
 
-        # rois = Variable(rois)
+        rois = Variable(rois)
 
         # do roi pooling based on predicted rois
-        # print('rois.shape :', rois[:,:,[0,1,2,4,5]].shape)
+        print('rois.shape :', rois.shape)
+        print('rois.shape :', rois.view(-1,7).shape)
         # print('rois.shape :', rois[:,:,[0,1,2,4,5]].view(-1,5).shape)
-        rois_xy = rois[:,:,[0,1,2,4,5]].contiguous()
-        pooled_feat = self.act_roi_align(base_feat, rois_xy.view(-1, 5))
-        # print('pooled_feat.shape :',pooled_feat.shape)
+        # print('rois :',rois)
+        # rois_xy = rois[:,:,[0,1,2,4,5]].contiguous()
+        # print('rois_xy :',rois_xy)
+        pooled_feat = self.act_roi_align(base_feat, rois.view(-1, 7))
+        print('pooled_feat.shape :',pooled_feat.shape)
+        # print('pooled_feat :',pooled_feat)
         # # feed pooled features to top model
         pooled_feat = self._head_to_tail(pooled_feat)
         # print('pooled_feat.shape :',pooled_feat.shape)

@@ -24,7 +24,7 @@ class _RPN(nn.Module):
         self.anchor_scales = [4, 8, 16 ]
         self.anchor_ratios = [0.5, 1, 2]
         self.feat_stride = [16, ]
-        self.anchor_duration = [16,8,4,3] # add 
+        self.anchor_duration = [16,8] # add 
 
         # # define the convrelu layers processing input feature map
 
@@ -71,20 +71,23 @@ class _RPN(nn.Module):
 
         # print('Inside region net')
         rpn_conv1 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
-        rpn_conv1 = rpn_conv1.permute(0,1,3,4,2) # move time dim as last dim
+        # rpn_conv1 = rpn_conv1.permute(0,1,3,4,2) # move time dim as last dim
         # print('rpn_conv1.shape :',rpn_conv1.shape)
 
         # ## get classification score for all anchors
         rpn_cls_score = self.RPN_cls_score(rpn_conv1)  # classification layer
+        
         rpn_bbox_pred = self.RPN_bbox_pred(rpn_conv1) # regression layer
 
-        # print('rpn_cls_score shape : ', rpn_cls_score.shape)
-        # print('rpn_bbox_pred shape : ', rpn_bbox_pred.shape)
+        print('rpn_cls_score shape : ', rpn_cls_score.shape)
+        print('rpn_bbox_pred shape : ', rpn_bbox_pred.shape)
 
         rpn_cls_score_reshape = self.reshape(rpn_cls_score, 2)
+        print('rpn_cls_score_reshape.shape : ', rpn_cls_score_reshape.shape)
         rpn_cls_prob_reshape = F.softmax(rpn_cls_score_reshape, 1)
+        print('rpn_cls_prob_reshape.shape : ', rpn_cls_prob_reshape.shape)
         rpn_cls_prob = self.reshape(rpn_cls_prob_reshape, self.nc_score_out)
-
+        print('rpn_cls_prob.shape :',rpn_cls_prob.shape)
         # print('rpn_cls_prob :',rpn_cls_prob)
         # print('rpn_cls_prob.shape :',rpn_cls_prob.shape)
         # proposal layer
@@ -117,9 +120,12 @@ class _RPN(nn.Module):
             rpn_label = torch.index_select(rpn_label.view(-1), 0, rpn_keep.data)
             rpn_label = Variable(rpn_label.long())
 
-            # print('rpn_cls_score.shape :',rpn_cls_score.shape)
-            # print('rpn_label.shape :',rpn_label.shape)
-
+            print('rpn_cls_score.shape :',rpn_cls_score.shape)
+            print('rpn_label.shape :',rpn_label.shape)
+            
+            print('rpn_cls_score[0][0] :',rpn_cls_score[0][0])
+            print('rpn_cls_score[0][1] :',rpn_cls_score[0][1])
+            print('rpn_label[0] :',rpn_label[0])
             self.rpn_loss_cls =  F.cross_entropy(rpn_cls_score, rpn_label)
             # print('self.rpn_loss_cls :',self.rpn_loss_cls)
             fg_cnt = torch.sum(rpn_label.data.ne(0))

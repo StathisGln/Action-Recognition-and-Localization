@@ -9,6 +9,7 @@ import copy
 import glob
 import json
 from create_tubes_from_boxes import create_tube
+from resize_rpn import resize_rpn, resize_tube
 
 from spatial_transforms import (Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
@@ -174,7 +175,7 @@ def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
 
 
 class Video(data.Dataset):
-    def __init__(self, video_path, frames_dur=8, split_txt_path=None,
+    def __init__(self, video_path, frames_dur=8, split_txt_path=None, sample_size= 112,
                  spatial_transform=None, temporal_transform=None, json_file = None,
                  sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None):
 
@@ -185,6 +186,7 @@ class Video(data.Dataset):
         self.temporal_transform = temporal_transform
         self.loader = get_loader()
         self.sample_duration = frames_dur
+        self.sample_size = sample_size
         self.json_file = json_file
         self.classes_idx = classes_idx
         
@@ -210,16 +212,12 @@ class Video(data.Dataset):
                 0, n_frames - self.sample_duration+1 ) + 1
             frame_indices = list(
                 range(time_index, time_index + self.sample_duration))  # get the corresponding frames
-        # print('path :',path ,' n_frames :',n_frames, ' index :', index, ' time_index :', time_index)
 
-
-        # print(frame_indices)
         if self.temporal_transform is not None:
             frame_indices = self.temporal_transform(frame_indices)
         clip = self.loader(path, frame_indices)
 
         # # get original height and width
-        # print('clip.size :', clip[0].size)
         w, h = clip[0].size
         
         if self.spatial_transform is not None:
@@ -236,18 +234,19 @@ class Video(data.Dataset):
             data = json.load(fp)[json_key]
             
         boxes = data[time_index-1:time_index +self.sample_duration-1] # because time_index starts from 1
-        
         class_int = self.classes_idx[cls]
-        # frames = list(range( time_index, time_index + self.sample_duration))
-        target = torch.IntTensor([class_int] * self.sample_duration)
-        # print(len(boxes)
-        gt_bboxes = torch.Tensor([boxes[i] + [ class_int] for i in range(len(boxes))]).clamp_(min=0)
-        gt_bboxes_tube = torch.Tensor([boxes[i] + [i, class_int] for i in range(len(boxes))]).unsqueeze(0)
+        gt_bboxes = torch.Tensor(boxes )
+        gt_bboxes[:,[0,2]] = gt_bboxes[:,[0,2]].clamp_(min=0,max=w)
+        gt_bboxes[:,[1,3]] = gt_bboxes[:,[1,3]].clamp_(min=0,max=h)
         gt_bboxes = torch.round(gt_bboxes)
-        # print('gt_bboxes.shape :',gt_bboxes.shape)
-        # im_info_tube = torch.Tensor([[w,h,frames[0],frames[-1]]*gt_bboxes.size(0)])
-        im_info_tube = torch.Tensor([[w,h,]*gt_bboxes.size(0)])
-        # print('im_info_tube :',im_info_tube)
+        gt_bboxes_r = resize_rpn(gt_bboxes, h,w,self.sample_size)
+
+        # print('gt_bboxes_r.shape :',gt_bboxes_r.shape)
+        # print('gt_bboxes_r :',gt_bboxes_r)
+        # print('class_int :',class_int)
+        gt_bboxes_tube = torch.cat((gt_bboxes[:,:4],torch.Tensor( [[i, class_int] for i in range(len(boxes))])),dim=1).unsqueeze(0)
+        # print('gt_bboxes_tube :',gt_bboxes_tube)
+        im_info_tube = torch.Tensor([[w,h,]*gt_bboxes_r.size(0)])
         gt_tubes = create_tube(gt_bboxes_tube.unsqueeze(2),im_info_tube,self.sample_duration)
         gt_tubes = torch.round(gt_tubes)
         
@@ -315,12 +314,12 @@ if __name__ == "__main__":
 
     dataset_folder = '/gpu-data/sgal/JHMDB-act-detector-frames'
     splt_txt_path =  '/gpu-data/sgal/splits'
-    boxes_file = './poses.json'
+    boxes_file = '../temporal_localization/poses.json'
     sample_size = 112
     sample_duration = 16 #len(images)
 
     batch_size = 1
-    n_threads = 2
+    n_threads = 0
     
     mean = [103.29825354, 104.63845484,  90.79830328] # jhmdb from .png
 

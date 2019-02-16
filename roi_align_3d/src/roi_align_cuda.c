@@ -29,7 +29,7 @@ int roi_align_forward_cuda(int aligned_height, int aligned_width, int time_dim, 
     int data_width = THCudaTensor_size(state, features, 4);
     // Number of channels
     int num_channels = THCudaTensor_size(state, features, 1);
-
+    printf('data_time %d data_height %d data width %d num_channels %d\n',data_time,data_height,data_width,num_channels);
     cudaStream_t stream = THCState_getCurrentStream(state);
 
     ROIAlignForwardLaucher(

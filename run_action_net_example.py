@@ -38,6 +38,7 @@ if __name__ == '__main__':
     batch_size = 1
     n_threads = 0
 
+
     # # get mean
     # mean =  [103.75581543 104.79421473  91.16894564] # jhmdb
     # mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
@@ -68,7 +69,7 @@ if __name__ == '__main__':
 
     # Init action_net
     model = ACT_net(actions)
-
+    model.create_architecture()
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
 
@@ -79,7 +80,10 @@ if __name__ == '__main__':
     clips, h, w, gt_tubes, n_actions = data[1451]
     clips2, h2, w2, gt_tubes2, n_actions2 = data[1450]
 
+    for key, value in dict(model.named_parameters()).items():
 
+        if value.requires_grad:
+            print(key)
     # gt_tubes_r2 = resize_tube(gt_tubes2, torch.Tensor(h),torch.Tensor(w),sample_size).to(device)
     # clips = clips.unsqueeze(0)
     # gt_tubes = gt_tubes.unsqueeze(0).to(device)
@@ -96,7 +100,7 @@ if __name__ == '__main__':
     gt_tubes = resize_tube(gt_tubes,h,w,sample_size).to(device)
     n_actions = torch.Tensor((n_actions,n_actions2)).to(device)
 
-    im_info = torch.Tensor([sample_size,sample_size,sample_duration] * 2).cuda().float().to(device)
+    im_info = torch.Tensor([[sample_size,sample_size,sample_duration]] * 2).cuda().float().to(device)
 
     print('gt_tubes.shape :',gt_tubes.shape )
     print('gt_tubes :',gt_tubes )
@@ -122,4 +126,5 @@ if __name__ == '__main__':
                                                       n_actions)
     print('**********VGIKE**********')
     print('rois.shape :',rois.shape)
+    # print('rois :',rois)
 

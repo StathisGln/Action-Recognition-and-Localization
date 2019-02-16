@@ -25,7 +25,7 @@ if torch.cuda.is_available():
     extra_objects = [os.path.join(this_file, fname) for fname in extra_objects]
 
 ffi = create_extension(
-    '_ext.roi_align',
+    '_ext.roi_align_3d',
     headers=headers,
     sources=sources,
     define_macros=defines,

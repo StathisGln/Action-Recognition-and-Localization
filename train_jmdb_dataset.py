@@ -71,7 +71,8 @@ if __name__ == '__main__':
 
     # Init action_net
     model = ACT_net(classes)
-
+    model.create_architecture()
+    
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
 
@@ -81,8 +82,9 @@ if __name__ == '__main__':
 
     params = []
     for key, value in dict(model.named_parameters()).items():
-        # print(key, value.requires_grad)
+
         if value.requires_grad:
+            print(key)
             if 'bias' in key:
                 params += [{'params':[value],'lr':lr*(True + 1), \
                             'weight_decay': False and 0.0005 or 0}]
@@ -92,7 +94,7 @@ if __name__ == '__main__':
     lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
 
-    epochs = 20
+    epochs = 1
     #epochs = 5
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
@@ -105,6 +107,8 @@ if __name__ == '__main__':
         for step, data  in enumerate(data_loader):
             # print('&&&&&&&&&&')
             print('step -->\t',step)
+            if step == 10:
+                break
             # clips,  (h, w), gt_tubes, gt_rois = data
             clips,  (h, w), gt_tubes, n_actions = data
             clips = clips.to(device)

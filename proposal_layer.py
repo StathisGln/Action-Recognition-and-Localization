@@ -16,7 +16,7 @@ import math
 import yaml
 from config import cfg
 from generate_3d_anchors import generate_anchors
-from bbox_transform import  clip_boxes_3d, bbox_transform_inv_3d
+from bbox_transform import bbox_transform_inv, clip_boxes_3d, clip_boxes_batch, bbox_transform_inv_3d
 from nms.nms_wrapper import nms
 
 import pdb
@@ -80,13 +80,13 @@ class _ProposalLayer(nn.Module):
         # nms_thresh    = cfg[cfg_key].RPN_NMS_THRESH
         # min_size      = cfg[cfg_key].RPN_MIN_SIZE
         if cfg_key == 'TRAIN':
-            pre_nms_topN  = 12000
-            post_nms_topN = 2000
+            pre_nms_topN  = 20000
+            post_nms_topN = 50
             nms_thresh    = 0.7
             min_size      = 8
         else:
             pre_nms_topN  = 6000
-            post_nms_topN = 300
+            post_nms_topN = 10
             nms_thresh    = 0.7
             min_size      = 16
 
@@ -95,7 +95,7 @@ class _ProposalLayer(nn.Module):
         ##################
 
         # print('batch_size :', batch_size)
-        feat_height, feat_width,  feat_time= scores.size(2), scores.size(3), scores.size(4) # (batch_size, 512/256, 7,7, 16/8)
+        feat_time, feat_height,  feat_width= scores.size(2), scores.size(3), scores.size(4) # (batch_size, 512/256, 7,7, 16/8)
         shift_x = np.arange(0, feat_width) * self._feat_stride
         shift_y = np.arange(0, feat_height) * self._feat_stride
         shift_z = np.arange(0, feat_time ) # z dim is time dim
@@ -112,7 +112,7 @@ class _ProposalLayer(nn.Module):
 
         anchors = self._anchors.view(1, A, 6) + shifts.view(K, 1, 6)
         anchors = anchors.view(1, K * A, 6)
-        print('anchors.shape :', anchors.shape)
+        # print('anchors.shape :', anchors.shape)
         anchors = anchors.expand(batch_size, K * A, 6)
 
         # print('anchors.shape :', anchors.shape)
@@ -146,10 +146,11 @@ class _ProposalLayer(nn.Module):
 
         # 2. clip predicted boxes to image
         ## if any dimension exceeds the dims of the original image, clamp_ them
-
-        proposals = clip_boxes_3d(proposals, torch.Tensor(im_info.tolist() * 1).cuda(), 1)
-
+        proposals = clip_boxes_3d(proposals, im_info, 1)
         # print('proposals.shape :',proposals.shape)
+        # print('proposals :',proposals[0][14000:14100])
+        # print('proposals :',proposals.cpu().tolist()[:100])
+
         # print('proposals :',proposals)
 
         # assign the score to 0 if it's non keep.
@@ -169,7 +170,8 @@ class _ProposalLayer(nn.Module):
 
         scores_keep = scores
         proposals_keep = proposals
-        _, order = torch.sort(scores, 0, True)
+
+        _, order = torch.sort(scores, 1, True)
         
         output = scores.new(batch_size, post_nms_topN, 7).zero_()
         # print('output.shape :',output.shape)
@@ -178,14 +180,13 @@ class _ProposalLayer(nn.Module):
             # # (NOTE: convert min_size to input image scale stored in im_info[2])
             proposals_single = proposals_keep[i]
             scores_single = scores_keep[i]
-
+            # print('scores_single.shape :',scores_single.shape)
             # # 4. sort all (proposal, score) pairs by score from highest to lowest
             # # 5. take top pre_nms_topN (e.g. 6000)
             order_single = order[i]
 
             if pre_nms_topN > 0 and pre_nms_topN < scores_keep.numel():
                 order_single = order_single[:pre_nms_topN]
-
             proposals_single = proposals_single[order_single, :]
             scores_single = scores_single[order_single].view(-1,1)
 
@@ -195,6 +196,7 @@ class _ProposalLayer(nn.Module):
 
             keep_idx_i = nms(torch.cat((proposals_single, scores_single), 1), nms_thresh, force_cpu=not cfg.USE_GPU_NMS)
             # keep_idx_i = nms(torch.cat((proposals_single, scores_single), 1), nms_thresh, force_cpu=True)
+            # print('keep_idx_i :',keep_idx_i)
             keep_idx_i = keep_idx_i.long().view(-1)
 
             if post_nms_topN > 0:
@@ -208,6 +210,7 @@ class _ProposalLayer(nn.Module):
             output[i,:num_proposal,1:] = proposals_single
 
         # print('output.shape :',output.shape)
+        # print('output :',output)
         return output
 
     def backward(self, top, propagate_down, bottom):

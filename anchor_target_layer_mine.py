@@ -37,7 +37,7 @@ class _AnchorTargetLayer(nn.Module):
     def __init__(self, feat_stride, scales, ratios, anchor_duration):
         super(_AnchorTargetLayer, self).__init__()
 
-        self._feat_stride = 32
+        self._feat_stride = feat_stride
         self._scales = scales
         anchor_scales = scales
         self.anchor_duration = anchor_duration
@@ -72,19 +72,21 @@ class _AnchorTargetLayer(nn.Module):
         # print('time_limit :',time_limit)
         height, width, time = rpn_cls_score.size(2), rpn_cls_score.size(3), rpn_cls_score.size(4)
 
-        feat_height, feat_width, feat_time = rpn_cls_score.size(2), rpn_cls_score.size(3), rpn_cls_score.size(4)
+        feat_time, feat_height, feat_width,  = rpn_cls_score.size(2), rpn_cls_score.size(3), rpn_cls_score.size(4)
         shift_x = np.arange(0, feat_width) * self._feat_stride
         shift_y = np.arange(0, feat_height) * self._feat_stride
-        shift_z = np.arange(0, feat_time) 
+        shift_z = np.arange(0, feat_time)
+        print('shift_z :',shift_z)
         shift_x, shift_y, shift_z = np.meshgrid(shift_x, shift_y, shift_z)
         shifts = torch.from_numpy(np.vstack((shift_x.ravel(), shift_y.ravel(), shift_z.ravel(),
                                              shift_x.ravel(), shift_y.ravel(), shift_z.ravel())).transpose())
         shifts = shifts.contiguous().type_as(rpn_cls_score).float()
 
+        print('shifts :',shifts)
         A = self._num_anchors
         K = shifts.size(0)
         # print("A {}, K {}".format(A,K))
-
+        
         self._anchors = self._anchors.type_as(gt_tubes) # move to specific gpu.
         # print('self._anchors.shape :',self._anchors.shape)
         all_anchors = self._anchors.view(1, A, 6) + shifts.view(K, 1, 6)
@@ -104,8 +106,9 @@ class _AnchorTargetLayer(nn.Module):
                 (all_anchors[:, 4] < long(im_info[0][0]) + self._allowed_border) &
                 (all_anchors[:, 5] < long(im_info[0][2]) + self._allowed_border))
 
-        inds_inside = torch.nonzero(keep).view(-1)
 
+        inds_inside = torch.nonzero(keep).view(-1)
+        print('all_anchors :',all_anchors)
         # keep only inside anchors
         anchors = all_anchors[inds_inside, :]
         print('mesa  anchors.shape :',anchors.shape)
@@ -115,9 +118,9 @@ class _AnchorTargetLayer(nn.Module):
 
         # print('anchors :',anchors.cpu().tolist())
 
-        for i in anchors.cpu().tolist():
-            if i[3] == 0.0 and i[5]== 15.0:
-                print(' edwwww :', i)
+        # for i in anchors.cpu().tolist():
+        #     if i[3] == 0.0 and i[5]== 15.0:
+        #         print(' edwwww :', i)
         # label: 1 is positive, 0 is negative, -1 is dont care
         labels = gt_tubes.new(batch_size, inds_inside.size(0)).fill_(-1)
         # print('labels.shape :',labels.shape)
