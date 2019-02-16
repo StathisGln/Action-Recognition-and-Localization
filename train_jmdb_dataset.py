@@ -93,7 +93,7 @@ if __name__ == '__main__':
     lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
 
-    epochs = 20
+    epochs = 30
     # epochs = 1
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
@@ -105,7 +105,7 @@ if __name__ == '__main__':
         ## 2 rois : 1450
         for step, data  in enumerate(data_loader):
             # print('&&&&&&&&&&')
-            print('step -->\t',step)
+            # print('step -->\t',step)
             # clips,  (h, w), gt_tubes, gt_rois = data
             clips,  (h, w), gt_tubes_r, n_actions = data
             clips = clips.to(device)
@@ -140,5 +140,5 @@ if __name__ == '__main__':
             epoch,loss_temp/step))
         if ( epoch + 1 ) % 5 == 0:
             torch.save(model.state_dict(), "jmdb_model_{0:03d}.pwf".format(epoch+1))
-        torch.save(model.state_dict(), "jmdb_model_pre_{0:03d}.pwf".format(epoch))
+        # torch.save(model.state_dict(), "jmdb_model_pre_{0:03d}.pwf".format(epoch))
 
