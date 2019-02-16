@@ -108,20 +108,18 @@ if __name__ == '__main__':
     data = model.act_rpn.RPN_cls_score.weight.data.clone()
 
 
-    model_data = torch.load('../temporal_localization/jmdb_model_030.pwf')
+
+    model_data = torch.load('../temporal_localization/jmdb_model_010.pwf')
     # # model_data = torch.load('../temporal_localization/r')
+
     model.load_state_dict(model_data)
 
     model = nn.DataParallel(model)
     model.to(device)
 
-    model_data = torch.load('./jmdb_model_010.pwf')
-    model.load_state_dict(model_data)
-    model.eval()
-
     model.eval()
     print('im_info :',im_info)
-
+    print('-----Starts-----')
     rois,  bbox_pred, rpn_loss_cls, \
     rpn_loss_bbox,  act_loss_bbox, rois_label = model(clips,
                                                       im_info,
@@ -130,20 +128,24 @@ if __name__ == '__main__':
     #                                                   torch.Tensor([[h,w]] * gt_tubes.size(1)).to(device),
     #                                                   gt_tubes, gt_rois,
     #                                                   torch.Tensor(len(gt_tubes)).to(device))
+
+    print('-----Eksww-----')
     print('rois :',rois.shape)
     # print('rois :',rois.)
     rois = rois[:,:,1:]
-    print('bbox_pred.shape :',bbox_pred.shape)
-    pred_boxes = bbox_transform_inv_3d(rois, bbox_pred, 1)
-    print('pred_boxes.shape :',pred_boxes.shape)
-    pred_boxes = clip_boxes_3d(pred_boxes, im_info.data, 1)
-    print('pred_boxes.shape :',pred_boxes.shape)
-    rois = pred_boxes[:,:,6:]
-    print('h %d w %d ' % (h,w))
-    rois[:,[0,2]] =rois[:,[0,2]].clamp_(min=0, )
-    rois[:,[1,3]] =rois[:,[1,3]].clamp_(min=0,)
-    print('rois.shape :',rois.shape)
-    print('rois :',rois[0][0])
+    # print('bbox_pred.shape :',bbox_pred.shape)
+    # pred_boxes = bbox_transform_inv_3d(rois, bbox_pred, 1)
+    # print('pred_boxes.shape :',pred_boxes.shape)
+    # pred_boxes = clip_boxes_3d(pred_boxes, im_info.data, 1)
+    # print('pred_boxes.shape :',pred_boxes.shape)
+    # rois = pred_boxes
+    # print('h %d w %d ' % (h,w))
+    # print('rois :',rois)
+    # print('rois.shape :',rois.shape)
+    # rois[:,[0,2]] =rois[:,[0,2]].clamp_(min=0, )
+    # rois[:,[1,3]] =rois[:,[1,3]].clamp_(min=0,)
+    # print('rois.shape :',rois.shape)
+    # print('rois :',rois[0][0])
 
     # print('rois.shape :',rois.shape)
     # print('rois :',rois)

@@ -21,6 +21,8 @@ import pdb
 
 np.random.seed(42)
 
+torch.backends.cudnn.benchmark = True # for accelerating
+
 if __name__ == '__main__':
 
     # torch.cuda.device_count()
@@ -122,15 +124,16 @@ if __name__ == '__main__':
             im_info = torch.Tensor([[sample_size, sample_size, sample_duration]] * gt_tubes_r.size(1)).to(device)
             # print('gt_tubes_r.shape :',gt_tubes_r.shape )
             inputs = Variable(clips)
-            rois,  bbox_pred, rpn_loss_cls, \
-            rpn_loss_bbox,  act_loss_bbox, rois_label = model(inputs,
+            rois,  bbox_pred, rpn_loss_cls, rpn_loss_bbox, \
+            act_loss_cls,  act_loss_bbox, rois_label = model(inputs,
                                                               im_info,
                                                               gt_tubes_r, None,
                                                               n_actions)
             # print('rois :',rois)
             # print('rpn_loss_bbox :',rpn_loss_bbox)
             # print('rpn_loss_cls :',rpn_loss_cls)
-            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean()
+            # loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + act_loss_cls.mean()
+            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() 
             loss_temp += loss.item()
 
             # backw\ard

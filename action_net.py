@@ -35,7 +35,7 @@ class ACT_net(nn.Module):
         # define rpng
         self.act_rpn = _RPN(256)
         # self.act_proposal_target = _ProposalTargetLayer(self.n_classes)
-        self.act_proposal_target = _ProposalTargetLayer(2) ## background/ foreground
+        self.act_proposal_target = _ProposalTargetLayer(self.n_classes) ## background/ foreground
         self.time_dim =16
         self.temp_scale = 1.
         self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale)
@@ -88,60 +88,54 @@ class ACT_net(nn.Module):
         pooled_feat = self._head_to_tail(pooled_feat)
         # print('pooled_feat.shape :',pooled_feat.shape)
 
-        n_rois = pooled_feat.size(0)
+        # n_rois = pooled_feat.size(0)
         # print('n_rois :',n_rois)
         # print('pooled_feat.view(n_rois,-1).shape :',pooled_feat.view(n_rois,-1).shape)
-        # compute bbox offset
-        # print('pooled_feat.view(n_rois,-1).shape :',pooled_feat.view(n_rois,-1).shape)
-        bbox_pred = self.act_bbox_pred(pooled_feat.view(n_rois,-1))
+        # # compute bbox offset
+        # # print('pooled_feat.view(n_rois,-1).shape :',pooled_feat.view(n_rois,-1).shape)
+        # bbox_pred = self.act_bbox_pred(pooled_feat.view(n_rois,-1))
+        bbox_pred = self.act_bbox_pred(pooled_feat)
         if self.training:
-            # select the corresponding columns according to roi labels
-            rois_label = rois_label.ne(0).long()
-            bbox_pred_view = bbox_pred.view(bbox_pred.size(0), int(bbox_pred.size(1) / 6), 6)
-            bbox_pred_select = torch.gather(bbox_pred_view, 1, rois_label.view(rois_label.size(0), 1, 1).expand(rois_label.size(0), 1, 6))
-            bbox_pred = bbox_pred_select.squeeze(1)
 
+            # # select the corresponding columns according to roi labels
+            # rois_label = rois_label.ne(0).long()
+            # bbox_pred_view = bbox_pred.view(bbox_pred.size(0), int(bbox_pred.size(1) / 6), 6)
+            # bbox_pred_select = torch.gather(bbox_pred_view, 1, rois_label.view(rois_label.size(0), 1, 1).expand(rois_label.size(0), 1, 6))
+            # bbox_pred = bbox_pred_select.squeeze(1)
+            # print('rois_label :',rois_label)
+            rois_label = rois_label.ne(0).long()
+            indexes = torch.nonzero(rois_label).view(-1)
+            bbox_pred_fg = bbox_pred[indexes]
+            # print(' bbox_pred_fg :', bbox_pred_fg )
+            # print(' bbox_pred_fg.shape :', bbox_pred_fg.shape )
+
+
+        # compute object classification probability
+        # cls_score = self.act_cls_score(pooled_feat)
+        # cls_prob = F.softmax(cls_score, 1)
+
+        act_loss_cls = 0
         act_loss_bbox = 0
 
         if self.training:
+            # # classification loss
+            # act_loss_cls = F.cross_entropy(cls_score, rois_label)
+
+
             # bounding box regression L1 loss
             act_loss_bbox = _smooth_l1_loss(bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
+
+            
         bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
         # print('bbox_pred :',bbox_pred)
         # return 0,0,0,0,0,0
         # return rois,  bbox_pred, rpn_loss_cls, rpn_loss_bbox,  act_loss_bbox, rois_label
         if self.training:
-            return rois,  bbox_pred, rpn_loss_cls, rpn_loss_bbox,  act_loss_bbox, rois_label
+            return rois,  bbox_pred, rpn_loss_cls, rpn_loss_bbox, act_loss_cls, act_loss_bbox, rois_label
 
 
         return rois,  bbox_pred,None,None,None,None
     
-
-    # def roi_pooling(self, base_feat, rois, size=(16,7,7), spatial_scale=1.0/16.0, time_scale=1.0):
-
-    #     print('rois.shape inside roi pooling :',rois.shape)
-    #     # assert(rois.dim() == 2)
-    #     # assert(rois.size(1) == 7)
-    #     output = []
-    #     rois = rois.data.float()
-    #     batch_size = rois.size(0)
-    #     num_rois = rois.size(1)
-
-    #     rois[:,:,[1,2,4,5]] =rois[:,:,[1,2,4,5]].mul_(spatial_scale)
-    #     rois[:,:,[3,6]] = rois[:,:,[3,6]].mul_(time_scale)
-
-    #     rois = rois.long()
-    #     for b in range(batch_size):
-    #         out_batch = []
-    #         for i in range(num_rois):
-    #             roi = rois[b,i].clamp_(min=0)
-    #             im_idx = roi[0]
-    #             im = base_feat[b, ... , roi[3]:(roi[6]+1), roi[2]:(roi[5]+1), roi[1]:(roi[4]+1)]
-    #             print('im.shape :',im.shape)
-    #             out_batch.append(F.adaptive_max_pool3d(im, size))
-    #         output.append(torch.cat(out_batch,0).unsqueeze(0))
-            
-    #     return torch.cat(output, 0)
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):
@@ -170,7 +164,7 @@ class ACT_net(nn.Module):
         model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
                          sample_size=sample_size, sample_duration=sample_duration,
                          last_fc=False)
-        model = model.cuda()
+        model = model
         model = nn.DataParallel(model, device_ids=None)
 
         self.model_path = '../temporal_localization/resnet-34-kinetics.pth'
@@ -183,8 +177,8 @@ class ACT_net(nn.Module):
 
         self.act_top = nn.Sequential(model.module.layer4)
 
-        self.act_bbox_pred = nn.Linear(512, 6 * 2 ) # 2 classes bg/ fg
-
+        self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg
+        # self.act_cls_score = nn.Linear(2048, self.n_classes)
         # Fix blocks
         for p in self.act_base[0].parameters(): p.requires_grad=False
         for p in self.act_base[1].parameters(): p.requires_grad=False

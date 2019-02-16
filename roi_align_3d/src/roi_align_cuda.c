@@ -37,7 +37,6 @@ int roi_align_forward_cuda(int aligned_height, int aligned_width, int time_dim, 
     int num_channels = THCudaTensor_size(state, features, 1);
     /* printf("num_channels %d\n",num_channels); */
     /* printf("data_time %d data_height %d data width %d num_channels %d\n",data_time,data_height,data_width,num_channels); */
-
     cudaStream_t stream = THCState_getCurrentStream(state);
     /* printf("temp_scale %f, spatial_scale %f\n",temp_scale,spatial_scale); */
     ROIAlignForwardLaucher(

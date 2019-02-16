@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+rom __future__ import absolute_import
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -34,7 +34,7 @@ class _RPN(nn.Module):
         # define bg/fg classifcation score layer for each kernel 
         # 2(bg/fg) * 9  (anchors) * 4 (duration : 16,8,4,3)
         self.nc_score_out = len(self.anchor_scales) * len(self.anchor_ratios) * len(self.anchor_duration) * 2 
-        self.RPN_cls_score = nn.Conv3d(512, self.nc_score_out, 1, 1, 0).cuda()
+        self.RPN_cls_score = nn.Conv3d(512, self.nc_score_out, 1, 1, 0)
 
         # define anchor box offset prediction layer
         # 6(coords:x1,y1,t1) * 9 (anchors)  * 4 (duration)
@@ -50,28 +50,26 @@ class _RPN(nn.Module):
 
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0
-        self.keep=self.RPN_cls_score.weight.data.clone() # modify here
-        self.init_rpn()
+        # self.keep=self.RPN_cls_score.weight.data.clone() # modify here
+        # self.init_rpn()
         
+    # def init_rpn(self):
 
-#     def init_rpn(self):
+    #     def normal_init(m, mean, stddev, truncated=False):
+    #         """
+    #         weight initalizer: truncated normal and random normal.
+    #         """
+    #         # x is a parameter
+    #         if truncated:
+    #             m.weight.data.normal_().fmod_(2).mul_(stddev).add_(mean) # not a perfect approximation
+    #         else:
+    #             m.weight.data.normal_(mean, stddev)
+    #             m.bias.data.zero_()
 
-#         def normal_init(m, mean, stddev, truncated=False):
-#             """
-#             weight initalizer: truncated normal and random normal.
-#             """
-#             # x is a parameter
-#             if truncated:
-#                 m.weight.data.normal_().fmod_(2).mul_(stddev).add_(mean) # not a perfect approximation
-#             else:
-#                 m.weight.data.normal_(mean, stddev)
-#                 m.bias.data.zero_()
-
-#         truncated = False
-#         normal_init(self.RPN_Conv, 0, 0.01, truncated)
-#         normal_init(self.RPN_cls_score, 0, 0.01, truncated)
-#         normal_init(self.RPN_bbox_pred, 0, 0.001, truncated)
-
+    #     truncated = False
+    #     normal_init(self.RPN_Conv, 0, 0.01, truncated)
+    #     normal_init(self.RPN_cls_score, 0, 0.01, truncated)
+    #     normal_init(self.RPN_bbox_pred, 0, 0.001, truncated)
 
 
     @staticmethod
@@ -91,7 +89,6 @@ class _RPN(nn.Module):
 
         batch_size = base_feat.size(0)
 
-        if (self.RPN_cls_score.weight.data==self.keep).all(): print('same!')
         # print('Inside region net')
         rpn_conv1 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
         # rpn_conv1 = rpn_conv1.permute(0,1,3,4,2) # move time dim as last dim
@@ -181,43 +178,15 @@ class _RPN(nn.Module):
 
 if __name__ == '__main__':
 
-
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # a good example is v_TrampolineJumping_g17_c01
     # feats = torch.rand(1,512,16,4,4).cuda()
     # feats = torch.rand(1,512,8,4,4).cuda().float()
-    feats = torch.rand(1,256,16,7,7).cuda().float()
-
-    h = torch.Tensor([240]).cuda()
-    w = torch.Tensor([320]).cuda()
-    gt_bboxes = torch.Tensor([[[160.7641,  70.0822, 242.5207, 175.3398,   1.]],
-                             [[161.1543,  70.5410, 242.4840, 175.2963,    1.]],
-                             [[161.1610,  70.5489, 242.4820, 175.2937,    1.]],
-                             [[161.0852,  70.4499, 243.3874, 176.4665,    1.]],
-                             [[161.0921,  70.4580, 243.3863, 176.4650,    1.]],
-                             [[161.5888,  73.5920, 242.9024, 176.6015,    1.]],
-                             [[161.5971,  73.5839, 242.9018, 177.6026,    1.]],
-                             [[161.6053,  73.5757, 242.9014, 177.6040,    1.]],
-                             [[160.7641,  70.0822, 242.5207, 175.3398,    1.]],
-                             [[161.1543,  70.5410, 242.4840, 175.2963,    1.]],
-                             [[161.1610,  70.5489, 242.4820, 175.2937,    1.]],
-                             [[161.0852,  70.4499, 243.3874, 176.4665,    1.]],
-                             [[161.0921,  70.4580, 243.3863, 176.4650,    1.]],
-                             [[161.5888,  73.5920, 242.9024, 176.6015,    1.]],
-                             [[161.5971,  73.5839, 242.9018, 177.6026,    1.]],
-                             [[161.6053,  73.5757, 242.9014, 177.6040,    1.]]]).cuda().float()
-
-    # gt_bboxes = torch.Tensor([[[160.7641,  70.0822, 242.5207, 175.3398,   1.]],
-    #                          [[161.1543,  70.5410, 242.4840, 175.2963,    1.]],
-    #                          [[161.1610,  70.5489, 242.4820, 175.2937,    1.]],
-    #                          [[161.0852,  70.4499, 243.3874, 176.4665,    1.]],
-    #                          [[161.0921,  70.4580, 243.3863, 176.4650,    1.]],
-    #                          [[161.5888,  73.5920, 242.9024, 176.6015,    1.]],
-    #                          [[161.5971,  73.5839, 242.9018, 177.6026,    1.]],
-    #                          [[161.6053,  73.5757, 242.9014, 177.6040,    1.]]]).cuda().float()
-
-
-    print(gt_bboxes.shape)
-    print('h {}, w {}, gt_bboxes.shape {}'.format(h,w,gt_bboxes.shape))
-    model = _RPN(256)
-    out = model(feats,torch.Tensor([[h,w]]*gt_bboxes.size(1)).cuda(), gt_bboxes, len(gt_bboxes))
+    feats = torch.rand(2,256,16,7,7).float().to(device)
+    gt_bboxes = torch.Tensor([[[42., 44.,  0., 68., 98., 15., 11.]],
+                              [[34., 52.,  0., 67., 98., 15., 11.]]]).to(device)
+    im_info = torch.Tensor([[112,112,16],[112,112,16]]).to(device)
+    n_actions = torch.Tensor([1,1]).to(device)
+    model = _RPN(256).to(device)
+    out = model(feats,im_info, gt_bboxes, None, n_actions)
 

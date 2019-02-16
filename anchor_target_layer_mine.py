@@ -41,7 +41,7 @@ class _AnchorTargetLayer(nn.Module):
         self._scales = scales
         anchor_scales = scales
         self.anchor_duration = anchor_duration
-        self._anchors = torch.from_numpy(generate_anchors(scales=np.array(anchor_scales), ratios=np.array(ratios), time_dim=anchor_duration)).float()
+        self._anchors = torch.from_numpy(generate_anchors(scales=np.array(anchor_scales), ratios=np.array(ratios), time_dim=anchor_duration)).float().cuda()
         self._num_anchors = self._anchors.size(0)
 
 
@@ -88,6 +88,7 @@ class _AnchorTargetLayer(nn.Module):
         # print("A {}, K {}".format(A,K))
         
         self._anchors = self._anchors.type_as(gt_tubes) # move to specific gpu.
+        # print('self._anchors :',self._anchors)
         # print('self._anchors.shape :',self._anchors.shape)
         all_anchors = self._anchors.view(1, A, 6) + shifts.view(K, 1, 6)
         all_anchors = all_anchors.view(K * A, 6)

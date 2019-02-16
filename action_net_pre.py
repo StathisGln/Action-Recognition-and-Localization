@@ -87,6 +87,7 @@ class ACT_net(nn.Module):
         # print('rois :',rois)
         # rois_xy = rois[:,:,[0,1,2,4,5]].contiguous()
         # print('rois_xy :',rois_xy)
+        print('-----Before roi align-----')
         pooled_feat = self.act_roi_align(base_feat, rois.view(-1, 7))
         print('pooled_feat.shape :',pooled_feat.shape)
         # print('pooled_feat :',pooled_feat)
@@ -188,7 +189,7 @@ class ACT_net(nn.Module):
 
         self.act_top = nn.Sequential(model.module.layer4)
 
-        self.act_bbox_pred = nn.Linear(512, 6 * 2 ) # 2 classes bg/ fg
+        self.act_bbox_pred = nn.Linear(512, 6) # 2 classes bg/ fg
 
         # Fix blocks
         for p in self.act_base[0].parameters(): p.requires_grad=False
