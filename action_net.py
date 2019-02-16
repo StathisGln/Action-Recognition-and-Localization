@@ -1,3 +1,4 @@
+
 from __future__ import absolute_import
 
 import os
@@ -87,14 +88,16 @@ class ACT_net(nn.Module):
         # # feed pooled features to top model
         pooled_feat = self._head_to_tail(pooled_feat)
         # print('pooled_feat.shape :',pooled_feat.shape)
-
+        print('rois_target.shape :',rois_target.shape)
         # n_rois = pooled_feat.size(0)
         # print('n_rois :',n_rois)
         # print('pooled_feat.view(n_rois,-1).shape :',pooled_feat.view(n_rois,-1).shape)
         # # compute bbox offset
         # # print('pooled_feat.view(n_rois,-1).shape :',pooled_feat.view(n_rois,-1).shape)
         # bbox_pred = self.act_bbox_pred(pooled_feat.view(n_rois,-1))
-        bbox_pred = self.act_bbox_pred(pooled_feat)
+        bbox_pred_xy = self.act_bbox_pred_xy(pooled_feat)
+        bbox_pred_t  = self.act_bbox_pred_t(pooled_feat)
+        bbox_pred = torch.cat((bbox_pred_xy[:,:2],bbox_pred_t[:,0].unsqueeze(1),bbox_pred_xy[:,2:],bbox_pred_t[:,1].unsqueeze(1)),dim=1)
         if self.training:
 
             # # select the corresponding columns according to roi labels
@@ -122,8 +125,18 @@ class ACT_net(nn.Module):
             # act_loss_cls = F.cross_entropy(cls_score, rois_label)
 
 
-            # bounding box regression L1 loss
-            act_loss_bbox = _smooth_l1_loss(bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
+            # bounding box regression L1 loss for x,y
+            rois_target_xy = rois_target[:,[0,1,3,4]]
+            rois_inside_ws_xy = rois_inside_ws[:,[0,1,3,4]]
+            rois_outside_ws_xy = rois_outside_ws[:,[0,1,3,4]]
+            act_loss_bbox_xy = _smooth_l1_loss(bbox_pred_xy, rois_target_xy, rois_inside_ws_xy, rois_outside_ws_xy)
+
+            rois_target_t = rois_target[:,[2,5]]
+            rois_inside_ws_t = rois_inside_ws[:,[2,5]]
+            rois_outside_ws_t = rois_outside_ws[:,[2,5]]
+            act_loss_bbox_t = _smooth_l1_loss(bbox_pred_t, rois_target_t, rois_inside_ws_t, rois_outside_ws_t)
+
+            act_loss_bbox = act_loss_bbox_t + act_loss_bbox_xy
 
             
         bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
@@ -152,7 +165,9 @@ class ACT_net(nn.Module):
         normal_init(self.act_rpn.RPN_Conv, 0, 0.01, truncated)
         normal_init(self.act_rpn.RPN_cls_score, 0, 0.01, truncated)
         normal_init(self.act_rpn.RPN_bbox_pred, 0, 0.01, truncated)
-        normal_init(self.act_bbox_pred, 0, 0.001, truncated)
+        normal_init(self.act_bbox_pred_xy, 0, 0.001, truncated)
+        normal_init(self.act_bbox_pred_t, 0, 0.001, truncated)
+
 
     def _init_modules(self):
 
@@ -176,7 +191,8 @@ class ACT_net(nn.Module):
 
         self.act_top = nn.Sequential(model.module.layer4)
 
-        self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg
+        self.act_bbox_pred_xy = nn.Linear(512, 4 ) # only for x,y
+        self.act_bbox_pred_t  =  nn.Linear(512, 2 ) # only for x,y
         # self.act_cls_score = nn.Linear(2048, self.n_classes)
         # Fix blocks
         for p in self.act_base[0].parameters(): p.requires_grad=False

@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     dataset_folder = '/gpu-data/sgal/JHMDB-act-detector-frames'
     splt_txt_path =  '/gpu-data/sgal/splits'
-    boxes_file = './poses.json'
+    boxes_file = '../temporal_localization/poses.json'
 
     sample_size = 112
     sample_duration = 16  # len(images)
