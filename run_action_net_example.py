@@ -114,10 +114,11 @@ if __name__ == '__main__':
     # inputs = Variable(clips)
     print('gt_tubes.shape :',gt_tubes.shape )
     # print('gt_rois.shape :',gt_rois.shape)
-    rois,  bbox_pred, rpn_loss_cls, \
-    rpn_loss_bbox,  act_loss_bbox, rois_label = model(clips,
+    rois,  bbox_pred, cls_prob, \
+    rpn_loss_cls, rpn_loss_bbox, \
+    act_loss_cls, act_loss_bbox, rois_labelx = model(inputs,
                                                       im_info,
-                                                      gt_tubes, None,
+                                                      gt_tubes_r, None,
                                                       n_actions)
     print('**********VGIKE**********')
     print('rois.shape :',rois.shape)

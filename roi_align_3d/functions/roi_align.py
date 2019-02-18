@@ -36,7 +36,7 @@ class RoIAlignFunction(Function):
             # print('features[0][0] :',features[0][0])
             roi_align_3d.roi_align_forward_cuda(self.aligned_height,
                                              self.aligned_width,
-                                             self.time_dim+1,
+                                             self.time_dim,
                                              self.spatial_scale, self.temp_scale, features,
                                              rois, output)
             # print('outttt')

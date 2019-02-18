@@ -88,7 +88,7 @@ class ACT_net(nn.Module):
         # # feed pooled features to top model
         pooled_feat = self._head_to_tail(pooled_feat)
         # print('pooled_feat.shape :',pooled_feat.shape)
-        print('rois_target.shape :',rois_target.shape)
+        # print('rois_target.shape :',rois_target.shape)
         # n_rois = pooled_feat.size(0)
         # print('n_rois :',n_rois)
         # print('pooled_feat.view(n_rois,-1).shape :',pooled_feat.view(n_rois,-1).shape)
@@ -109,8 +109,6 @@ class ACT_net(nn.Module):
             rois_label = rois_label.ne(0).long()
             indexes = torch.nonzero(rois_label).view(-1)
             bbox_pred_fg = bbox_pred[indexes]
-            # print(' bbox_pred_fg :', bbox_pred_fg )
-            # print(' bbox_pred_fg.shape :', bbox_pred_fg.shape )
 
 
         # compute object classification probability
@@ -136,7 +134,7 @@ class ACT_net(nn.Module):
             rois_outside_ws_t = rois_outside_ws[:,[2,5]]
             act_loss_bbox_t = _smooth_l1_loss(bbox_pred_t, rois_target_t, rois_inside_ws_t, rois_outside_ws_t)
 
-            act_loss_bbox = act_loss_bbox_t + act_loss_bbox_xy
+            act_loss_bbox = act_loss_bbox_xy
 
             
         bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)

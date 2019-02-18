@@ -108,7 +108,8 @@ if __name__ == '__main__':
     data = model.act_rpn.RPN_cls_score.weight.data.clone()
 
 
-    model_data = torch.load('../temporal_localization/jmdb_model_015.pwf')
+    # model_data = torch.load('../temporal_localization/jmdb_model_015.pwf')
+    model_data = torch.load('./jmdb_model_030.pwf')
     # # model_data = torch.load('../temporal_localization/r')
 
     model.load_state_dict(model_data)
@@ -131,22 +132,22 @@ if __name__ == '__main__':
     print('rois :',rois.shape)
     # print('rois :',rois.)
     rois = rois[:,:,1:]
-    print('bbox_pred.shape :',bbox_pred.shape)
-    pred_boxes = bbox_transform_inv_3d(rois, bbox_pred, 1)
-    print('pred_boxes.shape :',pred_boxes.shape)
-    pred_boxes = clip_boxes_3d(pred_boxes, im_info.data, 1)
-    print('pred_boxes.shape :',pred_boxes.shape)
-    rois = pred_boxes
-    print('h %d w %d ' % (h,w))
-    print('rois :',rois)
-    print('rois.shape :',rois.shape)
-    rois[:,[0,2]] =rois[:,[0,2]].clamp_(min=0, )
-    rois[:,[1,3]] =rois[:,[1,3]].clamp_(min=0,)
-    print('rois.shape :',rois.shape)
-    print('rois :',rois[0][0])
+    # print('bbox_pred.shape :',bbox_pred.shape)
+    # pred_boxes = bbox_transform_inv_3d(rois, bbox_pred, 1)
+    # print('pred_boxes.shape :',pred_boxes.shape)
+    # pred_boxes = clip_boxes_3d(pred_boxes, im_info.data, 1)
+    # print('pred_boxes.shape :',pred_boxes.shape)
+    # rois = pred_boxes
+    # print('h %d w %d ' % (h,w))
+    # print('rois :',rois)
+    # print('rois.shape :',rois.shape)
+    # rois[:,[0,2]] =rois[:,[0,2]].clamp_(min=0, )
+    # rois[:,[1,3]] =rois[:,[1,3]].clamp_(min=0,)
+    # print('rois.shape :',rois.shape)
+    # print('rois :',rois[0][0])
 
-    print('rois.shape :',rois.shape)
-    print('rois :',rois)
+    # print('rois.shape :',rois.shape)
+    # print('rois :',rois)
 
     colors = [ (255,0,0), (0,255,0), (0,0,255)]
     clips = clips.squeeze().permute(1,2,3,0)
@@ -155,7 +156,7 @@ if __name__ == '__main__':
     print('rois :',rois)
     rois = torch.round(rois)
     print('rois :',rois)
-    for i in range(len(frame_indices)):
+    for i in range(1):
         # img = cv2.imread(os.path.join(path, 'image_{:0>5}.jpg'.format(frame_indices[i])))
         # img = cv2.imread(os.path.join(path, '{:0>5}.png'.format(frame_indices[i])))
         img = clips[i].cpu().numpy()
@@ -165,11 +166,12 @@ if __name__ == '__main__':
         #     print('Image {} not found '.format(os.path.join(path, 'image_{:0>5}.jpg'.format(frame_indices[i]))))
         #     break
 
-        for j in range(7,8):
+        for j in range(10):
+            img_tmp = img.copy()
             cv2.rectangle(img_tmp,(int(rois[0,j,0]),int(rois[0,j,1])),(int(rois[0,j,3]),int(rois[0,j,4])), (255,0,0),3)
 
-        # print('out : ./out/{:0>3}.jpg'.format(i))
-        cv2.imwrite('./out_frames/action_{:0>3}.jpg'.format(i), img_tmp)
+            # print('out : ./out/{:0>3}.jpg'.format(i))
+            cv2.imwrite('./out_frames/action_rois_{}_{:0>3}.jpg'.format(j,i), img_tmp)
         # for j in range(10):
         #     cv2.rectangle(img_tmp,(int(gt_tubes_r[0,0,0]),int(gt_tubes_r[0,0,1])),(int(gt_tubes_r[0,0,3]),int(gt_tubes_r[0,0,4])), (0,255,0),3)
         # cv2.imwrite('./out_frames/both_{:0>3}.jpg'.format(i), img_tmp)
