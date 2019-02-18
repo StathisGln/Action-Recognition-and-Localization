@@ -1,5 +1,5 @@
 from torch.nn.modules.module import Module
-from torch.nn.functional import adaptive_max_pool3d, avg_pool2d, max_pool2d, avg_pool3d
+from torch.nn.functional import adaptive_max_pool3d,adaptive_avg_pool3d, avg_pool2d, max_pool2d, avg_pool3d
 from ..functions.roi_align import RoIAlignFunction
 
 
@@ -28,7 +28,7 @@ class RoIAlignAvg(Module):
         # print('RoiAlignAvg ==> rois.shape :', rois.shape)
         x =  RoIAlignFunction(self.aligned_height+1, self.aligned_width+1,self.time_dim+1,
                                 self.spatial_scale)(features, rois )
-        return adaptive_max_pool3d(x,(self.aligned_height,self.aligned_width,self.time_dim))
+        return adaptive_avg_pool3d(x,(self.time_dim,self.aligned_height,self.aligned_width))
 
 class RoIAlignMax(Module):
     def __init__(self, aligned_height, aligned_width, spatial_scale):

@@ -78,9 +78,7 @@ class ACT_net(nn.Module):
 
         rois = Variable(rois)
 
-        # do roi pooling based on predicted rois
-        # print('rois.shape :', rois[:,:,[0,1,2,4,5]].shape)
-        # print('rois.shape :', rois[:,:,[0,1,2,4,5]].view(-1,5).shape)
+        # do roi align based on predicted rois
         pooled_feat = self.act_roi_align(base_feat, rois.view(-1,7))
         # print('pooled_feat.shape :',pooled_feat.shape)
         # print('pooled_feat :',pooled_feat)
@@ -95,18 +93,23 @@ class ACT_net(nn.Module):
         # # print('pooled_feat.view(n_rois,-1).shape :',pooled_feat.view(n_rois,-1).shape)
         # bbox_pred = self.act_bbox_pred(pooled_feat.view(n_rois,-1))
         bbox_pred = self.act_bbox_pred(pooled_feat)
+        if self.training :
+            # select the corresponding columns according to roi labels
+            bbox_pred_view = bbox_pred.view(bbox_pred.size(0), int(bbox_pred.size(1) / 6), 6)
+            bbox_pred_select = torch.gather(bbox_pred_view, 1, rois_label.view(rois_label.size(0), 1, 1).expand(rois_label.size(0), 1, 6))
+            bbox_pred = bbox_pred_select.squeeze(1)
 
 
         # compute object classification probability
-        # cls_score = self.act_cls_score(pooled_feat)
-        # cls_prob = F.softmax(cls_score, 1)
+        cls_score = self.act_cls_score(pooled_feat)
+        cls_prob = F.softmax(cls_score, 1)
 
         act_loss_cls = 0
         act_loss_bbox = 0
 
         if self.training:
-            # # classification loss
-            # act_loss_cls = F.cross_entropy(cls_score, rois_label)
+            # classification loss
+            act_loss_cls = F.cross_entropy(cls_score, rois_label)
 
 
             # bounding box regression L1 loss
@@ -118,10 +121,11 @@ class ACT_net(nn.Module):
         # return 0,0,0,0,0,0
         # return rois,  bbox_pred, rpn_loss_cls, rpn_loss_bbox,  act_loss_bbox, rois_label
         if self.training:
-            return rois,  bbox_pred, rpn_loss_cls, rpn_loss_bbox, act_loss_cls, act_loss_bbox, rois_label
+            # print('edwwww')
+            return rois,  bbox_pred, cls_prob, rpn_loss_cls, rpn_loss_bbox, act_loss_cls, act_loss_bbox
 
 
-        return rois,  bbox_pred,None,None,None,None
+        return rois,  bbox_pred, cls_prob,
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):
@@ -163,8 +167,12 @@ class ACT_net(nn.Module):
 
         self.act_top = nn.Sequential(model.module.layer4)
 
-        self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg
-        # self.act_cls_score = nn.Linear(2048, self.n_classes)
+        # self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg
+        self.act_bbox_pred = nn.Linear(8192, 6 * self.n_classes) # 2 classes bg/ fg
+        self.act_cls_score = nn.Linear(8192, self.n_classes)
+        # self.act_bbox_pred = nn.Linear(512, 6 * self.n_classes) # 2 classes bg/ fg
+        # self.act_cls_score = nn.Linear(512, self.n_classes)
+
         # Fix blocks
         for p in self.act_base[0].parameters(): p.requires_grad=False
         for p in self.act_base[1].parameters(): p.requires_grad=False
@@ -188,13 +196,14 @@ class ACT_net(nn.Module):
 
     def _head_to_tail(self, pool5):
         # print('pool5.shape :',pool5.shape)
+        batch_size = pool5.size(0)
         fc7 = self.act_top(pool5)
-        # print('fc7.shape :',fc7.shape)
         fc7 = fc7.mean(4)
-        # print('fc7.shape :',fc7.shape)
         fc7 = fc7.mean(3)
+        # fc7 = fc7.mean(2)
         # print('fc7.shape :',fc7.shape)
-        fc7 = fc7.mean(2)
+        fc7 = fc7.view(batch_size,-1)
+        # print('fc7.shape :',fc7.shape)
         return fc7
 
     

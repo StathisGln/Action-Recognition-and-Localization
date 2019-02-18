@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 from resnet_3D import resnet34
 from jhmdb_dataset import Video
 
+from net_utils import adjust_learning_rate
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
@@ -31,7 +32,7 @@ if __name__ == '__main__':
 
     dataset_folder = '/gpu-data/sgal/JHMDB-act-detector-frames'
     splt_txt_path =  '/gpu-data/sgal/splits'
-    boxes_file = './poses.json'
+    boxes_file = '../temporal_localization/poses.json'
 
     sample_size = 112
     sample_duration = 16  # len(images)
@@ -70,7 +71,9 @@ if __name__ == '__main__':
     resnet_shortcut = 'A'
 
     lr = 0.001
-
+    lr_decay_step = 5
+    lr_decay_gamma = 0.1
+    
     # Init action_net
     model = ACT_net(classes)
     model.create_architecture()
@@ -102,6 +105,9 @@ if __name__ == '__main__':
 
         loss_temp = 0
         # start = time.time()
+        if epoch % (lr_decay_step + 1) == 0:
+            adjust_learning_rate(optimizer, lr_decay_gamma)
+            lr *= lr_decay_gamma
 
 
         ## 2 rois : 1450
@@ -121,16 +127,17 @@ if __name__ == '__main__':
             im_info = torch.Tensor([[sample_size, sample_size, sample_duration]] * gt_tubes_r.size(1)).to(device)
             # print('gt_tubes_r.shape :',gt_tubes_r.shape )
             inputs = Variable(clips)
-            rois,  bbox_pred, rpn_loss_cls, rpn_loss_bbox, \
-            act_loss_cls,  act_loss_bbox, rois_label = model(inputs,
-                                                              im_info,
-                                                              gt_tubes_r, None,
-                                                              n_actions)
+            rois,  bbox_pred, cls_prob, \
+            rpn_loss_cls, rpn_loss_bbox, \
+            act_loss_cls, act_loss_bbox  = model(inputs,
+                                                 im_info,
+                                                 gt_tubes_r, None,
+                                                 n_actions)
             # print('rois :',rois)
             # print('rpn_loss_bbox :',rpn_loss_bbox)
             # print('rpn_loss_cls :',rpn_loss_cls)
-            # loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + act_loss_cls.mean()
-            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() 
+            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + act_loss_cls.mean()
+            # loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() 
             loss_temp += loss.item()
 
             # backw\ard

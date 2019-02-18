@@ -22,6 +22,7 @@ class RoIAlignFunction(Function):
         # print('features_size :',features.size())
         batch_size, num_channels, data_time, data_height, data_width = features.size()
         num_rois = rois.size(0)
+        # print('rois :',rois)
         # print('num_rois {}, num_channels {}, data_time {}, self.aligned_height {}, self.aligned_width {}'.format(
             # num_rois, num_channels, data_time, self.aligned_height, self.aligned_width))
         output = features.new( num_rois, num_channels, self.time_dim, self.aligned_height, self.aligned_width).zero_()
@@ -36,7 +37,7 @@ class RoIAlignFunction(Function):
             # print('features[0][0] :',features[0][0])
             roi_align_3d.roi_align_forward_cuda(self.aligned_height,
                                              self.aligned_width,
-                                             self.time_dim+1,
+                                             self.time_dim,
                                              self.spatial_scale, self.temp_scale, features,
                                              rois, output)
             # print('outttt')
