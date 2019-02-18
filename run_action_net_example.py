@@ -116,10 +116,17 @@ if __name__ == '__main__':
     # print('gt_rois.shape :',gt_rois.shape)
     rois,  bbox_pred, cls_prob, \
     rpn_loss_cls,  rpn_loss_bbox, \
-    act_loss_cls,  act_loss_bbox, rois_label = model(clips,
-                                                     im_info,
-                                                     gt_tubes, None,
-                                                     n_actions)
+    act_loss_cls,  act_loss_bbox  = model(clips,
+                                          im_info,
+                                          gt_tubes, None,
+                                          n_actions)
+    # rois,  bbox_pred, cls_prob, \
+    # rpn_loss_cls,  rpn_loss_bbox, \
+    # act_loss_cls,  act_loss_bbox, rois_label = model(clips,
+    #                                                  im_info,
+    #                                                  gt_tubes, None,
+    #                                                  n_actions)
+
     print('**********VGIKE**********')
     print('rois.shape :',rois.shape)
     # print('rois :',rois)

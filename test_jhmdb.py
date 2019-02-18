@@ -112,7 +112,7 @@ if __name__ == '__main__':
     data = model.act_rpn.RPN_cls_score.weight.data.clone()
 
 
-    model_data = torch.load('../temporal_localization/jmdb_model_030.pwf')
+    model_data = torch.load('../temporal_localization/jmdb_model_020.pwf')
     # # model_data = torch.load('../temporal_localization/r')
 
     model.load_state_dict(model_data)

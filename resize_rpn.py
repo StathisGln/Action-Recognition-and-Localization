@@ -23,14 +23,45 @@ def resize_rpn(gt_rois, h,w, sample_size):
     # left = int(max(0, np.round((w - sample_size) / 2)))
     # bottom = height - top - target_h
     # right = width - left - target_w
-    # print('gt_rois.shape :',gt_rois.shape)
+    print('gt_rois.shape :',gt_rois.shape)
     # print('top {}, left {}'.format(top,left))
     # print('w {}, h {}, sample {} w.type {} h.type {}'.format(w, h, sample_size, w.type(), h.type()))
     gt_rois[:,0] = (np.round(gt_rois[:,0]  * scale) + left)
     gt_rois[:,1] = (np.round(gt_rois[:,1]  * scale) + top )
     gt_rois[:,2] = (np.round(gt_rois[:,2]  * scale) + left)
     gt_rois[:,3] = (np.round(gt_rois[:,3]  * scale) + top)
+    print('gt_Rois :',gt_rois)
+    return gt_rois
 
+def resize_rpn_multirois(gt_rois, h,w, sample_size):
+    '''
+    Input: a torch.Tensor
+    size shape is [h,w]
+    '''
+    target_h = sample_size
+    target_w = sample_size
+
+    w_bigger_h = w > h
+    scale = sample_size / max(h,w)
+    
+    if w_bigger_h:
+        target_h = int(np.round( h * float(sample_size) / float(w)))
+    else:
+        target_w = int(np.round( w * float(sample_size) / float(h)))
+
+    top = int(max(0, np.round((sample_size - target_h) / 2)))
+    left = int(max(0, np.round((sample_size - target_w) / 2)))
+
+    # top = int(max(0, np.round((h - sample_size) / 2)))
+    # left = int(max(0, np.round((w - sample_size) / 2)))
+    # bottom = height - top - target_h
+    # right = width - left - target_w
+    # print('top {}, left {}'.format(top,left))
+    # print('w {}, h {}, sample {} w.type {} h.type {}'.format(w, h, sample_size, w.type(), h.type()))
+    gt_rois[:,:,0] = (np.round(gt_rois[:,:,0]  * scale) + left)
+    gt_rois[:,:,1] = (np.round(gt_rois[:,:,1]  * scale) + top )
+    gt_rois[:,:,2] = (np.round(gt_rois[:,:,2]  * scale) + left)
+    gt_rois[:,:,3] = (np.round(gt_rois[:,:,3]  * scale) + top)
     return gt_rois
 
 # def resize_tube(gt_rois, h_tensor,w_tensor, sample_size):

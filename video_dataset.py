@@ -11,6 +11,11 @@ import json
 import pickle
 from itertools import groupby
 from create_tubes_from_boxes import create_tube_list
+from resize_rpn import resize_rpn_multirois, resize_tube
+
+from spatial_transforms import (Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
+from temporal_transforms import LoopPadding
+
 
 np.random.seed(42)
 
@@ -204,7 +209,7 @@ def make_dataset(dataset_path,  boxes_file, mode='train'):
 
 class Video(data.Dataset):
     def __init__(self, video_path, frames_dur=8, 
-                 spatial_transform=None, temporal_transform=None, json_file=None,
+                 spatial_transform=None, temporal_transform=None, json_file=None, sample_size = 112,
                  sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None):
 
         self.mode = mode
@@ -215,6 +220,7 @@ class Video(data.Dataset):
         self.temporal_transform = temporal_transform
         self.loader = get_loader()
         self.sample_duration = frames_dur
+        self.sample_size = sample_size
         self.json_file = json_file
         self.classes_idx = classes_idx
 
@@ -252,24 +258,29 @@ class Video(data.Dataset):
         if self.spatial_transform is not None:
             clip = [self.spatial_transform(img) for img in clip]
         clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
-        # print('clip :', clip.shape)
+
         ## get bboxes and create gt tubes
         rois_Tensor = torch.Tensor(rois)
+        # rois_Tensor[:,[0,2]] = rois_Tensor[:,[0,2]].clamp_(min=0,max=w)
+        # rois_Tensor[:,[1,3]] = rois_Tensor[:,[1,3]].clamp_(min=0,max=h)
+        
         # print('rois.shape :',rois.shape)
         # print('rois :', rois)
         # print('rois_Tensor.shape :',rois_Tensor.shape)
         rois_sample_tensor = rois_Tensor[:,np.array(frame_indices),:]
         # print('rois_sample_tensor :',rois_sample_tensor)
         # print('rois_sample_tensor.shape :',rois_sample_tensor.shape)
+        # print('rois_sample_tensor :',rois_sample_tensor)
         rois_sample_tensor[:,:,2] = rois_sample_tensor[:,:,0] + rois_sample_tensor[:,:,2]
         rois_sample_tensor[:,:,3] = rois_sample_tensor[:,:,1] + rois_sample_tensor[:,:,3]
+        rois_sample_tensor[:,:,[0,2]] =  rois_sample_tensor[:,:,[0,2]].clamp_(min=0, max=w)
+        rois_sample_tensor[:,:,[1,3]] =  rois_sample_tensor[:,:,[1,3]].clamp_(min=0, max=w)
+        # resize them to (112,112)
+        rois_sample_tensor = resize_rpn_multirois(rois_sample_tensor, h,w,self.sample_size)
         rois_sample = rois_sample_tensor.tolist()
 
         rois_fr = [[z+[j] for j,z in enumerate(rois_sample[i])] for i in range(len(rois_sample))]
         rois_gp =[[[list(g),i] for i,g in groupby(w, key=lambda x: x[:][4])] for w in rois_fr] # [person, [action, class]
-
-        # print('rois_gp :',rois_gp)
-        # print('len(rois_gp) :',len(rois_gp))
 
         final_rois_list = []
         for p in rois_gp: # for each person
@@ -277,16 +288,7 @@ class Video(data.Dataset):
                 if r[1] > -1 :
                     final_rois_list.append(r[0])
 
-        # print('final_rois_list :',final_rois_list)
-        # print('len(final_rois_list) :',len(final_rois_list))
-
-        # if final_rois == []: # empty ==> only background, no gt_tube exists
-        #     final_rois = [0] * 7
-        #     gt_tubes = torch.Tensor([[0,0,0,0,0,0,0]])
-
-
         num_actions = len(final_rois_list)
-
 
         if num_actions == 0:
             final_rois = torch.zeros(1,16,5)
@@ -304,17 +306,14 @@ class Video(data.Dataset):
             # # print('final_rois :',final_rois)
             gt_tubes = create_tube_list(rois_gp,[w,h], self.sample_duration) ## problem when having 2 actions simultaneously
 
-
         ret_tubes = torch.zeros(self.max_sim_actions,7)
         n_acts = gt_tubes.size(0)
         ret_tubes[:n_acts,:] = gt_tubes
-
-        # print('ret_tubes :',ret_tubes)
-        # print('ret_tubes.shape :',ret_tubes.shape)
+        print('ret_tubes.shape :',ret_tubes.shape)
         ## f_rois
         f_rois = torch.zeros(self.max_sim_actions,self.sample_duration,5)
         f_rois[:n_acts,:,:] = final_rois[:n_acts]
-
+        print('f_rois.shape :',f_rois.shape)
         # print('gt_tubes :',gt_tubes)
         # print(type(gt_tubes))
         # print('gt_tubes.shape :',gt_tubes.shape)
@@ -324,10 +323,10 @@ class Video(data.Dataset):
             # print('h {} w{}'.format(h,w))
             # print('gt_tubes :',gt_tubes)
             # return clip,  h, w,  gt_tubes, final_rois
-            return clip,  h, w,  ret_tubes, n_acts
+            return clip,  h, w,  ret_tubes, f_rois, n_acts
         else:
             # return clip,  (h, w),  gt_tubes, final_rois,  self.data[index]['abs_path']
-            return clip,  h, w,  gt_tubes, final_rois,  self.data[index]['abs_path'], frame_indices
+            return clip,  h, w,  gt_tubes, final_rois, n_acts, self.data[index]['abs_path'], frame_indices
 
     def __len__(self):
         return len(self.data)
@@ -448,3 +447,49 @@ class Pics(data.Dataset):
 
     def __len__(self):
         return len(self.data)
+
+if __name__ == "__main__":
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print("Device being used:", device)
+
+    dataset_folder = '/gpu-data/sgal/UCF-101-frames'
+    boxes_file = './pyannot.pkl'
+    # boxes_file = '/gpu-data/sgal/UCF-bboxes.json'
+    # dataset_folder = '../UCF-101-frames'
+    # boxes_file = '../UCF-101-frames/UCF-bboxes.json'
+
+    sample_size = 112
+    sample_duration = 16  # len(images)
+
+    batch_size = 1
+    n_threads = 0
+
+    # # get mean
+    # mean =  [103.75581543 104.79421473  91.16894564] # jhmdb
+    # mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
+    mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
+    # generate model
+    last_fc = False
+
+    actions = ['Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
+               'Diving','Fencing','FloorGymnastics','GolfSwing','HorseRiding','IceDancing',
+               'LongJump','PoleVault','RopeClimbing','SalsaSpin','SkateBoarding','Skiing',
+               'Skijet','SoccerJuggling','Surfing','TennisSwing','TrampolineJumping',
+               'VolleyballSpiking','WalkingWithDog']
+
+    cls2idx = {actions[i]: i for i in range(0, len(actions))}
+
+    spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
+                                 ToTensor(),
+                                 Normalize(mean, [1, 1, 1])])
+    temporal_transform = LoopPadding(sample_duration)
+
+    data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
+                 temporal_transform=temporal_transform, json_file=boxes_file, sample_size = 112,
+                 mode='train', classes_idx=cls2idx)
+    data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
+                                              shuffle=True, num_workers=n_threads, pin_memory=True)
+    clips, h,w, gt_tubes, gt_bboxes, n_acts = next(data_loader.__iter__())
+
+    # print(gt_bboxes)

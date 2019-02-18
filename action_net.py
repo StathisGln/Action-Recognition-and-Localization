@@ -32,14 +32,14 @@ class ACT_net(nn.Module):
         # cfg.POOLING_SIZE
         self.pooling_size = 7
         self.spatial_scale = 1.0/16.0
-        # define rpng
+
+        # define rpn
         self.act_rpn = _RPN(256)
-        # self.act_proposal_target = _ProposalTargetLayer(self.n_classes)
         self.act_proposal_target = _ProposalTargetLayer(self.n_classes) ## background/ foreground
         self.time_dim =16
         self.temp_scale = 1.
         self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale)
-        # self.act_roi_align = RoIAlignAvg(pooling_size, pooling_size, 1.0/16.0)
+
     def create_architecture(self):
         self._init_modules()
         self._init_weights()
@@ -80,28 +80,23 @@ class ACT_net(nn.Module):
 
         # do roi align based on predicted rois
         pooled_feat = self.act_roi_align(base_feat, rois.view(-1,7))
-        # print('pooled_feat.shape :',pooled_feat.shape)
-        # print('pooled_feat :',pooled_feat)
+
         # # feed pooled features to top model
         pooled_feat = self._head_to_tail(pooled_feat)
-        # print('pooled_feat.shape :',pooled_feat.shape)
+        n_rois = pooled_feat.size(0)
+        print('n_rois :',n_rois)
+        print('pooled_feat.shape :',pooled_feat.view(n_rois,-1).shape)
 
-        # n_rois = pooled_feat.size(0)
-        # print('n_rois :',n_rois)
-        # print('pooled_feat.view(n_rois,-1).shape :',pooled_feat.view(n_rois,-1).shape)
         # # compute bbox offset
-        # # print('pooled_feat.view(n_rois,-1).shape :',pooled_feat.view(n_rois,-1).shape)
-        # bbox_pred = self.act_bbox_pred(pooled_feat.view(n_rois,-1))
-        bbox_pred = self.act_bbox_pred(pooled_feat)
+        bbox_pred = self.act_bbox_pred(pooled_feat.view(n_rois,-1))
         if self.training :
             # select the corresponding columns according to roi labels
             bbox_pred_view = bbox_pred.view(bbox_pred.size(0), int(bbox_pred.size(1) / 6), 6)
             bbox_pred_select = torch.gather(bbox_pred_view, 1, rois_label.view(rois_label.size(0), 1, 1).expand(rois_label.size(0), 1, 6))
             bbox_pred = bbox_pred_select.squeeze(1)
 
-
         # compute object classification probability
-        cls_score = self.act_cls_score(pooled_feat)
+        cls_score = self.act_cls_score(pooled_feat.view(n_rois,-1))
         cls_prob = F.softmax(cls_score, 1)
 
         act_loss_cls = 0
@@ -117,13 +112,37 @@ class ACT_net(nn.Module):
 
             
         bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
-        # print('bbox_pred :',bbox_pred)
-        # return 0,0,0,0,0,0
-        # return rois,  bbox_pred, rpn_loss_cls, rpn_loss_bbox,  act_loss_bbox, rois_label
-        if self.training:
-            # print('edwwww')
-            return rois,  bbox_pred, cls_prob, rpn_loss_cls, rpn_loss_bbox, act_loss_cls, act_loss_bbox
 
+        ########################################################################
+
+        ## time for bbox pred single frame
+        rois_label = rois_label.unsqueeze(1).expand(-1,16).contiguous().view(-1)
+        pooled_feat = pooled_feat.permute(0,2,1).contiguous().view(-1,512)
+        print('rois_label :',rois_label.shape)
+        print('rois_label :',rois_label)
+        print('pooled_feat.shape :',pooled_feat.shape)
+
+        if self.training:
+            roi_frame_data = self.act_proposal_target(rois, gt_rois, num_boxes)
+
+            rois_frame, rois_frame_label, rois_frame_target, rois_frame_inside_ws, rois_frame_outside_ws = roi_frame_data
+            rois_frame_label = Variable(rois_frame_label.view(-1).long())
+            rois_frame_target = Variable(rois_frame_target.view(-1, rois_frame_target.size(2)))
+            rois_frame_inside_ws = Variable(rois_frame_inside_ws.view(-1, rois_frame_inside_ws.size(2)))
+            rois_frame_outside_ws = Variable(rois_frame_outside_ws.view(-1, rois_frame_outside_ws.size(2)))
+        else:
+            rois_frame_label = None
+            rois_frame_target = None
+            rois_frame_inside_ws = None
+            rois_frame_outside_ws = None
+            rpn_frame_loss_cls = 0
+            rpn_frame_loss_bbox = 0
+
+
+        bbox_single_frame_pred = self.act_single_frame_pred(pooled_feat)
+
+        if self.training:
+            return rois,  bbox_pred, cls_prob, rpn_loss_cls, rpn_loss_bbox, act_loss_cls, act_loss_bbox
 
         return rois,  bbox_pred, cls_prob,
 
@@ -144,6 +163,8 @@ class ACT_net(nn.Module):
         normal_init(self.act_rpn.RPN_cls_score, 0, 0.01, truncated)
         normal_init(self.act_rpn.RPN_bbox_pred, 0, 0.01, truncated)
         normal_init(self.act_bbox_pred, 0, 0.001, truncated)
+        normal_init(self.act_cls_score, 0, 0.001, truncated)
+        normal_init(self.act_single_frame_pred, 0, 0.001, truncated)
 
     def _init_modules(self):
 
@@ -168,10 +189,11 @@ class ACT_net(nn.Module):
         self.act_top = nn.Sequential(model.module.layer4)
 
         # self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg
-        self.act_bbox_pred = nn.Linear(8192, 6 * self.n_classes) # 2 classes bg/ fg
-        self.act_cls_score = nn.Linear(8192, self.n_classes)
-        # self.act_bbox_pred = nn.Linear(512, 6 * self.n_classes) # 2 classes bg/ fg
-        # self.act_cls_score = nn.Linear(512, self.n_classes)
+        # self.act_bbox_pred = nn.Linear(8192, 6 * self.n_classes) # 2 classes bg/ fg
+        # self.act_cls_score = nn.Linear(8192, self.n_classes)
+        self.act_single_frame_pred = nn.Linear(512, 4 * self.n_classes)
+        self.act_bbox_pred = nn.Linear(512, 6 * self.n_classes) # 2 classes bg/ fg
+        self.act_cls_score = nn.Linear(512, self.n_classes)
 
         # Fix blocks
         for p in self.act_base[0].parameters(): p.requires_grad=False
@@ -199,10 +221,9 @@ class ACT_net(nn.Module):
         batch_size = pool5.size(0)
         fc7 = self.act_top(pool5)
         fc7 = fc7.mean(4)
-        fc7 = fc7.mean(3)
-        # fc7 = fc7.mean(2)
-        # print('fc7.shape :',fc7.shape)
-        fc7 = fc7.view(batch_size,-1)
+        fc7 = fc7.mean(3) # exw (bs,512,16)
+        fc7 = fc7.mean(2)
+
         # print('fc7.shape :',fc7.shape)
         return fc7
 
