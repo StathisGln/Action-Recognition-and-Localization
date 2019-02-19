@@ -113,12 +113,15 @@ if __name__ == '__main__':
         ## 2 rois : 1450
         for step, data  in enumerate(data_loader):
             # print('&&&&&&&&&&')
-            # print('step -->\t',step)
+            print('step -->\t',step)
             # clips,  (h, w), gt_tubes, gt_rois = data
-            clips,  (h, w), gt_tubes_r, n_actions = data
+            clips,  (h, w), gt_tubes_r, gt_rois_r, n_actions = data
             clips = clips.to(device)
             gt_tubes_r = gt_tubes_r.to(device)
-            # print('gt_tubes_r :',gt_tubes_r)
+            gt_rois_r = gt_rois_r.to(device)
+            print('gt_rois_r.shape :',gt_rois_r.shape)
+            # print('gt_tubes_r :',gt_tubes_r.shape)
+            # print('gt_rois_r :',gt_rois_r.shape)
             # print('gt_tubes :',gt_tubes)
             # h = h.to(device)
             # w = w.to(device)
@@ -127,16 +130,25 @@ if __name__ == '__main__':
             im_info = torch.Tensor([[sample_size, sample_size, sample_duration]] * gt_tubes_r.size(1)).to(device)
             # print('gt_tubes_r.shape :',gt_tubes_r.shape )
             inputs = Variable(clips)
-            rois,  bbox_pred, cls_prob, \
-            rpn_loss_cls, rpn_loss_bbox, \
-            act_loss_cls, act_loss_bbox  = model(inputs,
-                                                 im_info,
-                                                 gt_tubes_r, None,
-                                                 n_actions)
+            # rois,  bbox_pred, cls_prob, \
+            # rpn_loss_cls, rpn_loss_bbox, \
+            # act_loss_cls, act_loss_bbox  = model(inputs,
+            #                                      im_info,
+            #                                      gt_tubes_r, None,
+            #                                      n_actions)
+            tubes,  tube_bbox_pred, rois, rois_bbox_pred, \
+            rpn_loss_cls,  rpn_loss_bbox, \
+            act_loss_cls,  act_loss_bbox, \
+            act_loss_cls_s, act_loss_bbox_s = model(clips,
+                                                    im_info,
+                                                    gt_tubes_r, gt_rois_r,
+                                                    n_actions)
+
+            
             # print('rois :',rois)
             # print('rpn_loss_bbox :',rpn_loss_bbox)
             # print('rpn_loss_cls :',rpn_loss_cls)
-            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + act_loss_cls.mean()
+            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + act_loss_bbox_s.mean() 
             # loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() 
             loss_temp += loss.item()
 

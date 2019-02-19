@@ -222,7 +222,6 @@ class _AnchorTargetLayer(nn.Module):
 
         outputs = []
 
-        # print('labels.shape :',labels.shape)
         labels = labels.view(batch_size, time,height, width, A).permute(0,4,1,2,3).contiguous()
         labels = labels.view(batch_size, 1, A * time* height, width)
         # print('labels.shape :',labels.shape)

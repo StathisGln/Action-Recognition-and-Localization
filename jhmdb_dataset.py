@@ -202,7 +202,8 @@ class Video(data.Dataset):
         end_t = self.data[index]['end_t']
 
         n_frames = self.data[index]['end_t']
-
+        if n_frames < 17:
+            print('n_frames :',n_frames)
         if n_frames < 17:
             time_index  = 1
             frame_indices = list(
@@ -244,18 +245,23 @@ class Video(data.Dataset):
         # print('gt_bboxes_r.shape :',gt_bboxes_r.shape)
         # print('gt_bboxes_r :',gt_bboxes_r)
         # print('class_int :',class_int)
-        gt_bboxes_tube = torch.cat((gt_bboxes[:,:4],torch.Tensor( [[i, class_int] for i in range(len(boxes))])),dim=1).unsqueeze(0)
-        # print('gt_bboxes_tube :',gt_bboxes_tube)
+        gt_bboxes_tube = torch.cat((gt_bboxes_r[:,:4],torch.Tensor( [[i, class_int] for i in range(len(boxes))])),dim=1).unsqueeze(0)
+
+        ## add gt_bboxes_r class_int
+        gt_bboxes_r = torch.cat((gt_bboxes_r[:,:4],torch.Tensor( [[ class_int] for i in range(len(boxes))])),dim=1).unsqueeze(0)
+        # print('gt_bboxes_r.shape :',gt_bboxes_r.shape)
+
         im_info_tube = torch.Tensor([[w,h,]*gt_bboxes_r.size(0)])
+        # print('im_info_tube :',im_info_tube)
         gt_tubes = create_tube(gt_bboxes_tube.unsqueeze(2),im_info_tube,self.sample_duration)
         gt_tubes = torch.round(gt_tubes)
         
         # print(gt_bboxes)
         if self.mode == 'train':
             # return clip, (h,w), gt_tubes, gt_bboxes
-            return clip, (h,w), gt_tubes, torch.Tensor([1.])
+            return clip, (h,w), gt_tubes, gt_bboxes_r, torch.Tensor([1.])
         else:
-            return clip, (h,w), gt_tubes, gt_bboxes, self.data[index]['abs_path'], frame_indices
+            return clip, (h,w), gt_tubes, gt_bboxes_r, self.data[index]['abs_path'], frame_indices
         
         
     def __len__(self):
@@ -338,8 +344,8 @@ if __name__ == "__main__":
                  split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
                                               shuffle=True, num_workers=n_threads, pin_memory=True)
-    clips, (h,w), gt_tubes, gt_bboxes = next(data_loader.__iter__())
-    # print('gt_bboxes.shape :',gt_bboxes)
-    # print('gt_bboxes.shape :',gt_bboxes.shape)
-    # print('gt_tubes :',gt_tubes)
-    # print('clips.shape :',clips.shape)
+    clips, (h,w), gt_tubes, gt_bboxes, n_actions = next(data_loader.__iter__())
+    print('gt_bboxes.shape :',gt_bboxes)
+    print('gt_bboxes.shape :',gt_bboxes.shape)
+    print('gt_tubes :',gt_tubes)
+    print('clips.shape :',clips.shape)

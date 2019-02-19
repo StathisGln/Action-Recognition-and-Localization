@@ -13,9 +13,68 @@ from torch.autograd import Variable
 from resnet_3D import resnet34
 from region_net import _RPN
 from proposal_target_layer_cascade import _ProposalTargetLayer
-
+from proposal_target_layer_cascade_single_frame import _ProposalTargetLayer as _ProposalTargetLayer_single
 from roi_align_3d.modules.roi_align  import RoIAlignAvg
+from roi_align.modules.roi_align  import RoIAlignAvg as RoIAlignAvg_s
 from net_utils import _smooth_l1_loss
+
+## code from resnet
+
+def conv3x3(in_planes, out_planes, stride=1):
+  "3x3 convolution with padding"
+  return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
+           padding=1, bias=False)
+
+
+class BasicBlock(nn.Module):
+  expansion = 1
+
+  def __init__(self, inplanes, planes, stride=1, downsample=None):
+    super(BasicBlock, self).__init__()
+    self.conv1 = conv3x3(inplanes, planes, stride)
+    self.bn1 = nn.BatchNorm2d(planes)
+    self.relu = nn.ReLU(inplace=True)
+    self.conv2 = conv3x3(planes, planes)
+    self.bn2 = nn.BatchNorm2d(planes)
+    self.downsample = downsample
+    self.stride = stride
+
+  def forward(self, x):
+    residual = x
+
+    out = self.conv1(x)
+    out = self.bn1(out)
+    out = self.relu(out)
+
+    out = self.conv2(out)
+    out = self.bn2(out)
+
+    if self.downsample is not None:
+      residual = self.downsample(x)
+
+    out += residual
+    out = self.relu(out)
+
+    return out
+
+def _make_layer( block, planes, blocks, stride=1, inplanes=256):
+    downsample = None
+    if stride != 1:
+      downsample = nn.Sequential(
+        nn.Conv2d(inplanes, planes * block.expansion,
+              kernel_size=1, stride=stride, bias=False),
+        nn.BatchNorm2d(planes * block.expansion),
+      )
+
+    layers = []
+    layers.append(block(
+        inplanes, planes, stride, downsample))
+    inplanes = planes * block.expansion
+    for i in range(1, blocks):
+      layers.append(block(inplanes, planes))
+
+    return nn.Sequential(*layers)
+
 
 class ACT_net(nn.Module):
     """ action tube proposal """
@@ -35,10 +94,12 @@ class ACT_net(nn.Module):
 
         # define rpn
         self.act_rpn = _RPN(256)
-        self.act_proposal_target = _ProposalTargetLayer(self.n_classes) ## background/ foreground
+        self.act_proposal_target = _ProposalTargetLayer(2) ## background/ foreground
+        self.act_proposal_target_single = _ProposalTargetLayer_single(2) ## background/ foreground
         self.time_dim =16
         self.temp_scale = 1.
         self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale)
+        self.act_roi_align_s = RoIAlignAvg_s(self.pooling_size, self.pooling_size, self.spatial_scale)
 
     def create_architecture(self):
         self._init_modules()
@@ -51,19 +112,24 @@ class ACT_net(nn.Module):
         im_info = im_info.data
         if self.training:
             gt_tubes = gt_tubes.data
+            gt_rois =  gt_rois.data
             # print('gt_tubes.shape :',gt_tubes.shape)
+            # print('gt_rois.shape :',gt_rois.shape)
             num_boxes = num_boxes.data
 
         # feed image data to base model to obtain base feature map
         base_feat = self.act_base(im_data)
         # feed base feature map tp RPN to obtain rois
         rois, rpn_loss_cls, rpn_loss_bbox = self.act_rpn(base_feat, im_info, gt_tubes, None, num_boxes)
-
         # if it is training phrase, then use ground trubut bboxes for refining
+        # firstly find xy- reggression boxes
+        # print('rois.shape :',rois.shape)
         if self.training:
             roi_data = self.act_proposal_target(rois, gt_tubes, num_boxes)
 
             rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = roi_data
+            # print('rois_label.shape :',rois_label.shape )
+            # print('rois.shape :',rois.shape )
             rois_label = Variable(rois_label.view(-1).long())
             rois_target = Variable(rois_target.view(-1, rois_target.size(2)))
             rois_inside_ws = Variable(rois_inside_ws.view(-1, rois_inside_ws.size(2)))
@@ -80,71 +146,108 @@ class ACT_net(nn.Module):
 
         # do roi align based on predicted rois
         pooled_feat = self.act_roi_align(base_feat, rois.view(-1,7))
-
+        # print('pooled_feat.shape :',pooled_feat.shape)
         # # feed pooled features to top model
         pooled_feat = self._head_to_tail(pooled_feat)
         n_rois = pooled_feat.size(0)
-        print('n_rois :',n_rois)
-        print('pooled_feat.shape :',pooled_feat.view(n_rois,-1).shape)
-
+        # print('pooled_feat.shape :',pooled_feat.shape)
         # # compute bbox offset
-        bbox_pred = self.act_bbox_pred(pooled_feat.view(n_rois,-1))
-        if self.training :
-            # select the corresponding columns according to roi labels
-            bbox_pred_view = bbox_pred.view(bbox_pred.size(0), int(bbox_pred.size(1) / 6), 6)
-            bbox_pred_select = torch.gather(bbox_pred_view, 1, rois_label.view(rois_label.size(0), 1, 1).expand(rois_label.size(0), 1, 6))
-            bbox_pred = bbox_pred_select.squeeze(1)
+        pooled_feat_mean = pooled_feat.mean(2)
+        # print('pooled_feat.shape :',pooled_feat_mean.shape)
+
+
+        bbox_pred = self.act_bbox_pred(pooled_feat_mean)
+        # print('bbox_pred.shape :',bbox_pred.shape)
+        # if self.training :
+        #     # select the corresponding columns according to roi labels
+        #     bbox_pred_view = bbox_pred.view(bbox_pred.size(0), int(bbox_pred.size(1) / 4), 4)
+        #     print('bbox_pred_view.shape :',bbox_pred_view.shape)
+        #     print('rois_label.shape :',rois_label.shape)
+
+        #     bbox_pred_select = torch.gather(bbox_pred_view, 1, rois_label.view(rois_label.size(0), 1, 1).expand(rois_label.size(0), 1, 4))
+        #     bbox_pred = bbox_pred_select.squeeze(1)
 
         # compute object classification probability
-        cls_score = self.act_cls_score(pooled_feat.view(n_rois,-1))
-        cls_prob = F.softmax(cls_score, 1)
+        # cls_score = self.act_cls_score(pooled_feat_mean)
+        # cls_prob = F.softmax(cls_score, 1)
 
         act_loss_cls = 0
         act_loss_bbox = 0
 
         if self.training:
-            # classification loss
-            act_loss_cls = F.cross_entropy(cls_score, rois_label)
-
+            # # classification loss
+            # # print('rois_label :', rois_label)
+            # act_loss_cls = F.cross_entropy(cls_score, rois_label)
 
             # bounding box regression L1 loss
             act_loss_bbox = _smooth_l1_loss(bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
-
             
         bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
 
-        ########################################################################
-
-        ## time for bbox pred single frame
-        rois_label = rois_label.unsqueeze(1).expand(-1,16).contiguous().view(-1)
-        pooled_feat = pooled_feat.permute(0,2,1).contiguous().view(-1,512)
-        print('rois_label :',rois_label.shape)
-        print('rois_label :',rois_label)
-        print('pooled_feat.shape :',pooled_feat.shape)
+        # ########################################################################
+        rois_s = rois[:,:,[0,1,2,4,5]]
+        rois_s = rois_s.unsqueeze(2).expand(rois_s.size(0),rois_s.size(1),self.sample_duration, -1).permute(0,2,1,3).contiguous().view(-1,rois.size(1),5)
 
         if self.training:
-            roi_frame_data = self.act_proposal_target(rois, gt_rois, num_boxes)
+            gt_rois = gt_rois.permute(0,2,1,3).contiguous().view(-1,gt_rois.size(1),5)
+            # print('gt_rois.shape :',gt_rois.shape)
+            roi_data_s = self.act_proposal_target_single(rois_s, gt_rois, num_boxes)
 
-            rois_frame, rois_frame_label, rois_frame_target, rois_frame_inside_ws, rois_frame_outside_ws = roi_frame_data
-            rois_frame_label = Variable(rois_frame_label.view(-1).long())
-            rois_frame_target = Variable(rois_frame_target.view(-1, rois_frame_target.size(2)))
-            rois_frame_inside_ws = Variable(rois_frame_inside_ws.view(-1, rois_frame_inside_ws.size(2)))
-            rois_frame_outside_ws = Variable(rois_frame_outside_ws.view(-1, rois_frame_outside_ws.size(2)))
+            rois_s, rois_s_label, rois_s_target, rois_s_inside_ws, rois_s_outside_ws = roi_data_s
+            # print('rois_s_label.shape :',rois_s_label.shape )
+            # print('rois_s.shape :',rois_s.shape )
+            rois_s_label = Variable(rois_s_label.view(-1).long())
+            rois_s_target = Variable(rois_s_target.view(-1, rois_s_target.size(2)))
+            rois_s_inside_ws = Variable(rois_s_inside_ws.view(-1, rois_s_inside_ws.size(2)))
+            rois_s_outside_ws = Variable(rois_s_outside_ws.view(-1, rois_s_outside_ws.size(2)))
         else:
-            rois_frame_label = None
-            rois_frame_target = None
-            rois_frame_inside_ws = None
-            rois_frame_outside_ws = None
-            rpn_frame_loss_cls = 0
-            rpn_frame_loss_bbox = 0
+            rois_s_label = None
+            rois_s_target = None
+            rois_s_inside_ws = None
+            rois_s_outside_ws = None
+            rpn_loss_cls = 0
+            rpn_loss_bbox = 0
 
+        # do roi align based on predicted rois
 
-        bbox_single_frame_pred = self.act_single_frame_pred(pooled_feat)
+        base_feat = base_feat.permute(0,2,1,3,4).contiguous()
+        base_feat = base_feat.view(-1,base_feat.size(2),base_feat.size(3),base_feat.size(4))
+        pooled_feat_s = self.act_roi_align_s(base_feat, rois_s.view(-1,5))
+
+        # # feed pooled features to top model
+        pooled_feat_s = self._head_to_tail_s(pooled_feat_s)
+        n_rois = pooled_feat_s.size(0)
+
+        # # compute bbox offset
+        bbox_pred_s = self.act_bbox_single_frame_pred(pooled_feat_s)
+
+        # cls_score_s = self.act_cls_score(pooled_feat_s)
+        # cls_prob_s = F.softmax(cls_score_s, 1)
+
+        act_loss_cls_s = 0
+        act_loss_bbox_s = 0
 
         if self.training:
-            return rois,  bbox_pred, cls_prob, rpn_loss_cls, rpn_loss_bbox, act_loss_cls, act_loss_bbox
+            # classification loss
+            # print('rois_label :', rois_label)
+            # act_loss_cls_s = F.cross_entropy(cls_score_s, rois_s_label)
 
-        return rois,  bbox_pred, cls_prob,
+            # bounding box regression L1 loss
+            act_loss_bbox_s = _smooth_l1_loss(bbox_pred_s, rois_s_target, rois_s_inside_ws, rois_s_outside_ws)
+
+        bbox_pred_s = bbox_pred_s.view(batch_size, rois_s.size(1), -1)
+
+        # print('rois.shape :', rois.shape)
+        # print('bbox_pred.shape :',bbox_pred.shape)
+
+        # print('rois_s.shape :',rois_s.shape)
+        # print('bbox_pred_s.shape :',bbox_pred_s.shape)
+
+        # print('bbox_pred.shape :',bbox_pred.shape)
+        if self.training:
+            return rois,  bbox_pred, rois_s, bbox_pred_s, rpn_loss_cls, rpn_loss_bbox, act_loss_cls, act_loss_bbox, act_loss_bbox_s, act_loss_bbox_s
+
+        return rois,  bbox_pred, rois_s, bbox_pred_s, cls_prob
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):
@@ -163,17 +266,18 @@ class ACT_net(nn.Module):
         normal_init(self.act_rpn.RPN_cls_score, 0, 0.01, truncated)
         normal_init(self.act_rpn.RPN_bbox_pred, 0, 0.01, truncated)
         normal_init(self.act_bbox_pred, 0, 0.001, truncated)
-        normal_init(self.act_cls_score, 0, 0.001, truncated)
-        normal_init(self.act_single_frame_pred, 0, 0.001, truncated)
+        normal_init(self.act_bbox_single_frame_pred, 0, 0.001, truncated)
+        # normal_init(self.act_cls_score, 0, 0.001, truncated)
+
 
     def _init_modules(self):
 
         resnet_shortcut = 'A'
         sample_size = 112
-        sample_duration = 16  # len(images)
+        self.sample_duration = 16  # len(images)
 
         model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
-                         sample_size=sample_size, sample_duration=sample_duration,
+                         sample_size=sample_size, sample_duration=self.sample_duration,
                          last_fc=False)
         model = model
         model = nn.DataParallel(model, device_ids=None)
@@ -187,13 +291,13 @@ class ACT_net(nn.Module):
           model.module.maxpool,model.module.layer1,model.module.layer2, model.module.layer3)
 
         self.act_top = nn.Sequential(model.module.layer4)
-
+        self.act_top_s = nn.Sequential(_make_layer(BasicBlock, 512, 3, stride=2, inplanes=256))
         # self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg
         # self.act_bbox_pred = nn.Linear(8192, 6 * self.n_classes) # 2 classes bg/ fg
         # self.act_cls_score = nn.Linear(8192, self.n_classes)
-        self.act_single_frame_pred = nn.Linear(512, 4 * self.n_classes)
-        self.act_bbox_pred = nn.Linear(512, 6 * self.n_classes) # 2 classes bg/ fg
-        self.act_cls_score = nn.Linear(512, self.n_classes)
+        self.act_bbox_single_frame_pred = nn.Linear(512, 4 )
+        self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg
+        # self.act_cls_score = nn.Linear(512, self.n_classes)
 
         # Fix blocks
         for p in self.act_base[0].parameters(): p.requires_grad=False
@@ -222,9 +326,15 @@ class ACT_net(nn.Module):
         fc7 = self.act_top(pool5)
         fc7 = fc7.mean(4)
         fc7 = fc7.mean(3) # exw (bs,512,16)
-        fc7 = fc7.mean(2)
 
         # print('fc7.shape :',fc7.shape)
         return fc7
+    def _head_to_tail_s(self, pool5):
+        # print('pool5.shape :',pool5.shape)
+        fc7 = self.act_top_s(pool5)
+        fc7 = fc7.mean(3)
+        fc7 = fc7.mean(2) # exw (bs,512)
+        return fc7
+
 
     

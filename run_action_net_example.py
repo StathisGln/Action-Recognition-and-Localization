@@ -77,8 +77,8 @@ if __name__ == '__main__':
     model.to(device)
 
     # clips, h, w, gt_tubes, n_actions = data[1451]
-    clips, h, w, gt_tubes, n_actions = data[144]
-    clips2, h2, w2, gt_tubes2, n_actions2 = data[1450]
+    clips, h, w, gt_tubes, gt_rois, n_actions, rois_action = data[144]
+    clips2, h2, w2, gt_tubes2, gt_rois2, n_actions2, rois_action2 = data[1450]
 
 
     # clips = clips.unsqueeze(0)
@@ -93,12 +93,16 @@ if __name__ == '__main__':
     w = torch.Tensor((w,w2)).to(device)
 
     gt_tubes = torch.stack((gt_tubes,gt_tubes2),dim=0).to(device)
+    gt_rois = torch.stack((gt_rois,gt_rois2),dim=0).to(device)
     n_actions = torch.Tensor((n_actions,n_actions2)).to(device)
-
+    rois_action = torch.stack((rois_action,rois_action2)).to(device)
     im_info = torch.stack((h.float(),w.float(),torch.Tensor([sample_duration] * 2).cuda().float()),dim=1).to(device)
 
     print('gt_tubes.shape :',gt_tubes.shape )
     print('gt_tubes :',gt_tubes )
+
+    print('gt_rois.shape :',gt_rois.shape )
+    # print('gt_rois :',gt_rois )
 
     print('im_info :',im_info)
     print('im_info.shape :',im_info.shape)
@@ -114,12 +118,13 @@ if __name__ == '__main__':
     # inputs = Variable(clips)
     print('gt_tubes.shape :',gt_tubes.shape )
     # print('gt_rois.shape :',gt_rois.shape)
-    rois,  bbox_pred, cls_prob, \
+    tubes,  tube_bbox_pred, rois, rois_bbox_pred, \
     rpn_loss_cls,  rpn_loss_bbox, \
-    act_loss_cls,  act_loss_bbox  = model(clips,
-                                          im_info,
-                                          gt_tubes, None,
-                                          n_actions)
+    act_loss_cls,  act_loss_bbox, \
+    act_loss_cls_s, act_loss_bbox_s = model(clips,
+                                            im_info,
+                                            gt_tubes, gt_rois,
+                                            n_actions)
     # rois,  bbox_pred, cls_prob, \
     # rpn_loss_cls,  rpn_loss_bbox, \
     # act_loss_cls,  act_loss_bbox, rois_label = model(clips,
@@ -129,5 +134,5 @@ if __name__ == '__main__':
 
     print('**********VGIKE**********')
     print('rois.shape :',rois.shape)
-    # print('rois :',rois)
+    print('rois :',rois)
 

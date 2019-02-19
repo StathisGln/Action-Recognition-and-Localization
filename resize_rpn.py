@@ -23,14 +23,14 @@ def resize_rpn(gt_rois, h,w, sample_size):
     # left = int(max(0, np.round((w - sample_size) / 2)))
     # bottom = height - top - target_h
     # right = width - left - target_w
-    print('gt_rois.shape :',gt_rois.shape)
+    # print('gt_rois.shape :',gt_rois.shape)
     # print('top {}, left {}'.format(top,left))
     # print('w {}, h {}, sample {} w.type {} h.type {}'.format(w, h, sample_size, w.type(), h.type()))
     gt_rois[:,0] = (np.round(gt_rois[:,0]  * scale) + left)
     gt_rois[:,1] = (np.round(gt_rois[:,1]  * scale) + top )
     gt_rois[:,2] = (np.round(gt_rois[:,2]  * scale) + left)
     gt_rois[:,3] = (np.round(gt_rois[:,3]  * scale) + top)
-    print('gt_Rois :',gt_rois)
+    # print('gt_Rois :',gt_rois)
     return gt_rois
 
 def resize_rpn_multirois(gt_rois, h,w, sample_size):
