@@ -131,6 +131,8 @@ def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
         
     assert classes != (None), 'classes must not be None, Check dataset path'
     
+    max_sim_actions = -1
+
     for idx, cls in enumerate(classes):
         
         class_path = os.path.join(dataset_path, cls)
@@ -255,13 +257,20 @@ class Video(data.Dataset):
         # print('im_info_tube :',im_info_tube)
         gt_tubes = create_tube(gt_bboxes_tube.unsqueeze(2),im_info_tube,self.sample_duration)
         gt_tubes = torch.round(gt_tubes)
+
+        f_rois = torch.zeros(1,self.sample_duration,5) # because only 1 action can have simultaneously
+        f_rois[0,:n_frames,:] = gt_bboxes_r
+
+        if (n_frames < 16):
+            print(f_rois)
+
         
         # print(gt_bboxes)
         if self.mode == 'train':
             # return clip, (h,w), gt_tubes, gt_bboxes
-            return clip, (h,w), gt_tubes, gt_bboxes_r, torch.Tensor([1.])
+            return clip, (h,w), gt_tubes, f_rois, torch.Tensor([1.])
         else:
-            return clip, (h,w), gt_tubes, gt_bboxes_r, self.data[index]['abs_path'], frame_indices
+            return clip, (h,w), gt_tubes, f_rois, self.data[index]['abs_path'], frame_indices
         
         
     def __len__(self):
