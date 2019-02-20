@@ -118,6 +118,9 @@ if __name__ == '__main__':
     # inputs = Variable(clips)
     print('gt_tubes.shape :',gt_tubes.shape )
     # print('gt_rois.shape :',gt_rois.shape)
+
+    print('**********Starts**********')
+
     tubes,  tube_bbox_pred, rois, rois_bbox_pred, \
     rpn_loss_cls,  rpn_loss_bbox, \
     act_loss_cls,  act_loss_bbox, \

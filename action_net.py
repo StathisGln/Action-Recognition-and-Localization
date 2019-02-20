@@ -17,7 +17,7 @@ from proposal_target_layer_cascade_single_frame import _ProposalTargetLayer as _
 from roi_align_3d.modules.roi_align  import RoIAlignAvg
 from roi_align.modules.roi_align  import RoIAlignAvg as RoIAlignAvg_s
 from net_utils import _smooth_l1_loss
-from bbox_transform import  clip_boxes, bbox_transform_inv
+from bbox_transform import  clip_boxes, bbox_transform_inv, clip_boxes_3d, bbox_transform_inv_3d
 ## code from resnet
 
 def conv3x3(in_planes, out_planes, stride=1):
@@ -185,30 +185,24 @@ class ACT_net(nn.Module):
         bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
 
         # # ########################################################################
-        # print('bbox_pred.shape  :',bbox_pred.shape )
-        # print('rois.shape :',rois.shape)
-        rois_s = rois[:,:,[0,1,2,4,5]]
-        # print('rois_s.shape :',rois_s.shape)
-        # print('rois_s :',rois_s)
+
+        bbox_normalize_means = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0 )
+        bbox_normalize_stds = (0.1, 0.1, 0.1, 0.2, 0.2, 0.1)
+
+        box_deltas = bbox_pred.view(-1, 6) * torch.FloatTensor(bbox_normalize_stds).type_as(rois) \
+                                   + torch.FloatTensor(bbox_normalize_means).type_as(rois)
+
+        box_deltas = box_deltas.view(batch_size,-1,6)
+        pred_boxes = bbox_transform_inv_3d(rois[:,:,1:], box_deltas, batch_size)
+        pred_boxes = clip_boxes(pred_boxes, im_info.data, batch_size)
+
+        rois_s = torch.cat((rois[:,:,0].unsqueeze(2),pred_boxes[:,:,[0,1,3,4]]), dim=2)
         rois_s = rois_s.unsqueeze(2).expand(rois_s.size(0),rois_s.size(1),self.sample_duration,5).permute(0,2,1,3).contiguous().view(-1,rois_s.size(1),5)
-        # print('rois_s.shape :',rois_s.shape)
-        # print('rois_s :',rois_s)
-        box_pred_s = bbox_pred[:, :,[0,1,3,4]]
-        # print('box_pred_s :', box_pred_s.shape)
-        box_pred_s = box_pred_s.unsqueeze(2).expand(box_pred_s.size(0),box_pred_s.size(1),self.sample_duration, -1)
-        box_pred_s = box_pred_s.permute(0,2,1,3).contiguous().view(-1,box_pred_s.size(1),4)
-
-        bbox_normalize_means_s = (0.0, 0.0, 0.0, 0.0, )
-        bbox_normalize_stds_s = (0.1, 0.1, 0.1, 0.2, )
-
-        box_deltas_s = box_pred_s.view(-1, 4) * torch.FloatTensor(bbox_normalize_stds_s).type_as(rois_s) \
-                                   + torch.FloatTensor(bbox_normalize_means_s).type_as(rois_s)
-        box_deltas_s = box_deltas_s.view(box_pred_s.size(0),-1,4)
-        pred_boxes_s = bbox_transform_inv(rois_s[:,:,1:], box_deltas_s, 1)
-        rois_s[:,:,1:] = clip_boxes(pred_boxes_s, im_info.data, 1)
 
         if self.training:
             gt_rois = gt_rois.permute(0,2,1,3).contiguous().view(-1,gt_rois.size(1),5)
+            # print('gt_rois.shape    :',gt_rois.shape)
+            # print('rois_s.shape :',rois_s.shape)
             roi_data_s = self.act_proposal_target_single(rois_s, gt_rois, num_boxes)
 
             rois_s, rois_s_label, rois_s_target, rois_s_inside_ws, rois_s_outside_ws = roi_data_s

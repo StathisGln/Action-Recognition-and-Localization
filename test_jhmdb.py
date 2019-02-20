@@ -111,7 +111,7 @@ if __name__ == '__main__':
     model.create_architecture()
     data = model.act_rpn.RPN_cls_score.weight.data.clone()
 
-    model_data = torch.load('../temporal_localization/jmdb_model_020.pwf')
+    model_data = torch.load('../temporal_localization/jmdb_model_030.pwf')
     # model_data = torch.load('../temporal_localization/jmdb_model_020.pwf')
     # # model_data = torch.load('../temporal_localization/r')
 
@@ -133,19 +133,17 @@ if __name__ == '__main__':
     #                                                   gt_tubes, gt_rois,
     #                                                   torch.Tensor(len(gt_tubes)).to(device))
     print('-----Eksww-----')
-    print('rois :',rois.shape)
-    print('rois :',rois)
-    print('tubes :',tubes)
-    print('bbox_pred.shape :',bbox_pred.shape)
-    print('bbox_pred_s.shape :',bbox_pred_s.shape)
+    # print('rois :',rois.shape)
+    # print('rois :',rois)
+    # print('tubes :',tubes)
+    # print('bbox_pred.shape :',bbox_pred.shape)
+    # print('bbox_pred_s.shape :',bbox_pred_s.shape)
     bbox_pred_s = bbox_pred_s.view(1,10,16,4).permute(0,2,1,3).contiguous().view(-1,10,4)
     print('bbox_pred_s.shape :',bbox_pred_s.shape)
 
     thresh = 0.05
     bbox_normalize_means = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
     bbox_normalize_stds = (0.1, 0.1, 0.1, 0.2, 0.2, 0.1)
-    bbox_normalize_means_s = (0.0, 0.0, 0.0, 0.0, )
-    bbox_normalize_stds_s = (0.1, 0.1, 0.1, 0.2, )
 
     rois = rois[:,:,1:]
     # # rois = rois.data
@@ -161,13 +159,18 @@ if __name__ == '__main__':
 
     box_deltas_s = bbox_pred_s.view(-1, 4) * torch.FloatTensor(bbox_normalize_stds_s).to(device) \
                                + torch.FloatTensor(bbox_normalize_means_s).to(device)
-    box_deltas_s = box_deltas_s.view(16,-1,4)
-    pred_boxes_s = bbox_transform_inv(rois, bbox_pred_s, 1)
-    pred_boxes_s = clip_boxes(pred_boxes_s, im_info.data, 1)
+    print('box_deltas_s :', box_deltas_s.shape)
+    box_deltas_s = box_deltas_s.view(16,10,4)
+
+    print(im_info.data)
+    im_info_s = torch.Tensor([[112,112]] * 16).to(device)
+    print('im_info_s.shape :',im_info_s)
+    pred_boxes_s = bbox_transform_inv(rois, bbox_pred_s, 16)
+    pred_boxes_s = clip_boxes(pred_boxes_s,im_info_s , 16)
     pred_boxes_s = pred_boxes_s.view(16,rois.size(1),1,4)
 
-    # print('pred_boxes_s :', pred_boxes_s)
-    print('pred_boxes_s.shape :', pred_boxes_s.shape)
+    # print('pred_boxes_s :', pred_boxes_s.shape)
+    # print('pred_boxes_s.shape :', pred_boxes_s)
     # print('bbox_pred.shape :',pred_boxes.shape)
     
     # print(scores)
@@ -176,7 +179,8 @@ if __name__ == '__main__':
     colors = [ (255,0,0), (0,255,0), (0,0,255)]
     clips2 = clips2.squeeze().permute(1,2,3,0)
 
-    for i in range(16):
+    print('rois.shape  :',rois.shape )
+    for i in range(16): # frame
         # img = cv2.imread(os.path.join(path, 'image_{:0>5}.jpg'.format(frame_indices[i])))
         # img = cv2.imread(os.path.join(path, '{:0>5}.png'.format(frame_indices[i])))
         img = clips2[i].cpu().numpy()
@@ -185,7 +189,7 @@ if __name__ == '__main__':
         #     print('Image {} not found '.format(os.path.join(path, 'image_{:0>5}.jpg'.format(frame_indices[i]))))
         #     break
 
-        for j in range(10):
+        for j in range(10): #rois
             # img_tmp = img.copy()
             # cv2.rectangle(img_tmp,(int(rois[i,j,0]),int(rois[i,j,1])),(int(rois[i,j,2]),int(rois[i,j,3])), (255,0,0),3)
 
@@ -193,6 +197,11 @@ if __name__ == '__main__':
             # cv2.imwrite('./out_frames/action_tube_{}_{:0>3}.jpg'.format(j,i), img_tmp)
 
             img_tmp = img.copy()
-            cv2.rectangle(img_tmp,(int(pred_boxes_s[i,j,0,0]),int(pred_boxes_s[i,j,0,1])),(int(pred_boxes_s[i,j,0,2]),int(pred_boxes_s[i,j,0,3])), (255,0,0),3)
+            # cv2.rectangle(img_tmp,(int(pred_boxes_s[i,j,0,0]),int(pred_boxes_s[i,j,0,1])),(int(pred_boxes_s[i,j,0,2]),int(pred_boxes_s[i,j,0,3])), (255,0,0),3)
+            cv2.rectangle(img_tmp,(int(rois[i,j,0]),int(rois[i,j,1])),(int(rois[i,j,2]),int(rois[i,j,3])), (255,0,0),3)
             # print('out : ./out/{:0>3}.jpg'.format(i))
             cv2.imwrite('./out_frames/action_rois_{}_{:0>3}.jpg'.format(j,i), img_tmp)
+            img_tmp = img.copy()
+            cv2.rectangle(img_tmp,(int(pred_boxes_s[i,j,0,0]),int(pred_boxes_s[i,j,0,1])),(int(pred_boxes_s[i,j,0,2]),int(pred_boxes_s[i,j,0,3])), (255,0,0),3)
+            # print('out : ./out/{:0>3}.jpg'.format(i))
+            cv2.imwrite('./out_frames/action_regboxes_{}_{:0>3}.jpg'.format(j,i), img_tmp)
