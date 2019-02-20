@@ -113,7 +113,7 @@ if __name__ == '__main__':
 
 
     # model_data = torch.load('../temporal_localization/jmdb_model_030.pwf')
-    model_data = torch.load('./jmdb_model_020.pwf')
+    model_data = torch.load('./jmdb_model_010.pwf')
     # # model_data = torch.load('../temporal_localization/r')
 
     model.load_state_dict(model_data)
