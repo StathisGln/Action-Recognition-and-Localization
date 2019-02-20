@@ -27,7 +27,7 @@ if __name__ == '__main__':
     print("Device being used:", device)
 
     dataset_folder = '/gpu-data/sgal/UCF-101-frames'
-    boxes_file = './pyannot.pkl'
+    boxes_file = '../temporal_localization/pyannot.pkl'
     # boxes_file = '/gpu-data/sgal/UCF-bboxes.json'
     # dataset_folder = '../UCF-101-frames'
     # boxes_file = '../UCF-101-frames/UCF-bboxes.json'
@@ -77,10 +77,10 @@ if __name__ == '__main__':
     model.to(device)
 
     # clips, h, w, gt_tubes, n_actions = data[1451]
-    clips, h, w, gt_tubes, n_actions = data[144]
+    clips, h, w, gt_tubes, n_actions = data[1451]
     clips2, h2, w2, gt_tubes2, n_actions2 = data[1450]
 
-
+    gt_tubes[0,6] = 3
     # clips = clips.unsqueeze(0)
     # gt_tubes = gt_tubes.unsqueeze(0).to(device)
     # n_actions = torch.Tensor(n_actions).unsqueeze(0).to(device)
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     gt_tubes = torch.stack((gt_tubes,gt_tubes2),dim=0).to(device)
     n_actions = torch.Tensor((n_actions,n_actions2)).to(device)
 
-    im_info = torch.stack((h.float(),w.float(),torch.Tensor([sample_duration] * 2).cuda().float()),dim=1).to(device)
+    im_info = torch.stack((h.float(),w.float(),torch.Tensor([sample_duration] * 2).to(device).float()),dim=1)
 
     print('gt_tubes.shape :',gt_tubes.shape )
     print('gt_tubes :',gt_tubes )
@@ -113,6 +113,7 @@ if __name__ == '__main__':
 
     # inputs = Variable(clips)
     print('gt_tubes.shape :',gt_tubes.shape )
+
     # print('gt_rois.shape :',gt_rois.shape)
     rois,  bbox_pred, cls_prob, \
     rpn_loss_cls,  rpn_loss_bbox, \
@@ -123,4 +124,4 @@ if __name__ == '__main__':
     print('**********VGIKE**********')
     print('rois.shape :',rois.shape)
     # print('rois :',rois)
-
+    print('rois_label :',rois_label)

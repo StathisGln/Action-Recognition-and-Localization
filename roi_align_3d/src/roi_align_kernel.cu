@@ -36,7 +36,6 @@ extern "C" {
 	    //   }
             // bottom_rois += n * 7
 
-	    // if (index==50) printf(" n : %d\n",n);
             float roi_batch_ind = bottom_rois[n * 7 + 0];
             float roi_start_w = bottom_rois[n * 7 + 1] * spatial_scale;
             float roi_start_h = bottom_rois[n * 7 + 2] * spatial_scale;
@@ -143,7 +142,8 @@ extern "C" {
 			     const int aligned_width, const int time_dim, const float* bottom_rois, float* top_data,
 			     cudaStream_t stream) {
         const int kThreadsPerBlock = 1024;
-        const int output_size = num_rois * aligned_height * aligned_width * channels;
+        const int output_size = num_rois * aligned_height * time_dim * aligned_width * channels;
+	// printf("output_size %d\n",output_size);
         cudaError_t err;
 
 	// printf("edw exw temp_scale %f \n", temp_scale);
@@ -250,7 +250,7 @@ extern "C" {
 			      const int aligned_height, const int aligned_width, const int time_dim, const float* bottom_rois,
 			      float* bottom_diff, cudaStream_t stream) {
         const int kThreadsPerBlock = 1024;
-        const int output_size = num_rois * aligned_height * aligned_width * channels;
+        const int output_size = num_rois * time_dim * aligned_height * aligned_width * channels;
         cudaError_t err;
 
         ROIAlignBackward<<<(output_size + kThreadsPerBlock - 1) / kThreadsPerBlock, kThreadsPerBlock, 0, stream>>>(

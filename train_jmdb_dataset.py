@@ -47,7 +47,7 @@ if __name__ == '__main__':
     # mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
     # generate model
 
-    classes = ['brush_hair', 'clap', 'golf', 'kick_ball', 'pour',
+    classes = ['__background__', 'brush_hair', 'clap', 'golf', 'kick_ball', 'pour',
                'push', 'shoot_ball', 'shoot_gun', 'stand', 'throw', 'wave',
                'catch','climb_stairs', 'jump', 'pick', 'pullup', 'run', 'shoot_bow', 'sit',
                'swing_baseball', 'walk' ]
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     resnet_shortcut = 'A'
 
     lr = 0.001
-    lr_decay_step = 5
+    lr_decay_step = 10
     lr_decay_gamma = 0.1
     
     # Init action_net
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
 
-    epochs = 30
+    epochs = 50
     # epochs = 1
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))

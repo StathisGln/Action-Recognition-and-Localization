@@ -58,7 +58,6 @@ class ACT_net(nn.Module):
         base_feat = self.act_base(im_data)
         # feed base feature map tp RPN to obtain rois
         rois, rpn_loss_cls, rpn_loss_bbox = self.act_rpn(base_feat, im_info, gt_tubes, None, num_boxes)
-
         # if it is training phrase, then use ground trubut bboxes for refining
         if self.training:
             roi_data = self.act_proposal_target(rois, gt_tubes, num_boxes)
@@ -101,7 +100,9 @@ class ACT_net(nn.Module):
 
 
         # compute object classification probability
+        # print('pooled_feat :',pooled_feat)
         cls_score = self.act_cls_score(pooled_feat)
+        # print('cls_score :',cls_score)
         cls_prob = F.softmax(cls_score, 1)
 
         act_loss_cls = 0
@@ -109,6 +110,7 @@ class ACT_net(nn.Module):
 
         if self.training:
             # classification loss
+            # print('rois_label :', rois_label)
             act_loss_cls = F.cross_entropy(cls_score, rois_label)
 
 
@@ -144,6 +146,7 @@ class ACT_net(nn.Module):
         normal_init(self.act_rpn.RPN_cls_score, 0, 0.01, truncated)
         normal_init(self.act_rpn.RPN_bbox_pred, 0, 0.01, truncated)
         normal_init(self.act_bbox_pred, 0, 0.001, truncated)
+        normal_init(self.act_cls_score, 0, 0.001, truncated)
 
     def _init_modules(self):
 
@@ -161,6 +164,7 @@ class ACT_net(nn.Module):
         print("Loading pretrained weights from %s" %(self.model_path))
         model_data = torch.load(self.model_path)
         model.load_state_dict(model_data['state_dict'])
+
         # Build resnet.
         self.act_base = nn.Sequential(model.module.conv1, model.module.bn1, model.module.relu,
           model.module.maxpool,model.module.layer1,model.module.layer2, model.module.layer3)
@@ -168,10 +172,10 @@ class ACT_net(nn.Module):
         self.act_top = nn.Sequential(model.module.layer4)
 
         # self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg
-        self.act_bbox_pred = nn.Linear(8192, 6 * self.n_classes) # 2 classes bg/ fg
-        self.act_cls_score = nn.Linear(8192, self.n_classes)
-        # self.act_bbox_pred = nn.Linear(512, 6 * self.n_classes) # 2 classes bg/ fg
-        # self.act_cls_score = nn.Linear(512, self.n_classes)
+        # self.act_bbox_pred = nn.Linear(8192, 6 * self.n_classes) # 2 classes bg/ fg
+        # self.act_cls_score = nn.Linear(8192, self.n_classes)
+        self.act_bbox_pred = nn.Linear(512, 6 * self.n_classes) # 2 classes bg/ fg
+        self.act_cls_score = nn.Linear(512, self.n_classes)
 
         # Fix blocks
         for p in self.act_base[0].parameters(): p.requires_grad=False
@@ -200,9 +204,7 @@ class ACT_net(nn.Module):
         fc7 = self.act_top(pool5)
         fc7 = fc7.mean(4)
         fc7 = fc7.mean(3)
-        # fc7 = fc7.mean(2)
-        # print('fc7.shape :',fc7.shape)
-        fc7 = fc7.view(batch_size,-1)
+        fc7 = fc7.mean(2)
         # print('fc7.shape :',fc7.shape)
         return fc7
 

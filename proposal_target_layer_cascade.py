@@ -126,59 +126,65 @@ class _ProposalTargetLayer(nn.Module):
         examples.
         """
         # overlaps: (rois x gt_boxes)
-
+        # print('all_rois :',all_rois)
         overlaps = bbox_overlaps_batch_3d(all_rois, gt_boxes)
         # print('overlaps.shape :',overlaps.shape)
+        # print('overlaps :',overlaps)
+        # print('overlaps[0] :',overlaps[0])
+        # print('overlaps[0][50] :',overlaps[0][50])
         max_overlaps, gt_assignment = torch.max(overlaps, 2)
-
+        # print('gt_assignment :',gt_assignment)
+        # print(' max_overlaps :',max_overlaps)
+        # print(' max_overlaps :',max_overlaps.shape)
         batch_size = overlaps.size(0)
         num_proposal = overlaps.size(1)
         num_boxes_per_img = overlaps.size(2)
 
         offset = torch.arange(0, batch_size)*gt_boxes.size(1)
         offset = offset.view(-1, 1).type_as(gt_assignment) + gt_assignment
-
+        # print('offset :',offset)
         labels = gt_boxes[:,:,6].contiguous().view(-1)[(offset.view(-1),)].view(batch_size, -1)
 
         n_last_dim = all_rois.size(2)
-        # print('n_last_dim :',n_last_dim)
         labels_batch = labels.new(batch_size, rois_per_image).zero_()
+        # print('labels_batch.shape :',labels_batch.shape)
         rois_batch  = all_rois.new(batch_size, rois_per_image, n_last_dim).zero_()
         gt_rois_batch = all_rois.new(batch_size, rois_per_image, n_last_dim).zero_()
+
         # Guard against the case when an image has fewer than max_fg_rois_per_image
         # foreground RoIs
 
         for i in range(batch_size):
             gt_boxes_single = gt_boxes[i,:num_boxes[i]]
-            # print(gt_boxes_single.shape)
+            # print('Mesaaa --> gt_boxes_single.shape :',gt_boxes_single.shape)
             # print('gt_boxes[:num_boxes[i]] :',gt_boxes_single)
-            if gt_boxes_single.cpu().tolist() == [[0,0,0,0,0,0,0,]]:
+            if gt_boxes_single.byte().any() == 0:
                 print('no rois')
                 continue
-            
+
+            # print('num_boxes[i] :',num_boxes[i], ' num_rois_pre :',num_rois_pre)
             max_overlaps_single =max_overlaps[i][:num_boxes[i]+num_rois_pre]
             # print('max_overlaps_single.shape :',max_overlaps_single.shape)
             fg_inds = torch.nonzero(max_overlaps_single >= cfg.TRAIN.FG_THRESH).view(-1)
             fg_num_rois = fg_inds.numel()
-
+            # print('fg_num_rois : ',fg_num_rois )
             # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
             bg_inds = torch.nonzero((max_overlaps_single < cfg.TRAIN.BG_THRESH_HI) &
                                     (max_overlaps_single >= cfg.TRAIN.BG_THRESH_LO)).view(-1)
             bg_num_rois = bg_inds.numel()
-
+            # print('bg_num_rois :',bg_num_rois)
             
             if fg_num_rois > 0 and bg_num_rois > 0:
                 # print('1')
                 # sampling fg
                 fg_rois_per_this_image = min(fg_rois_per_image, fg_num_rois)
-
                 # torch.randperm seems has a bug on multi-gpu setting that cause the segfault.
                 # See https://github.com/pytorch/pytorch/issues/1868 for more details.
                 # use numpy instead.
                 #rand_num = torch.randperm(fg_num_rois).long().cuda()
                 rand_num = torch.from_numpy(np.random.permutation(fg_num_rois)).type_as(gt_boxes).long()
                 fg_inds = fg_inds[rand_num[:fg_rois_per_this_image]]
-
+                # print('fg_inds :',fg_inds)
                 # sampling bg
                 bg_rois_per_this_image = rois_per_image - fg_rois_per_this_image
 
@@ -188,7 +194,7 @@ class _ProposalTargetLayer(nn.Module):
                 rand_num = np.floor(np.random.rand(bg_rois_per_this_image) * bg_num_rois)
                 rand_num = torch.from_numpy(rand_num).type_as(gt_boxes).long()
                 bg_inds = bg_inds[rand_num]
-
+                # print('bg_inds :',bg_inds)
             elif fg_num_rois > 0 and bg_num_rois == 0:
                 # print('2')
                 # sampling fg
@@ -227,15 +233,14 @@ class _ProposalTargetLayer(nn.Module):
             # Clamp labels for the background RoIs to 0
             if fg_rois_per_this_image < rois_per_image:
                 labels_batch[i][fg_rois_per_this_image:] = 0
+
             # print('all_rois.shape :', all_rois.shape)
             # print('kee_inds :', keep_inds)
             # print('all_rois[i,keep_inds] :',all_rois[i,keep_inds])
             rois_batch[i] = all_rois[i,keep_inds]
             rois_batch[i,:,0] = i
-
             gt_rois_batch[i] = gt_boxes[i][gt_assignment[i][keep_inds]]
 
-        # print('rois_batch :',rois_batch)
         # print('rois_batch.shape :',rois_batch.shape)
         bbox_target_data = self._compute_targets_pytorch(
                 rois_batch[:,:,1:7], gt_rois_batch[:,:,:6])
