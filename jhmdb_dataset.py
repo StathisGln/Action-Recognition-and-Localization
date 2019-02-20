@@ -203,6 +203,7 @@ class Video(data.Dataset):
         path = self.data[index]['abs_path']
         end_t = self.data[index]['end_t']
 
+        self.sample_duration = 16
         n_frames = self.data[index]['end_t']
         if n_frames < 17:
             print('n_frames :',n_frames)
@@ -258,8 +259,10 @@ class Video(data.Dataset):
         gt_tubes = create_tube(gt_bboxes_tube.unsqueeze(2),im_info_tube,self.sample_duration)
         gt_tubes = torch.round(gt_tubes)
 
-        f_rois = torch.zeros(1,self.sample_duration,5) # because only 1 action can have simultaneously
-        f_rois[0,:n_frames,:] = gt_bboxes_r
+        f_rois = torch.zeros(1,16,5) # because only 1 action can have simultaneously
+        b_frames = gt_bboxes_r.size(1)
+
+        f_rois[:,:b_frames,:] = gt_bboxes_r
 
         if (n_frames < 16):
             print(f_rois)

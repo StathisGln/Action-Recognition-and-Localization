@@ -324,7 +324,7 @@ class Video(data.Dataset):
             # print('h {} w{}'.format(h,w))
             # print('gt_tubes :',gt_tubes)
             # return clip,  h, w,  gt_tubes, final_rois
-            return clip,  h, w,  ret_tubes, n_acts
+            return clip,  h, w,  ret_tubes, f_rois, n_acts
         else:
             # return clip,  (h, w),  gt_tubes, final_rois,  self.data[index]['abs_path']
             return clip,  h, w,  gt_tubes, final_rois,  self.data[index]['abs_path'], frame_indices

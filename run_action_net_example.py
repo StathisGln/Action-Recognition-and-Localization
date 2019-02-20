@@ -77,8 +77,8 @@ if __name__ == '__main__':
     model.to(device)
 
     # clips, h, w, gt_tubes, n_actions = data[1451]
-    clips, h, w, gt_tubes, gt_rois, n_actions, rois_action = data[144]
-    clips2, h2, w2, gt_tubes2, gt_rois2, n_actions2, rois_action2 = data[1450]
+    clips, h, w, gt_tubes, gt_rois, n_actions = data[144]
+    clips2, h2, w2, gt_tubes2, gt_rois2, n_actions2 = data[1450]
 
 
     # clips = clips.unsqueeze(0)
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     gt_tubes = torch.stack((gt_tubes,gt_tubes2),dim=0).to(device)
     gt_rois = torch.stack((gt_rois,gt_rois2),dim=0).to(device)
     n_actions = torch.Tensor((n_actions,n_actions2)).to(device)
-    rois_action = torch.stack((rois_action,rois_action2)).to(device)
+    # rois_action = torch.stack((rois_action,rois_action2)).to(device)
     im_info = torch.stack((h.float(),w.float(),torch.Tensor([sample_duration] * 2).cuda().float()),dim=1).to(device)
 
     print('gt_tubes.shape :',gt_tubes.shape )
@@ -133,6 +133,6 @@ if __name__ == '__main__':
     #                                                  n_actions)
 
     print('**********VGIKE**********')
-    print('rois.shape :',rois.shape)
-    print('rois :',rois)
+    # print('rois.shape :',rois.shape)
+    # print('rois :',rois)
 

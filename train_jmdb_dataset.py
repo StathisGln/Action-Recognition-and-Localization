@@ -113,13 +113,13 @@ if __name__ == '__main__':
         ## 2 rois : 1450
         for step, data  in enumerate(data_loader):
             # print('&&&&&&&&&&')
-            print('step -->\t',step)
+            # print('step -->\t',step)
             # clips,  (h, w), gt_tubes, gt_rois = data
             clips,  (h, w), gt_tubes_r, gt_rois_r, n_actions = data
             clips = clips.to(device)
             gt_tubes_r = gt_tubes_r.to(device)
             gt_rois_r = gt_rois_r.to(device)
-            print('gt_rois_r.shape :',gt_rois_r.shape)
+            # print('gt_rois_r.shape :',gt_rois_r.shape)
             # print('gt_tubes_r :',gt_tubes_r.shape)
             # print('gt_rois_r :',gt_rois_r.shape)
             # print('gt_tubes :',gt_tubes)

@@ -139,6 +139,12 @@ class _ProposalTargetLayer(nn.Module):
         # Guard against the case when an image has fewer than max_fg_rois_per_image
         # foreground RoIs
         for i in range(batch_size):
+            gt_boxes_single = gt_boxes[i]
+            if gt_boxes_single.byte().any() == 0:
+                print('gt_boxes_single :',gt_boxes_single)
+                print('gt_boxes :',gt_boxes)
+                print('no rois')
+                continue
 
             fg_inds = torch.nonzero(max_overlaps[i] >= cfg.TRAIN.FG_THRESH).view(-1)
             fg_num_rois = fg_inds.numel()
