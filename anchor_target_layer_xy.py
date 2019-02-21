@@ -29,13 +29,13 @@ except NameError:
     long = int  # Python 3
 
 
-class _AnchorTargetLayer(nn.Module):
+class _AnchorTargetLayer_xy(nn.Module):
     """
         Assign anchors to ground-truth targets. Produces anchor classification
         labels and bounding-box regression targets.
     """
     def __init__(self, feat_stride, time_stride, scales, ratios, anchor_duration):
-        super(_AnchorTargetLayer, self).__init__()
+        super(_AnchorTargetLayer_xy, self).__init__()
 
         self._feat_stride = feat_stride
         self._time_stride = time_stride
@@ -71,13 +71,13 @@ class _AnchorTargetLayer(nn.Module):
         batch_size = gt_tubes.size(0)
 
         # print('time_limit :',time_limit)
-        time, height, width  = rpn_cls_score.size(2), rpn_cls_score.size(3), rpn_cls_score.size(4)
+        height, width  = rpn_cls_score.size(2), rpn_cls_score.size(3)
         # print('time :', time)
-        feat_time, feat_height, feat_width,  = rpn_cls_score.size(2), rpn_cls_score.size(3), rpn_cls_score.size(4)
+        feat_height, feat_width,  = rpn_cls_score.size(2), rpn_cls_score.size(3)
 
         shift_x = np.arange(0, feat_width) * self._feat_stride
         shift_y = np.arange(0, feat_height) * self._feat_stride
-        shift_z = np.arange(0, feat_time) * self._time_stride
+        shift_z = np.arange(0, 1) 
         shift_x, shift_y, shift_z = np.meshgrid(shift_x, shift_y, shift_z)
         shifts = torch.from_numpy(np.vstack((shift_x.ravel(), shift_y.ravel(), shift_z.ravel(),
                                              shift_x.ravel(), shift_y.ravel(), shift_z.ravel())).transpose())
@@ -222,28 +222,27 @@ class _AnchorTargetLayer(nn.Module):
         bbox_outside_weights = _unmap(bbox_outside_weights, total_anchors, inds_inside, batch_size, fill=0)
 
         outputs = []
-
-        labels = labels.view(batch_size, time,height, width, A).permute(0,4,1,2,3).contiguous()
-        labels = labels.view(batch_size, 1, A * time* height, width)
+        labels = labels.view(batch_size, height, width, A).permute(0,3,1,2).contiguous()
+        labels = labels.view(batch_size, 1, A *  height, width)
         # print('labels.shape :',labels.shape)
         outputs.append(labels)
 
         # print('bbox_targets.shape :',bbox_targets.shape)
-
-        bbox_targets = bbox_targets.view(batch_size, time, height, width,  A*6).permute(0,4,1,2,3).contiguous()
-        # print('bbox_targets.shape :',bbox_targets.shape)
+        bbox_targets = bbox_targets[:,:,[0,1,3,4]]
+        bbox_targets = bbox_targets.view(batch_size, height, width,  A*4).permute(0,3,1,2).contiguous()
         outputs.append(bbox_targets)
 
         anchors_count = bbox_inside_weights.size(1)
         bbox_inside_weights = bbox_inside_weights.view(batch_size,anchors_count,1).expand(batch_size, anchors_count, 6)
-
-        bbox_inside_weights = bbox_inside_weights.contiguous().view(batch_size, time,height, width,  A * 6)\
-                            .permute(0,4,1,2,3).contiguous()
+        bbox_inside_weights = bbox_inside_weights[:,:,[0,1,3,4]]
+        bbox_inside_weights = bbox_inside_weights.contiguous().view(batch_size, height, width,  A * 4)\
+                            .permute(0,3,1,2).contiguous()
         outputs.append(bbox_inside_weights)
 
         bbox_outside_weights = bbox_outside_weights.view(batch_size,anchors_count,1).expand(batch_size, anchors_count, 6)
-        bbox_outside_weights = bbox_outside_weights.contiguous().view(batch_size, time,height, width,  A * 6)\
-                            .permute(0,4,1,2,3).contiguous()
+        bbox_outside_weights = bbox_outside_weights[:,:,[0,1,3,4]]
+        bbox_outside_weights = bbox_outside_weights.contiguous().view(batch_size, height, width,  A * 4)\
+                            .permute(0,3,1,2).contiguous()
 
         outputs.append(bbox_outside_weights)
 

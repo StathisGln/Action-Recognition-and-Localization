@@ -27,7 +27,7 @@ if __name__ == '__main__':
     print("Device being used:", device)
 
     dataset_folder = '/gpu-data/sgal/UCF-101-frames'
-    boxes_file = './pyannot.pkl'
+    boxes_file = '../temporal_localization/pyannot.pkl'
     # boxes_file = '/gpu-data/sgal/UCF-bboxes.json'
     # dataset_folder = '../UCF-101-frames'
     # boxes_file = '../UCF-101-frames/UCF-bboxes.json'
@@ -118,13 +118,15 @@ if __name__ == '__main__':
     # inputs = Variable(clips)
     print('gt_tubes.shape :',gt_tubes.shape )
     # print('gt_rois.shape :',gt_rois.shape)
-    tubes,  tube_bbox_pred, rois, rois_bbox_pred, \
+    print('**********START**********')
+    rois, rois_bbox_pred, \
     rpn_loss_cls,  rpn_loss_bbox, \
-    act_loss_cls,  act_loss_bbox, \
-    act_loss_cls_s, act_loss_bbox_s = model(clips,
-                                            im_info,
-                                            gt_tubes, gt_rois,
-                                            n_actions)
+    rpn_loss_cls_16, rpn_loss_bbox_16, \
+    act_loss_cls,  act_loss_bbox,  \
+    act_loss_cls_16,  act_loss_bbox_16   = model(clips,
+                                                 im_info,
+                                                 gt_tubes, gt_rois,
+                                                 n_actions)
     # rois,  bbox_pred, cls_prob, \
     # rpn_loss_cls,  rpn_loss_bbox, \
     # act_loss_cls,  act_loss_bbox, rois_label = model(clips,
@@ -133,6 +135,6 @@ if __name__ == '__main__':
     #                                                  n_actions)
 
     print('**********VGIKE**********')
-    # print('rois.shape :',rois.shape)
+    print('rois.shape :',rois.shape)
     # print('rois :',rois)
 

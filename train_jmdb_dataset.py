@@ -136,19 +136,28 @@ if __name__ == '__main__':
             #                                      im_info,
             #                                      gt_tubes_r, None,
             #                                      n_actions)
-            tubes,  tube_bbox_pred, rois, rois_bbox_pred, \
+            rois, rois_16, rois_bbox_pred, \
             rpn_loss_cls,  rpn_loss_bbox, \
-            act_loss_cls,  act_loss_bbox, \
-            act_loss_cls_s, act_loss_bbox_s = model(clips,
-                                                    im_info,
-                                                    gt_tubes_r, gt_rois_r,
-                                                    n_actions)
+            rpn_loss_cls_16, rpn_loss_bbox_16, \
+            act_loss_cls,  act_loss_bbox,  \
+            act_loss_cls_16,  act_loss_bbox_16   = model(clips,
+                                                         im_info,
+                                                         gt_tubes_r, gt_rois_r,
+                                                         n_actions)
 
+            # tubes,  tube_bbox_pred, rois, rois_bbox_pred, \
+            # rpn_loss_cls,  rpn_loss_bbox, \
+            # act_loss_cls,  act_loss_bbox, \
+            # act_loss_cls_s, act_loss_bbox_s = model(clips,
+            #                                         im_info,
+            #                                         gt_tubes_r, gt_rois_r,
+            #                                         n_actions)
             
             # print('rois :',rois)
             # print('rpn_loss_bbox :',rpn_loss_bbox)
             # print('rpn_loss_cls :',rpn_loss_cls)
-            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + act_loss_bbox_s.mean() 
+            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + \
+                   rpn_loss_cls_16.mean() + rpn_loss_bbox_16.mean() + act_loss_bbox_16.mean() 
             # loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() 
             loss_temp += loss.item()
 

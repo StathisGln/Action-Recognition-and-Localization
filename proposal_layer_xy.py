@@ -16,21 +16,21 @@ import math
 import yaml
 from config import cfg
 from generate_3d_anchors import generate_anchors
-from bbox_transform import bbox_transform_inv, clip_boxes_3d, clip_boxes_batch, bbox_transform_inv_3d
+from bbox_transform import bbox_transform_inv, clip_boxes, clip_boxes_batch
 from nms.nms_wrapper import nms
 
 import pdb
 
 DEBUG = False
 
-class _ProposalLayer(nn.Module):
+class _ProposalLayer_xy(nn.Module):
     """
     Outputs object detection proposals by applying estimated bounding-box
     transformations to a set of regular boxes (called "anchors").
     """
 
     def __init__(self, feat_stride, time_stride, scales, ratios, time_dim):
-        super(_ProposalLayer, self).__init__()
+        super(_ProposalLayer_xy, self).__init__()
 
         self._feat_stride = feat_stride
         self._time_stride = time_stride
@@ -72,7 +72,6 @@ class _ProposalLayer(nn.Module):
         im_info = input[2]
         cfg_key = input[3]
         time_dim = input[4]
-        # print('bbox_frame.shape :',bbox_frame.shape)
 
         batch_size = bbox_frame.size(0)
 
@@ -96,10 +95,11 @@ class _ProposalLayer(nn.Module):
         ##################
 
         # print('batch_size :', batch_size)
-        feat_time, feat_height,  feat_width= scores.size(2), scores.size(3), scores.size(4) # (batch_size, 512/256, 7,7, 16/8)
+        # print('scores.shape :',scores.shape)
+        feat_height,  feat_width= scores.size(2), scores.size(3) # (batch_size, 512/256, 7, 7)
         shift_x = np.arange(0, feat_width) * self._feat_stride
         shift_y = np.arange(0, feat_height) * self._feat_stride
-        shift_z = np.arange(0, feat_time ) * self._time_stride # z dim is time dim
+        shift_z = np.arange(0, 1 )
         shift_x, shift_y, shift_z = np.meshgrid(shift_x, shift_y, shift_z)
         shifts = torch.from_numpy(np.vstack((shift_x.ravel(), shift_y.ravel(), shift_z.ravel(),
                                              shift_x.ravel(), shift_y.ravel(), shift_z.ravel())).transpose())
@@ -117,19 +117,19 @@ class _ProposalLayer(nn.Module):
         anchors = anchors.expand(batch_size, K * A, 6)
 
         # print('anchors.shape :', anchors.shape)
-
+        # print('anchors.shape :',anchors.shape)
         # Transpose and reshape predicted bbox transformations to get them
         # into the same order as the anchors:
         # print('bbox_frame.shape :', bbox_frame.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
 
-        bbox_frame = bbox_frame.permute(0, 2, 3, 4, 1).contiguous()
+        bbox_frame = bbox_frame.permute(0, 2, 3, 1).contiguous()
         # print('bbox_frame.shape :', bbox_frame.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
-        bbox_frame = bbox_frame.view(batch_size, -1, 6)
+        bbox_frame = bbox_frame.view(batch_size, -1, 4)
         # print('bbox_frame.shape :', bbox_frame.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
 
         # Same story for the scores:
         # print('scores.shape :', scores.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
-        scores = scores.permute(0, 2, 3, 4, 1).contiguous()
+        scores = scores.permute(0, 2, 3, 1).contiguous()
         # print('scores.shape :', scores.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
         scores = scores.view(batch_size, -1)
         # print('scores.shape :', scores.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
@@ -141,15 +141,27 @@ class _ProposalLayer(nn.Module):
         """
         # Convert anchors into proposals via bbox transformations
         # proposals = bbox_frames_transform_inv(anchors, bbox_deltas, batch_size)
-        proposals = bbox_transform_inv_3d(anchors, bbox_frame, batch_size) # proposals have 441 * time_dim shape
+        # print('anchors.shape :',anchors.shape)
+        anchors_xy = anchors[:,:,[0,1,3,4]]
+        # print('anchors :',anchors)
+        for j in anchors.cpu().tolist():
+            for i in j:
+                if (i[2] != 0.0) or (i[5] != 15.0) :
+                    print('malakia ', i)
+        # print('anchors_xy.shape :',anchors_xy.shape)
+        # print('bbox_frame.shape :',bbox_frame.shape )
+        proposals_xy = bbox_transform_inv(anchors_xy, bbox_frame, batch_size) # proposals have 441 * time_dim shape
         # print('proposals.shape :',proposals.shape)
         # print('proposals :',proposals)
 
         # 2. clip predicted boxes to image
         ## if any dimension exceeds the dims of the original image, clamp_ them
-        proposals = clip_boxes_3d(proposals, im_info, 1)
+        proposals_xy = clip_boxes(proposals_xy, im_info, 1)
+        # print('proposals_xy.shape :', proposals_xy.shape)
+        # print('anchors[:,:,2].shape :',anchors[:,:,2].unsqueeze(2).shape)
+        # print('proposals_xy[:,:,[0,1]].shape :', proposals_xy[:,:,[0,1]].shape)
+        proposals = torch.cat(( proposals_xy[:,:,[0,1]],anchors[:,:,2].unsqueeze(2), proposals_xy[:,:,[2,3]], anchors[:,:,5].unsqueeze(2)), dim=2)
         # print('proposals.shape :',proposals.shape)
-        # print('proposals :',proposals[0][14000:14100])
         # print('proposals :',proposals.cpu().tolist()[:100])
 
         # print('proposals :',proposals)
