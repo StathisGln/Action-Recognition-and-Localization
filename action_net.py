@@ -186,6 +186,10 @@ class ACT_net(nn.Module):
 
         # # ########################################################################
 
+        offset = (torch.arange(0,batch_size) * self.sample_duration).unsqueeze(1).expand(-1,self.sample_duration).contiguous().view(-1)
+        offset = torch.arange(0,self.sample_duration).expand(batch_size,-1).contiguous().view(-1) + offset
+        offset = offset.unsqueeze(1).expand(offset.size(0),rois.size(1)).unsqueeze(2).type_as(bbox_pred)
+
         bbox_normalize_means = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0 )
         bbox_normalize_stds = (0.1, 0.1, 0.1, 0.2, 0.2, 0.1)
 
@@ -196,9 +200,12 @@ class ACT_net(nn.Module):
         pred_boxes = bbox_transform_inv_3d(rois[:,:,1:], box_deltas, batch_size)
         pred_boxes = clip_boxes(pred_boxes, im_info.data, batch_size)
 
-        rois_s = torch.cat((rois[:,:,0].unsqueeze(2),pred_boxes[:,:,[0,1,3,4]]), dim=2)
-        rois_s = rois_s.unsqueeze(2).expand(rois_s.size(0),rois_s.size(1),self.sample_duration,5).permute(0,2,1,3).contiguous().view(-1,rois_s.size(1),5)
-
+        # print('pred_boxes[:,:,[0,1,3,4]].shape :',pred_boxes[:,:,[0,1,3,4]].shape)
+        pred_boxes = pred_boxes[:,:,[0,1,3,4]].unsqueeze(2).expand(pred_boxes.size(0),pred_boxes.size(1),self.sample_duration,4).permute(0,2,1,3).contiguous().view(-1,pred_boxes.size(1),4)
+        # print('pred_boxes.shape :',pred_boxes.shape)
+        # print('offset.shape :',offset.shape)
+        rois_s = torch.cat((offset,pred_boxes), dim=2)
+        # rois_s = rois_s.unsqueeze(2).expand(r.size(0),rois_s.size(1),self.sample_duration,5).permute(0,2,1,3).contiguous().view(-1,rois_s.size(1),5)
         if self.training:
             gt_rois = gt_rois.permute(0,2,1,3).contiguous().view(-1,gt_rois.size(1),5)
             # print('gt_rois.shape    :',gt_rois.shape)

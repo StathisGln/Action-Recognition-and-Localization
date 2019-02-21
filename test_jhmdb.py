@@ -111,7 +111,7 @@ if __name__ == '__main__':
     model.create_architecture()
     data = model.act_rpn.RPN_cls_score.weight.data.clone()
 
-    model_data = torch.load('../temporal_localization/jmdb_model_030.pwf')
+    model_data = torch.load('../temporal_localization/jmdb_model.pwf')
     # model_data = torch.load('../temporal_localization/jmdb_model_020.pwf')
     # # model_data = torch.load('../temporal_localization/r')
 
@@ -136,8 +136,8 @@ if __name__ == '__main__':
     # print('rois :',rois.shape)
     # print('rois :',rois)
     # print('tubes :',tubes)
-    # print('bbox_pred.shape :',bbox_pred.shape)
-    # print('bbox_pred_s.shape :',bbox_pred_s.shape)
+    print('bbox_pred.shape :',bbox_pred.shape)
+    print('bbox_pred_s.shape :',bbox_pred_s.shape)
     bbox_pred_s = bbox_pred_s.view(1,10,16,4).permute(0,2,1,3).contiguous().view(-1,10,4)
     print('bbox_pred_s.shape :',bbox_pred_s.shape)
 
@@ -145,17 +145,23 @@ if __name__ == '__main__':
     bbox_normalize_means = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
     bbox_normalize_stds = (0.1, 0.1, 0.1, 0.2, 0.2, 0.1)
 
+    print('rois :',rois)
     rois = rois[:,:,1:]
+
     # # rois = rois.data
     # scores = cls_prob.data
     # print('scores :', scores)
-    box_deltas = bbox_pred.view(-1, 6) * torch.FloatTensor(bbox_normalize_stds).to(device) \
-                               + torch.FloatTensor(bbox_normalize_means).to(device)
+    bbox_normalize_means_s = (0.0, 0.0, 0.0, 0.0 )
+    bbox_normalize_stds_s = (0.1, 0.1, 0.2, 0.2)
 
-    box_deltas = box_deltas.view(1,-1,6)
-    pred_boxes = bbox_transform_inv_3d(tubes, box_deltas, 1)
-    pred_boxes = clip_boxes_3d(pred_boxes, im_info.data, 1)
-    pred_boxes = pred_boxes.view(1,rois.size(1),1,6)
+    
+    # box_deltas = bbox_pred.view(-1, 4) * torch.FloatTensor(bbox_normalize_stds).to(device) \
+    #                            + torch.FloatTensor(bbox_normalize_means).to(device)
+
+    # box_deltas = box_deltas.view(1,-1,4)
+    # pred_boxes = bbox_transform_inv_3d(tubes, box_deltas, 1)
+    # pred_boxes = clip_boxes_3d(pred_boxes, im_info.data, 1)
+    # pred_boxes = pred_boxes.view(1,rois.size(1),1,6)
 
     box_deltas_s = bbox_pred_s.view(-1, 4) * torch.FloatTensor(bbox_normalize_stds_s).to(device) \
                                + torch.FloatTensor(bbox_normalize_means_s).to(device)
@@ -169,8 +175,8 @@ if __name__ == '__main__':
     pred_boxes_s = clip_boxes(pred_boxes_s,im_info_s , 16)
     pred_boxes_s = pred_boxes_s.view(16,rois.size(1),1,4)
 
-    # print('pred_boxes_s :', pred_boxes_s.shape)
-    # print('pred_boxes_s.shape :', pred_boxes_s)
+    print('pred_boxes_s :', pred_boxes_s.shape)
+    print('pred_boxes_s.shape :', pred_boxes_s)
     # print('bbox_pred.shape :',pred_boxes.shape)
     
     # print(scores)
