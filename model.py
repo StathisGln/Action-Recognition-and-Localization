@@ -8,6 +8,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 from action_net import ACT_net
+from tcn import TCN
 
 class Model(nn.Module):
     """ 
@@ -23,6 +24,11 @@ class Model(nn.Module):
 
         self.act_net = ACT_net(actions)
 
+        ## general options
+        self.sample_duration = 16
+        # self.step = int(self.sample_duration/2)
+        self.step = 8
+
         ### tcn options
         ## TODO optimize them
 
@@ -35,8 +41,24 @@ class Model(nn.Module):
 
         self.tcn_net = TCN(input_channels, self.n_classes, channel_sizes, kernel_size = kernel_size, dropout=dropout)
 
-    def forward(input_video, gt_tubes, gt_rois, im_info, num_boxes):
+    def forward(self, input_video, im_info, gt_tubes, gt_rois,  num_boxes):
 
         print('input_video.shape :',input_video.shape)
         print('im_info :',im_info)
         print('num_boxes :',num_boxes)
+
+        batch_size = input_video.size(0)
+        print('batch_size :',batch_size)
+        for b in range(batch_size):
+            n_frames = im_info[b, 2].long() # video shape : (bs, 3, n_fr, 112, 112,)
+            for i in range(0, (n_frames.data - self.sample_duration ), self.step):
+                # vid_indices = torch.range(i,i+self.sample_duration-1).long()
+                # vid_seg = input_video[b,:,vid_indices]
+                # gt_tubes_seg  = gt_tubes.
+                print(i)
+        
+        return 0
+    
+    def create_architecture(self):
+
+        self.act_net.create_architecture()

@@ -478,32 +478,32 @@ class Video_UCF(data.Dataset):
     def __len__(self):
         return len(self.data)
 
-class Video_UCF(data.Dataset):
-    def __init__(self, video_path, frames_dur=8, 
-                 spatial_transform=None, temporal_transform=None, json_file=None,
-                 sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None):
+# class Video_UCF(data.Dataset):
+#     def __init__(self, video_path, frames_dur=8, 
+#                  spatial_transform=None, temporal_transform=None, json_file=None,
+#                  sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None):
 
-        self.mode = mode
-        self.data= make_sub_samples(
-                    video_path, sample_duration, step=int(sample_duration/2))
+#         self.mode = mode
+#         self.data= make_sub_samples(
+#                     video_path, sample_duration, step=int(sample_duration/2))
 
-        self.spatial_transform = spatial_transform
-        self.temporal_transform = temporal_transform
-        self.loader = get_loader()
-        self.sample_duration = sample_duration
-        self.json_file = json_file
-        self.classes_idx = classes_idx
+#         self.spatial_transform = spatial_transform
+#         self.temporal_transform = temporal_transform
+#         self.loader = get_loader()
+#         self.sample_duration = sample_duration
+#         self.json_file = json_file
+#         self.classes_idx = classes_idx
 
-    def __getitem__(self, index):
-        """
-        Args:
-            index (int): Index
-        Returns:
-            tuple: (image, target) where target is class_index of the target class.
-        """
+#     def __getitem__(self, index):
+#         """
+#         Args:
+#             index (int): Index
+#         Returns:
+#             tuple: (image, target) where target is class_index of the target class.
+#         """
 
-        frame_indices = =self.data[index]['frame_indices']
-    def __len__(self):
-        return len(self.data)
+#         frame_indices =self.data[index]['frame_indices']
+#     def __len__(self):
+#         return len(self.data)
 
 
