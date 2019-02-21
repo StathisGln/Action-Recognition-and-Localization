@@ -99,7 +99,6 @@ class ACT_net(nn.Module):
         self.time_dim =16
         self.temp_scale = 1.
         self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale)
-        self.act_roi_align_s = RoIAlignAvg_s(self.pooling_size, self.pooling_size, self.spatial_scale)
 
     def create_architecture(self):
         self._init_modules()
@@ -113,8 +112,6 @@ class ACT_net(nn.Module):
         if self.training:
             gt_tubes = gt_tubes.data
             gt_rois =  gt_rois.data
-            # print('gt_tubes.shape :',gt_tubes.shape)
-            # print('gt_rois.shape :',gt_rois.shape)
             num_boxes = num_boxes.data
 
         # feed image data to base model to obtain base feature map
@@ -123,150 +120,71 @@ class ACT_net(nn.Module):
         rois, rpn_loss_cls, rpn_loss_bbox = self.act_rpn(base_feat, im_info, gt_tubes, None, num_boxes)
         # if it is training phrase, then use ground trubut bboxes for refining
         # firstly find xy- reggression boxes
-        # print('rois.shape :',rois.shape)
-        if self.training:
-            roi_data = self.act_proposal_target(rois, gt_tubes, num_boxes)
+        print('rois.shape :',rois.shape)
+        # print('rois :',rois)
+        # if self.training:
+        #     roi_data = self.act_proposal_target(rois, gt_tubes, num_boxes)
 
-            rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = roi_data
-            # print('rois_label.shape :',rois_label.shape )
-            # print('rois.shape :',rois.shape )
-            rois_label = Variable(rois_label.view(-1).long())
-            rois_target = Variable(rois_target.view(-1, rois_target.size(2)))
-            rois_inside_ws = Variable(rois_inside_ws.view(-1, rois_inside_ws.size(2)))
-            rois_outside_ws = Variable(rois_outside_ws.view(-1, rois_outside_ws.size(2)))
-        else:
-            rois_label = None
-            rois_target = None
-            rois_inside_ws = None
-            rois_outside_ws = None
-            rpn_loss_cls = 0
-            rpn_loss_bbox = 0
+        #     rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = roi_data
+        #     # print('rois_label.shape :',rois_label.shape )
+        #     # print('rois.shape :',rois.shape )
+        #     rois_label = Variable(rois_label.view(-1).long())
+        #     rois_target = Variable(rois_target.view(-1, rois_target.size(2)))
+        #     rois_inside_ws = Variable(rois_inside_ws.view(-1, rois_inside_ws.size(2)))
+        #     rois_outside_ws = Variable(rois_outside_ws.view(-1, rois_outside_ws.size(2)))
+        # else:
+        #     rois_label = None
+        #     rois_target = None
+        #     rois_inside_ws = None
+        #     rois_outside_ws = None
+        #     rpn_loss_cls = 0
+        #     rpn_loss_bbox = 0
 
-        rois = Variable(rois)
+        # rois = Variable(rois)
 
-        # do roi align based on predicted rois
-        pooled_feat = self.act_roi_align(base_feat, rois.view(-1,7))
-        # print('pooled_feat.shape :',pooled_feat.shape)
-        # # feed pooled features to top model
-        pooled_feat = self._head_to_tail(pooled_feat)
-        n_rois = pooled_feat.size(0)
-        # print('pooled_feat.shape :',pooled_feat.shape)
-        # # compute bbox offset
-        pooled_feat_mean = pooled_feat.mean(2)
-        # print('pooled_feat.shape :',pooled_feat_mean.shape)
+        # # do roi align based on predicted rois
+        # pooled_feat = self.act_roi_align(base_feat, rois.view(-1,7))
+        # # print('pooled_feat.shape :',pooled_feat.shape)
+        # # # feed pooled features to top model
+        # pooled_feat = self._head_to_tail(pooled_feat)
+        # n_rois = pooled_feat.size(0)
+        # # print('pooled_feat.shape :',pooled_feat.shape)
+        # # # compute bbox offset
+        # pooled_feat_mean = pooled_feat.mean(2)
+        # # print('pooled_feat.shape :',pooled_feat_mean.shape)
 
         
-        bbox_pred = self.act_bbox_pred(pooled_feat_mean)
-        # print('bbox_pred.shape :',bbox_pred.shape)
-        # if self.training :
-        #     # select the corresponding columns according to roi labels
-        #     bbox_pred_view = bbox_pred.view(bbox_pred.size(0), int(bbox_pred.size(1) / 4), 4)
-        #     print('bbox_pred_view.shape :',bbox_pred_view.shape)
-        #     print('rois_label.shape :',rois_label.shape)
-
-        #     bbox_pred_select = torch.gather(bbox_pred_view, 1, rois_label.view(rois_label.size(0), 1, 1).expand(rois_label.size(0), 1, 4))
-        #     bbox_pred = bbox_pred_select.squeeze(1)
-
-        # compute object classification probability
-        # cls_score = self.act_cls_score(pooled_feat_mean)
-        # cls_prob = F.softmax(cls_score, 1)
-
-        act_loss_cls = 0
-        act_loss_bbox = 0
-
-        if self.training:
-            # # classification loss
-            # # print('rois_label :', rois_label)
-            # act_loss_cls = F.cross_entropy(cls_score, rois_label)
-
-            # bounding box regression L1 loss
-            act_loss_bbox = _smooth_l1_loss(bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
-
-        bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
-
-        # # ########################################################################
-
-        offset = (torch.arange(0,batch_size) * self.sample_duration).unsqueeze(1).expand(-1,self.sample_duration).contiguous().view(-1)
-        offset = torch.arange(0,self.sample_duration).expand(batch_size,-1).contiguous().view(-1) + offset
-        offset = offset.unsqueeze(1).expand(offset.size(0),rois.size(1)).unsqueeze(2).type_as(bbox_pred)
-
-        bbox_normalize_means = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0 )
-        bbox_normalize_stds = (0.1, 0.1, 0.1, 0.2, 0.2, 0.1)
-
-        box_deltas = bbox_pred.view(-1, 6) * torch.FloatTensor(bbox_normalize_stds).type_as(rois) \
-                                   + torch.FloatTensor(bbox_normalize_means).type_as(rois)
-
-        box_deltas = box_deltas.view(batch_size,-1,6)
-        pred_boxes = bbox_transform_inv_3d(rois[:,:,1:], box_deltas, batch_size)
-        pred_boxes = clip_boxes(pred_boxes, im_info.data, batch_size)
-
-        # print('pred_boxes[:,:,[0,1,3,4]].shape :',pred_boxes[:,:,[0,1,3,4]].shape)
-        pred_boxes = pred_boxes[:,:,[0,1,3,4]].unsqueeze(2).expand(pred_boxes.size(0),pred_boxes.size(1),self.sample_duration,4).permute(0,2,1,3).contiguous().view(-1,pred_boxes.size(1),4)
-        # print('pred_boxes.shape :',pred_boxes.shape)
-        # print('offset.shape :',offset.shape)
-        rois_s = torch.cat((offset,pred_boxes), dim=2)
-        # rois_s = rois_s.unsqueeze(2).expand(r.size(0),rois_s.size(1),self.sample_duration,5).permute(0,2,1,3).contiguous().view(-1,rois_s.size(1),5)
-        if self.training:
-            gt_rois = gt_rois.permute(0,2,1,3).contiguous().view(-1,gt_rois.size(1),5)
-            # print('gt_rois.shape    :',gt_rois.shape)
-            # print('rois_s.shape :',rois_s.shape)
-            roi_data_s = self.act_proposal_target_single(rois_s, gt_rois, num_boxes)
-
-            rois_s, rois_s_label, rois_s_target, rois_s_inside_ws, rois_s_outside_ws = roi_data_s
-            # print('rois_s_label.shape :',rois_s_label.shape )
-            # print('rois_s.shape :',rois_s.shape )
-            rois_s_label = Variable(rois_s_label.view(-1).long())
-            rois_s_target = Variable(rois_s_target.view(-1, rois_s_target.size(2)))
-            rois_s_inside_ws = Variable(rois_s_inside_ws.view(-1, rois_s_inside_ws.size(2)))
-            rois_s_outside_ws = Variable(rois_s_outside_ws.view(-1, rois_s_outside_ws.size(2)))
-        else:
-            rois_s_label = None
-            rois_s_target = None
-            rois_s_inside_ws = None
-            rois_s_outside_ws = None
-            rpn_loss_cls = 0
-            rpn_loss_bbox = 0
-
-        # do roi align based on predicted rois
-
-        base_feat = base_feat.permute(0,2,1,3,4).contiguous()
-        base_feat = base_feat.view(-1,base_feat.size(2),base_feat.size(3),base_feat.size(4))
-        pooled_feat_s = self.act_roi_align_s(base_feat, rois_s.view(-1,5))
-
-        # # feed pooled features to top model
-        pooled_feat_s = self._head_to_tail_s(pooled_feat_s)
-        n_rois = pooled_feat_s.size(0)
-
-        # # compute bbox offset
-        bbox_pred_s = self.act_bbox_single_frame_pred(pooled_feat_s)
-
-        # cls_score_s = self.act_cls_score(pooled_feat_s)
-        # cls_prob_s = F.softmax(cls_score_s, 1)
-
-        act_loss_cls_s = 0
-        act_loss_bbox_s = 0
-
-        if self.training:
-            # classification loss
-            # print('rois_label :', rois_label)
-            # act_loss_cls_s = F.cross_entropy(cls_score_s, rois_s_label)
-
-            # bounding box regression L1 loss
-            act_loss_bbox_s = _smooth_l1_loss(bbox_pred_s, rois_s_target, rois_s_inside_ws, rois_s_outside_ws)
-
-        bbox_pred_s = bbox_pred_s.view(batch_size, rois_s.size(1), -1)
-
-        # print('rois.shape :', rois.shape)
-        # print('bbox_pred.shape :',bbox_pred.shape)
-
-        # print('rois_s.shape :',rois_s.shape)
-        # print('bbox_pred_s.shape :',bbox_pred_s.shape)
-
-        bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
+        # bbox_pred = self.act_bbox_pred(pooled_feat_mean)
         # # print('bbox_pred.shape :',bbox_pred.shape)
-        if self.training:
-            return rois,  bbox_pred, rois_s, bbox_pred_s, rpn_loss_cls, rpn_loss_bbox, act_loss_cls, act_loss_bbox, act_loss_bbox_s, act_loss_bbox_s,
+        # # if self.training :
+        # #     # select the corresponding columns according to roi labels
+        # #     bbox_pred_view = bbox_pred.view(bbox_pred.size(0), int(bbox_pred.size(1) / 4), 4)
+        # #     print('bbox_pred_view.shape :',bbox_pred_view.shape)
+        # #     print('rois_label.shape :',rois_label.shape)
 
+        # #     bbox_pred_select = torch.gather(bbox_pred_view, 1, rois_label.view(rois_label.size(0), 1, 1).expand(rois_label.size(0), 1, 4))
+        # #     bbox_pred = bbox_pred_select.squeeze(1)
+
+        # # compute object classification probability
+        # # cls_score = self.act_cls_score(pooled_feat_mean)
+        # # cls_prob = F.softmax(cls_score, 1)
+
+        # act_loss_cls = 0
+        # act_loss_bbox = 0
+
+        # if self.training:
+        #     # # classification loss
+        #     # # print('rois_label :', rois_label)
+        #     # act_loss_cls = F.cross_entropy(cls_score, rois_label)
+
+        #     # bounding box regression L1 loss
+        #     act_loss_bbox = _smooth_l1_loss(bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
+
+        # bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
+
+        if self.training:
+            # return rois,  bbox_pred, rois_s, bbox_pred_s, rpn_loss_cls, rpn_loss_bbox, act_loss_cls, act_loss_bbox, act_loss_bbox_s, act_loss_bbox_s,
+          return rois,  0, 0, 0, 0, 0, 0, 0, 0, 0,
         return rois,  bbox_pred, rois_s, bbox_pred_s
 
     def _init_weights(self):

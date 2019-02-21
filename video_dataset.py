@@ -167,6 +167,28 @@ def make_correct_ucf_dataset(dataset_path,  boxes_file, mode='train'):
     return dataset, max_sim_actions
 
 
+def make_sub_samples(video_path, sample_duration, step):
+    dataset = []
+
+    n_frames = len(os.listdir(video_path))
+
+    begin_t = 1
+    end_t = n_frames
+    sample = {
+        'video': video_path,
+        'segment': [begin_t, end_t],
+        'n_frames': n_frames,
+    }
+
+    for i in range(1, (n_frames - sample_duration + 1), step):
+        sample_i = copy.deepcopy(sample)
+        sample_i['frame_indices'] = list(range(i, i + sample_duration))
+        sample_i['segment'] = torch.IntTensor([i, i + sample_duration - 1])
+        dataset.append(sample_i)
+    print('len(dataset) :',len(dataset))
+    return dataset
+
+
 def make_dataset(dataset_path,  boxes_file, mode='train'):
     dataset = []
     classes = next(os.walk(dataset_path, True))[1]
@@ -333,55 +355,14 @@ class Video(data.Dataset):
         return len(self.data)
 
 
-class TCN_Dataset(data.Dataset):
-    def __init__(self, split_txt_path, json_path, classes, mode):
-
-        self.split_txt_path = split_txt_path
-        self.json_path = json_path
-        self.mode = mode
-        if mode == 'train':
-            self.data = create_tcn_dataset(
-                split_txt_path, json_path, classes, mode)
-        elif mode == 'test':
-            self.data = create_tcn_dataset(
-                split_txt_path, json_path, classes, mode)
-        else:
-            raise NotImplementedError
-
-    def __getitem__(self, index):
-        """
-        Args:
-            index (int): Index
-        Returns:
-            tuple: (features, target) where target is class_index of the target class.
-        """
-        path = self.data[index]['video']
-        target = self.data[index]['class_idx']
-        class_name = self.data[index]['class']
-        with open(os.path.join(self.json_path, class_name+'.json'), 'r') as fp:
-            data = json.load(fp)
-        feats = data[path]['clips']
-        final_feats = np.zeros((len(feats), 512))
-        for f in range(len(feats)):
-            final_feats[f, :] = feats[f]['features']
-
-        return final_feats, path, target
-
-    def __len__(self):
-        return len(self.data)
-
-
-# def check_boxes:
-
-#     for
-class Pics(data.Dataset):
-    def __init__(self, video_path, frames_dur=8, split_txt_path=None,
+class Video_UCF(data.Dataset):
+    def __init__(self, video_path, frames_dur=8, 
                  spatial_transform=None, temporal_transform=None, json_file=None,
                  sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None):
 
         self.mode = mode
-        self.data = make_dataset(
-            video_path, split_txt_path, json_file, self.mode)
+        self.data, self.max_sim_actions = make_correct_ucf_dataset(
+                    video_path, json_file, self.mode)
 
         self.spatial_transform = spatial_transform
         self.temporal_transform = temporal_transform
@@ -397,54 +378,132 @@ class Pics(data.Dataset):
         Returns:
             tuple: (image, target) where target is class_index of the target class.
         """
-        # print(self.data[index]['video'])
-        path = self.data[index]['abs_path']   # video path
-        start_t = self.data[index]['begin_t']  # starting frame
-        end_t = self.data[index]['end_t']     # ending   frame
-        # get 8 random frames from the video
-        time_index = np.random.randint(
-            start_t, end_t - self.sample_duration) + 1
+        name = self.data[index]['video_name']   # video path
+        cls  = self.data[index]['class']
+        path = self.data[index]['abs_path']
+        rois = self.data[index]['rois']
+
+        
+        n_frames = len(glob.glob(path+ '/*.jpg'))
+        # print('n_frames :',n_frames, ' files ', sorted(glob.glob(path+ '/*.jpg')))
+        # print('path :',path,  ' n_frames :', n_frames, 'index :',index)        
+
 
         frame_indices = list(
-            range(time_index, time_index + self.sample_duration))  # get the corresponding frames
+            range(1,n_frames))  # get the corresponding frames
 
-        # print('frame_indices :', frame_indices)
         if self.temporal_transform is not None:
             frame_indices = self.temporal_transform(frame_indices)
-
         clip = self.loader(path, frame_indices)
 
-        # get original height and width
+        ## get original height and width
         w, h = clip[0].size
         if self.spatial_transform is not None:
             clip = [self.spatial_transform(img) for img in clip]
         clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
+        # print('clip :', clip.shape)
 
-        # get bbox
-        cls = self.data[index]['class']
-        name = self.data[index]['video']
-        json_key = os.path.join(cls, name)
+        rois_Tensor = torch.Tensor(rois)
+        print('rois.shape :',rois.shape)
+        # print('rois :', rois)
+        # print('rois_Tensor.shape :',rois_Tensor.shape)
+        rois_Tensor[:,:,2] = rois_Tensor[:,:,0] + rois_Tensor[:,:,2]
+        rois_Tensor[:,:,3] = rois_Tensor[:,:,1] + rois_Tensor[:,:,3]
+        rois_sample = rois_Tensor.tolist()
 
-        with open(self.json_file, 'r') as fp:
-            data = json.load(fp)[json_key]
+        rois_fr = [[z+[j] for j,z in enumerate(rois_sample[i])] for i in range(len(rois_sample))]
+        rois_gp =[[[list(g),i] for i,g in groupby(w, key=lambda x: x[:][4])] for w in rois_fr] # [person, [action, class]
 
-        # frames = list(range(time_index, ))
+        # print('rois_gp :',rois_gp)
+        # print('len(rois_gp) :',len(rois_gp))
 
-        boxes = [data[i] for i in frame_indices]
-        # print('len(boxes) {}, len(boxes[0] {}'.format(
-        #     len(boxes), len(boxes[0])))
+        final_rois_list = []
+        for p in rois_gp: # for each person
+            for r in p:
+                if r[1] > -1 :
+                    final_rois_list.append(r[0])
 
-        class_int = self.classes_idx[cls]
-        target = torch.IntTensor([class_int])
-        # print('target : ', target)
-        gt_bboxes = torch.Tensor([boxes[i] + [class_int]
-                                  for i in range(len(boxes))])
+        # print('final_rois_list :',final_rois_list)
+        # print('len(final_rois_list) :',len(final_rois_list))
 
-        # print('gt_bboxes ', gt_bboxes)
-        if self.mode == 'train':
-            return clip, target, (h, w),  gt_bboxes
+        # if final_rois == []: # empty ==> only background, no gt_tube exists
+        #     final_rois = [0] * 7
+        #     gt_tubes = torch.Tensor([[0,0,0,0,0,0,0]])
+
+
+        num_actions = len(final_rois_list)
+
+
+        if num_actions == 0:
+            final_rois = torch.zeros(1,16,5)
+            gt_tubes = torch.zeros(1,7)
         else:
-            return clip, target, (h, w),  gt_bboxes, self.data[index]['abs_path']
+            final_rois = torch.zeros((num_actions,n_frames,5)) # num_actions x [x1,y1,x2,y2,label]
+            for i in range(num_actions):
+                # for every action:
+                for j in range(len(final_rois_list[i])):
+                    # for every rois
+                    # print('final_rois_list[i][j][:5] :',final_rois_list[i][j][:5])
+                    pos = final_rois_list[i][j][5]
+                    final_rois[i,pos,:]= torch.Tensor(final_rois_list[i][j][:5])
+
+            # # print('final_rois :',final_rois)
+            gt_tubes = create_tube_list(rois_gp,[w,h], n_frames) ## problem when having 2 actions simultaneously
+
+
+        ret_tubes = torch.zeros(self.max_sim_actions,7)
+        n_acts = gt_tubes.size(0)
+        ret_tubes[:n_acts,:] = gt_tubes
+
+        # print('ret_tubes :',ret_tubes)
+        # print('ret_tubes.shape :',ret_tubes.shape)
+        ## f_rois
+        f_rois = torch.zeros(self.max_sim_actions,n_frames,5)
+        f_rois[:n_acts,:,:] = final_rois[:n_acts]
+
+        # print('gt_tubes :',gt_tubes)
+        # print(type(gt_tubes))
+        # print('gt_tubes.shape :',gt_tubes.shape)
+        # print('final_rois.shape :', final_rois.shape)
+        if self.mode == 'train':
+            # print('clips.shape :',clip.shape)
+            # print('h {} w{}'.format(h,w))
+            # print('gt_tubes :',gt_tubes)
+            # return clip,  h, w,  gt_tubes, final_rois
+            return clip,  h, w,  ret_tubes, f_rois, n_acts
+        else:
+            # return clip,  (h, w),  gt_tubes, final_rois,  self.data[index]['abs_path']
+            return clip,  h, w,  gt_tubes, final_rois,  self.data[index]['abs_path'], frame_indices
 
     def __len__(self):
         return len(self.data)
+
+class Video_UCF(data.Dataset):
+    def __init__(self, video_path, frames_dur=8, 
+                 spatial_transform=None, temporal_transform=None, json_file=None,
+                 sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None):
+
+        self.mode = mode
+        self.data= make_sub_samples(
+                    video_path, sample_duration, step=int(sample_duration/2))
+
+        self.spatial_transform = spatial_transform
+        self.temporal_transform = temporal_transform
+        self.loader = get_loader()
+        self.sample_duration = sample_duration
+        self.json_file = json_file
+        self.classes_idx = classes_idx
+
+    def __getitem__(self, index):
+        """
+        Args:
+            index (int): Index
+        Returns:
+            tuple: (image, target) where target is class_index of the target class.
+        """
+
+        frame_indices = =self.data[index]['frame_indices']
+    def __len__(self):
+        return len(self.data)
+
+
