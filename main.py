@@ -254,11 +254,11 @@ if __name__ == '__main__':
 
         training(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, batch_size, n_threads, lr)
 
-        if (epoch + 1) % (10) == 0:
+        if (epoch + 1) % (5) == 0:
             validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, batch_size, n_threads)
 
 
-    #     if ( epoch + 1 ) % 5 == 0:
-    #         torch.save(model.state_dict(), "jmdb_model.pwf".format(epoch+1))
-    # torch.save(model.state_dict(), "jmdb_model.pwf".format(epoch))
+        if ( epoch + 1 ) % 5 == 0:
+            torch.save(model.state_dict(), "jmdb_model.pwf".format(epoch+1))
+    torch.save(model.state_dict(), "jmdb_model.pwf".format(epoch))
 
