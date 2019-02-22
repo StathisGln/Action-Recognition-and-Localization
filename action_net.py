@@ -103,8 +103,10 @@ class ACT_net(nn.Module):
         # print('pooled_feat :',pooled_feat)
         cls_score = self.act_cls_score(pooled_feat)
         # print('cls_score :',cls_score)
+        # print('cls_score :',cls_score.shape)
         cls_prob = F.softmax(cls_score, 1)
-
+        # print('cls_prob :',cls_prob)
+        # print('cls_prob.shape :',cls_prob.shape)
         act_loss_cls = 0
         act_loss_bbox = 0
 

@@ -146,7 +146,7 @@ def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
                     videos.append(vid_name)
                 else:
                     print ( '2', b_key)
-            elif spl[1] == '2' and mode == 'test': # train video
+            elif spl[1] == '2' and (mode == 'test' or mode == 'val'): # train video
                 vid_name = spl[0][:-4]
 
                 videos.append(vid_name)
@@ -253,6 +253,8 @@ class Video(data.Dataset):
         # print(gt_bboxes)
         if self.mode == 'train':
             # return clip, (h,w), gt_tubes, gt_bboxes
+            return clip, (h,w), gt_tubes, torch.Tensor([1.])
+        elif self.mode == 'val':
             return clip, (h,w), gt_tubes, torch.Tensor([1.])
         else:
             return clip, (h,w), gt_tubes, gt_bboxes, self.data[index]['abs_path'], frame_indices

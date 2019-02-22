@@ -113,7 +113,7 @@ if __name__ == '__main__':
 
 
     # model_data = torch.load('../temporal_localization/jmdb_model_030.pwf')
-    model_data = torch.load('./jmdb_model_010.pwf')
+    model_data = torch.load('./jmdb_model.pwf')
     # # model_data = torch.load('../temporal_localization/r')
 
     model.load_state_dict(model_data)
@@ -175,7 +175,7 @@ if __name__ == '__main__':
             # print('out : ./out/{:0>3}.jpg'.format(i))
             cv2.imwrite('./out_frames/action_rois_{}_{:0>3}.jpg'.format(j,i), img_tmp)
             img_tmp = img.copy()
-            score = scores[i]
+            score = scores[j]
             print('score :',score)
             _, pos = torch.max(score, 0)
             print('pred_boxes.shape :',pred_boxes.shape)

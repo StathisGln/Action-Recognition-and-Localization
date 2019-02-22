@@ -70,7 +70,7 @@ if __name__ == '__main__':
     n_classes = len(classes)
     resnet_shortcut = 'A'
 
-    lr = 0.001
+    lr = 0.01
     lr_decay_step = 10
     lr_decay_gamma = 0.1
     
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
 
-    epochs = 50
+    epochs = 100
     # epochs = 1
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
@@ -149,6 +149,6 @@ if __name__ == '__main__':
         print('Train Epoch: {} \tLoss: {:.6f}\t'.format(
             epoch,loss_temp/step))
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(model.state_dict(), "jmdb_model_{0:03d}.pwf".format(epoch+1))
-        # torch.save(model.state_dict(), "jmdb_model_pre_{0:03d}.pwf".format(epoch))
+            torch.save(model.state_dict(), "jmdb_model.pwf".format(epoch+1))
+    torch.save(model.state_dict(), "jmdb_model.pwf".format(epoch))
 

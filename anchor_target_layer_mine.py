@@ -120,7 +120,7 @@ class _AnchorTargetLayer(nn.Module):
         # print('anchors.shape :',anchors.shape)
         overlaps = bbox_overlaps_batch_3d(anchors, gt_tubes)
         # print('overlaps.shape :',overlaps.shape)
-        indx = np.where(overlaps.cpu().numpy() > 0.3)
+        # indx = np.where(overlaps.cpu().numpy() > 0.3)
         # print(indx)
 
         # print('rois_overlaps.shape :',rois_overlaps.shape)
