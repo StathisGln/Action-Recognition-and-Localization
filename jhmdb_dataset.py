@@ -131,6 +131,8 @@ def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
         
     assert classes != (None), 'classes must not be None, Check dataset path'
     
+    max_sim_actions = -1
+
     for idx, cls in enumerate(classes):
         
         class_path = os.path.join(dataset_path, cls)
@@ -146,7 +148,7 @@ def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
                     videos.append(vid_name)
                 else:
                     print ( '2', b_key)
-            elif spl[1] == '2' and mode == 'test': # train video
+            elif spl[1] == '2' and (mode == 'test' or mode=='val'): # train video
                 vid_name = spl[0][:-4]
 
                 videos.append(vid_name)
@@ -201,8 +203,10 @@ class Video(data.Dataset):
         path = self.data[index]['abs_path']
         end_t = self.data[index]['end_t']
 
+        self.sample_duration = 16
         n_frames = self.data[index]['end_t']
-
+        if n_frames < 17:
+            print('n_frames :',n_frames)
         if n_frames < 17:
             time_index  = 1
             frame_indices = list(
@@ -244,18 +248,34 @@ class Video(data.Dataset):
         # print('gt_bboxes_r.shape :',gt_bboxes_r.shape)
         # print('gt_bboxes_r :',gt_bboxes_r)
         # print('class_int :',class_int)
-        gt_bboxes_tube = torch.cat((gt_bboxes[:,:4],torch.Tensor( [[i, class_int] for i in range(len(boxes))])),dim=1).unsqueeze(0)
-        # print('gt_bboxes_tube :',gt_bboxes_tube)
+        gt_bboxes_tube = torch.cat((gt_bboxes_r[:,:4],torch.Tensor( [[i, class_int] for i in range(len(boxes))])),dim=1).unsqueeze(0)
+
+        ## add gt_bboxes_r class_int
+        gt_bboxes_r = torch.cat((gt_bboxes_r[:,:4],torch.Tensor( [[ class_int] for i in range(len(boxes))])),dim=1).unsqueeze(0)
+        # print('gt_bboxes_r.shape :',gt_bboxes_r.shape)
+
         im_info_tube = torch.Tensor([[w,h,]*gt_bboxes_r.size(0)])
+        # print('im_info_tube :',im_info_tube)
         gt_tubes = create_tube(gt_bboxes_tube.unsqueeze(2),im_info_tube,self.sample_duration)
         gt_tubes = torch.round(gt_tubes)
+
+        f_rois = torch.zeros(1,16,5) # because only 1 action can have simultaneously
+        b_frames = gt_bboxes_r.size(1)
+
+        f_rois[:,:b_frames,:] = gt_bboxes_r
+
+        if (n_frames < 16):
+            print(f_rois)
+
         
         # print(gt_bboxes)
         if self.mode == 'train':
             # return clip, (h,w), gt_tubes, gt_bboxes
-            return clip, (h,w), gt_tubes, torch.Tensor([1.])
+            return clip, (h,w), gt_tubes, f_rois, torch.Tensor([1.])
+        elif self.mode == 'val':
+            return clip, (h,w), gt_tubes, f_rois, torch.Tensor([1.])
         else:
-            return clip, (h,w), gt_tubes, gt_bboxes, self.data[index]['abs_path'], frame_indices
+            return clip, (h,w), gt_tubes, f_rois, self.data[index]['abs_path'], frame_indices
         
         
     def __len__(self):
@@ -338,8 +358,8 @@ if __name__ == "__main__":
                  split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
                                               shuffle=True, num_workers=n_threads, pin_memory=True)
-    clips, (h,w), gt_tubes, gt_bboxes = next(data_loader.__iter__())
-    # print('gt_bboxes.shape :',gt_bboxes)
-    # print('gt_bboxes.shape :',gt_bboxes.shape)
-    # print('gt_tubes :',gt_tubes)
-    # print('clips.shape :',clips.shape)
+    clips, (h,w), gt_tubes, gt_bboxes, n_actions = next(data_loader.__iter__())
+    print('gt_bboxes.shape :',gt_bboxes)
+    print('gt_bboxes.shape :',gt_bboxes.shape)
+    print('gt_tubes :',gt_tubes)
+    print('clips.shape :',clips.shape)

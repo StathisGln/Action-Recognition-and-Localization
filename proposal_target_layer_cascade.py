@@ -152,7 +152,7 @@ class _ProposalTargetLayer(nn.Module):
             gt_boxes_single = gt_boxes[i,:num_boxes[i]]
             # print(gt_boxes_single.shape)
             # print('gt_boxes[:num_boxes[i]] :',gt_boxes_single)
-            if gt_boxes_single.cpu().tolist() == [[0,0,0,0,0,0,0,]]:
+            if gt_boxes_single.byte().any() == 0:
                 print('no rois')
                 continue
             

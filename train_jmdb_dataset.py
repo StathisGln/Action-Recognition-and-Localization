@@ -149,6 +149,6 @@ if __name__ == '__main__':
         print('Train Epoch: {} \tLoss: {:.6f}\t'.format(
             epoch,loss_temp/step))
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(model.state_dict(), "jmdb_model_{0:03d}.pwf".format(epoch+1))
-        # torch.save(model.state_dict(), "jmdb_model_pre_{0:03d}.pwf".format(epoch))
+            torch.save(model.state_dict(), "jmdb_model.pwf".format(epoch+1))
+    torch.save(model.state_dict(), "jmdb_model.pwf".format(epoch))
 

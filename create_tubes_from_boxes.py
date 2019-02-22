@@ -51,6 +51,7 @@ import cv2
 #     ret = torch.Tensor([x1, y1, t1, x2, y2, t2, labels]
 #                        ).permute(1, 2, 0).cuda()
 #     return ret
+
 def create_tube(boxes, im_info_3d, sample_duration):
 
     batch_size = boxes.size(0)
@@ -72,10 +73,10 @@ def create_tube(boxes, im_info_3d, sample_duration):
     for i in range(batch_size):
         x1 = x1.clamp_(min=0, max=im_info_3d[i, 0]-1)
         y1 = y1.clamp_(min=0, max=im_info_3d[i, 1]-1)
-        t1 = t1.clamp_(min=0, max=im_info_3d[i, 3])
+        t1 = t1.clamp_(min=0, max=sample_duration)
         x2 = x2.clamp_(min=0, max=im_info_3d[i, 0]-1)
         y2 = y2.clamp_(min=0, max=im_info_3d[i, 1]-1)
-        t2 = t2.clamp_(min=0, max=im_info_3d[i, 3])
+        t2 = t2.clamp_(min=0, max=sample_duration)
 
     # print('x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(x1, y1, t1, x2, y2, t2))
     # print('shapes :x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(

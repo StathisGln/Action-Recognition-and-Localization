@@ -80,21 +80,12 @@ class ACT_net(nn.Module):
         rois = Variable(rois)
 
         # do roi pooling based on predicted rois
-        # print('rois.shape :', rois[:,:,[0,1,2,4,5]].shape)
-        # print('rois.shape :', rois[:,:,[0,1,2,4,5]].view(-1,5).shape)
         pooled_feat = self.act_roi_align(base_feat, rois.view(-1,7))
-        # print('pooled_feat.shape :',pooled_feat.shape)
-        # print('pooled_feat :',pooled_feat)
+
         # # feed pooled features to top model
         pooled_feat = self._head_to_tail(pooled_feat)
-        # print('pooled_feat.shape :',pooled_feat.shape)
-        # print('rois_target.shape :',rois_target.shape)
-        # n_rois = pooled_feat.size(0)
-        # print('n_rois :',n_rois)
-        # print('pooled_feat.view(n_rois,-1).shape :',pooled_feat.view(n_rois,-1).shape)
+
         # # compute bbox offset
-        # # print('pooled_feat.view(n_rois,-1).shape :',pooled_feat.view(n_rois,-1).shape)
-        # bbox_pred = self.act_bbox_pred(pooled_feat.view(n_rois,-1))
         bbox_pred_xy = self.act_bbox_pred_xy(pooled_feat)
         bbox_pred_t  = self.act_bbox_pred_t(pooled_feat)
         bbox_pred = torch.cat((bbox_pred_xy[:,:2],bbox_pred_t[:,0].unsqueeze(1),bbox_pred_xy[:,2:],bbox_pred_t[:,1].unsqueeze(1)),dim=1)
@@ -127,19 +118,18 @@ class ACT_net(nn.Module):
             rois_target_xy = rois_target[:,[0,1,3,4]]
             rois_inside_ws_xy = rois_inside_ws[:,[0,1,3,4]]
             rois_outside_ws_xy = rois_outside_ws[:,[0,1,3,4]]
-            act_loss_bbox_xy = _smooth_l1_loss(bbox_pred_xy, rois_target_xy, rois_inside_ws_xy, rois_outside_ws_xy)
+            act_loss_bbox = _smooth_l1_loss(bbox_pred_xy, rois_target_xy, rois_inside_ws_xy, rois_outside_ws_xy)
 
-            rois_target_t = rois_target[:,[2,5]]
-            rois_inside_ws_t = rois_inside_ws[:,[2,5]]
-            rois_outside_ws_t = rois_outside_ws[:,[2,5]]
-            act_loss_bbox_t = _smooth_l1_loss(bbox_pred_t, rois_target_t, rois_inside_ws_t, rois_outside_ws_t)
+            # rois_target_t = rois_target[:,[2,5]]
+            # rois_inside_ws_t = rois_inside_ws[:,[2,5]]
+            # rois_outside_ws_t = rois_outside_ws[:,[2,5]]
+            # act_loss_bbox_t = _smooth_l1_loss(bbox_pred_t, rois_target_t, rois_inside_ws_t, rois_outside_ws_t)
 
-            act_loss_bbox = act_loss_bbox_xy
+            # act_loss_bbox = act_loss_bbox_xy
 
             
         bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
-        # print('bbox_pred :',bbox_pred)
-        # return 0,0,0,0,0,0
+        
         # return rois,  bbox_pred, rpn_loss_cls, rpn_loss_bbox,  act_loss_bbox, rois_label
         if self.training:
             return rois,  bbox_pred, rpn_loss_cls, rpn_loss_bbox, act_loss_cls, act_loss_bbox, rois_label
@@ -216,11 +206,8 @@ class ACT_net(nn.Module):
     def _head_to_tail(self, pool5):
         # print('pool5.shape :',pool5.shape)
         fc7 = self.act_top(pool5)
-        # print('fc7.shape :',fc7.shape)
         fc7 = fc7.mean(4)
-        # print('fc7.shape :',fc7.shape)
         fc7 = fc7.mean(3)
-        # print('fc7.shape :',fc7.shape)
         fc7 = fc7.mean(2)
         return fc7
 

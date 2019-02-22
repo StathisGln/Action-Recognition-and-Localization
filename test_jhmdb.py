@@ -132,19 +132,24 @@ if __name__ == '__main__':
     print('rois :',rois.shape)
     # print('rois :',rois.)
     rois = rois[:,:,1:]
-    # print('bbox_pred.shape :',bbox_pred.shape)
-    # pred_boxes = bbox_transform_inv_3d(rois, bbox_pred, 1)
-    # print('pred_boxes.shape :',pred_boxes.shape)
-    # pred_boxes = clip_boxes_3d(pred_boxes, im_info.data, 1)
-    # print('pred_boxes.shape :',pred_boxes.shape)
-    # rois = pred_boxes
-    # print('h %d w %d ' % (h,w))
-    # print('rois :',rois)
-    # print('rois.shape :',rois.shape)
-    # rois[:,[0,2]] =rois[:,[0,2]].clamp_(min=0, )
-    # rois[:,[1,3]] =rois[:,[1,3]].clamp_(min=0,)
-    # print('rois.shape :',rois.shape)
-    # print('rois :',rois[0][0])
+
+    thresh = 0.05
+    bbox_normalize_means = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+    bbox_normalize_stds = (0.1, 0.1, 0.1, 0.2, 0.2, 0.2)
+
+    print('bbox_pred.shape :',bbox_pred.shape)
+    pred_boxes = bbox_transform_inv_3d(rois, bbox_pred, 1)
+    print('pred_boxes.shape :',pred_boxes.shape)
+    pred_boxes = clip_boxes_3d(pred_boxes, im_info.data, 1)
+    print('pred_boxes.shape :',pred_boxes.shape)
+    rois = pred_boxes
+    print('h %d w %d ' % (h,w))
+    print('rois :',rois)
+    print('rois.shape :',rois.shape)
+    rois[:,[0,2]] =rois[:,[0,2]].clamp_(min=0, )
+    rois[:,[1,3]] =rois[:,[1,3]].clamp_(min=0,)
+    print('rois.shape :',rois.shape)
+    print('rois :',rois[0][0])
 
     # print('rois.shape :',rois.shape)
     # print('rois :',rois)
