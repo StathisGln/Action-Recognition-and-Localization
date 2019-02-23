@@ -170,7 +170,7 @@ class _AnchorTargetLayer(nn.Module):
         for i in range(batch_size):
             # subsample positive labels if we have too many
             if sum_fg[i] > num_fg:
-                print('mpikeeeee')
+                # print('mpikeeeee')
                 fg_inds = torch.nonzero(labels[i] == 1).view(-1)
                 # torch.randperm seems has a bug on multi-gpu setting that cause the segfault.
                 # See https://github.com/pytorch/pytorch/issues/1868 for more details.

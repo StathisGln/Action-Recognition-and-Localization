@@ -120,7 +120,7 @@ class ACT_net(nn.Module):
         rois, rpn_loss_cls, rpn_loss_bbox = self.act_rpn(base_feat, im_info, gt_tubes, None, num_boxes)
         # if it is training phrase, then use ground trubut bboxes for refining
         # firstly find xy- reggression boxes
-        print('rois.shape :',rois.shape)
+        # print('rois.shape :',rois.shape)
         # print('rois :',rois)
         if self.training:
           gt_tubes = torch.cat((gt_tubes,torch.ones(gt_tubes.size(0),gt_tubes.size(1),1).type_as(gt_tubes)),dim=2).type_as(gt_tubes)
@@ -268,7 +268,8 @@ class ACT_net(nn.Module):
         fc7 = self.act_top(pool5)
         fc7 = fc7.mean(4)
         fc7 = fc7.mean(3) # exw (bs,512,16)
-
+        # print('fc7.shape :',fc7.shape)
+        # fc7 = fc7.mean(2) # exw (bs,512,16)
         # print('fc7.shape :',fc7.shape)
         return fc7
     def _head_to_tail_s(self, pool5):

@@ -65,7 +65,7 @@ def create_tube(boxes, im_info_3d, sample_duration):
             if k.nelement() == 0 :
                 continue
             else:
-                print(k[0,0])
+                # print(k[0,0])
                 t1[i,j] = k[0,0]
                 t2[i,j] = k[-1,0]
                 labels[i,j] = boxes[i,j,k[0,0],4]

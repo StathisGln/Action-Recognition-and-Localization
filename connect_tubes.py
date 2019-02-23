@@ -173,11 +173,11 @@ def connect_tubes(tubes, tubes_curr, pooled_feats, rois_feats, index): # tubes a
         tubes[i] += [tubes_curr[0,max_index[0,i]].cpu().tolist()]
         pooled_feats[i] += [rois_feats[max_index[0,i]]]
 
-    for i in range(len(tubes_curr_list)):
-        print(tubes_curr_list[i])
-        if tubes_curr_list[i][0][7] > 0.5:
-            tubes += [tubes_curr_list[i]]
-            pooled_feats += [[rois_feats[i]]]
+    # for i in range(len(tubes_curr_list)):
+    #     print(tubes_curr_list[i])
+    #     if tubes_curr_list[i][0][7] > 0.5:
+    #         tubes += [tubes_curr_list[i]]
+    #         pooled_feats += [[rois_feats[i]]]
             
     return tubes, pooled_feats
 

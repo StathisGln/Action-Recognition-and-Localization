@@ -192,7 +192,7 @@ class _ProposalLayer(nn.Module):
             
             proposals_single = proposals_single[:post_nms_topN, :]
             scores_single = scores_single[:post_nms_topN]
-            print('scores_single.shape :',scores_single.shape)
+            # print('scores_single.shape :',scores_single.shape)
             # padding 0 at the end.
             num_proposal = proposals_single.size(0)
             output[i,:num_proposal,0] = i

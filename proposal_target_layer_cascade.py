@@ -41,7 +41,7 @@ class _ProposalTargetLayer(nn.Module):
         gt_boxes_append[:,:,1:] = gt_boxes[:,:,:7] # in pos 0 is the score
         # gt_boxes_append[:,:,1:] = gt_boxes[:,:,:6] # in pos 0 is the score
         num_rois_pre = all_rois.size(1)
-        print('all_rois.shape :',all_rois.shape )
+        # print('all_rois.shape :',all_rois.shape )
         # print('nu_rois_pre :', num_rois_pre )
 
         # print('gt_boxes_append.shape :',gt_boxes_append.shape)
