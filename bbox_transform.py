@@ -800,13 +800,12 @@ def bbox_overlaps_batch_3d(anchors, gt_boxes):
         N = anchors.size(1)
         K = gt_boxes.size(1)
 
+        print('anchors.shape: ',anchors.shape)
         if anchors.size(2) == 6:
             anchors = anchors[:, :, :6].contiguous()
         else:
             anchors = anchors[:, :, 1:7].contiguous()
 
-        # print('anchors.shape: ',anchors.shape)
-        # print('gt_boxes :',gt_boxes)
         gt_boxes = gt_boxes[:, :, :6].contiguous()
 
         gt_boxes_x = (gt_boxes[:, :, 3] - gt_boxes[:, :, 0] + 1)

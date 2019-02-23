@@ -83,7 +83,7 @@ if __name__ == '__main__':
     gt_tubes = gt_tubes.unsqueeze(0).to(device)
     gt_rois = gt_rois.unsqueeze(0).to(device)
     n_actions = torch.Tensor([n_actions]).unsqueeze(0).to(device)
-    im_info = torch.Tensor([112,112,clips.size(2)]).unsqueeze(0).to(device)
+    im_info = torch.Tensor([240,320,clips.size(2)]).unsqueeze(0).to(device)
 
     print('clips.shape :',clips.shape )
 
