@@ -105,7 +105,7 @@ def create_tcn_dataset(split_txt_path,json_path, classes, mode):
             if spl[1] == '1' and mode == 'train': # train video
                 vid_name = spl[0][:-4]
                 videos.append(vid_name)
-            elif spl[1] == '2' and mode == 'test': # train video
+            elif spl[1] == '2' and( mode == 'test' or mode == 'val'): # train video
                 vid_name = spl[0][:-4]
                 videos.append(vid_name)
 
@@ -141,14 +141,14 @@ def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
             lines=fp.readlines()
         for l in lines:
             spl = l.split()
-            if spl[1] == '1' and mode == 'train': # train video
+            if spl[1] == '1' and mode == 'train' : # train video
                 vid_name = spl[0][:-4]
                 b_key =  os.path.join(cls,vid_name)
                 if b_key in boxes_data:
                     videos.append(vid_name)
                 else:
                     print ( '2', b_key)
-            elif spl[1] == '2' and mode == 'test': # train video
+            elif spl[1] == '2' and (mode == 'test' or mode == 'val'): # train video
                 vid_name = spl[0][:-4]
 
                 videos.append(vid_name)
@@ -271,6 +271,8 @@ class Video(data.Dataset):
         # print(gt_bboxes)
         if self.mode == 'train':
             # return clip, (h,w), gt_tubes, gt_bboxes
+            return clip, (h,w), gt_tubes, f_rois, torch.Tensor([1.])
+        elif self.mode == 'val':
             return clip, (h,w), gt_tubes, f_rois, torch.Tensor([1.])
         else:
             return clip, (h,w), gt_tubes, f_rois, self.data[index]['abs_path'], frame_indices

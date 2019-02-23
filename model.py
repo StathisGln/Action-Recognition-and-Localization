@@ -54,8 +54,12 @@ class Model(nn.Module):
         for b in range(batch_size):
             n_frames = im_info[b, 2].long() # video shape : (bs, 3, n_fr, 112, 112,)
         n_frames = im_info[:, 2].long() # video shape : (bs, 3, n_fr, 112, 112,)
+        print('exw n_frames :',n_frames)
         # for i in range(0, (n_frames.data -self.sample_duration  ), self.step):
-        indexes = range(0, (n_frames.data -self.sample_duration  ), self.step)
+        if n_frames < 17:
+            indexes = [0]
+        else:
+            indexes = range(0, (n_frames.data -self.sample_duration  ), self.step)
 
         tubes = []
         pooled_feats = []
@@ -65,12 +69,15 @@ class Model(nn.Module):
         for i in indexes:
             
             vid_indices = torch.range(i,i+self.sample_duration-1).long()
+            # print('vid_indices :',vid_indices)
             vid_seg = input_video[:,:,vid_indices]
-            gt_rois_seg = gt_rois[:,:,i:i+self.sample_duration]
+            # print('vid_seg :',vid_seg)
+            gt_rois_seg = gt_rois[:,:,vid_indices]
 
             ## TODO remove that and just filter gt_tubes
             gt_tubes_seg = create_tube(gt_rois_seg, im_info, 16)
             # print('gt_tubes_seg.shape :',gt_tubes_seg.shape)
+            # print('gt_tubes_seg :',gt_tubes_seg)
             ## run ACT_net
             rois,  bbox_pred, rois_feat, \
             rpn_loss_cls,  rpn_loss_bbox, \

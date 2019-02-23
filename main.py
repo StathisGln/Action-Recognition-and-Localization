@@ -13,7 +13,7 @@ from net_utils import adjust_learning_rate
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
-from action_net import ACT_net
+from model import Model
 from resize_rpn import resize_rpn, resize_tube
 import pdb
 
@@ -104,7 +104,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         if step == 2:
             break
 
-        clips,  (h, w), gt_tubes_r, n_actions = data
+        clips,  (h, w), gt_tubes_r, gt_rois, n_actions = data
         clips = clips.to(device)
         gt_tubes_r = gt_tubes_r.to(device)
         n_actions = n_actions.to(device)
@@ -112,7 +112,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         inputs = Variable(clips)
         tubes,  bbox_pred, cls_prob   = model(inputs,
                                              im_info,
-                                             gt_tubes_r, None,
+                                             gt_tubes_r, gt_rois,
                                              n_actions)
 
         overlaps = bbox_overlaps_batch_3d(tubes.squeeze(0), gt_tubes_r) # check one video each time
@@ -150,12 +150,13 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
     ## 2 rois : 1450
     for step, data  in enumerate(data_loader):
 
-        if step == 2:
-            break
+        # if step == 2:
+        #     break
 
-        clips,  (h, w), gt_tubes_r, n_actions = data
+        clips,  (h, w), gt_tubes_r, gt_rois, n_actions = data
         clips = clips.to(device)
         gt_tubes_r = gt_tubes_r.to(device)
+        gt_rois = gt_rois.to(device)
         # print('gt_tubes_r :',gt_tubes_r)
         # print('gt_tubes :',gt_tubes)
         # h = h.to(device)
@@ -169,7 +170,7 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         rpn_loss_cls, rpn_loss_bbox, \
         act_loss_cls, act_loss_bbox  = model(inputs,
                                              im_info,
-                                             gt_tubes_r, None,
+                                             gt_tubes_r, gt_rois,
                                              n_actions)
         # print('rois :',rois)
         # print('rpn_loss_bbox :',rpn_loss_bbox)
@@ -228,7 +229,7 @@ if __name__ == '__main__':
     lr_decay_gamma = 0.1
     
     # Init action_net
-    model = ACT_net(classes)
+    model = Model(classes)
     model.create_architecture()
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
@@ -251,7 +252,7 @@ if __name__ == '__main__':
     lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
 
-    epochs = 20
+    epochs = 10
     # epochs = 1
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
@@ -264,8 +265,8 @@ if __name__ == '__main__':
 
         training(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, batch_size, n_threads, lr)
 
-        if (epoch + 1) % (5) == 0:
-            validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, batch_size, n_threads)
+        # if (epoch + 1) % (5) == 0:
+        #     validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, batch_size, n_threads)
 
 
         if ( epoch + 1 ) % 5 == 0:

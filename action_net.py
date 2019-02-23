@@ -189,7 +189,7 @@ class ACT_net(nn.Module):
         if self.training:
             return rois,  bbox_pred, pooled_feat, rpn_loss_cls, rpn_loss_bbox, act_loss_cls, act_loss_bbox, rois_label
           # return rois,  0, 0, 0, 0, 0, 0, 0, 0, 0,
-        return rois,  bbox_pred, rois_s, bbox_pred_s
+        return rois,  bbox_pred, pooled_feat, None, None, None, None, None, 
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):
