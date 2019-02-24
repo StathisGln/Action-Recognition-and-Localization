@@ -167,8 +167,13 @@ def connect_tubes(tubes, tubes_curr, pooled_feats, rois_feats, index): # tubes a
     max_overlaps, max_index = torch.max(overlaps,2) # max_overlaps contains the most likely new tubes to be connected
 
     max_overlaps = torch.where(max_overlaps > iou_thresh, max_overlaps, torch.zeros_like(max_overlaps).type_as(max_overlaps))
-    connect_indices = max_overlaps.nonzero()[:,1] # connect_indices says which pre tubes to connect
+    connect_indices = max_overlaps.nonzero() ## [:,1] # connect_indices says which pre tubes to connect
 
+    if (connect_indices.nelement() == 0):
+        print('no connection')
+        return tubes, pooled_feats
+
+    connect_indices = connect_indices[:,1]
     for i in connect_indices:
         tubes[i] += [tubes_curr[0,max_index[0,i]].cpu().tolist()]
         pooled_feats[i] += [rois_feats[max_index[0,i]]]
@@ -207,3 +212,4 @@ if __name__ == '__main__':
     print(connect_tubes([], tubes_curr, 0))
 
     
+

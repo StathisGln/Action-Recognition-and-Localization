@@ -104,11 +104,11 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         if step == 2:
             break
 
-        clips,  (h, w), gt_tubes_r, gt_rois, n_actions = data
+        clips,  (h, w), gt_tubes_r, gt_rois, n_actions, n_frames = data
         clips = clips.to(device)
         gt_tubes_r = gt_tubes_r.to(device)
         n_actions = n_actions.to(device)
-        im_info = torch.Tensor([[sample_size, sample_size, sample_duration]] * gt_tubes_r.size(1)).to(device)
+        im_info = torch.Tensor([[sample_size, sample_size, n_frames]] * gt_tubes_r.size(1)).to(device)
         inputs = Variable(clips)
         tubes,  bbox_pred, cls_prob   = model(inputs,
                                              im_info,
@@ -153,7 +153,7 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         # if step == 2:
         #     break
 
-        clips,  (h, w), gt_tubes_r, gt_rois, n_actions = data
+        clips,  (h, w), gt_tubes_r, gt_rois, n_actions, n_frames = data
         clips = clips.to(device)
         gt_tubes_r = gt_tubes_r.to(device)
         gt_rois = gt_rois.to(device)
@@ -163,8 +163,8 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         # w = w.to(device)
         # gt_tubes = gt_tubes.to(device)
         n_actions = n_actions.to(device)
-        im_info = torch.Tensor([[sample_size, sample_size, sample_duration]] * gt_tubes_r.size(1)).to(device)
-        # print('gt_tubes_r.shape :',gt_tubes_r.shape )
+        im_info = torch.Tensor([[sample_size, sample_size, n_frames]] * gt_tubes_r.size(1)).to(device)
+        # print('gt_rois.shape :',gt_rois.shape )
         inputs = Variable(clips)
         rois,  bbox_pred, cls_prob, \
         rpn_loss_cls, rpn_loss_bbox, \

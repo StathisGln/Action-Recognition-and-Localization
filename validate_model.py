@@ -13,7 +13,7 @@ from net_utils import adjust_learning_rate
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
-from action_net import ACT_net
+from model import Model
 from resize_rpn import resize_rpn, resize_tube
 import pdb
 
@@ -145,20 +145,23 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     ## 2 rois : 1450
     for step, data  in enumerate(data_loader):
 
-        # if step == 2:
-        #     break
-        # print('step :',step)
+        if step == 2:
+            break
+        print('step :',step)
 
-        clips,  (h, w), gt_tubes_r, n_actions = data
+        clips,  (h, w), gt_tubes_r, gt_rois, n_actions, frames, target = data
+        
         clips = clips.to(device)
         gt_tubes_r = gt_tubes_r.to(device)
         n_actions = n_actions.to(device)
+        target = target.to(device)
         im_info = torch.Tensor([[sample_size, sample_size, sample_duration]] * gt_tubes_r.size(1)).to(device)
         inputs = Variable(clips)
         tubes,  bbox_pred, cls_prob   = model(inputs,
                                              im_info,
-                                             gt_tubes_r, None,
+                                             gt_tubes_r, gt_rois,
                                              n_actions)
+        print('gt_tubes_r :',gt_tubes_r)
         # tubes[:,:,3] = 0
         # tubes[:,:,6] = 15
         overlaps, overlaps_xy, overlaps_t = bbox_overlaps_batch_3d(tubes.squeeze(0), gt_tubes_r) # check one video each time
@@ -250,7 +253,7 @@ if __name__ == '__main__':
     temporal_transform = LoopPadding(sample_duration)
 
     # Init action_net
-    model = ACT_net(classes)
+    model = Model(classes)
     model.create_architecture()
     model_data = torch.load('./jmdb_model.pwf')
 

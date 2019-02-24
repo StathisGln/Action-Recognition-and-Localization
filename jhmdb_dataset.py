@@ -201,22 +201,17 @@ class Video(data.Dataset):
         """
         # print(self.data[index]['video'])
         path = self.data[index]['abs_path']
+        begin_t = self.data[index]['begin_t']
         end_t = self.data[index]['end_t']
 
         self.sample_duration = 16
         n_frames = self.data[index]['end_t']
         if n_frames < 17:
             print('n_frames :',n_frames)
-        if n_frames < 17:
-            time_index  = 1
-            frame_indices = list(
-            range(time_index, n_frames+1))  # get the corresponding frames
-        else:
-            time_index = np.random.randint(
-                0, n_frames - self.sample_duration+1 ) + 1
-            frame_indices = list(
-                range(time_index, time_index + self.sample_duration))  # get the corresponding frames
 
+        frame_indices= list(
+            range( begin_t, end_t))
+        # print(frame_indices)
         if self.temporal_transform is not None:
             frame_indices = self.temporal_transform(frame_indices)
         clip = self.loader(path, frame_indices)
@@ -237,7 +232,7 @@ class Video(data.Dataset):
         with open(self.json_file, 'r') as fp:
             data = json.load(fp)[json_key]
             
-        boxes = data[time_index-1:time_index +self.sample_duration-1] # because time_index starts from 1
+        boxes = data
         class_int = self.classes_idx[cls]
         gt_bboxes = torch.Tensor(boxes )
         gt_bboxes[:,[0,2]] = gt_bboxes[:,[0,2]].clamp_(min=0,max=w)
@@ -256,10 +251,10 @@ class Video(data.Dataset):
 
         im_info_tube = torch.Tensor([[w,h,]*gt_bboxes_r.size(0)])
         # print('im_info_tube :',im_info_tube)
-        gt_tubes = create_tube(gt_bboxes_tube.unsqueeze(2),im_info_tube,self.sample_duration)
+        gt_tubes = create_tube(gt_bboxes_tube.unsqueeze(2),im_info_tube,n_frames)
         gt_tubes = torch.round(gt_tubes)
 
-        f_rois = torch.zeros(1,16,5) # because only 1 action can have simultaneously
+        f_rois = torch.zeros(1,n_frames,5) # because only 1 action can have simultaneously
         b_frames = gt_bboxes_r.size(1)
 
         f_rois[:,:b_frames,:] = gt_bboxes_r
@@ -267,13 +262,15 @@ class Video(data.Dataset):
         if (n_frames < 16):
             print(f_rois)
 
-        
+
+        # print('f_rois.shape :',f_rois.shape)
+        # print('gt_tubes :',gt_tubes)
         # print(gt_bboxes)
         if self.mode == 'train':
             # return clip, (h,w), gt_tubes, gt_bboxes
-            return clip, (h,w), gt_tubes, f_rois, torch.Tensor([1.])
+            return clip, (h,w), gt_tubes, f_rois, torch.Tensor([1.]), n_frames
         elif self.mode == 'val':
-            return clip, (h,w), gt_tubes, f_rois, torch.Tensor([1.])
+            return clip, (h,w), gt_tubes, f_rois, torch.Tensor([1.]), n_frames, class_int
         else:
             return clip, (h,w), gt_tubes, f_rois, self.data[index]['abs_path'], frame_indices
         

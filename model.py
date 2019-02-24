@@ -67,8 +67,11 @@ class Model(nn.Module):
         # print('feats.shape :',feats.shape)
         # for i in [0,1]:
         for i in indexes:
-            
-            vid_indices = torch.range(i,i+self.sample_duration-1).long()
+
+            lim = min(i+self.sample_duration-1, (n_frames-1).cpu().tolist()[0])
+            if (n_frames < i+self.sample_duration):
+                print('lim :',lim)
+            vid_indices = torch.range(i,lim).long()
             # print('vid_indices :',vid_indices)
             vid_seg = input_video[:,:,vid_indices]
             # print('vid_seg :',vid_seg)
@@ -93,6 +96,7 @@ class Model(nn.Module):
         ###################################
         #           Time for TCN          #
         ###################################
+        print(tubes[0])
         for i in [0]:
             tubes_t = torch.Tensor(tubes[i]).type_as(input_video)
             feat = torch.zeros(len(tubes[i]),512,16).type_as(input_video)
