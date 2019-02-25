@@ -14,7 +14,7 @@ from jhmdb_dataset import Video
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
-from action_net import ACT_net
+from model import Model
 from resize_rpn import resize_rpn, resize_tube
 import pdb
 
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     n_classes = len(classes)
 
     # Init action_net
-    model = ACT_net(classes)
+    model = Model(classes)
     model.create_architecture()
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
@@ -72,8 +72,7 @@ if __name__ == '__main__':
     model.to(device)
 
     # clips, h, w, gt_tubes, n_actions = data[1451]
-    clips, (h, w), gt_tubes_r, n_actions = data[144]
-    clips2, (h2, w2), gt_tubes2_r, n_actions2 = data[145]
+    clips, (h, w), gt_tubes_r, gt_rois, n_actions, n_frames = data[144]
 
     # clips = torch.stack((clips,clips),dim=0).to(device) 
 
@@ -82,14 +81,19 @@ if __name__ == '__main__':
     # n_actions = torch.Tensor((n_actions,n_actions2)).to(device)
     # im_info = torch.Tensor([[sample_size, sample_size, sample_duration]] * gt_tubes.size(1)).to(device)
 
-    clips = torch.stack((clips,clips),dim=0).to(device)
-    gt_tubes = torch.stack((gt_tubes_r,gt_tubes2_r),dim=0).to(device)
-    n_actions = torch.Tensor((n_actions,n_actions2)).to(device)
-    im_info = torch.Tensor([[sample_size, sample_size, sample_duration]] * gt_tubes.size(1)).to(device)
-
-
-    print('gt_tubes :',gt_tubes)
-    print('gt_tubes.shape :',gt_tubes.shape)
+    # clips = torch.stack((clips,clips),dim=0).to(device)
+    # gt_tubes = torch.stack((gt_tubes_r,gt_tubes2_r),dim=0).to(device)
+    # n_actions = torch.Tensor((n_actions,n_actions2)).to(device)
+    im_info = torch.Tensor([[sample_size, sample_size, n_frames]] ).to(device)
+    clips = clips.unsqueeze(0).to(device)
+    gt_tubes_r = gt_tubes_r.unsqueeze(0).to(device)
+    gt_rois = gt_rois.unsqueeze(0).to(device)
+    n_actions = n_actions.unsqueeze(0).to(device)
+    
+    print('n_actions :',n_actions)
+    print('clips :',clips.shape)
+    print('gt_tubes :',gt_tubes_r)
+    print('gt_tubes.shape :',gt_tubes_r.shape)
 
     print('im_info :',im_info)
     print('im_info.shape :',im_info.shape)
@@ -102,14 +106,12 @@ if __name__ == '__main__':
     #                                                   im_info,
     #                                                   gt_tubes, None,
     #                                                   n_actions)
-
-    rois,  bbox_pred, rpn_loss_cls, rpn_loss_bbox, \
-    act_loss_cls,  act_loss_bbox, rois_label = model(clips,
-                                                      im_info,
-                                                      gt_tubes, None,
-                                                      n_actions)
+    ret = model(clips,
+                im_info,
+                gt_tubes_r, gt_rois,
+                n_actions)
 
     print('**********VGIKE**********')
-    print('rois.shape :',rois.shape)
-    print('rois :',rois)
+    # print('rois.shape :',rois.shape)
+    # print('rois :',rois)
 

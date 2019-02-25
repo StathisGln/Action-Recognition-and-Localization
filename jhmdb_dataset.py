@@ -160,15 +160,18 @@ def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
             video_path = os.path.join(dataset_path, cls, vid)
             n_frames = len(glob.glob(video_path+'/*.png'))
             begin_t = 1
-            end_t = n_frames
+
+            json_key = os.path.join(cls,vid)
+            boxes = boxes_data[json_key]
+            end_t = min(n_frames,len(boxes))
 
             video_sample = {
                 'video': vid,
                 'class': cls,
                 'abs_path' : video_path,
                 'begin_t' : begin_t,
-                'end_t' : n_frames
-
+                'end_t' : end_t,
+                'boxes' : boxes
             }
 
             dataset.append(video_sample)
@@ -203,16 +206,16 @@ class Video(data.Dataset):
         path = self.data[index]['abs_path']
         begin_t = self.data[index]['begin_t']
         end_t = self.data[index]['end_t']
-
-        print('path :',path)
+        boxes = self.data[index]['boxes']        
+        # print('path :',path, 'index :', index)
         self.sample_duration = 16
         n_frames = self.data[index]['end_t']
         if n_frames < 17:
             print('n_frames :',n_frames)
 
         frame_indices= list(
-            range( begin_t, end_t))
-        print(frame_indices)
+            range( begin_t, end_t+1))
+        # print(frame_indices)
         if self.temporal_transform is not None:
             frame_indices = self.temporal_transform(frame_indices)
         clip = self.loader(path, frame_indices)
@@ -229,12 +232,11 @@ class Video(data.Dataset):
         name = self.data[index]['video']
         json_key = os.path.join(cls, name)
 
-        # print(json_key)
-        with open(self.json_file, 'r') as fp:
-            data = json.load(fp)[json_key]
+        # # print(json_key)
+        # with open(self.json_file, 'r') as fp:
+        #     data = json.load(fp)[json_key]
             
-        boxes = data
-        print(len(boxes))
+
         class_int = self.classes_idx[cls]
         gt_bboxes = torch.Tensor(boxes )
         gt_bboxes[:,[0,2]] = gt_bboxes[:,[0,2]].clamp_(min=0,max=w)
@@ -259,7 +261,7 @@ class Video(data.Dataset):
                 lim = min(i+self.sample_duration-1, (n_frames-1))
                 if (n_frames < i+self.sample_duration):
                     print('lim :',lim)
-                vid_indices = torch.range(i,lim).long()
+                vid_indices = torch.arange(i,lim-1).long()
 
                 gt_rois_seg = gt_bboxes_r[:, vid_indices]
                 gt_tubes_seg = create_tube(gt_rois_seg.unsqueeze(0), torch.Tensor([[self.sample_size,self.sample_size]]), self.sample_duration)                
@@ -272,6 +274,7 @@ class Video(data.Dataset):
 
         else:
             gt_tubes =  create_tube(gt_bboxes_r.unsqueeze(0), torch.Tensor([[self.sample_size,self.sample_size]]), n_frames)                
+
         f_rois = torch.zeros(1,n_frames,5) # because only 1 action can have simultaneously
         b_frames = gt_bboxes_r.size(1)
 
@@ -280,7 +283,9 @@ class Video(data.Dataset):
         if (n_frames < 16):
             print(f_rois)
 
-
+        if (b_frames != n_frames):
+            print('\n LATHOSSSSSS\n', 'n_frames :', n_frames, ' b_frames :',b_frames)
+            exit(1)
         # print('f_rois.shape :',f_rois.shape)
         # print('gt_tubes :',gt_tubes)
         # print(gt_bboxes)
@@ -295,47 +300,6 @@ class Video(data.Dataset):
         
     def __len__(self):
         return len(self.data)
-
-class TCN_Dataset(data.Dataset):
-    def __init__(self, split_txt_path, json_path,classes, mode):
-
-        self.split_txt_path = split_txt_path
-        self.json_path = json_path
-        self.mode = mode
-        if mode == 'train':
-            self.data = create_tcn_dataset(split_txt_path,json_path, classes, mode)
-        elif mode == 'test':
-            self.data = create_tcn_dataset(split_txt_path,json_path, classes, mode)
-        else:
-            raise NotImplementedError
-        
-    def __getitem__(self, index):
-        """
-        Args:
-            index (int): Index
-        Returns:
-            tuple: (features, target) where target is class_index of the target class.
-        """
-        path = self.data[index]['video']
-        target = self.data[index]['class_idx']
-        class_name = self.data[index]['class']
-        with open(os.path.join(self.json_path, class_name+'.json'), 'r') as fp:
-            data= json.load(fp)
-        feats = data[path]['clips']
-        final_feats = np.zeros((len(feats),512))
-        for f in range(len(feats)):
-            final_feats[f,:]=feats[f]['features']
-        
-        return final_feats, path, target
-
-    def __len__(self):
-        return len(self.data)
-
-
-
-# def check_boxes:
-
-#     for 
 
 if __name__ == "__main__":
 
@@ -372,9 +336,18 @@ if __name__ == "__main__":
                  temporal_transform=temporal_transform, json_file = boxes_file,
                  split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
-                                              shuffle=True, num_workers=n_threads, pin_memory=True)
-    clips, (h,w), gt_tubes, gt_bboxes, n_actions = next(data_loader.__iter__())
-    print('gt_bboxes.shape :',gt_bboxes)
-    print('gt_bboxes.shape :',gt_bboxes.shape)
-    print('gt_tubes :',gt_tubes)
-    print('clips.shape :',clips.shape)
+                                              shuffle=False, num_workers=n_threads, pin_memory=True)
+    # clips, (h,w), gt_tubes, gt_bboxes, n_actions, n_frames = next(data_loader.__iter__())
+    # for i in data:
+    #     clips, (h,w), gt_tubes, gt_bboxes, n_actions, n_frames = i
+    #     # print('gt_bboxes.shape :',gt_bboxes)
+    #     # print('gt_bboxes.shape :',gt_bboxes.shape)
+    #     # print('gt_tubes :',gt_tubes)
+    #     # print('clips.shape :',clips.shape)
+
+    #     # print('n_frames :',n_frames)
+    #     if (n_frames != gt_bboxes.size(1)):
+    #         print('probleeeemm', ' n_frames :',n_frames, ' gt_bboxes :',gt_bboxes.size(1))
+    clips, (h,w), gt_tubes, gt_bboxes, n_actions, n_frames = data[108]
+    if (n_frames != gt_bboxes.size(1)):
+        print('probleeeemm', ' n_frames :',n_frames, ' gt_bboxes :',gt_bboxes.size(1))

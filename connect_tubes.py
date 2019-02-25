@@ -134,9 +134,7 @@ def bbox_overlaps_batch_3d(tubes, tubes_curr):
         ua_t = tubes_boxes_t.view(batch_size,N,1) + tubes_curr_t.view(batch_size,1,K) - it
         overlaps_t = it / ua_t
 
-        
         overlaps = overlaps_xy 
-
 
         # mask the overlap here.
         overlaps.masked_fill_(gt_area_zero.view(
@@ -152,8 +150,7 @@ def connect_tubes(tubes, tubes_curr, pooled_feats, rois_feats, index): # tubes a
 
     if len(tubes) == 0: # first time
         return (tubes_curr.permute(1,0,2).cpu().tolist(), [[rois_feats[i]]  for i in range(rois_feats.size(0))])
-
-    iou_thresh = 0.5
+    iou_thresh = 0.3
     tubes_last = [i[-1] for i in tubes]
     tubes_curr_list = tubes_curr.permute(1,0,2).cpu().tolist()
     # print('tubes :',tubes)
@@ -164,8 +161,8 @@ def connect_tubes(tubes, tubes_curr, pooled_feats, rois_feats, index): # tubes a
 
     tubes_tensor = torch.Tensor(tubes_last).unsqueeze(0).type_as(tubes_curr)
     overlaps = bbox_overlaps_batch_3d(tubes_tensor, tubes_curr)
-    max_overlaps, max_index = torch.max(overlaps,2) # max_overlaps contains the most likely new tubes to be connected
 
+    max_overlaps, max_index = torch.max(overlaps,2) # max_overlaps contains the most likely new tubes to be connected
     max_overlaps = torch.where(max_overlaps > iou_thresh, max_overlaps, torch.zeros_like(max_overlaps).type_as(max_overlaps))
     connect_indices = max_overlaps.nonzero() ## [:,1] # connect_indices says which pre tubes to connect
 

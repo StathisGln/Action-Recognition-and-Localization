@@ -47,15 +47,13 @@ class Model(nn.Module):
     def forward(self, input_video, im_info, gt_tubes, gt_rois,  num_boxes):
 
         # print('input_video.shape :',input_video.shape)
-        print('im_info :',im_info)
+        # print('im_info :',im_info)
+        # print('gt_tubes :',gt_tubes)
         # print('num_boxes :',num_boxes)
         
-        batch_size = input_video.size(0)
-        for b in range(batch_size):
-            n_frames = im_info[b, 2].long() # video shape : (bs, 3, n_fr, 112, 112,)
-        n_frames = im_info[:, 2].long() # video shape : (bs, 3, n_fr, 112, 112,)
-        print('exw n_frames :',n_frames)
-        # for i in range(0, (n_frames.data -self.sample_duration  ), self.step):
+        # JUST for now only 1 picture support
+        n_frames = im_info[0, 2].long() # video shape : (bs, 3, n_fr, 112, 112,)
+
         if n_frames < 17:
             indexes = [0]
         else:
@@ -64,24 +62,19 @@ class Model(nn.Module):
         tubes = []
         pooled_feats = []
         feats = torch.zeros((len(indexes),128, 512, 16)).type_as(input_video)
-        # print('feats.shape :',feats.shape)
-        # for i in [0,1]:
+
         for i in indexes:
 
-            lim = min(i+self.sample_duration-1, (n_frames-1).cpu().tolist()[0])
-            if (n_frames < i+self.sample_duration):
-                print('lim :',lim)
-            vid_indices = torch.range(i,lim).long()
+            lim = min(i+self.sample_duration-1, (n_frames-1))
+            vid_indices = torch.arange(i,lim-1).long()
 
-            # print('vid_indices :',vid_indices)
             vid_seg = input_video[:,:,vid_indices]
-            # print('vid_seg :',vid_seg)
             gt_rois_seg = gt_rois[:,:,vid_indices]
-
             ## TODO remove that and just filter gt_tubes
             gt_tubes_seg = create_tube(gt_rois_seg, im_info, 16)
             # print('gt_tubes_seg.shape :',gt_tubes_seg.shape)
             # print('gt_tubes_seg :',gt_tubes_seg)
+            # print('gt_tubes :',gt_tubes)
             ## run ACT_net
             rois,  bbox_pred, rois_feat, \
             rpn_loss_cls,  rpn_loss_bbox, \
@@ -91,28 +84,33 @@ class Model(nn.Module):
                                                                     gt_rois_seg,
                                                                     num_boxes)
 
-            # tubes = connect_tubes(tubes,torch.round(rois), i)
             tubes, pooled_feats = connect_tubes(tubes,rois, pooled_feats, rois_feat,  i)
 
         ###################################
         #           Time for TCN          #
         ###################################
+
         cls_prob = torch.zeros((len(tubes),self.n_classes)).type_as(input_video)
         cls_loss = torch.zeros(len(tubes)).type_as(input_video)
         for i in range(len(tubes)):
             
             tubes_t = torch.Tensor(tubes[i]).type_as(input_video)
             feat = torch.zeros(len(tubes[i]),512,16).type_as(input_video)
+            feat = Variable(feat)
+            target = Variable(tubes_t[0,7].expand(16).long())
             for j in range(len(pooled_feats[i])):
                 feat[j] = pooled_feats[i][j]
             feat = feat.permute(1,0,2).mean(2).unsqueeze(0)
-            cls_prob[i] = self.tcn_net(feat)
-            cls_prob[i] = F.softmax(cls_prob[i],0)
+            tmp_prob = self.tcn_net(feat)
+            cls_prob[i] = F.softmax(tmp_prob,0)
             # loss = F.nll_loss(output, tubes_t[0,7].unsqueeze(0).long())
             # if self.training:
-            print('cls_prob[i].shape :', cls_prob[i].shape, ' tubes_t[0,7].shape', tubes_t[0,7].unsqueeze(0).shape, ' tubes_t[0,7] ',  tubes_t[0,7])
-            cls_loss[i] = F.cross_entropy(cls_prob[i].unsqueeze(0), tubes_t[0,7].unsqueeze(0).long())
-            
+            # print('cls_prob[i].shape :', cls_prob[i].shape, ' tubes_t[0,7].shape', tubes_t[0,7].unsqueeze(0).shape, ' tubes_t[0,7] ',  tubes_t[0,7])
+        # print('cls_loss.shape :',cls_loss.shape)
+        # print('cls_prob.shape :',cls_prob.shape)
+        # print('tubes_t[0,7].unsqueeze(0).expand(16,-1).shape :',tubes_t[0,7].expand(16).shape)
+        cls_loss = F.cross_entropy(cls_prob, target)
+        # print('cls_loss.shape :',cls_loss)
         if self.training:
             return rois, bbox_pred,  cls_prob, rpn_loss_cls, rpn_loss_bbox, act_loss_bbox, cls_loss
 
