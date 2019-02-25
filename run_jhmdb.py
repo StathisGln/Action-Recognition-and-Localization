@@ -106,6 +106,7 @@ if __name__ == '__main__':
     #                                                   im_info,
     #                                                   gt_tubes, None,
     #                                                   n_actions)
+    print('**********Start**********')
     ret = model(clips,
                 im_info,
                 gt_tubes_r, gt_rois,

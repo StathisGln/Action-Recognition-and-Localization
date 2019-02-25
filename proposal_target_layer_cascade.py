@@ -36,6 +36,7 @@ class _ProposalTargetLayer(nn.Module):
         self.BBOX_NORMALIZE_STDS  = self.BBOX_NORMALIZE_STDS.type_as(gt_boxes)
         self.BBOX_INSIDE_WEIGHTS  = self.BBOX_INSIDE_WEIGHTS.type_as(gt_boxes)
 
+        # print('gt_boxes :', gt_boxes)
         num_boxes = num_boxes.long()
         gt_boxes_append = gt_boxes.new(gt_boxes.size()).zero_()
         gt_boxes_append[:,:,1:] = gt_boxes[:,:,:7] # in pos 0 is the score
@@ -60,7 +61,7 @@ class _ProposalTargetLayer(nn.Module):
             rois_per_image, self._num_classes, num_boxes, num_rois_pre)
 
         bbox_outside_weights = (bbox_inside_weights > 0).float()
-
+        # print('inside cascade rois :',rois)
         return rois, labels, bbox_targets, bbox_inside_weights, bbox_outside_weights
 
     def backward(self, top, propagate_down, bottom):

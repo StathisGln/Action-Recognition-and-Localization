@@ -161,9 +161,9 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         # print('frames :',frames)
         n_actions = n_actions.to(device)
         target = target.to(device)
-        im_info = torch.Tensor([[sample_size, sample_size, sample_duration]] ).to(device)
+        im_info = torch.Tensor([[sample_size, sample_size, frames]] ).to(device)
         inputs = Variable(clips)
-        tubes,  bbox_pred, cls_prob   = model(inputs,
+        tubes, bbox_pred, cls_prob   = model(inputs,
                                              im_info,
                                              None, gt_rois,
                                              n_actions)

@@ -39,21 +39,15 @@ class Model(nn.Module):
         nhid = 25 ## number of hidden units per levels
         levels = 8
         channel_sizes = [nhid] * levels
-        kernel_size = 7
+        kernel_size = 3
         dropout = 0.05
 
         self.tcn_net = TCN(input_channels, self.n_classes, channel_sizes, kernel_size = kernel_size, dropout=dropout)
 
     def forward(self, input_video, im_info, gt_tubes, gt_rois,  num_boxes):
 
-        # print('input_video.shape :',input_video.shape)
-        # print('im_info :',im_info)
-        # print('gt_tubes :',gt_tubes)
-        # print('num_boxes :',num_boxes)
-        
         # JUST for now only 1 picture support
         n_frames = im_info[0, 2].long() # video shape : (bs, 3, n_fr, 112, 112,)
-
         if n_frames < 17:
             indexes = [0]
         else:
@@ -65,9 +59,9 @@ class Model(nn.Module):
 
         for i in indexes:
 
-            lim = min(i+self.sample_duration-1, (n_frames-1))
-            vid_indices = torch.arange(i,lim-1).long()
-
+            lim = min(i+self.sample_duration, (n_frames))
+            vid_indices = torch.arange(i,lim).long()
+            print('vid_indices :',vid_indices)
             vid_seg = input_video[:,:,vid_indices]
             gt_rois_seg = gt_rois[:,:,vid_indices]
             ## TODO remove that and just filter gt_tubes
@@ -83,7 +77,7 @@ class Model(nn.Module):
                                                                     gt_tubes_seg,
                                                                     gt_rois_seg,
                                                                     num_boxes)
-
+            # print('rois :', rois)
             tubes, pooled_feats = connect_tubes(tubes,rois, pooled_feats, rois_feat,  i)
 
         ###################################
@@ -92,29 +86,30 @@ class Model(nn.Module):
 
         cls_prob = torch.zeros((len(tubes),self.n_classes)).type_as(input_video)
         cls_loss = torch.zeros(len(tubes)).type_as(input_video)
+        max_dim = -1
+        target = torch.zeros(len(tubes)).type_as(input_video)
         for i in range(len(tubes)):
-            
             tubes_t = torch.Tensor(tubes[i]).type_as(input_video)
+            if (len(tubes[i]) > max_dim):
+                max_dim = len(tubes[i])
             feat = torch.zeros(len(tubes[i]),512,16).type_as(input_video)
             feat = Variable(feat)
-            target = Variable(tubes_t[0,7].expand(16).long())
+            target[i] = tubes_t[0,7].long()
+
             for j in range(len(pooled_feats[i])):
                 feat[j] = pooled_feats[i][j]
             feat = feat.permute(1,0,2).mean(2).unsqueeze(0)
             tmp_prob = self.tcn_net(feat)
-            cls_prob[i] = F.softmax(tmp_prob,0)
-            # loss = F.nll_loss(output, tubes_t[0,7].unsqueeze(0).long())
-            # if self.training:
-            # print('cls_prob[i].shape :', cls_prob[i].shape, ' tubes_t[0,7].shape', tubes_t[0,7].unsqueeze(0).shape, ' tubes_t[0,7] ',  tubes_t[0,7])
-        # print('cls_loss.shape :',cls_loss.shape)
-        # print('cls_prob.shape :',cls_prob.shape)
-        # print('tubes_t[0,7].unsqueeze(0).expand(16,-1).shape :',tubes_t[0,7].expand(16).shape)
-        cls_loss = F.cross_entropy(cls_prob, target)
-        # print('cls_loss.shape :',cls_loss)
+            cls_prob[i] = F.softmax(tmp_prob,1)
+
+        if self.training:
+            target = torch.ceil(target)
+            cls_loss = F.cross_entropy(cls_prob, target.long())
+
         if self.training:
             return rois, bbox_pred,  cls_prob, rpn_loss_cls, rpn_loss_bbox, act_loss_bbox, cls_loss
-
-        return tubes, bbox_pred,  cls_prob, 
+        else:
+            return tubes, bbox_pred, cls_prob
 
     def create_architecture(self):
 
