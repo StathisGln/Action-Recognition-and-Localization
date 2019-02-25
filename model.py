@@ -47,9 +47,9 @@ class Model(nn.Module):
     def forward(self, input_video, im_info, gt_tubes, gt_rois,  num_boxes):
 
         # print('input_video.shape :',input_video.shape)
-        # print('im_info :',im_info)
+        print('im_info :',im_info)
         # print('num_boxes :',num_boxes)
-
+        
         batch_size = input_video.size(0)
         for b in range(batch_size):
             n_frames = im_info[b, 2].long() # video shape : (bs, 3, n_fr, 112, 112,)
@@ -72,6 +72,7 @@ class Model(nn.Module):
             if (n_frames < i+self.sample_duration):
                 print('lim :',lim)
             vid_indices = torch.range(i,lim).long()
+
             # print('vid_indices :',vid_indices)
             vid_seg = input_video[:,:,vid_indices]
             # print('vid_seg :',vid_seg)
@@ -96,22 +97,26 @@ class Model(nn.Module):
         ###################################
         #           Time for TCN          #
         ###################################
-        print(tubes[0])
-        for i in [0]:
+        cls_prob = torch.zeros((len(tubes),self.n_classes)).type_as(input_video)
+        cls_loss = torch.zeros(len(tubes)).type_as(input_video)
+        for i in range(len(tubes)):
+            
             tubes_t = torch.Tensor(tubes[i]).type_as(input_video)
             feat = torch.zeros(len(tubes[i]),512,16).type_as(input_video)
             for j in range(len(pooled_feats[i])):
-                feat[i] = pooled_feats[i][j]
+                feat[j] = pooled_feats[i][j]
             feat = feat.permute(1,0,2).mean(2).unsqueeze(0)
-            cls_prob = self.tcn_net(feat)
-            cls_prob = F.softmax(cls_prob,1)
+            cls_prob[i] = self.tcn_net(feat)
+            cls_prob[i] = F.softmax(cls_prob[i],0)
             # loss = F.nll_loss(output, tubes_t[0,7].unsqueeze(0).long())
-            cls_loss = F.cross_entropy(cls_prob, tubes_t[0,7].unsqueeze(0).long())
+            # if self.training:
+            print('cls_prob[i].shape :', cls_prob[i].shape, ' tubes_t[0,7].shape', tubes_t[0,7].unsqueeze(0).shape, ' tubes_t[0,7] ',  tubes_t[0,7])
+            cls_loss[i] = F.cross_entropy(cls_prob[i].unsqueeze(0), tubes_t[0,7].unsqueeze(0).long())
             
         if self.training:
             return rois, bbox_pred,  cls_prob, rpn_loss_cls, rpn_loss_bbox, act_loss_bbox, cls_loss
 
-        return rois, bbox_pred,  cls_prob, 
+        return tubes, bbox_pred,  cls_prob, 
 
     def create_architecture(self):
 

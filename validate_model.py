@@ -142,55 +142,84 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     true_pos_t = torch.zeros(1).long().to(device)
     false_neg_t = torch.zeros(1).long().to(device)
 
+    correct_preds = torch.zeros(1).long().to(device)
+    n_preds = torch.zeros(1).long().to(device)
+    preds = torch.zeros(1).long().to(device)
     ## 2 rois : 1450
+    tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
-        if step == 2:
-            break
-        print('step :',step)
+        # if step == 2:
+        #     break
+        # print('step :',step)
 
         clips,  (h, w), gt_tubes_r, gt_rois, n_actions, frames, target = data
         
         clips = clips.to(device)
         gt_tubes_r = gt_tubes_r.to(device)
+        # print('gt_tubes_r :',gt_tubes_r)
+        # print('frames :',frames)
         n_actions = n_actions.to(device)
         target = target.to(device)
-        im_info = torch.Tensor([[sample_size, sample_size, sample_duration]] * gt_tubes_r.size(1)).to(device)
+        im_info = torch.Tensor([[sample_size, sample_size, sample_duration]] ).to(device)
         inputs = Variable(clips)
         tubes,  bbox_pred, cls_prob   = model(inputs,
                                              im_info,
-                                             gt_tubes_r, gt_rois,
+                                             None, gt_rois,
                                              n_actions)
-        print('gt_tubes_r :',gt_tubes_r)
-        # tubes[:,:,3] = 0
-        # tubes[:,:,6] = 15
-        overlaps, overlaps_xy, overlaps_t = bbox_overlaps_batch_3d(tubes.squeeze(0), gt_tubes_r) # check one video each time
 
-        ## for the whole tube
-        gt_max_overlaps, _ = torch.max(overlaps, 1)
-        gt_max_overlaps = torch.where(gt_max_overlaps > iou_thresh, gt_max_overlaps, torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
-        detected =  gt_max_overlaps.ne(0).sum()
-        n_elements = gt_max_overlaps.nelement()
-        true_pos += detected
-        false_neg += n_elements - detected
+        # print('gt_bues_r.shape :',gt_tubes_r.shape)
+        # print('cls_prob.shape :',cls_prob.shape)
+        # print('len(tubes) :',len(tubes))
+        n_tubes = len(tubes)
 
-        ## for xy - area
-        gt_max_overlaps_xy, _ = torch.max(overlaps_xy, 1)
-        gt_max_overlaps_xy = torch.where(gt_max_overlaps_xy > iou_thresh, gt_max_overlaps_xy, torch.zeros_like(gt_max_overlaps_xy).type_as(gt_max_overlaps_xy))
+        _, cls_int = torch.max(cls_prob,1)
+        # print('cls_int :',cls_int, ' target :', target)
+        for k in cls_int.cpu().tolist():
+            if k == target.data:
+                print('Found one')
+                correct_preds += 1
+            n_preds += 1
+        for i in range(gt_tubes_r.size(0)): # how many frames we have
+            tubes_t = torch.zeros(n_tubes, 7).type_as(gt_tubes_r)
+            for j in range(n_tubes):
+                # print('J :',j, 'i :',i)
+                # print(' len(tube[j]) :',len(tubes[j]))
+                # print('tubes[j] :',tubes[j])
+                # print('tubes[j][i] :',tubes[j][i])
+                
+                if (len(tubes[j]) - 1 < i):
+                    continue
+                tubes_t[j] = torch.Tensor(tubes[j][i][:7]).type_as(tubes_t)
+            
+            overlaps, overlaps_xy, overlaps_t = bbox_overlaps_batch_3d(tubes_t.squeeze(0), gt_tubes_r[i].unsqueeze(0)) # check one video each time
 
-        detected_xy =  gt_max_overlaps_xy.ne(0).sum()
-        n_elements_xy = gt_max_overlaps_xy.nelement()
-        true_pos_xy += detected_xy
-        false_neg_xy += n_elements_xy - detected_xy
+            ## for the whole tube
+            gt_max_overlaps, _ = torch.max(overlaps, 1)
+            gt_max_overlaps = torch.where(gt_max_overlaps > iou_thresh, gt_max_overlaps, torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
+            detected =  gt_max_overlaps.ne(0).sum()
+            n_elements = gt_max_overlaps.nelement()
+            true_pos += detected
+            false_neg += n_elements - detected
 
-        ## for t - area
-        gt_max_overlaps_t, _ = torch.max(overlaps_t, 1)
-        gt_max_overlaps_t = torch.where(gt_max_overlaps_t > iou_thresh, gt_max_overlaps_t, torch.zeros_like(gt_max_overlaps_t).type_as(gt_max_overlaps_t))
-        detected_t =  gt_max_overlaps_t.ne(0).sum()
-        n_elements_t = gt_max_overlaps_t.nelement()
-        true_pos_t += detected_t
-        false_neg_t += n_elements_t - detected_t
+            ## for xy - area
+            gt_max_overlaps_xy, _ = torch.max(overlaps_xy, 1)
+            gt_max_overlaps_xy = torch.where(gt_max_overlaps_xy > iou_thresh, gt_max_overlaps_xy, torch.zeros_like(gt_max_overlaps_xy).type_as(gt_max_overlaps_xy))
 
+            detected_xy =  gt_max_overlaps_xy.ne(0).sum()
+            n_elements_xy = gt_max_overlaps_xy.nelement()
+            true_pos_xy += detected_xy
+            false_neg_xy += n_elements_xy - detected_xy
+
+            ## for t - area
+            gt_max_overlaps_t, _ = torch.max(overlaps_t, 1)
+            gt_max_overlaps_t = torch.where(gt_max_overlaps_t > iou_thresh, gt_max_overlaps_t, torch.zeros_like(gt_max_overlaps_t).type_as(gt_max_overlaps_t))
+            detected_t =  gt_max_overlaps_t.ne(0).sum()
+            n_elements_t = gt_max_overlaps_t.nelement()
+            true_pos_t += detected_t
+            false_neg_t += n_elements_t - detected_t
+
+            tubes_sum += 1
 
 
     recall    = true_pos.float()    / (true_pos.float()    + false_neg.float())
@@ -214,6 +243,13 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     print('|                       |')
     print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
         step, true_pos_t.cpu().tolist()[0], false_neg_t.cpu().tolist()[0], recall_t.cpu().tolist()[0]))
+    print('|                       |')
+    print('| Classification        |')
+    print('|                       |')
+    print('| In {: >6} steps    :  |'.format(step))
+    print('|                       |')
+    print('| Correct preds :       |\n| {: >6} / {: >6}       |'.format( correct_preds.cpu().tolist()[0], n_preds.cpu().tolist()[0]))
+
 
     print(' -----------------------')
         
@@ -231,7 +267,7 @@ if __name__ == '__main__':
 
     batch_size = 1
     # batch_size = 1
-    n_threads = 2
+    n_threads = 0
 
     # # get mean
     # mean =  [103.75581543 104.79421473  91.16894564] # jhmdb
