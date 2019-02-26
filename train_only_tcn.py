@@ -31,7 +31,6 @@ def validate_tcn(model, tcn_net, val_data, val_data_loader):
 
         # if step == 2:
         #     break
-
         clips,  (h, w), target, boxes, n_frames = data
 
         clips = clips.to(device)
@@ -198,7 +197,7 @@ if __name__ == '__main__':
     roi_align = RoIAlignAvg(7, 7, 16, 1.0/16.0, 1.0)
     tcn_net = TCN(input_channels, n_classes, channel_sizes, kernel_size = kernel_size, dropout=dropout)
 
-    tcn_net = tcn_net.to(device)
+    # tcn_net = tcn_net.to(device)
     ######################################
     #          Resnet Variables          #
     ######################################
@@ -217,12 +216,13 @@ if __name__ == '__main__':
     model = resnet34(num_classes=n_classes, shortcut_type=resnet_shortcut,
                      sample_size=sample_size, sample_duration=sample_duration,
                      last_fc=last_fc)
-    model = model.to(device)
+    # model = model.to(device)
     # if torch.cuda.device_count() > 1:
     #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
 
     model = nn.DataParallel(model)
     tcn_net = nn.DataParallel(tcn_net)
+
 
     model_data = torch.load('/gpu-data2/sgal/resnet-34-kinetics.pth')
     model.load_state_dict(model_data['state_dict'])
@@ -336,7 +336,7 @@ if __name__ == '__main__':
             val_data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                          temporal_transform=temporal_transform, json_file = boxes_file,
                          split_txt_path=splt_txt_path, mode='val', classes_idx=cls2idx)
-            val_data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
+            val_data_loader = torch.utils.data.DataLoader(val_data, batch_size=batch_size,
                                                       shuffle=True, num_workers=n_threads, pin_memory=True)
 
             validate_tcn(model, tcn_net, val_data, val_data_loader)
