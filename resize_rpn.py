@@ -1,6 +1,34 @@
 import numpy as np
+import torch
+def resize_rpn(gt_rois_old, h,w, sample_size):
+    '''
+    Input: a torch.Tensor
+    size shape is [h,w]
+    '''
+    target_h = sample_size
+    target_w = sample_size
 
-def resize_rpn(gt_rois, h,w, sample_size):
+    gt_rois =torch.zeros(gt_rois_old.size()).type_as(gt_rois_old)
+
+    w_bigger_h = w > h
+    scale = sample_size / max(h,w)
+
+    if w_bigger_h:
+        target_h = int(np.round( h * float(sample_size) / float(w)))
+    else:
+        target_w = int(np.round( w * float(sample_size) / float(h)))
+
+    top = int(max(0, np.round(((sample_size) - target_h) / 2)))
+    left = int(max(0, np.round(((sample_size) - target_w) / 2)))
+
+    gt_rois[:,:,0] = (torch.round(gt_rois_old[:,:,0]  * float(scale)) + left)
+    gt_rois[:,:,1] = (torch.round(gt_rois_old[:,:,1]  * float(scale)) + top )
+    gt_rois[:,:,2] = (torch.round(gt_rois_old[:,:,2]  * float(scale)) + left)
+    gt_rois[:,:,3] = (torch.round(gt_rois_old[:,:,3]  * float(scale)) + top)
+
+    return gt_rois
+
+def resize_rpn_np(gt_rois, h,w, sample_size):
     '''
     Input: a torch.Tensor
     size shape is [h,w]

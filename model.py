@@ -102,7 +102,7 @@ class Model(nn.Module):
             feat = torch.zeros(len(tubes[i]),512,16).type_as(input_video)
             feat = Variable(feat)
             if self.training and phase == 2:
-                target[i] = tubes_t[0,7].long()
+                target[i] = tubes_t[0,6]
 
             for j in range(len(pooled_feats[i])):
                 feat[j] = pooled_feats[i][j]

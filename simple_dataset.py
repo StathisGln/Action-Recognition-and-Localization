@@ -206,7 +206,8 @@ class Video(data.Dataset):
         path = self.data[index]['abs_path']
         begin_t = self.data[index]['begin_t']
         end_t = self.data[index]['end_t']
-        boxes = self.data[index]['boxes']        
+        boxes = self.data[index]['boxes']
+        boxes_np = np.array(boxes, dtype=np.float)
         # print('path :',path, 'index :', index)
         self.sample_duration = 16
         n_frames = self.data[index]['end_t']
@@ -227,76 +228,17 @@ class Video(data.Dataset):
             clip = [self.spatial_transform(img) for img in clip]
         clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
 
-        # get bbox
         cls = self.data[index]['class']
-        name = self.data[index]['video']
-        json_key = os.path.join(cls, name)
-
-        # # print(json_key)
-        # with open(self.json_file, 'r') as fp:
-        #     data = json.load(fp)[json_key]
-            
-
         class_int = self.classes_idx[cls]
         target = class_int
-        gt_bboxes = np.array(boxes )
-        gt_bboxes[:,[0,2]] = gt_bboxes[:,[0,2]].clip(0,w)
-        gt_bboxes[:,[1,3]] = gt_bboxes[:,[1,3]].clip(0,h)
-        gt_bboxes = np.round(gt_bboxes)
-        gt_bboxes_r = resize_rpn(gt_bboxes, h,w,self.sample_size)
 
-        ## add gt_bboxes_r class_int
-        gt_bboxes_r = np.concatenate((gt_bboxes_r[:,:4],np.array( [[ class_int] for i in range(len(boxes))])),axis=1)
-        gt_bboxes_r = np.expand_dims(gt_bboxes_r, 0)
-        im_info_tube = np.array([[w,h,]*gt_bboxes_r.shape[0]])
-        
-        if self.mode == 'train' or self.mode == 'val':
 
-            if n_frames < 17:
-                indexes = [0]
-            else:
-                indexes = range(0, (n_frames -self.sample_duration  ), int(self.sample_duration/2))
-            gt_tubes = np.zeros((len(indexes),7))
-            
-            for i in indexes :
-                lim = min(i+self.sample_duration-1, (n_frames-1))
-                # if (n_frames < i+self.sample_duration):
-                #     print('lim :',lim)
-                vid_indices = np.arange(i,lim-1, dtype=np.long)
-
-                gt_rois_seg = gt_bboxes_r[:, vid_indices]
-                gt_tubes_seg = create_tube(np.expand_dims(gt_rois_seg,0), np.array([[self.sample_size,self.sample_size]]), self.sample_duration)                
-                gt_tubes_seg[:,:,2] = i
-                gt_tubes_seg[:,:,5] = i+self.sample_duration-1
-                gt_tubes[int(i/self.sample_duration*2)] = gt_tubes_seg
-
-                
-                gt_tubes = np.round(gt_tubes)
-
-        else:
-            gt_tubes =  create_tube(np.expand_dims(gt_bboxes_r,0), np.array([[self.sample_size,self.sample_size]]), n_frames)                
-
-        f_rois = np.zeros((1,n_frames,5)) # because only 1 action can have simultaneously
-        b_frames = gt_bboxes_r.shape[1]
-
-        f_rois[:,:b_frames,:] = gt_bboxes_r
-
-        # if (n_frames < 16):
-        #     print(f_rois)
-
-        if (b_frames != n_frames):
-            print('\n LATHOSSSSSS\n', 'n_frames :', n_frames, ' b_frames :',b_frames)
-            exit(1)
-        # print('f_rois.shape :',f_rois.shape)
-        # print('gt_tubes :',gt_tubes)
-        # print(gt_bboxes)
         if self.mode == 'train':
-            # return clip, (h,w), gt_tubes, gt_bboxes
-            return clip, (h,w), gt_tubes, f_rois, np.array([1.]), n_frames, class_int
+            return clip, (h,w), target, boxes_np, n_frames
         elif self.mode == 'val':
-            return clip, (h,w), gt_tubes, f_rois, np.array([1.]), n_frames, class_int
+            return clip, (h,w), target, boxes_np, n_frames
         else:
-            return clip, (h,w), gt_tubes, f_rois, self.data[index]['abs_path'], frame_indices
+            return clip, (h,w), target, boxes_np, n_frames, self.data[index]['abs_path'], frame_indices
         
         
     def __len__(self):

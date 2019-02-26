@@ -72,7 +72,7 @@ if __name__ == '__main__':
     model.to(device)
     model.train()
     # clips, h, w, gt_tubes, n_actions = data[1451]
-    clips, (h, w), gt_tubes_r, gt_rois, n_actions, n_frames = data[144]
+    clips, (h, w), gt_tubes_r, gt_rois, n_actions, n_frames, target = data[144]
 
     # clips = torch.stack((clips,clips),dim=0).to(device) 
 
@@ -86,9 +86,9 @@ if __name__ == '__main__':
     # n_actions = torch.Tensor((n_actions,n_actions2)).to(device)
     im_info = torch.Tensor([[sample_size, sample_size, n_frames]] ).to(device)
     clips = clips.unsqueeze(0).to(device)
-    gt_tubes_r = gt_tubes_r.unsqueeze(0).to(device)
-    gt_rois = gt_rois.unsqueeze(0).to(device)
-    n_actions = n_actions.unsqueeze(0).to(device)
+    gt_tubes_r = torch.from_numpy(gt_tubes_r).float().unsqueeze(0).to(device)
+    gt_rois = torch.from_numpy(gt_rois).float().unsqueeze(0).to(device)
+    n_actions = torch.from_numpy(n_actions).unsqueeze(0).to(device)
     
     print('n_actions :',n_actions)
     print('clips :',clips.shape)
