@@ -174,7 +174,8 @@ class _ProposalLayer(nn.Module):
 
         _, order = torch.sort(scores, 1, True)
         
-        output = scores.new(batch_size, post_nms_topN, 8).zero_()
+        # output = scores.new(batch_size, post_nms_topN, 8).zero_()
+        output = scores.new(batch_size, post_nms_topN, 7).zero_()
         # print('output.shape :',output.shape)
         for i in range(batch_size):
             # # 3. remove predicted boxes with either height or width < threshold
@@ -197,7 +198,7 @@ class _ProposalLayer(nn.Module):
             num_proposal = proposals_single.size(0)
             output[i,:num_proposal,0] = i
             output[i,:num_proposal,1:7] = proposals_single
-            output[i,:num_proposal,7] = scores_single.squeeze()
+            # output[i,:num_proposal,7] = scores_single.squeeze()
             
 
         # print('output.shape :',output.shape)

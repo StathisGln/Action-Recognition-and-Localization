@@ -26,9 +26,9 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_folder = '/gpu-data/sgal/JHMDB-act-detector-frames'
-    splt_txt_path =  '/gpu-data/sgal/splits'
-    boxes_file = '../temporal_localization/poses.json'
+    dataset_folder = '/gpu-data2/sgal/JHMDB-act-detector-frames'
+    splt_txt_path =  '/gpu-data2/sgal/splits'
+    boxes_file = '/gpu-data2/sgal/poses.json'
 
     sample_size = 112
     sample_duration = 16  # len(images)
@@ -70,7 +70,7 @@ if __name__ == '__main__':
         model = nn.DataParallel(model)
 
     model.to(device)
-
+    model.train()
     # clips, h, w, gt_tubes, n_actions = data[1451]
     clips, (h, w), gt_tubes_r, gt_rois, n_actions, n_frames = data[144]
 
@@ -106,10 +106,18 @@ if __name__ == '__main__':
     #                                                   im_info,
     #                                                   gt_tubes, None,
     #                                                   n_actions)
-    ret = model(clips,
-                im_info,
-                gt_tubes_r, gt_rois,
-                n_actions)
+    print('**********Start**********')
+    rois, bbox_pred, pooled_feat, rpn_loss_cls, \
+    rpn_loss_bbox, act_loss_cls, act_loss_bbox, = model(input_video= clips,
+                                                        im_info = im_info,
+                                                        gt_tubes = gt_tubes_r, gt_rois =  gt_rois,
+                                                        num_boxes = n_actions, phase = 1)
+    rois, bbox_pred, pooled_feat, rpn_loss_cls, \
+    rpn_loss_bbox, act_loss_cls, act_loss_bbox, = model(input_video= clips,
+                                                        im_info = im_info,
+                                                        gt_tubes = gt_tubes_r, gt_rois =  gt_rois,
+                                                        num_boxes = n_actions, phase = 2)
+
 
     print('**********VGIKE**********')
     # print('rois.shape :',rois.shape)

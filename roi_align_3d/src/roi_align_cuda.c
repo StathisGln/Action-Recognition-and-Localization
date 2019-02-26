@@ -21,7 +21,7 @@ int roi_align_forward_cuda(int aligned_height, int aligned_width, int time_dim, 
     /* printf("num_rois : %d\n",num_rois); */
     if (size_rois != 7)
     {
-        return 0;
+      return 0;
     }
 
     // data height
@@ -39,6 +39,7 @@ int roi_align_forward_cuda(int aligned_height, int aligned_width, int time_dim, 
     /* printf("data_time %d data_height %d data width %d num_channels %d\n",data_time,data_height,data_width,num_channels); */
     cudaStream_t stream = THCState_getCurrentStream(state);
     /* printf("temp_scale %f, spatial_scale %f\n",temp_scale,spatial_scale); */
+    /* printf("before roiAlignForwardLauncher\n"); */
     ROIAlignForwardLaucher(
 			   data_flat, spatial_scale, temp_scale, num_rois, data_height,
 			   data_width, data_time, num_channels, aligned_height,

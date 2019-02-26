@@ -110,7 +110,7 @@ class _RPN(nn.Module):
         # print('rpn_cls_prob.shape :',rpn_cls_prob.shape)
         rois = self.RPN_proposal((rpn_cls_prob.data, rpn_bbox_pred.data,
                                      im_info, cfg_key,16))
-
+        print('proposal rois :',rois.shape)
         # print('rois.shape :',rois.shape)
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0
@@ -160,7 +160,7 @@ class _RPN(nn.Module):
             # print('self.rpn_loss_box :',self.rpn_loss_box)
             # print('self.rpn_loss_box :',self.rpn_loss_box)
 
-
+        print('output rois.shape :',rois.shape)
         return rois, self.rpn_loss_cls, self.rpn_loss_box
 
 

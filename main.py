@@ -146,7 +146,10 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
 
     model.train()
     loss_temp = 0
-    
+    rpn_epochs = 20
+    for ep in range(rpn_epochs):
+        print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(ep+1, rpn_epochs))
+
     ## 2 rois : 1450
     for step, data  in enumerate(data_loader):
 
@@ -157,11 +160,6 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         clips = clips.to(device)
         gt_tubes_r = gt_tubes_r.to(device)
         gt_rois = gt_rois.to(device)
-        # print('gt_tubes_r :',gt_tubes_r)
-        # print('gt_tubes :',gt_tubes)
-        # h = h.to(device)
-        # w = w.to(device)
-        # gt_tubes = gt_tubes.to(device)
         n_actions = n_actions.to(device)
         im_info = torch.Tensor([[sample_size, sample_size, n_frames]] * gt_tubes_r.size(1)).to(device)
         # print('gt_rois.shape :',gt_rois.shape )
@@ -171,7 +169,7 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         act_loss_cls, act_loss_bbox  = model(inputs,
                                              im_info,
                                              gt_tubes_r, gt_rois,
-                                             n_actions)
+                                             n_actions, phase=1)
         # print('rois :',rois)
         # print('rpn_loss_bbox :',rpn_loss_bbox)
         # print('rpn_loss_cls :',rpn_loss_cls)

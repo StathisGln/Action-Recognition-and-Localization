@@ -31,7 +31,7 @@ extern "C" {
             int c  = (index / aligned_width / aligned_height / time_dim) % channels;
             int n  =  index / aligned_width / aligned_height / time_dim  / channels;
 
-	    // if (index == 50 ){
+	    // if (index == 1 ){
 	    //   printf("pw %d ph %d pt %d c %d n %d index %d \n",pw,ph,pt,c,n,index);
 	    //   }
             // bottom_rois += n * 7
@@ -88,6 +88,7 @@ extern "C" {
 
 	    // if (index==50)
 	    //   printf("h %f w %f t %f\n", h,w,t);
+
             // trilinear interpolation = 2 bilinear interpolation + 1 linear interpolation
 	    // if( index==50 ) printf("height : %d width %d time %d \n",height,width,time);
             if (h < 0 || h >= height || w < 0 || w >= width || t < 0 || t >= time) {
@@ -97,7 +98,7 @@ extern "C" {
             } else {
 	      // if (index ==524225)
 		// if (index ==50)
-		// printf("t %f tstart %d\n",t,tstart);
+	      // printf("index %d t %f tstart %d\n",index,t,tstart);
                 float h_ratio = h - (float)(hstart);
                 float w_ratio = w - (float)(wstart);
 		float t_ratio = t - (float)(tstart);
@@ -146,7 +147,6 @@ extern "C" {
         const int output_size = num_rois * aligned_height * aligned_width * channels;
         cudaError_t err;
 
-	// printf("edw exw temp_scale %f \n", temp_scale);
         ROIAlignForward<<<(output_size + kThreadsPerBlock - 1) / kThreadsPerBlock, kThreadsPerBlock, 0, stream>>>(
 														  output_size, bottom_data, spatial_scale, temp_scale, height,
 														  width, time, channels, aligned_height, aligned_width,
