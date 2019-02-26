@@ -27,7 +27,7 @@ def validate_tcn(model, tcn_net, val_data, val_data_loader):
     max_dim = 1
     correct = 0
 
-    for step, data  in enumerate(data_loader):
+    for step, data  in enumerate(val_data_loader):
 
         # if step == 2:
         #     break
@@ -69,16 +69,15 @@ def validate_tcn(model, tcn_net, val_data, val_data_loader):
 
         output = tcn_net(features)
         output = F.log_softmax(output, 1)
-        print('output.shape :',output.shape)
-        _, cls = torch.max(output)
+        _, cls = torch.max(output,1)
 
         if cls == target :
             correct += 1
 
     print(' ------------------- ')
-    print('|  In {: >6} steps  |'.format(steps))
+    print('|  In {: >6} steps  |'.format(step))
     print('|                   |')
-    print('|  Correct : {: >6} |')
+    print('|  Correct : {: >6} |'.format(correct))
     print(' ------------------- ')
     
 
@@ -149,7 +148,6 @@ if __name__ == '__main__':
     #        JHMDB data inits         #
     ###################################
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print("Device being used:", device)
 
     dataset_folder = '/gpu-data2/sgal/JHMDB-act-detector-frames'
     splt_txt_path  = '/gpu-data2/sgal/splits'
@@ -191,10 +189,10 @@ if __name__ == '__main__':
     ###################################
     
     input_channels = 512
-    nhid = 25 ## number of hidden units per levels
-    levels = 8
+    nhid = 4 ## 25 ## number of hidden units per levels
+    levels = 3 ##8 
     channel_sizes = [nhid] * levels
-    kernel_size = 7
+    kernel_size = 2 # 7
     dropout = 0.05
 
     roi_align = RoIAlignAvg(7, 7, 16, 1.0/16.0, 1.0)
@@ -246,7 +244,7 @@ if __name__ == '__main__':
     #                         'weight_decay': False and 0.0005 or 0}]
     #         else:
     #             params += [{'params':[value],'lr':lr, 'weight_decay': 0.0005}]
-    optimizer = optim.SGD(tcn_net.parameters(), lr = 2e-3)
+    optimizer = optim.SGD(tcn_net.parameters(), lr = lr)
 
     # lr = lr * 0.1
     # optimizer = torch.optim.Adam(params)
@@ -265,7 +263,8 @@ if __name__ == '__main__':
         loss_temp = 0
 
         # start = time.time()
-        if ep % (lr_decay_step + 1) == 0:
+        if (ep +1) % (lr_decay_step ) == 0:
+            print('time to reduce learning rate ')
             adjust_learning_rate(optimizer, lr_decay_gamma)
             lr *= lr_decay_gamma
 
@@ -332,11 +331,11 @@ if __name__ == '__main__':
 
         print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
         ep+1,loss_temp/step, lr))
-
+        
         if ( ep + 1 ) % 5 == 0: # validation time
             val_data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                          temporal_transform=temporal_transform, json_file = boxes_file,
-                         split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
+                         split_txt_path=splt_txt_path, mode='val', classes_idx=cls2idx)
             val_data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
                                                       shuffle=True, num_workers=n_threads, pin_memory=True)
 

@@ -122,10 +122,10 @@ if __name__ == '__main__':
     n_classes = len(classes)
 
     input_channels = 512
-    nhid = 25 ## number of hidden units per levels
-    levels = 8
+    nhid = 4 # 25 ## number of hidden units per levels
+    levels = 3 ## 8
     channel_sizes = [nhid] * levels
-    kernel_size = 7
+    kernel_size = 2 # 7
     dropout = 0.05
 
     roi_align = RoIAlignAvg(7, 7, 16, 1.0/16.0, 1.0)
