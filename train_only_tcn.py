@@ -24,6 +24,7 @@ def validate_tcn(model, tcn_net, val_data, val_data_loader):
 
     ###
     top_part = model.module.layer4
+    tcn_avgpool = nn.AvgPool3d((16, 4, 4), stride=1)
     max_dim = 1
     correct = 0
 
@@ -60,10 +61,9 @@ def validate_tcn(model, tcn_net, val_data, val_data_loader):
             pooled_feat = roi_align(outputs,rois)
 
             fc7 = top_part(pooled_feat)
-            fc7 = fc7.mean(4)
-            fc7 = fc7.mean(3)
-            fc7 = fc7.mean(2)
-
+            fc7 = tcn_avgpool(fc7)
+            fc7 = fc7.view(-1)
+            
             features[0,:,int(i*2/sample_duration)] = fc7
 
         output = tcn_net(features)
@@ -228,6 +228,7 @@ if __name__ == '__main__':
     model.load_state_dict(model_data['state_dict'])
 
     top_part = nn.Sequential(model.module.layer4)
+    tcn_avgpool = nn.AvgPool3d((16, 4, 4), stride=1)
     max_dim = 1
 
     lr = 0.1
@@ -310,9 +311,8 @@ if __name__ == '__main__':
                 pooled_feat = roi_align(outputs,rois)
 
                 fc7 = top_part(pooled_feat)
-                fc7 = fc7.mean(4)
-                fc7 = fc7.mean(3)
-                fc7 = fc7.mean(2)
+                fc7 = tcn_avgpool(fc7)
+                fc7 = fc7.view(-1)
 
                 features[0,:,int(i*2/sample_duration)] = fc7
 
