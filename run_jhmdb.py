@@ -10,7 +10,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from resnet_3D import resnet34
-from jhmdb_dataset import Video
+from simple_dataset import Video
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
@@ -19,6 +19,67 @@ from resize_rpn import resize_rpn, resize_tube
 import pdb
 
 np.random.seed(42)
+def preprocess_data(device, clip, n_frames, gt_bboxes, h, w, sample_size, sample_duration, target, mode):
+
+
+    gt_bboxes[:,:,[0,2]] = gt_bboxes[:,:,[0,2]].clamp_(min=0, max=w.item())
+    gt_bboxes[:,:,[1,3]] = gt_bboxes[:,:,[1,3]].clamp_(min=0, max=h.item())
+
+    gt_bboxes = torch.round(gt_bboxes)
+    gt_bboxes_r = resize_rpn(gt_bboxes, h.item(),w.item(),sample_size)
+
+    ## add gt_bboxes_r class_int
+    target = target.unsqueeze(0).unsqueeze(2)
+    target = target.expand(1, gt_bboxes_r.size(1), 1).type_as(gt_bboxes)
+
+    gt_bboxes_r = torch.cat((gt_bboxes_r[:,:, :4],target),dim=2).type_as(gt_bboxes)
+    im_info_tube = torch.Tensor([[w,h,]*gt_bboxes_r.shape[0]]).to(device)
+
+    if mode == 'train' or mode == 'val':
+
+        if n_frames < 17:
+            indexes = [0]
+        else:
+            indexes = range(0, (n_frames -sample_duration  ), int(sample_duration/2))
+
+        gt_tubes = torch.zeros((gt_bboxes.size(0),len(indexes),7)).to(device)
+        # print('n_frames :',n_frames)
+        for i in indexes :
+            lim = min(i+sample_duration, (n_frames.item()-1))
+            # print('lim :', lim)
+            vid_indices = torch.arange(i,lim).long().to(device)
+            # print('vid_indices :',vid_indices)
+
+            gt_rois_seg = gt_bboxes_r[:, vid_indices]
+            gt_tubes_seg = create_tube(gt_rois_seg.unsqueeze(0),torch.Tensor([[sample_size,sample_size]]).type_as(gt_bboxes), sample_duration)
+            # print('gt_tubes_seg.shape :',gt_tubes_seg.shape)
+            gt_tubes_seg[:,:,2] = i
+            gt_tubes_seg[:,:,5] = i+sample_duration-1
+            gt_tubes[0,int(i/sample_duration*2)] = gt_tubes_seg
+
+
+            gt_tubes = torch.round(gt_tubes)
+
+    else:
+        gt_tubes =  create_tube(np.expand_dims(gt_bboxes_r,0), np.array([[sample_size,sample_size]]), n_frames)                
+
+    f_rois = torch.zeros((1,n_frames,5)).type_as(gt_bboxes) # because only 1 action can have simultaneously
+    b_frames = gt_bboxes_r.size(1)
+
+    f_rois[:,:b_frames,:] = gt_bboxes_r
+
+    # print('gt_tubes :',gt_tubes)
+    # if (n_frames < 16):
+    #     print(f_rois)
+
+    if (b_frames != n_frames):
+        print('\n LATHOSSSSSS\n', 'n_frames :', n_frames, ' b_frames :',b_frames)
+        exit(1)
+    # print('f_rois.shape :',f_rois.shape)
+    # print('gt_tubes :',gt_tubes)
+    # print(gt_bboxes)
+    return gt_tubes, f_rois
+
 
 if __name__ == '__main__':
 

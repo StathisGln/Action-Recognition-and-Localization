@@ -121,7 +121,9 @@ if __name__ == '__main__':
 
     n_classes = len(classes)
 
-    input_channels = 512
+    input_channels = 256
+    # input_channels = 512
+
     nhid = 4 # 25 ## number of hidden units per levels
     levels = 3 ## 8
     channel_sizes = [nhid] * levels
@@ -184,7 +186,8 @@ if __name__ == '__main__':
         else:
             indexes = range(0, (n_frames.data - sample_duration  ), int(sample_duration/2))
 
-        features = torch.zeros(1,512,len(indexes)).type_as(clips)
+        # features = torch.zeros(1,512,len(indexes)).type_as(clips)
+        features = torch.zeros(1,256,len(indexes)).type_as(clips)
         rois = torch.zeros(max_dim, 7).type_as(clips)
         for i in indexes:
 
@@ -192,21 +195,26 @@ if __name__ == '__main__':
             vid_indices = torch.arange(i,lim).long()
             rois[:,1:] = gt_tubes_r[:,int(i*2/sample_duration),:6]
             vid_seg = clips[:,:,vid_indices]
-
+            print('rois :', rois)
             outputs = model(vid_seg)
 
             pooled_feat = roi_align(outputs,rois)
+            # print('pooled_feat :', pooled_feat)
+            fc7 = pooled_feat.mean(4).mean(3).mean(2)
+            # fc7 = top_part(pooled_feat)
+            # fc7 = fc7.mean(4)
+            # fc7 = fc7.mean(3)
+            # fc7 = fc7.mean(2)
 
-            fc7 = top_part(pooled_feat)
-            fc7 = tcn_avgpool(fc7).view(-1)
             features[0,:,int(i*2/sample_duration)] = fc7
-
-        print('features.shape :',features.shape)
+        print('features :',features)
         output = tcn_net(features)
-        # output = F.log_softmax(output, 1)
 
+
+        output = F.log_softmax(output, 1)
+        
         _, cls = torch.max(output,1)
-        print('cls :',cls.item(), ' target :',target)
+        print('cls :', cls, ' target :',target)
         if cls == target :
             correct += 1
 

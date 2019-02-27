@@ -81,7 +81,8 @@ def preprocess_data(device, clip, n_frames, gt_bboxes, h, w, sample_size, sample
 def train_tcn(clips, target, sample_duration, n_frames, max_dim):
 
     indexes = range(0, (n_frames - sample_duration  ), int(sample_duration/2))
-    features = torch.zeros(1,512,len(indexes)).type_as(clips)
+    features = torch.zeros(1,256,len(indexes)).type_as(clips)
+
     rois = torch.zeros(max_dim, 7).type_as(clips)
     for i in indexes:
 
@@ -153,7 +154,8 @@ if __name__ == '__main__':
     #          TCN valiables          #
     ###################################
     
-    input_channels = 512
+    input_channels = 256
+
     nhid = 25 ## number of hidden units per levels
     levels = 8
     channel_sizes = [nhid] * levels
@@ -219,7 +221,8 @@ if __name__ == '__main__':
     print('n_actions.shape :',n_actions.shape)
 
     top_part = nn.Sequential(model.module.layer4)
-    tcn_avgpool = nn.AvgPool3d((16, 4, 4), stride=1)
+    tcn_avgpool = nn.AvgPool3d((16, 7, 7), stride=1)
+
     max_dim = 1
     ###################################
     #          Function here          #
@@ -227,7 +230,8 @@ if __name__ == '__main__':
 
 
     indexes = range(0, (n_frames - sample_duration  ), int(sample_duration/2))
-    features = torch.zeros(1,512,len(indexes)).type_as(clips)
+    features = torch.zeros(1,256,len(indexes)).type_as(clips)
+
     rois = torch.zeros(max_dim, 7).type_as(clips)
     for i in indexes:
 
@@ -240,15 +244,17 @@ if __name__ == '__main__':
 
         pooled_feat = roi_align(outputs,rois)
 
-        fc7 = top_part(pooled_feat)
-        fc7 = tcn_avgpool(fc7)
-        fc7 = fc7.view(-1)
+        # fc7 = top_part(pooled_feat)
         # fc7 = tcn_avgpool(fc7)
-        # print('pooled_feat.shape :',pooled_feat.shape)
-
+        print('pooled_feat.shape :',pooled_feat.shape)
+        fc7 = tcn_avgpool(pooled_feat)
         # print('fc7 :',fc7)
-        # print('fc7.shape :',fc7.shape)
-        # print('fc7.view(fc7.size(0),-1).shape :',fc7.view(fc7.size(0),-1).shape)
+        print('fc7.shape :',fc7.shape)
+        print('fc7.view(fc7.size(0),-1).shape :',fc7.view(fc7.size(0),-1).shape)
+        # fc7 = fc7.avgpool
+        # fc7 = 
+        # print('fc7
+        fc7 = fc7.view(-1)
 
         features[0,:,int(i*2/sample_duration)] = fc7
         print('features :',features )

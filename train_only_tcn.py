@@ -42,12 +42,14 @@ def validate_tcn(model, tcn_net, val_data, val_data_loader):
         gt_tubes_r, gt_rois = preprocess_data(device, clips, n_frames, boxes, h, w, sample_size, sample_duration,target, 'train')
 
 
+
         if n_frames < 17:
             indexes = [0]
         else:
             indexes = range(0, (n_frames.data - sample_duration  ), int(sample_duration/2))
 
-        features = torch.zeros(1,512,len(indexes)).type_as(clips)
+        # features = torch.zeros(1,512,len(indexes)).type_as(clips)
+        features = torch.zeros(1,256,len(indexes)).type_as(clips)
         rois = torch.zeros(max_dim, 7).type_as(clips)
         for i in indexes:
 
@@ -59,7 +61,6 @@ def validate_tcn(model, tcn_net, val_data, val_data_loader):
             outputs = model(vid_seg)
 
             pooled_feat = roi_align(outputs,rois)
-
             fc7 = top_part(pooled_feat)
             fc7 = tcn_avgpool(fc7)
             fc7 = fc7.view(-1)
@@ -187,7 +188,8 @@ if __name__ == '__main__':
     #          TCN valiables          #
     ###################################
     
-    input_channels = 512
+    # input_channels = 512
+    input_channels = 256
     nhid = 4 ## 25 ## number of hidden units per levels
     levels = 3 ##8 
     channel_sizes = [nhid] * levels
@@ -296,7 +298,8 @@ if __name__ == '__main__':
             else:
                 indexes = range(0, (n_frames.data - sample_duration  ), int(sample_duration/2))
 
-            features = torch.zeros(1,512,len(indexes)).type_as(clips)
+            # features = torch.zeros(1,512,len(indexes)).type_as(clips)
+            features = torch.zeros(1,256,len(indexes)).type_as(clips)
 
             rois = torch.zeros(max_dim, 7).type_as(clips)
 
