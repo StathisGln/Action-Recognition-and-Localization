@@ -5,20 +5,15 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from torch.autograd import Variable
-
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
 from simple_dataset import Video
-from net_utils import adjust_learning_rate
 from resize_rpn import resize_rpn, resize_tube
-from create_tubes_from_boxes import  create_tube
 from resnet_3D import resnet34
 from roi_align_3d.modules.roi_align  import RoIAlignAvg
 from tcn import TCN
-
-    
+from create_tubes_from_boxes import  create_tube
 
 def preprocess_data(device, clip, n_frames, gt_bboxes, h, w, sample_size, sample_duration, target, mode):
 
@@ -30,6 +25,7 @@ def preprocess_data(device, clip, n_frames, gt_bboxes, h, w, sample_size, sample
     gt_bboxes_r = resize_rpn(gt_bboxes, h.item(),w.item(),sample_size)
 
     ## add gt_bboxes_r class_int
+    print('target.shape  :',target.shape )
     target = target.unsqueeze(0).unsqueeze(2)
     target = target.expand(1, gt_bboxes_r.size(1), 1).type_as(gt_bboxes)
 
@@ -81,8 +77,40 @@ def preprocess_data(device, clip, n_frames, gt_bboxes, h, w, sample_size, sample
     # print(gt_bboxes)
     return gt_tubes, f_rois
 
-if __name__ == '__main__':
 
+def train_tcn(clips, target, sample_duration, n_frames, max_dim):
+
+    indexes = range(0, (n_frames - sample_duration  ), int(sample_duration/2))
+    features = torch.zeros(1,512,len(indexes)).type_as(clips)
+    rois = torch.zeros(max_dim, 7).type_as(clips)
+    for i in indexes:
+
+        lim = min(i+sample_duration, (n_frames))
+        vid_indices = torch.arange(i,lim).long()
+        rois[:,1:] = gt_tubes_r[:,int(i*2/sample_duration),:6]
+        vid_seg = clips[:,:,vid_indices]
+
+        outputs = model(vid_seg)
+
+        pooled_feat = roi_align(outputs,rois)
+
+        fc7 = top_part(pooled_feat)
+        fc7 = tcn_avgpool(fc7)
+        features[0,:,int(i*2/sample_duration)] = fc7
+        
+    output = tcn_net(features)
+    output = F.softmax(output, 1)
+    tcn_loss = F.cross_entropy(output, target.long())
+    print(tcn_loss)
+    return output, tcn_loss
+    
+
+
+if __name__ == '__main__':
+    
+    ###################################
+    #        JHMDB data inits         #
+    ###################################
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
@@ -94,13 +122,13 @@ if __name__ == '__main__':
     sample_duration = 16  # len(images)
 
     batch_size = 1
-    n_threads = 4
+    n_threads = 0
 
     # # get mean
     mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
 
     # generate model
-    classes = ['__background__', 'brush_hair', 'clap', 'golf', 'kick_ball', 'pour',
+    classes = ['brush_hair', 'clap', 'golf', 'kick_ball', 'pour',
                'push', 'shoot_ball', 'shoot_gun', 'stand', 'throw', 'wave',
                'catch','climb_stairs', 'jump', 'pick', 'pullup', 'run', 'shoot_bow', 'sit',
                'swing_baseball', 'walk' ]
@@ -115,26 +143,36 @@ if __name__ == '__main__':
 
     data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
-                 split_txt_path=splt_txt_path, mode='val', classes_idx=cls2idx)
-    data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
-                                              shuffle=True, num_workers=n_threads, pin_memory=True)
+                 split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
+    # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
+    #                                           shuffle=True, num_workers=n_threads, pin_memory=True)
 
     n_classes = len(classes)
 
+    ###################################
+    #          TCN valiables          #
+    ###################################
+    
     input_channels = 512
-    nhid = 4 # 25 ## number of hidden units per levels
-    levels = 3 ## 8
+    nhid = 25 ## number of hidden units per levels
+    levels = 8
     channel_sizes = [nhid] * levels
-    kernel_size = 2 # 7
+    kernel_size = 3
     dropout = 0.05
 
     roi_align = RoIAlignAvg(7, 7, 16, 1.0/16.0, 1.0)
     tcn_net = TCN(input_channels, n_classes, channel_sizes, kernel_size = kernel_size, dropout=dropout)
 
     tcn_net = tcn_net.to(device)
+    ######################################
+    #          Resnet Variables          #
+    ######################################
 
     sample_size = 112
     sample_duration = 16 #len(images)
+
+    batch_size = 16
+    n_threads = 1
 
     # get mean
     mean =  [114.7748, 107.7354, 99.4750]
@@ -147,71 +185,74 @@ if __name__ == '__main__':
     model = resnet34(num_classes=n_classes, shortcut_type=resnet_shortcut,
                      sample_size=sample_size, sample_duration=sample_duration,
                      last_fc=last_fc)
-    model = model.to(device)
-    # if torch.cuda.device_count() > 1:
-    #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
-
-    model = nn.DataParallel(model)
-    tcn_net = nn.DataParallel(tcn_net)
+    model = model.cuda()
+    model = nn.DataParallel(model, device_ids=None)
 
     model_data = torch.load('/gpu-data2/sgal/resnet-34-kinetics.pth')
     model.load_state_dict(model_data['state_dict'])
 
-    tcn_net_data = torch.load('./tcn_model.pwf')
-    tcn_net.load_state_dict(tcn_net_data)
+    ######################################
+    #          Code starts here          #
+    ######################################
+
+    # clips,  (h, w), target, boxes, n_frames = data[114]
+    clips,  (h, w), target, boxes, n_frames = data[122]
+    target = torch.Tensor([target]).to(device)
+    h = torch.Tensor([h]).to(device)
+    w = torch.Tensor([w]).to(device)
+    n_frames = torch.Tensor([n_frames]).long().to(device)
+    print('n_frames :',n_frames)
+    clips = clips.unsqueeze(0).to(device)
+    boxes = torch.from_numpy(boxes).unsqueeze(0).to(device)
+    n_actions = torch.Tensor([[1]]).to(device)
+    gt_tubes_r, gt_rois = preprocess_data(device, clips, n_frames, boxes, h, w, sample_size, sample_duration,target, 'train')
+    im_info = torch.Tensor([[sample_size, sample_size, n_frames]] ).to(device)    
+    print('n_actions :',n_actions)
+    print('clips :',clips.shape)
+    print('gt_tubes :',gt_tubes_r)
+    print('gt_tubes.shape :',gt_tubes_r.shape)
+
+    print('im_info :',im_info)
+    print('im_info.shape :',im_info.shape)
+
+    print('n_actions :',n_actions)
+    print('n_actions.shape :',n_actions.shape)
 
     top_part = nn.Sequential(model.module.layer4)
+    tcn_avgpool = nn.AvgPool3d((16, 4, 4), stride=1)
     max_dim = 1
-    tcn_avgpool = nn.MaxPool3d((16, 4, 4), stride=1)
-    correct = 0
-    for step, data  in enumerate(data_loader):
-
-        # if step == 2:
-        #     break
-
-        clips,  (h, w), target, boxes, n_frames = data
-
-        clips = clips.to(device)
-        boxes = boxes.to(device)
-        n_actions = torch.Tensor([[1]]).to(device)
-        im_info = torch.Tensor([[sample_size, sample_size, n_frames]] ).to(device)    
-        target = target.to(device)
-        gt_tubes_r, gt_rois = preprocess_data(device, clips, n_frames, boxes, h, w, sample_size, sample_duration,target, 'train')
+    ###################################
+    #          Function here          #
+    ###################################
 
 
-        if n_frames < 17:
-            indexes = [0]
-        else:
-            indexes = range(0, (n_frames.data - sample_duration  ), int(sample_duration/2))
+    indexes = range(0, (n_frames - sample_duration  ), int(sample_duration/2))
+    features = torch.zeros(1,512,len(indexes)).type_as(clips)
+    rois = torch.zeros(max_dim, 7).type_as(clips)
+    for i in indexes:
 
-        features = torch.zeros(1,512,len(indexes)).type_as(clips)
-        rois = torch.zeros(max_dim, 7).type_as(clips)
-        for i in indexes:
+        lim = min(i+sample_duration, (n_frames))
+        vid_indices = torch.arange(i,lim).long()
+        rois[:,1:] = gt_tubes_r[:,int(i*2/sample_duration),:6]
+        vid_seg = clips[:,:,vid_indices]
 
-            lim = min(i+sample_duration, (n_frames.item()))
-            vid_indices = torch.arange(i,lim).long()
-            rois[:,1:] = gt_tubes_r[:,int(i*2/sample_duration),:6]
-            vid_seg = clips[:,:,vid_indices]
+        outputs = model(vid_seg)
 
-            outputs = model(vid_seg)
+        pooled_feat = roi_align(outputs,rois)
 
-            pooled_feat = roi_align(outputs,rois)
+        fc7 = top_part(pooled_feat)
+        fc7 = tcn_avgpool(fc7)
+        fc7 = fc7.view(-1)
+        # fc7 = tcn_avgpool(fc7)
+        # print('pooled_feat.shape :',pooled_feat.shape)
 
-            fc7 = top_part(pooled_feat)
-            fc7 = tcn_avgpool(fc7).view(-1)
-            features[0,:,int(i*2/sample_duration)] = fc7
+        # print('fc7 :',fc7)
+        # print('fc7.shape :',fc7.shape)
+        # print('fc7.view(fc7.size(0),-1).shape :',fc7.view(fc7.size(0),-1).shape)
 
-        print('features.shape :',features.shape)
-        output = tcn_net(features)
-        # output = F.log_softmax(output, 1)
-
-        _, cls = torch.max(output,1)
-        print('cls :',cls.item(), ' target :',target)
-        if cls == target :
-            correct += 1
-
-    print(' ------------------- ')
-    print('|  In {: >6} steps  |'.format(step))
-    print('|                   |')
-    print('|  Correct : {: >6} |'.format(correct))
-    print(' ------------------- ')
+        features[0,:,int(i*2/sample_duration)] = fc7
+        print('features :',features )
+    output = tcn_net(features)
+    output = F.softmax(output, 1)
+    tcn_loss = F.cross_entropy(output, target.long())
+    print(tcn_loss)
