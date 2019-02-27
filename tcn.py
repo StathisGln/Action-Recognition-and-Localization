@@ -71,6 +71,8 @@ class TCN(nn.Module):
 
     def forward(self, inputs):
         """Inputs have to have dimension (N, C_in, L_in)"""
+        # print('inputs.shape :',inputs.shape)
         y1 = self.tcn(inputs)  # input should have dimension (N, C, L)
+        # print('y1.shape :',y1.shape)
         o = self.linear(y1[:, :, -1])
         return F.log_softmax(o, dim=1)

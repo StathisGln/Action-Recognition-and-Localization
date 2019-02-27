@@ -17,14 +17,12 @@ from create_tubes_from_boxes import  create_tube
 from resnet_3D import resnet34
 from roi_align_3d.modules.roi_align  import RoIAlignAvg
 from tcn import TCN
-
+from tcn_net import tcn_net
 # torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
-def validate_tcn(model, tcn_net, val_data, val_data_loader):
+def validate_tcn(model,  val_data, val_data_loader):
 
     ###
-    top_part = model.module.layer4
-    tcn_avgpool = nn.AvgPool3d((16, 4, 4), stride=1)
     max_dim = 1
     correct = 0
 
@@ -42,36 +40,7 @@ def validate_tcn(model, tcn_net, val_data, val_data_loader):
         gt_tubes_r, gt_rois = preprocess_data(device, clips, n_frames, boxes, h, w, sample_size, sample_duration,target, 'train')
 
 
-
-        if n_frames < 17:
-            indexes = [0]
-        else:
-            indexes = range(0, (n_frames.data - sample_duration  ), int(sample_duration/2))
-
-        features = torch.zeros(1,512,len(indexes)).type_as(clips)
-        # features = torch.zeros(1,256,len(indexes)).type_as(clips)
-        rois = torch.zeros(max_dim, 7).type_as(clips)
-        for i in indexes:
-
-            lim = min(i+sample_duration, (n_frames.item()))
-            vid_indices = torch.arange(i,lim).long()
-            rois[:,1:] = gt_tubes_r[:,int(i*2/sample_duration),:6]
-            rois[:,3] = rois[:,3] - i
-            rois[:,6] = rois[:,6] - i
-
-            vid_seg = clips[:,:,vid_indices]
-
-            outputs = model(vid_seg)
-
-            pooled_feat = roi_align(outputs,rois)
-            fc7 = top_part(pooled_feat)
-            fc7 = tcn_avgpool(fc7)
-            fc7 = fc7.view(-1)
-            
-            features[0,:,int(i*2/sample_duration)] = fc7
-
-        output = tcn_net(features)
-        output = F.log_softmax(output, 1)
+        output, tcn_loss = model( clips, target, gt_tubes_r, n_frames, max_dim=1)
         _, cls = torch.max(output,1)
 
         if cls == target :
@@ -157,10 +126,10 @@ if __name__ == '__main__':
     boxes_file     = '/gpu-data2/sgal/poses.json'
 
     sample_size = 112
-    sample_duration = 16  # len(images)
+    sample_duration = 8  # len(images)
 
     batch_size = 1
-    n_threads = 4
+    n_threads = 0
 
     # # get mean
     mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
@@ -191,70 +160,47 @@ if __name__ == '__main__':
     #          TCN valiables          #
     ###################################
     
-    input_channels = 512
-    # input_channels = 256
+    # input_channels = 512
+    input_channels = 256
     nhid = 25 ## number of hidden units per levels
-    levels = 8 
+    levels = 3
     channel_sizes = [nhid] * levels
-    kernel_size = 3 # 7
+    kernel_size = 2 # 7
     dropout = 0.05
 
-    roi_align = RoIAlignAvg(7, 7, 16, 1.0/16.0, 1.0)
-    tcn_net = TCN(input_channels, n_classes, channel_sizes, kernel_size = kernel_size, dropout=dropout).to(device)
-
-    # tcn_net = tcn_net.to(device)
     ######################################
-    #          Resnet Variables          #
+    #          TCN initilzation          #
     ######################################
 
-    sample_size = 112
-    sample_duration = 16 #len(images)
+    model = tcn_net(classes, sample_duration, sample_size, input_channels, channel_sizes, kernel_size=kernel_size, dropout=dropout)
 
-    # get mean
-    mean =  [114.7748, 107.7354, 99.4750]
+    model.create_architecture()
 
-    # generate model
-    last_fc = False
-    n_classes = 400
-    resnet_shortcut = 'A'
-    
-    model = resnet34(num_classes=n_classes, shortcut_type=resnet_shortcut,
-                     sample_size=sample_size, sample_duration=sample_duration,
-                     last_fc=last_fc).to(device)
-    # model = model.to(device)
-    # if torch.cuda.device_count() > 1:
-    #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
+    if torch.cuda.device_count() > 1:
+        print('Using {} GPUs!'.format(torch.cuda.device_count()))
 
-    model = nn.DataParallel(model)
-    tcn_net = nn.DataParallel(tcn_net)
+        model = nn.DataParallel(model)
 
-
-    model_data = torch.load('/gpu-data2/sgal/resnet-34-kinetics.pth')
-    model.load_state_dict(model_data['state_dict'])
-
-    top_part = nn.Sequential(model.module.layer4).to(device)
-    tcn_avgpool = nn.AvgPool3d((16, 4, 4), stride=1).to(device)
-    max_dim = 1
+    model.to(device)
 
     lr = 0.1
     lr_decay_step = 10
     lr_decay_gamma = 0.1
 
-    # params = []
-    # for key, value in dict(tcn_net.named_parameters()).items():
-    #     # print(key, value.requires_grad)
-    #     if value.requires_grad:
-    #         print('key :',key)
-    #         if 'bias' in key:
-    #             params += [{'params':[value],'lr':lr*(True + 1), \
-    #                         'weight_decay': False and 0.0005 or 0}]
-    #         else:
-    #             params += [{'params':[value],'lr':lr, 'weight_decay': 0.0005}]
-    optimizer = optim.SGD(tcn_net.parameters(), lr = lr)
+    params = []
+    for key, value in dict(model.named_parameters()).items():
+        # print(key, value.requires_grad)
+        if value.requires_grad:
+            print('key :',key)
+            if 'bias' in key:
+                params += [{'params':[value],'lr':lr*(True + 1), \
+                            'weight_decay': False and 0.0005 or 0}]
+            else:
+                params += [{'params':[value],'lr':lr, 'weight_decay': 0.0005}]
 
-    # lr = lr * 0.1
-    # optimizer = torch.optim.Adam(params)
-
+    lr = lr * 0.1
+    optimizer = torch.optim.Adam(params)
+    # optimizer = optim.SGD(tcn_net.parameters(), lr = lr)
 
     ######################################
     #          Code starts here          #
@@ -264,8 +210,7 @@ if __name__ == '__main__':
     
     for ep in range(epochs):
 
-        tcn_net.train()
-        model.eval()
+        model.train()
         loss_temp = 0
 
         # start = time.time()
@@ -296,48 +241,15 @@ if __name__ == '__main__':
             clips = Variable(clips)
             target = Variable(target)
 
-            if n_frames < 17:
-                indexes = [0]
-            else:
-                indexes = range(0, (n_frames.data - sample_duration  ), int(sample_duration/2))
-
-            features = torch.zeros(1,512,len(indexes)).type_as(clips)
-            # features = torch.zeros(1,256,len(indexes)).type_as(clips)
-
-            rois = torch.zeros(max_dim, 7).type_as(clips)
-
-            for i in indexes:
-
-                lim = min(i+sample_duration, (n_frames.item()))
-                vid_indices = torch.arange(i,lim).long()
-                rois[:,1:] = gt_tubes_r[:,int(i*2/sample_duration),:6]
-                rois[:,3] = rois[:,3] - i
-                rois[:,6] = rois[:,6] - i
-
-                vid_seg = clips[:,:,vid_indices]
-
-                outputs = model(vid_seg)
-                pooled_feat = roi_align(outputs,rois)
-
-                fc7 = top_part(pooled_feat)
-                fc7 = tcn_avgpool(fc7)
-                fc7 = fc7.view(-1)
-
-                features[0,:,int(i*2/sample_duration)] = fc7
-
-            optimizer.zero_grad()
-            output = tcn_net(features)
-            # output = F.log_softmax(output, 1)
-            tcn_loss = F.nll_loss(output, target)
+            out_prob, tcn_loss = model( clips, target, gt_tubes_r, n_frames, max_dim=1)
 
             loss = tcn_loss.mean()
 
-
-
             # backw\ard
-
+            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+
             loss_temp += loss.item()
 
         print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
@@ -350,9 +262,9 @@ if __name__ == '__main__':
             val_data_loader = torch.utils.data.DataLoader(val_data, batch_size=batch_size,
                                                       shuffle=True, num_workers=n_threads, pin_memory=True)
 
-            validate_tcn(model, tcn_net, val_data, val_data_loader)
+            validate_tcn(model, val_data, val_data_loader)
         if ( ep + 1 ) % 5 == 0:
-            torch.save(tcn_net.state_dict(), "tcn_model.pwf")
-    torch.save(tcn_net.state_dict(), "tcn_model.pwf")
+            torch.save(model.state_dict(), "tcn_model.pwf")
+    torch.save(model.state_dict(), "tcn_model.pwf")
 
 
