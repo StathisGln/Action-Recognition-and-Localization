@@ -23,7 +23,12 @@ from tcn import TCN
 def validate_tcn(model, tcn_net, val_data, val_data_loader):
 
     ###
+<<<<<<< HEAD
     # top_part = model.module.layer4
+=======
+    top_part = model.module.layer4
+    tcn_avgpool = nn.AvgPool3d((16, 4, 4), stride=1)
+>>>>>>> 4eee237a1f1163e1d49312895fc5acfee1cfd70a
     max_dim = 1
     correct = 0
 
@@ -62,12 +67,17 @@ def validate_tcn(model, tcn_net, val_data, val_data_loader):
             pooled_feat = roi_align(outputs,rois)
             fc7 = top_part(pooled_feat)
             fc7 = tcn_avgpool(fc7)
+<<<<<<< HEAD
 
             # fc7 = top_part(pooled_feat)
             # fc7 = fc7.mean(4)
             # fc7 = fc7.mean(3)
             # fc7 = fc7.mean(2)
 
+=======
+            fc7 = fc7.view(-1)
+            
+>>>>>>> 4eee237a1f1163e1d49312895fc5acfee1cfd70a
             features[0,:,int(i*2/sample_duration)] = fc7
 
         output = tcn_net(features)
@@ -232,8 +242,13 @@ if __name__ == '__main__':
     model_data = torch.load('/gpu-data2/sgal/resnet-34-kinetics.pth')
     model.load_state_dict(model_data['state_dict'])
 
+<<<<<<< HEAD
     # top_part = nn.Sequential(model.module.layer4)
     tcn_avgpool = nn.AvgPool3d((16, 7, 7), stride=1)
+=======
+    top_part = nn.Sequential(model.module.layer4)
+    tcn_avgpool = nn.AvgPool3d((16, 4, 4), stride=1)
+>>>>>>> 4eee237a1f1163e1d49312895fc5acfee1cfd70a
     max_dim = 1
 
     lr = 0.1
@@ -315,11 +330,18 @@ if __name__ == '__main__':
 
                 outputs = model(vid_seg)
                 pooled_feat = roi_align(outputs,rois)
+<<<<<<< HEAD
                 fc7 = tcn_avgpool(pooled_feat).view(-1)
                 # fc7 = top_part(pooled_feat)
                 # fc7 = fc7.mean(4)
                 # fc7 = fc7.mean(3)
                 # fc7 = fc7.mean(2)
+=======
+
+                fc7 = top_part(pooled_feat)
+                fc7 = tcn_avgpool(fc7)
+                fc7 = fc7.view(-1)
+>>>>>>> 4eee237a1f1163e1d49312895fc5acfee1cfd70a
 
                 features[0,:,int(i*2/sample_duration)] = fc7
 
