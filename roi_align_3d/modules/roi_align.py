@@ -28,7 +28,8 @@ class RoIAlignAvg(Module):
         # print('RoiAlignAvg ==> rois.shape :', rois.shape)
         x =  RoIAlignFunction(self.aligned_height+1, self.aligned_width+1,self.time_dim+1,
                                 self.spatial_scale)(features, rois )
-        return adaptive_avg_pool3d(x,(self.time_dim,self.aligned_height,self.aligned_width))
+        # print(x.shape)
+        return adaptive_max_pool3d(x,(self.time_dim,self.aligned_height,self.aligned_width))
 
 class RoIAlignMax(Module):
     def __init__(self, aligned_height, aligned_width, spatial_scale):

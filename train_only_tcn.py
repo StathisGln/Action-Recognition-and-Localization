@@ -23,7 +23,7 @@ from tcn import TCN
 def validate_tcn(model, tcn_net, val_data, val_data_loader):
 
     ###
-    top_part = model.module.layer4
+    # top_part = model.module.layer4
     max_dim = 1
     correct = 0
 
@@ -41,12 +41,14 @@ def validate_tcn(model, tcn_net, val_data, val_data_loader):
         gt_tubes_r, gt_rois = preprocess_data(device, clips, n_frames, boxes, h, w, sample_size, sample_duration,target, 'train')
 
 
+
         if n_frames < 17:
             indexes = [0]
         else:
             indexes = range(0, (n_frames.data - sample_duration  ), int(sample_duration/2))
 
-        features = torch.zeros(1,512,len(indexes)).type_as(clips)
+        # features = torch.zeros(1,512,len(indexes)).type_as(clips)
+        features = torch.zeros(1,256,len(indexes)).type_as(clips)
         rois = torch.zeros(max_dim, 7).type_as(clips)
         for i in indexes:
 
@@ -58,11 +60,13 @@ def validate_tcn(model, tcn_net, val_data, val_data_loader):
             outputs = model(vid_seg)
 
             pooled_feat = roi_align(outputs,rois)
-
             fc7 = top_part(pooled_feat)
-            fc7 = fc7.mean(4)
-            fc7 = fc7.mean(3)
-            fc7 = fc7.mean(2)
+            fc7 = tcn_avgpool(fc7)
+
+            # fc7 = top_part(pooled_feat)
+            # fc7 = fc7.mean(4)
+            # fc7 = fc7.mean(3)
+            # fc7 = fc7.mean(2)
 
             features[0,:,int(i*2/sample_duration)] = fc7
 
@@ -187,7 +191,8 @@ if __name__ == '__main__':
     #          TCN valiables          #
     ###################################
     
-    input_channels = 512
+    # input_channels = 512
+    input_channels = 256
     nhid = 4 ## 25 ## number of hidden units per levels
     levels = 3 ##8 
     channel_sizes = [nhid] * levels
@@ -227,7 +232,8 @@ if __name__ == '__main__':
     model_data = torch.load('/gpu-data2/sgal/resnet-34-kinetics.pth')
     model.load_state_dict(model_data['state_dict'])
 
-    top_part = nn.Sequential(model.module.layer4)
+    # top_part = nn.Sequential(model.module.layer4)
+    tcn_avgpool = nn.AvgPool3d((16, 7, 7), stride=1)
     max_dim = 1
 
     lr = 0.1
@@ -295,7 +301,8 @@ if __name__ == '__main__':
             else:
                 indexes = range(0, (n_frames.data - sample_duration  ), int(sample_duration/2))
 
-            features = torch.zeros(1,512,len(indexes)).type_as(clips)
+            # features = torch.zeros(1,512,len(indexes)).type_as(clips)
+            features = torch.zeros(1,256,len(indexes)).type_as(clips)
 
             rois = torch.zeros(max_dim, 7).type_as(clips)
 
@@ -308,11 +315,11 @@ if __name__ == '__main__':
 
                 outputs = model(vid_seg)
                 pooled_feat = roi_align(outputs,rois)
-
-                fc7 = top_part(pooled_feat)
-                fc7 = fc7.mean(4)
-                fc7 = fc7.mean(3)
-                fc7 = fc7.mean(2)
+                fc7 = tcn_avgpool(pooled_feat).view(-1)
+                # fc7 = top_part(pooled_feat)
+                # fc7 = fc7.mean(4)
+                # fc7 = fc7.mean(3)
+                # fc7 = fc7.mean(2)
 
                 features[0,:,int(i*2/sample_duration)] = fc7
 

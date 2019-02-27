@@ -144,7 +144,7 @@ extern "C" {
 			     const int aligned_width, const int time_dim, const float* bottom_rois, float* top_data,
 			     cudaStream_t stream) {
         const int kThreadsPerBlock = 1024;
-        const int output_size = num_rois * aligned_height * aligned_width * channels;
+        const int output_size = num_rois * time_dim * aligned_height * aligned_width * channels;
         cudaError_t err;
 
         ROIAlignForward<<<(output_size + kThreadsPerBlock - 1) / kThreadsPerBlock, kThreadsPerBlock, 0, stream>>>(
@@ -250,7 +250,7 @@ extern "C" {
 			      const int aligned_height, const int aligned_width, const int time_dim, const float* bottom_rois,
 			      float* bottom_diff, cudaStream_t stream) {
         const int kThreadsPerBlock = 1024;
-        const int output_size = num_rois * aligned_height * aligned_width * channels;
+        const int output_size = num_rois * time_dim * aligned_height * aligned_width * channels;
         cudaError_t err;
 
         ROIAlignBackward<<<(output_size + kThreadsPerBlock - 1) / kThreadsPerBlock, kThreadsPerBlock, 0, stream>>>(
