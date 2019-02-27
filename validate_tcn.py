@@ -209,12 +209,12 @@ if __name__ == '__main__':
             features[0,:,int(i*2/sample_duration)] = fc7
         print('features :',features)
         output = tcn_net(features)
-
+        _,cls_pre = torch.max(output, 1)
 
         output = F.log_softmax(output, 1)
         
         _, cls = torch.max(output,1)
-        print('cls :', cls, ' target :',target)
+        print('cls_pre :', cls_pre, ' cls :', cls, ' target :',target)
         if cls == target :
             correct += 1
 

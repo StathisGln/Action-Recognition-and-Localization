@@ -56,6 +56,9 @@ def validate_tcn(model, tcn_net, val_data, val_data_loader):
             lim = min(i+sample_duration, (n_frames.item()))
             vid_indices = torch.arange(i,lim).long()
             rois[:,1:] = gt_tubes_r[:,int(i*2/sample_duration),:6]
+            rois[:,3] = rois[:,3] - i
+            rois[:,6] = rois[:,6] - i
+
             vid_seg = clips[:,:,vid_indices]
 
             outputs = model(vid_seg)
@@ -308,6 +311,9 @@ if __name__ == '__main__':
                 lim = min(i+sample_duration, (n_frames.item()))
                 vid_indices = torch.arange(i,lim).long()
                 rois[:,1:] = gt_tubes_r[:,int(i*2/sample_duration),:6]
+                rois[:,3] = rois[:,3] - i
+                rois[:,6] = rois[:,6] - i
+
                 vid_seg = clips[:,:,vid_indices]
 
                 outputs = model(vid_seg)
