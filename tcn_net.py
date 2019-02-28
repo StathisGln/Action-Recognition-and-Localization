@@ -24,12 +24,13 @@ class tcn_net(nn.Module):
         # self.tcn_net =  TCN(input_channels, self.n_classes, channel_sizes, kernel_size = kernel_size, dropout=dropout)
         self.rnn_neurons = 128
         # self.act_rnn = Act_RNN(1,512,self.rnn_neurons,self.n_classes)
-        self.act_rnn = Act_RNN(1,256,self.rnn_neurons,self.n_classes)
+        # self.act_rnn = Act_RNN(1,256,self.rnn_neurons,self.n_classes)
         # self.tcn_avgpool = nn.AvgPool3d((16, 4, 4), stride=1)
         self.tcn_avgpool = nn.AvgPool3d((16, 7, 7), stride=1)
         self.roi_align = RoIAlignAvg(7, 7, 16, 1.0/16.0, 1.0)
-
-
+        # self.linear = nn.Linear(512,self.n_classes)
+        self.linear = nn.Linear(256,128)
+        self.prob = nn.Linear(128,self.n_classes)
     def forward(self, clips, target, gt_tubes, n_frames, max_dim=1):
         """Inputs have to have dimension (N, C_in, L_in)"""
 
@@ -43,7 +44,6 @@ class tcn_net(nn.Module):
 
         # features = torch.zeros(1,len(indexes),512).type_as(clips)
         features = torch.zeros(1,len(indexes),256).type_as(clips)
-
         rois = torch.zeros(max_dim, 7).type_as(clips)
 
         # for every sequence extract features
@@ -69,13 +69,15 @@ class tcn_net(nn.Module):
             fc7 = fc7.view(-1)
 
             features[0,int(i*2/self.sample_duration)] = fc7
-        print('features :',features)
-        self.act_rnn.hidden = torch.zeros(1,batch_size,self.rnn_neurons).cuda()
+        # print('features :',features)
 
-        output = self.act_rnn(features)
-        print(' output :',output)
+        features_mean =torch.mean(features,1)
+        feat = F.relu(self.linear(features_mean))
+        output = self.prob(feat)
+        # print('features_mean.shape :',features_mean.shape)
+        # print(' output :',output)
         output = F.log_softmax(output, 1)
-        tcn_loss = F.nll_loss(output, target.long())
+        tcn_loss = F.cross_entropy(output, target.long())
 
         if self.training:
             return output, tcn_loss
@@ -104,7 +106,7 @@ class tcn_net(nn.Module):
 
         self.base_model = nn.Sequential(model.module.conv1, model.module.bn1, model.module.relu,
           model.module.maxpool,model.module.layer1,model.module.layer2, model.module.layer3)
-        self.top_part = nn.Sequential(model.module.layer4)
+        # self.top_part = nn.Sequential(model.module.layer4)
 
         # Fix blocks
         for p in self.base_model[0].parameters(): p.requires_grad=False
@@ -124,5 +126,5 @@ class tcn_net(nn.Module):
             for p in m.parameters(): p.requires_grad=False
 
         self.base_model.apply(set_bn_fix)
-        self.top_part.apply(set_bn_fix)
+        # self.top_part.apply(set_bn_fix)
 

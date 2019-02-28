@@ -176,10 +176,10 @@ if __name__ == '__main__':
 
     model.create_architecture()
 
-    # if torch.cuda.device_count() > 1:
-    #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
+    if torch.cuda.device_count() > 1:
+        print('Using {} GPUs!'.format(torch.cuda.device_count()))
 
-    #     model = nn.DataParallel(model)
+        model = nn.DataParallel(model)
 
     model.to(device)
 
@@ -242,6 +242,7 @@ if __name__ == '__main__':
             target = Variable(target)
 
             out_prob, tcn_loss = model( clips, target, gt_tubes_r, n_frames, max_dim=1)
+
             loss = tcn_loss.mean()
 
             # backw\ard
