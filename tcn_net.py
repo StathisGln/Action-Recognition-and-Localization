@@ -43,7 +43,7 @@ class tcn_net(nn.Module):
 
         # features = torch.zeros(1,len(indexes),512).type_as(clips)
         # features = torch.zeros(1,len(indexes),256).type_as(clips)        
-        features = torch.zeros(1,3,256).type_as(clips)
+        features = torch.zeros(1,8,256).type_as(clips)
         rois = torch.zeros(max_dim, 7).type_as(clips)
 
         # for every sequence extract features
