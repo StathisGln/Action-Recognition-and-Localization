@@ -132,7 +132,7 @@ def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
     assert classes != (None), 'classes must not be None, Check dataset path'
     
     max_sim_actions = -1
-
+    max_frames = -1
     for idx, cls in enumerate(classes):
         
         class_path = os.path.join(dataset_path, cls)
@@ -160,7 +160,8 @@ def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
             video_path = os.path.join(dataset_path, cls, vid)
             n_frames = len(glob.glob(video_path+'/*.png'))
             begin_t = 1
-
+            if n_frames > max_frames:
+                max_frames = n_frames
             json_key = os.path.join(cls,vid)
             boxes = boxes_data[json_key]
             end_t = min(n_frames,len(boxes))
@@ -176,7 +177,8 @@ def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
 
             dataset.append(video_sample)
     print(len(dataset))
-    return dataset
+    print('max_frames :',max_frames)
+    return dataset, max_frames
 
 
 class Video(data.Dataset):
@@ -185,7 +187,7 @@ class Video(data.Dataset):
                  sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None):
 
         self.mode = mode
-        self.data = make_dataset(video_path, split_txt_path, json_file, self.mode)
+        self.data, max_frames = make_dataset(video_path, split_txt_path, json_file, self.mode)
 
         self.spatial_transform = spatial_transform
         self.temporal_transform = temporal_transform
@@ -194,7 +196,9 @@ class Video(data.Dataset):
         self.sample_size = sample_size
         self.json_file = json_file
         self.classes_idx = classes_idx
-        
+
+        self.max_time_dim = len(range(0,max_frames-self.sample_duration,int(self.sample_duration/2)))
+        print('self.max_time_dim :',self.max_time_dim)
     def __getitem__(self, index):
         """
         Args:

@@ -4,15 +4,18 @@ from ..functions.roi_align import RoIAlignFunction
 
 
 class RoIAlign(Module):
-    def __init__(self, aligned_height, aligned_width, spatial_scale):
+    # def __init__(self, aligned_height, aligned_width, spatial_scale):
+    def __init__(self, aligned_height, aligned_width, time_dim, spatial_scale, temp_scale=1.):
         super(RoIAlign, self).__init__()
 
         self.aligned_width = int(aligned_width)
         self.aligned_height = int(aligned_height)
+        self.time_dim = int(time_dim)
         self.spatial_scale = float(spatial_scale)
+        self.temp_scale = float(temp_scale)
 
     def forward(self, features, rois):
-        return RoIAlignFunction(self.aligned_height, self.aligned_width,
+        return RoIAlignFunction(self.aligned_height, self.aligned_width, self.time_dim,
                                 self.spatial_scale)(features, rois)
 
 class RoIAlignAvg(Module):

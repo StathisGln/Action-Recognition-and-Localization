@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from resnet_3D import resnet34
-from roi_align_3d.modules.roi_align  import RoIAlignAvg
+from roi_align_3d.modules.roi_align  import RoIAlignAvg, RoIAlign
 from tcn import TCN
 from act_rnn import Act_RNN
 
@@ -23,14 +23,13 @@ class tcn_net(nn.Module):
 
         # self.tcn_net =  TCN(input_channels, self.n_classes, channel_sizes, kernel_size = kernel_size, dropout=dropout)
         self.rnn_neurons = 128
-        # self.act_rnn = Act_RNN(1,512,self.rnn_neurons,self.n_classes)
-        # self.act_rnn = Act_RNN(1,256,self.rnn_neurons,self.n_classes)
         # self.tcn_avgpool = nn.AvgPool3d((16, 4, 4), stride=1)
         self.tcn_avgpool = nn.AvgPool3d((16, 7, 7), stride=1)
-        self.roi_align = RoIAlignAvg(7, 7, 16, 1.0/16.0, 1.0)
+        # self.roi_align = RoIAlignAvg(7, 7, 16, 1.0/16.0, 1.0)
+        self.roi_align = RoIAlign(7, 7, 16, 1.0/16.0, 1.0)
         # self.linear = nn.Linear(512,self.n_classes)
-        self.linear = nn.Linear(256,128)
-        self.prob = nn.Linear(128,self.n_classes)
+        self.conv1 = nn.Conv1d(256,256,kernel_size=3, stride=1, groups=256)
+        self.prob = nn.Linear(256,self.n_classes)
     def forward(self, clips, target, gt_tubes, n_frames, max_dim=1):
         """Inputs have to have dimension (N, C_in, L_in)"""
 
@@ -43,7 +42,8 @@ class tcn_net(nn.Module):
             indexes = range(0, (n_frames.data - self.sample_duration  ), int(self.sample_duration/2))
 
         # features = torch.zeros(1,len(indexes),512).type_as(clips)
-        features = torch.zeros(1,len(indexes),256).type_as(clips)
+        # features = torch.zeros(1,len(indexes),256).type_as(clips)        
+        features = torch.zeros(1,3,256).type_as(clips)
         rois = torch.zeros(max_dim, 7).type_as(clips)
 
         # for every sequence extract features
@@ -63,20 +63,19 @@ class tcn_net(nn.Module):
 
             # fc7 = self.top_part(pooled_feat)
             # fc7 = self.tcn_avgpool(fc7)
+            # print('fc7.shape :',pooled_feat.shape)
             fc7 = self.tcn_avgpool(pooled_feat)
             
             # print('fc7.shape :',fc7.shape)
             fc7 = fc7.view(-1)
 
             features[0,int(i*2/self.sample_duration)] = fc7
-        # print('features :',features)
-
-        features_mean =torch.mean(features,1)
-        feat = F.relu(self.linear(features_mean))
-        output = self.prob(feat)
-        # print('features_mean.shape :',features_mean.shape)
-        # print(' output :',output)
-        output = F.log_softmax(output, 1)
+        # print('features :',features.shape)
+        conv1_ret = self.conv1(features.permute(0,2,1))
+        conv1_ret = torch.mean(conv1_ret, 2)
+        feats = conv1_ret.view(conv1_ret.size(0),-1)
+        output = self.prob(feats)
+        output = F.softmax(output, 1)
         tcn_loss = F.cross_entropy(output, target.long())
 
         if self.training:
@@ -87,7 +86,12 @@ class tcn_net(nn.Module):
     def create_architecture(self):
 
         self._init_modules()
-        
+        self.conv1.weight.data.normal_(0, 0.01)
+        self.conv1.bias.data.zero_()
+        self.prob.weight.data.normal_(0, 0.01)
+        self.prob.bias.data.zero_()
+
+
     def _init_modules(self):
 
         last_fc = False
