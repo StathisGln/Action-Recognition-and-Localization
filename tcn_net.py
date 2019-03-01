@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from resnet_3D import resnet34
-from roi_align_3d.modules.roi_align  import RoIAlignAvg
+from roi_align_3d.modules.roi_align  import RoIAlignAvg, RoIAlign
 from tcn import TCN
 from act_rnn import Act_RNN
 
@@ -23,14 +23,11 @@ class tcn_net(nn.Module):
 
         # self.tcn_net =  TCN(input_channels, self.n_classes, channel_sizes, kernel_size = kernel_size, dropout=dropout)
         self.rnn_neurons = 128
-        # self.act_rnn = Act_RNN(1,512,self.rnn_neurons,self.n_classes)
-        # self.act_rnn = Act_RNN(1,256,self.rnn_neurons,self.n_classes)
-        # self.tcn_avgpool = nn.AvgPool3d((16, 4, 4), stride=1)
         self.tcn_avgpool = nn.AvgPool3d((16, 7, 7), stride=1)
-        self.roi_align = RoIAlignAvg(7, 7, 16, 1.0/16.0, 1.0)
+        self.roi_align = RoIAlign(7, 7, 16, 1.0/16.0, 1.0)
         # self.linear = nn.Linear(512,self.n_classes)
-        self.linear = nn.Linear(256,128)
-        self.prob = nn.Linear(128,self.n_classes)
+        self.conv1 = nn.Conv1d(256,256,kernel_size=1,stride=1,groups=256)
+        self.prob = nn.Linear(256,self.n_classes)
     def forward(self, clips, target, gt_tubes, n_frames, max_dim=1):
         """Inputs have to have dimension (N, C_in, L_in)"""
 
@@ -69,14 +66,18 @@ class tcn_net(nn.Module):
             fc7 = fc7.view(-1)
 
             features[0,int(i*2/self.sample_duration)] = fc7
-        # print('features :',features)
+        # print('features :',features.shape)
+        conv1_ret = self.conv1(features.permute(0,2,1))
+        # print('conv1_ret.shape :',conv1_ret.shape)
+        features_mean = torch.mean(conv1_ret,2)
+        # print('features_mean :',features_mean.shape)        
+        # features_mean =torch.mean(features,1)
 
-        features_mean =torch.mean(features,1)
-        feat = F.relu(self.linear(features_mean))
-        output = self.prob(feat)
+        # output = self.prob(self.linear(features_mean))
+        output = self.prob(features_mean)
         # print('features_mean.shape :',features_mean.shape)
         # print(' output :',output)
-        output = F.log_softmax(output, 1)
+        output = F.softmax(output, 1)
         tcn_loss = F.cross_entropy(output, target.long())
 
         if self.training:

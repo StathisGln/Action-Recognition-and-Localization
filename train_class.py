@@ -184,7 +184,7 @@ if __name__ == '__main__':
     model.to(device)
 
     lr = 0.1
-    lr_decay_step = 10
+    lr_decay_step = 15
     lr_decay_gamma = 0.1
 
     params = []
@@ -206,7 +206,7 @@ if __name__ == '__main__':
     #          Code starts here          #
     ######################################
 
-    epochs = 40
+    epochs = 60
     
     for ep in range(epochs):
 
