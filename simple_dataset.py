@@ -256,7 +256,7 @@ class Video(data.Dataset):
         clips = torch.zeros((self.max_time_dim,3,self.sample_duration,self.sample_size,self.sample_size)) # contains all the clips
         tmp_clip = torch.zeros(( self.sample_duration, 3,self.sample_size, self.sample_size))           # copy each clip before permute
         # print('before clips.shape :',clips.shape)
-        gt_tubes = np.zeros((self.max_time_dim,7))
+        gt_tubes = np.zeros((self.max_time_dim,1,7))
         gt_rois = np.zeros((self.max_time_dim,self.sample_duration,5))
 
         labels = np.array([[class_int]] * boxes_r.shape[0])
@@ -291,11 +291,11 @@ class Video(data.Dataset):
             gt_tubes_seg[:,:,2] = i
             gt_tubes_seg[:,:,5] = lim
             # print('gt_tubes_seg:',gt_tubes_seg.shape)
-            gt_tubes[int(i/self.sample_duration*2)] = gt_tubes_seg
+            gt_tubes[int(i/self.sample_duration*2),0] = gt_tubes_seg
 
         # print('gt_tubes :',gt_tubes)
         # print('clips.shape :',clips.shape)
-        im_info = torch.Tensor([self.sample_size, self.sample_size, n_frames] )
+        im_info = torch.Tensor([[self.sample_size, self.sample_size, n_frames] ]*self.max_time_dim )
         if self.mode == 'train':
             return clips, (h,w), target, gt_tubes, im_info, n_frames
         elif self.mode == 'val':
@@ -351,11 +351,12 @@ if __name__ == "__main__":
     #     if (n_frames != gt_bboxes.size(1)):
     #         print('probleeeemm', ' n_frames :',n_frames, ' gt_bboxes :',gt_bboxes.size(1))
     # clips, (h,w), target, gt_tubes,   n_frames = data[166] # 14 frames
-    clips, (h,w), target, gt_tubes,   n_frames = data[14]
+    clips, (h,w), target, gt_tubes, im_info,  n_frames = data[14]
     # if (n_frames != gt_bboxes.size(1)):
     #     print('probleeeemm', ' n_frames :',n_frames, ' gt_bboxes :',gt_bboxes.size(1))
     print('clips.shape :',clips.shape)
     print('gt_tubes :',gt_tubes)
+    print('gt_tubes :',gt_tubes.shape)
     # print('gt_bboxes :',gt_bboxes)
     # print('gt_bboxes :',gt_bboxes.shape)
     

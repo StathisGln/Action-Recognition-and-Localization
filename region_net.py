@@ -50,27 +50,6 @@ class _RPN(nn.Module):
 
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0
-        # self.keep=self.RPN_cls_score.weight.data.clone() # modify here
-        # self.init_rpn()
-        
-    # def init_rpn(self):
-
-    #     def normal_init(m, mean, stddev, truncated=False):
-    #         """
-    #         weight initalizer: truncated normal and random normal.
-    #         """
-    #         # x is a parameter
-    #         if truncated:
-    #             m.weight.data.normal_().fmod_(2).mul_(stddev).add_(mean) # not a perfect approximation
-    #         else:
-    #             m.weight.data.normal_(mean, stddev)
-    #             m.bias.data.zero_()
-
-    #     truncated = False
-    #     normal_init(self.RPN_Conv, 0, 0.01, truncated)
-    #     normal_init(self.RPN_cls_score, 0, 0.01, truncated)
-    #     normal_init(self.RPN_bbox_pred, 0, 0.001, truncated)
-
 
     @staticmethod
     def reshape(x, d):
@@ -119,7 +98,7 @@ class _RPN(nn.Module):
         if self.training:
 
             assert gt_boxes is not None
-
+            
             rpn_data = self.RPN_anchor_target((rpn_cls_score.data, gt_boxes, im_info, gt_rois, num_boxes, 16)) # time_limit = 16
 
             # print('rpn_cls_score.shape :',rpn_cls_score.shape) 

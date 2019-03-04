@@ -53,19 +53,23 @@ import cv2
 #     return ret
 def create_tube(boxes, im_info_3d, sample_duration):
 
+    # print('boxes.shape :',boxes.shape)
+    # print('boxes :',boxes)
     batch_size = boxes.size(0)
     n_actions = boxes.size(1)
-
+    # gt_tubes = torch.Tensor((batch_size, n_actions, 7)).type_as(boxes)
     t1 = torch.zeros(batch_size, n_actions).type_as(boxes)
     t2 = torch.zeros(batch_size, n_actions).type_as(boxes)
     labels = torch.zeros(batch_size, n_actions).type_as(boxes)
     for i in range(batch_size):
         for j in range(boxes.size(1)):
             k = boxes[i,j].nonzero()
+            # print(boxes[i,j])
             if k.nelement() == 0 :
                 continue
             else:
                 # print(k)
+                # print(k.shape)
                 t1[i,j] = k[0,0]
                 t2[i,j] = k[-1,0]
                 labels[i,j] = boxes[i,j,k[0,0],4]
@@ -88,7 +92,54 @@ def create_tube(boxes, im_info_3d, sample_duration):
     # print('x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(x1, y1, t1, x2, y2, t2))
     # print('shapes :x1 {} y1 {} t1 {} x2 {} y2 {} t2 {} labels {}'.format(
     #     x1.shape, y1.shape, t1.shape, x2.shape, y2.shape, t2.shape, labels.shape))
-    ret = torch.stack((x1, y1, t1, x2, y2, t2, labels)).permute(1,2,0)
+    ret = torch.stack((x1, y1, t1, x2, y2, t2, labels)).permute(1,2,0).type_as(boxes)
+
+    # print('ret.shape :',ret.shape)
+    # print('ret :',ret)
+    return ret
+
+
+def create_tube_numpy(boxes, im_info_3d, sample_duration):
+
+    batch_size = boxes.shape[0]
+    n_actions = boxes.shape[1]
+
+    t1 = np.zeros((batch_size, n_actions))
+    t2 = np.zeros((batch_size, n_actions))
+    labels = np.zeros((batch_size, n_actions))
+    # print('boxes.shape :',boxes.shape)
+    for i in range(batch_size):
+        for j in range(boxes.shape[1]):
+            k = boxes[i,j].nonzero()
+            # print('boxes :',boxes.tolist())
+            # print(k)
+            if k[0].size == 0 :
+                continue
+            else:
+                t1[i,j] = k[0][0]
+                t2[i,j] = k[0][-1]
+                # print('t1 :', t1, ' t2 :',t2)
+                labels[i,j] = boxes[i,j,k[0][0],4]
+
+    mins = np.min(boxes, 2)
+    x1 = mins[:, :, 0]
+    y1 = mins[:, :, 1]
+
+    maxs  = np.max(boxes, 2)
+
+    x2 = maxs[:, :, 2]
+    y2 = maxs[:, :, 3]
+    # print(im_info_3d)
+    for i in range(batch_size):
+        x1 = x1.clip(0, im_info_3d[i, 1]-1)
+        y1 = y1.clip(0, im_info_3d[i, 0]-1)
+        x2 = x2.clip(0, im_info_3d[i, 1]-1)
+        y2 = y2.clip(0, im_info_3d[i, 0]-1)
+
+    # print('x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(x1, y1, t1, x2, y2, t2))
+    # print('shapes :x1 {} y1 {} t1 {} x2 {} y2 {} t2 {} labels {}'.format(
+    #     x1.shape, y1.shape, t1.shape, x2.shape, y2.shape, t2.shape, labels.shape))
+    ret = np.stack((x1, y1, t1, x2, y2, t2, labels)).transpose(1,2,0)
                        
     # print('ret.shape :',ret.shape)
     # print('ret :',ret)

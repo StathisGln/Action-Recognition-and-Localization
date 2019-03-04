@@ -10,7 +10,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from resnet_3D import resnet34
-from jhmdb_dataset import Video
+from simple_dataset import Video
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     n_classes = len(classes)
 
     # Init action_net
-    model = Model(classes)
+    model = Model(classes, sample_duration, sample_size)
     model.create_architecture()
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
@@ -71,8 +71,9 @@ if __name__ == '__main__':
 
     model.to(device)
 
-    # clips, h, w, gt_tubes, n_actions = data[1451]
-    clips, (h, w), gt_tubes_r, gt_rois, n_actions, n_frames = data[144]
+
+    clips, (h,w), target, gt_tubes, im_info, n_frames = data[24]
+    # clips, (h,w), target, gt_tubes, im_info, n_frames = data[144]
 
     # clips = torch.stack((clips,clips),dim=0).to(device) 
 
@@ -84,33 +85,40 @@ if __name__ == '__main__':
     # clips = torch.stack((clips,clips),dim=0).to(device)
     # gt_tubes = torch.stack((gt_tubes_r,gt_tubes2_r),dim=0).to(device)
     # n_actions = torch.Tensor((n_actions,n_actions2)).to(device)
-    im_info = torch.Tensor([[sample_size, sample_size, n_frames]] ).to(device)
-    clips = clips.unsqueeze(0).to(device)
-    gt_tubes_r = gt_tubes_r.unsqueeze(0).to(device)
-    gt_rois = gt_rois.unsqueeze(0).to(device)
-    n_actions = n_actions.unsqueeze(0).to(device)
-    
-    print('n_actions :',n_actions)
-    print('clips :',clips.shape)
-    print('gt_tubes :',gt_tubes_r)
-    print('gt_tubes.shape :',gt_tubes_r.shape)
+    clips_t = clips.unsqueeze(0).to(device)
+    target_t = torch.Tensor([target]).unsqueeze(0).to(device)
+    gt_tubes_t = torch.from_numpy(gt_tubes).float().unsqueeze(0).to(device)
+    im_info_t = im_info.unsqueeze(0).to(device)
+    n_frames_t = torch.Tensor([n_frames]).long().unsqueeze(0).to(device)
+    num_boxes = torch.Tensor([[1],[1],[1]]).unsqueeze(0).to(device)
 
-    print('im_info :',im_info)
-    print('im_info.shape :',im_info.shape)
+    print('clips :',clips_t.shape)
+    print('clips.type() :',clips.type())
 
-    print('n_actions :',n_actions)
-    print('n_actions.shape :',n_actions.shape)
+    print('target_t :',target_t)
+    print('target_t.type() :',target_t.type())
+    print('target_t :',target_t.shape)
 
-    # rois,  bbox_pred, rpn_loss_cls, \
-    # rpn_loss_bbox,  act_loss_bbox, rois_label = model(clips,
-    #                                                   im_info,
-    #                                                   gt_tubes, None,
-    #                                                   n_actions)
+    print('gt_tubes :',gt_tubes_t)
+    print('gt_tubes.type() :',gt_tubes_t.type())
+    print('gt_tubes.shape :',gt_tubes_t.shape)
+
+    print('im_info :',im_info_t)
+    print('im_info.type() :',im_info.type())
+    print('im_info.shape :',im_info_t.shape)
+
+    print('n_frames_t :',n_frames_t)
+    print('n_frames_t.type() :',n_frames_t.type())
+    print('n_frames_t.shape :',n_frames_t.shape)
+
+    print('num_boxes :', num_boxes)
+    print('num_boxes.shape :', num_boxes.shape)
+
     print('**********Start**********')
-    ret = model(clips,
-                im_info,
-                gt_tubes_r, gt_rois,
-                n_actions)
+    ret = model(clips_t, target_t,
+                im_info_t,
+                gt_tubes_t, None,
+                n_frames_t, num_boxes, max_dim=1, phase=2)
 
     print('**********VGIKE**********')
     # print('rois.shape :',rois.shape)

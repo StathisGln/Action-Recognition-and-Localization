@@ -106,16 +106,19 @@ class ACT_net(nn.Module):
 
     def forward(self, im_data, im_info, gt_tubes, gt_rois, num_boxes):
 
-        # print('----------Inside----------')
+        print('----------Inside TPN net----------')
         batch_size = im_data.size(0)
         im_info = im_info.data
         if self.training:
             gt_tubes = gt_tubes.data
-            gt_rois =  gt_rois.data
+            # gt_rois =  gt_rois.data
             num_boxes = num_boxes.data
 
         # feed image data to base model to obtain base feature map
+        # print('im_data.shape :',im_data.shape)
+        # print('gt_tubes.shape :',gt_tubes.shape)
         base_feat = self.act_base(im_data)
+        # print('base_feat.shape :',base_feat.shape)
         # feed base feature map tp RPN to obtain rois
         rois, rpn_loss_cls, rpn_loss_bbox = self.act_rpn(base_feat, im_info, gt_tubes, None, num_boxes)
         # if it is training phrase, then use ground trubut bboxes for refining
@@ -150,7 +153,9 @@ class ACT_net(nn.Module):
         pooled_feat = self.act_roi_align(base_feat, rois_s.view(-1,7))
         # print('pooled_feat.shape :',pooled_feat.shape)
         # # feed pooled features to top model
+        print('pooled_feat.shape :', pooled_feat.shape)
         pooled_feat = self._head_to_tail(pooled_feat)
+        print('pooled_feat.shape :', pooled_feat.shape)
         n_rois = pooled_feat.size(0)
         # print('pooled_feat.shape :',pooled_feat.shape)
         # # compute bbox offset
@@ -185,9 +190,11 @@ class ACT_net(nn.Module):
             act_loss_bbox = _smooth_l1_loss(bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
 
         bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
+        # pooled_feat = pooled_feat.view(batch_size, rois.size(1),-1)
 
         if self.training:
-            return rois,  bbox_pred, pooled_feat, rpn_loss_cls, rpn_loss_bbox, act_loss_cls, act_loss_bbox, rois_label
+          rois_label = rois_label.view(batch_size, rois.size(1),-1)
+          return rois,  bbox_pred, pooled_feat, rpn_loss_cls, rpn_loss_bbox, act_loss_cls, act_loss_bbox, rois_label
           # return rois,  0, 0, 0, 0, 0, 0, 0, 0, 0,
         return rois,  bbox_pred, pooled_feat, None, None, None, None, None, 
 

@@ -13,44 +13,55 @@ def bbox_overlaps_batch_3d(tubes, tubes_curr):
     overlaps: (N, K) ndarray of overlap between boxes and query_boxes
     """
     batch_size = tubes_curr.size(0)
-
+    
     if tubes.dim() == 2:
-
         N = tubes.size(0)
         K = tubes_curr.size(1)
 
         # print('N {} K {}'.format(N,K))
+
+        tubes = tubes[:,1:7]
+        tubes_curr = tubes_curr[:,:,1:7]
+
+        # print('tubes :',tubes)
+        # print('tubes_curr :',tubes_curr)
         tubes = tubes.view(1,N,6).expand(batch_size, N, 6).contiguous()
-        tubes_curr = tubes_curr[:, :, :6].contiguous()
 
         tubes_curr_x = (tubes_curr[:, :, 3] - tubes_curr[:, :, 0] + 1)
         tubes_curr_y = (tubes_curr[:, :, 4] - tubes_curr[:, :, 1] + 1)
         tubes_curr_t  = (tubes_curr[:, :, 5] - tubes_curr[:, :, 2] + 1)
-
+        
+        # print('tubes_curr_x.shape :',tubes_curr_x)
+        # print('tubes_curr_y.shape :',tubes_curr_y)
         # print('tubes_curr_t.shape :',tubes_curr_t)
-        # print('tubes_curr_t.view(batch_size,1,K :',tubes_curr_t.view(batch_size,1,K))
 
-        tubes_curr_area_xy = (tubes_curr_x * tubes_curr_y )
-        tubes_curr_area_xy = tubes_curr_area_xy.view(batch_size, 1, K)
+        tubes_curr_area_xy = (tubes_curr_x * tubes_curr_y ).view(batch_size, 1, K)
+        # print('tubes_curr_area_xy :',tubes_curr_area_xy)
 
         tubes_boxes_x = (tubes[:, :, 3] - tubes[:, :, 0] + 1)
         tubes_boxes_y = (tubes[:, :, 4] - tubes[:, :, 1] + 1)
         tubes_boxes_t = (tubes[:, :, 5] - tubes[:, :, 2] + 1)
 
-        # print('tubes_boxes_t.shape :',tubes_boxes_t.shape)
-        # print('tubes_boxes_t.view(batch_size,1,K :',tubes_boxes_t.view(batch_size,N,1))
+        # print('tubes_boxes_x.shape :',tubes_boxes_x)
+        # print('tubes_boxes_y.shape :',tubes_boxes_y)
+        # print('tubes_boxes_t.shape :',tubes_boxes_t)
 
         tubes_area_xy = (tubes_boxes_x * tubes_boxes_y ).view(batch_size, N, 1)  # for 1 frame
-
+        # print('tubes_area_xy :',tubes_area_xy)
+        
         gt_area_zero = (tubes_curr_x == 1) & (tubes_curr_y == 1) & (tubes_curr_t == 1)
         tubes_area_zero = (tubes_boxes_x == 1) & (tubes_boxes_y == 1) & (tubes_boxes_t == 1)
 
         boxes = tubes.view(batch_size, N, 1, 6)
         boxes = boxes.expand(batch_size, N, K, 6)
 
+        # print('boxes :',boxes)
+
         query_boxes = tubes_curr.view(batch_size, 1, K, 6)
         query_boxes = query_boxes.expand(batch_size, N, K, 6)
 
+        # print('query_boxes :',query_boxes )
+        
         iw = (torch.min(boxes[:, :, :, 3], query_boxes[:, :, :, 3]) -
               torch.max(boxes[:, :, :, 0], query_boxes[:, :, :, 0]) + 1)
         iw[iw < 0] = 0
@@ -63,15 +74,17 @@ def bbox_overlaps_batch_3d(tubes, tubes_curr):
               torch.max(boxes[:, :, :, 2], query_boxes[:, :, :, 2]) + 1)
         it[it < 0] = 0
 
+        # print('iw :',iw)
+        # print('ih :',ih)
         # print('it.shape :',it.shape)
         ua_xy = tubes_area_xy + tubes_curr_area_xy - (iw * ih )
         overlaps_xy = iw * ih / ua_xy
 
-        
+        # print('overlaps_xy :',overlaps_xy)
         ua_t = tubes_boxes_t.view(batch_size,N,1) + tubes_curr_t.view(batch_size,1,K) - it
-        overlaps_t = it / ua_t
-
-        overlaps = overlaps_xy * overlaps_t
+        overlaps_t = it / ua_t 
+        # print('overlaps_t :',overlaps_t)
+        overlaps = overlaps_xy * (overlaps_t * 3) # 2.5 because time_dim reduces / 3
 
         overlaps.masked_fill_(gt_area_zero.view(
             batch_size, 1, K).expand(batch_size, N, K), 0)
@@ -146,40 +159,70 @@ def bbox_overlaps_batch_3d(tubes, tubes_curr):
 
     return overlaps
 
-def connect_tubes(tubes, tubes_curr, pooled_feats, rois_feats, rois_label, index): # tubes are the already connected and tubes_curr are the new
+def connect_tubes(tubes, tubes_curr, p_tubes, pooled_feats, rois_label, index): # tubes are the already connected and tubes_curr are the new
+    '''
+    tubes : a list containing the position in p_tubes for each tube, in each sequence
+    tubes_curr : proposed tubes according to last loop
+    p_tubes : all the proposed tubes
+    pooled_feats : 
+    rois_label : each tube label
+    index :
+    '''
+    # iou_thresh = 0.3
+    iou_thresh = 0.5
+    start = 0
+    # print('tubes_curr.shape :',tubes_curr.shape)
+    
+    if len(tubes) == 0: # first batch_size
+        start = 1
+        tubes = [[i] for i in zip([0] * tubes_curr.size(1), range(0,tubes_curr.size(1)))]
 
-    if len(tubes) == 0: # first time
-        return (tubes_curr.permute(1,0,2).cpu().tolist(), [[rois_feats[i]]  for i in range(rois_feats.size(0))])
-    iou_thresh = 0.3
-    tubes_last = [i[-1] for i in tubes]
-    tubes_curr_list = tubes_curr.permute(1,0,2).cpu().tolist()
+    # print('p_tubes[0] :',p_tubes[0])
+    for tb in range(start, tubes_curr.size(0)):
+    # for tb in range(start, 2):
 
-    tubes_curr[:,:,3] = tubes_curr[:,:,3]  + index
-    tubes_curr[:,:,6] = tubes_curr[:,:,6]  + index
+        ## firstly get last tubes
+        tubes_last = np.array([i[-1] for i in tubes])
+        # print('tubes_last :',tubes_last)
 
-    tubes_tensor = torch.Tensor(tubes_last).unsqueeze(0).type_as(tubes_curr)
-    overlaps = bbox_overlaps_batch_3d(tubes_tensor, tubes_curr)
+        last_tubes = torch.zeros(tubes_last.shape[0],8).type_as(p_tubes)
+        for j in range(tubes_last.shape[0]):
+            last_tubes[j] = p_tubes[tubes_last[j,0],tubes_last[j,1],:] # the last tubes
 
-    max_overlaps, max_index = torch.max(overlaps,2) # max_overlaps contains the most likely new tubes to be connected
-    max_overlaps = torch.where(max_overlaps > iou_thresh, max_overlaps, torch.zeros_like(max_overlaps).type_as(max_overlaps))
-    connect_indices = max_overlaps.nonzero() ## [:,1] # connect_indices says which pre tubes to connect
+        new_tubes = tubes_curr[tb]
+        overlaps = bbox_overlaps_batch_3d(last_tubes, new_tubes.unsqueeze(0))
 
-    if (connect_indices.nelement() == 0):
-        print('no connection')
-        return tubes, pooled_feats
+        max_overlaps, max_index = torch.max(overlaps,2) # max_overlaps contains the most likely new tubes to be connected
+        max_overlaps = torch.where(max_overlaps > iou_thresh, max_overlaps, torch.zeros_like(max_overlaps).type_as(max_overlaps))
+        connect_indices = max_overlaps.nonzero() ## [:,1] # connect_indices says which pre tubes to connect
 
-    connect_indices = connect_indices[:,1]
-    for i in connect_indices:
-        tubes[i] += [tubes_curr[0,max_index[0,i]].cpu().tolist()]
-        pooled_feats[i] += [rois_feats[max_index[0,i]]]
+        max_index_np = max_index[0].cpu().numpy()
+        poss_indices = np.arange(0,new_tubes.size(0))
+        rest_indice = np.where(np.isin(poss_indices,max_index_np)==False)
+        # print(rest_indice)
+        # print('max_index_np  :',max_index_np )
+        # print('connect_indices  :',connect_indices )
+        # print('connect_indices.shape  :',connect_indices.shape )
+        if (connect_indices.nelement() == 0):
+            print('no connection')
 
-    # for i in range(len(tubes_curr_list)):
-    #     print(tubes_curr_list[i])
-    #     if tubes_curr_list[i][0][7] > 0.5:
-    #         tubes += [tubes_curr_list[i]]
-    #         pooled_feats += [[rois_feats[i]]]
+        connect_indices = connect_indices[:,1]
+        
+        for i in connect_indices:
+            # print('max_index.shape :',max_index.shape)
+            # print('[tb, max_index[i.item()]] :',[tb, max_index[0,i.item()].item()])
+            # print('len(tubes) :',len(tubes))
+            # print('i.item() :',i.item())
+            tubes[i.item()] += [(tb, max_index[0,i.item()].item())]
             
-    return tubes, pooled_feats
+            # tubes[i] += [tubes_curr[0,max_index[0,i]].cpu().tolist()]
+        if rest_indice[0].size != 0:
+            for i in rest_indice[0]:
+                tubes += [[(tb, i)]]
+
+    # print('tubes :',tubes)
+    # print('len(tubes) :',len(tubes))
+    return tubes
 
 if __name__ == '__main__':
 
