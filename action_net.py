@@ -224,7 +224,7 @@ class ACT_net(nn.Module):
         model = model
         model = nn.DataParallel(model, device_ids=None)
 
-        self.model_path = '../temporal_localization/resnet-34-kinetics.pth'
+        self.model_path = '/gpu-data2/sgal/resnet-34-kinetics.pth'
         print("Loading pretrained weights from %s" %(self.model_path))
         model_data = torch.load(self.model_path)
         model.load_state_dict(model_data['state_dict'])
@@ -245,7 +245,7 @@ class ACT_net(nn.Module):
         for p in self.act_base[0].parameters(): p.requires_grad=False
         for p in self.act_base[1].parameters(): p.requires_grad=False
 
-        fixed_blocks = 3
+        fixed_blocks = 1
         if fixed_blocks >= 3:
           for p in self.act_base[6].parameters(): p.requires_grad=False
         if fixed_blocks >= 2:

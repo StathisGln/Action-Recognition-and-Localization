@@ -19,7 +19,6 @@ class RoIAlignFunction(Function):
         # print('self.rois.shape :',self.rois.shape)
         # print('self.time_dim :',self.time_dim)
         self.feature_size = features.size()
-        # print('features_size :',features.size())
         batch_size, num_channels, data_time, data_height, data_width = features.size()
         num_rois = rois.size(0)
         # print('rois :',rois)
@@ -54,22 +53,21 @@ class RoIAlignFunction(Function):
     def backward(self, grad_output):
         assert(self.feature_size is not None and grad_output.is_cuda)
 
-        batch_size, num_channels, data_height, data_width = self.feature_size
+        batch_size, num_channels, data_time, data_height, data_width = self.feature_size
 
-        grad_input = self.rois.new(batch_size, num_channels, data_height,
+        grad_input = self.rois.new(batch_size, num_channels, data_time, data_height,
                                   data_width).zero_()
-        if features.is_cuda:
-            roi_align.roi_align_backward_cuda(self.aligned_height,
-                                              self.aligned_width,
-                                              self.time_dim,
-                                              self.spatial_scale, self.temp_scale, grad_output,
-                                              self.rois, grad_input)
-        else:
-            roi_align.roi_align_backward(self.aligned_height,
-                                         self.aligned_width,
-                                         self.time_dim,
-                                         self.spatial_scale, self.temp_scale, grad_output,
-                                         self.rois, grad_input)
+        roi_align_3d.roi_align_backward_cuda(self.aligned_height,
+                                          self.aligned_width,
+                                          self.time_dim,
+                                          self.spatial_scale, self.temp_scale, grad_output,
+                                          self.rois, grad_input)
+        # else:
+        #     roi_align.roi_align_backward(self.aligned_height,
+        #                                  self.aligned_width,
+        #                                  self.time_dim,
+        #                                  self.spatial_scale, self.temp_scale, grad_output,
+        #                                  self.rois, grad_input)
 
         # print grad_input
 

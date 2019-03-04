@@ -132,13 +132,21 @@ def make_correct_ucf_dataset(dataset_path,  boxes_file, mode='train'):
     assert classes != (None), 'classes must not be None, Check dataset path'
 
     max_sim_actions = -1
+    max_frames = -1
     for vid, values in boxes_data.items():
         name = vid.split('/')[-1]
         n_frames = values['numf']
         annots = values['annotations']
         n_actions = len(annots)
+
+        # find max simultaneous actions
         if n_actions > max_sim_actions:
             max_sim_actions = n_actions
+
+        # find max number of frames
+        if n_frames > max_frames:
+            max_frames = n_frames
+
         rois = np.zeros((n_actions,n_frames,5))
         rois[:,:,4] = -1 
         cls = values['label']
@@ -164,7 +172,8 @@ def make_correct_ucf_dataset(dataset_path,  boxes_file, mode='train'):
 
     print('len(dataset) :',len(dataset))
     print('max_sim_actions :',max_sim_actions)
-    return dataset, max_sim_actions
+    print('max_frames :', max_frames)
+    return dataset, max_sim_actions, max_frames
 
 
 def make_sub_samples(video_path, sample_duration, step):
@@ -225,12 +234,12 @@ def make_dataset(dataset_path,  boxes_file, mode='train'):
 
 
 class Video(data.Dataset):
-    def __init__(self, video_path, frames_dur=8, 
+    def __init__(self, video_path, frames_dur=16, 
                  spatial_transform=None, temporal_transform=None, json_file=None,
                  sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None):
 
         self.mode = mode
-        self.data, self.max_sim_actions = make_correct_ucf_dataset(
+        self.data, self.max_sim_actions, max_frames = make_correct_ucf_dataset(
                     video_path, json_file, self.mode)
 
         self.spatial_transform = spatial_transform
@@ -240,6 +249,7 @@ class Video(data.Dataset):
         self.json_file = json_file
         self.classes_idx = classes_idx
 
+        self.tensor_dim = len(range(0, max_frames, int(sample_duration/2)))
     def __getitem__(self, index):
         """
         Args:

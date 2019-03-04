@@ -26,9 +26,9 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_folder = '/gpu-data/sgal/JHMDB-act-detector-frames'
-    splt_txt_path =  '/gpu-data/sgal/splits'
-    boxes_file = '../temporal_localization/poses.json'
+    dataset_folder = '/gpu-data2/sgal/JHMDB-act-detector-frames'
+    split_txt_path =  '/gpu-data2/sgal/splits'
+    boxes_file = '/gpu-data2/sgal/poses.json'
 
     sample_size = 112
     sample_duration = 16  # len(images)
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
-                 split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
+                 split_txt_path=split_txt_path, mode='train', classes_idx=cls2idx)
     # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
     #                                           shuffle=True, num_workers=n_threads, pin_memory=True)
 

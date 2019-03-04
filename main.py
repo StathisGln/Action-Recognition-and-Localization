@@ -187,16 +187,16 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
     print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
         epoch+1,loss_temp/step, lr))
 
-    return loss_temp
+    return model, loss_temp
 
 if __name__ == '__main__':
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_folder = '/gpu-data/sgal/JHMDB-act-detector-frames'
-    split_txt_path =  '/gpu-data/sgal/splits'
-    boxes_file = '../temporal_localization/poses.json'
+    dataset_folder = '/gpu-data2/sgal/JHMDB-act-detector-frames'
+    split_txt_path =  '/gpu-data2/sgal/splits'
+    boxes_file = '/gpu-data2/sgal/poses.json'
 
     sample_size = 112
     sample_duration = 16  # len(images)
@@ -224,7 +224,7 @@ if __name__ == '__main__':
                                  Normalize(mean, [1, 1, 1])])
     temporal_transform = LoopPadding(sample_duration)
 
-    lr = 0.01
+    lr = 0.1
     lr_decay_step = 10
     lr_decay_gamma = 0.1
     
@@ -252,7 +252,7 @@ if __name__ == '__main__':
     lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
 
-    epochs = 10
+    epochs = 100
     # epochs = 1
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
@@ -263,7 +263,7 @@ if __name__ == '__main__':
             lr *= lr_decay_gamma
 
 
-        training(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, batch_size, n_threads, lr)
+            model, loss = training(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, batch_size, n_threads, lr)
 
         # if (epoch + 1) % (5) == 0:
         #     validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, batch_size, n_threads)

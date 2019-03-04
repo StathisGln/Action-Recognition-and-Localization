@@ -146,15 +146,13 @@ def bbox_overlaps_batch_3d(tubes, tubes_curr):
 
     return overlaps
 
-def connect_tubes(tubes, tubes_curr, pooled_feats, rois_feats, index): # tubes are the already connected and tubes_curr are the new
+def connect_tubes(tubes, tubes_curr, pooled_feats, rois_feats, rois_label, index): # tubes are the already connected and tubes_curr are the new
 
     if len(tubes) == 0: # first time
         return (tubes_curr.permute(1,0,2).cpu().tolist(), [[rois_feats[i]]  for i in range(rois_feats.size(0))])
     iou_thresh = 0.3
     tubes_last = [i[-1] for i in tubes]
     tubes_curr_list = tubes_curr.permute(1,0,2).cpu().tolist()
-    # print('tubes :',tubes)
-    # print('tubes_last:',tubes_last)
 
     tubes_curr[:,:,3] = tubes_curr[:,:,3]  + index
     tubes_curr[:,:,6] = tubes_curr[:,:,6]  + index
