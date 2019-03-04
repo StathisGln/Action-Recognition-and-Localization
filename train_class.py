@@ -20,9 +20,10 @@ from tcn import TCN
 from tcn_net import tcn_net
 # torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
-def validate_tcn(model,  val_data, val_data_loader):
+def validate_tcn(model,  val_data, val_data_loader, n_classes):
 
     ###
+    model.eval()
     max_dim = 1
     correct = 0
 
@@ -30,21 +31,21 @@ def validate_tcn(model,  val_data, val_data_loader):
 
         # if step == 2:
         #     break
-        clips,  (h, w), target, boxes, n_frames = data
+        clips,  (h, w), target, gt_tubes, im_info, n_frames = data
+            
+        clips_t = clips.to(device)
+        gt_tubes_t = gt_tubes.to(device)
+        im_info_t = im_info.to(device)
+        n_frames_t = n_frames.to(device)
+        target_t = target.to(device)
+        out_prob, tcn_loss = model( clips_t, None, gt_tubes_t, n_frames, max_dim=1)
+        output = out_prob.view(-1, n_classes)
 
-        clips = clips.to(device)
-        boxes = boxes.to(device)
-        n_actions = torch.Tensor([[1]]).to(device)
-        im_info = torch.Tensor([[sample_size, sample_size, n_frames]] ).to(device)    
-        target = target.to(device)
-        gt_tubes_r, gt_rois = preprocess_data(device, clips, n_frames, boxes, h, w, sample_size, sample_duration,target, 'train')
-
-
-        output, tcn_loss = model( clips, target, gt_tubes_r, n_frames, max_dim=1)
         _, cls = torch.max(output,1)
 
-        if cls == target :
-            correct += 1
+        for i in range(len(target)):
+            if cls[i] == target_t[i] :
+                correct += 1
 
     print(' ------------------- ')
     print('|  In {: >6} steps  |'.format(step))
@@ -178,8 +179,8 @@ if __name__ == '__main__':
     ###################################
     
     lr = 0.1
-    lr_decay_step = 15
-    lr_decay_gamma = 0.1
+    lr_decay_step = 5
+    lr_decay_gamma = [0.1,1.,1.,0.1,1.,1.,1.,0.1,1.,1.]
 
     params = []
     for key, value in dict(model.named_parameters()).items():
@@ -192,7 +193,6 @@ if __name__ == '__main__':
             else:
                 params += [{'params':[value],'lr':lr, 'weight_decay': 0.0005}]
 
-    lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
     # optimizer = optim.SGD(tcn_net.parameters(), lr = lr)
 
@@ -204,17 +204,21 @@ if __name__ == '__main__':
     
     for ep in range(epochs):
 
+        print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(ep+1, epochs))
         model.train()
         loss_temp = 0
 
         # start = time.time()
         if (ep +1) % (lr_decay_step ) == 0:
-            print('time to reduce learning rate ')
-            adjust_learning_rate(optimizer, lr_decay_gamma)
-            lr *= lr_decay_gamma
+            print('(ep + 1) / 5:',int(((ep + 1) /5)-1))
+            lr_step = lr_decay_gamma[int(((ep + 1) /5)-1)]
+            
+            print('time to reduce learning rate :', lr_step)
+            adjust_learning_rate(optimizer, lr_step)
+            lr *= lr_step
 
 
-        print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(ep+1, epochs))
+       
         for step, data  in enumerate(data_loader):
 
             # if step == 2:
@@ -255,7 +259,7 @@ if __name__ == '__main__':
             val_data_loader = torch.utils.data.DataLoader(val_data, batch_size=batch_size,
                                                       shuffle=True, num_workers=n_threads, pin_memory=True)
 
-            validate_tcn(model, val_data, val_data_loader)
+            validate_tcn(model, val_data, val_data_loader, len(classes))
         if ( ep + 1 ) % 5 == 0:
             torch.save(model.state_dict(), "tcn_model.pwf")
     torch.save(model.state_dict(), "tcn_model.pwf")

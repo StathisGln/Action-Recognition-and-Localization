@@ -63,12 +63,14 @@ class tcn_net(nn.Module):
         
         output = self.prob(features_mean)
         # output = F.softmax(output, 0)
-        # print(' output :',output.shape)
-        tcn_loss = F.cross_entropy(output.unsqueeze(0), target.long())
+        # print(' output :',output)
+        if self.training :
+            tcn_loss = F.cross_entropy(output.unsqueeze(0), target.long())
 
         if self.training:
-            return output, tcn_loss
+            return output.unsqueeze(0), tcn_loss
 
+        output = F.softmax(output, 0)
         return output, None
         
     def create_architecture(self):
