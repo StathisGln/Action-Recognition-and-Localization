@@ -126,10 +126,10 @@ if __name__ == '__main__':
     boxes_file     = '/gpu-data2/sgal/poses.json'
 
     sample_size = 112
-    sample_duration = 8  # len(images)
+    sample_duration = 16  # len(images)
 
-    batch_size = 1
-    n_threads = 0
+    batch_size = 2
+    # n_threads = 4
 
     # # get mean
     mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
@@ -143,6 +143,23 @@ if __name__ == '__main__':
 
     cls2idx = {classes[i]: i for i in range(0, len(classes))}
 
+    ######################################
+    #          TCN initilzation          #
+    ######################################
+
+    model = tcn_net(classes, sample_duration, sample_size)
+
+    model.create_architecture()
+
+    if torch.cuda.device_count() > 1:
+        print('Using {} GPUs!'.format(torch.cuda.device_count()))
+
+        model = nn.DataParallel(model)
+
+    model.to(device)
+
+    #
+
     spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
                                  ToTensor(),
                                  Normalize(mean, [1, 1, 1])])
@@ -152,7 +169,7 @@ if __name__ == '__main__':
                  temporal_transform=temporal_transform, json_file = boxes_file,
                  split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
-                                              shuffle=True, num_workers=n_threads, pin_memory=True)
+                                              shuffle=True)
 
     n_classes = len(classes)
 
@@ -167,21 +184,6 @@ if __name__ == '__main__':
     channel_sizes = [nhid] * levels
     kernel_size = 2 # 7
     dropout = 0.05
-
-    ######################################
-    #          TCN initilzation          #
-    ######################################
-
-    model = tcn_net(classes, sample_duration, sample_size, input_channels, channel_sizes, kernel_size=kernel_size, dropout=dropout)
-
-    model.create_architecture()
-
-    # if torch.cuda.device_count() > 1:
-    #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
-
-    #     model = nn.DataParallel(model)
-
-    model.to(device)
 
     lr = 0.1
     lr_decay_step = 15
@@ -226,22 +228,22 @@ if __name__ == '__main__':
             # if step == 2:
             #     break
 
-            clips,  (h, w), target, boxes, n_frames = data
+            clips,  (h, w), target, gt_tubes, im_info, n_frames = data
             
-            clips = clips.to(device)
-            boxes = boxes.to(device)
-            n_actions = torch.Tensor([[1]]).to(device)
-            im_info = torch.Tensor([[sample_size, sample_size, n_frames]] ).to(device)    
-            target = target.to(device)
-            gt_tubes_r, gt_rois = preprocess_data(device, clips, n_frames, boxes, h, w, sample_size, sample_duration,target, 'train')
+            clips_t = clips.to(device)
+            target_t = target.to(device)
+            gt_tubes_t = gt_tubes.to(device)
+            im_info_t = im_info.to(device)
+            n_frames_t = n_frames.to(device)
+    #         gt_tubes_r, gt_rois = preprocess_data(device, clips, n_frames, boxes, h, w, sample_size, sample_duration,target, 'train')
 
-            ###################################
-            #          Function here          #
-            ###################################
-            clips = Variable(clips)
-            target = Variable(target)
+    #         ###################################
+    #         #          Function here          #
+    #         ###################################
+    #         clips = Variable(clips)
+    #         target = Variable(target)
 
-            out_prob, tcn_loss = model( clips, target, gt_tubes_r, n_frames, max_dim=1)
+            out_prob, tcn_loss = model( clips_t, target_t, gt_tubes_t, n_frames, max_dim=1)
             loss = tcn_loss.mean()
 
             # backw\ard
@@ -251,19 +253,19 @@ if __name__ == '__main__':
 
             loss_temp += loss.item()
 
-        print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
-        ep+1,loss_temp/step, lr))
+    #     print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
+    #     ep+1,loss_temp/step, lr))
         
-        if ( ep + 1 ) % 5 == 0: # validation time
-            val_data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
-                         temporal_transform=temporal_transform, json_file = boxes_file,
-                         split_txt_path=splt_txt_path, mode='val', classes_idx=cls2idx)
-            val_data_loader = torch.utils.data.DataLoader(val_data, batch_size=batch_size,
-                                                      shuffle=True, num_workers=n_threads, pin_memory=True)
+    #     if ( ep + 1 ) % 5 == 0: # validation time
+    #         val_data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
+    #                      temporal_transform=temporal_transform, json_file = boxes_file,
+    #                      split_txt_path=splt_txt_path, mode='val', classes_idx=cls2idx)
+    #         val_data_loader = torch.utils.data.DataLoader(val_data, batch_size=batch_size,
+    #                                                   shuffle=True, num_workers=n_threads, pin_memory=True)
 
-            validate_tcn(model, val_data, val_data_loader)
-        if ( ep + 1 ) % 5 == 0:
-            torch.save(model.state_dict(), "tcn_model.pwf")
-    torch.save(model.state_dict(), "tcn_model.pwf")
+    #         validate_tcn(model, val_data, val_data_loader)
+    #     if ( ep + 1 ) % 5 == 0:
+    #         torch.save(model.state_dict(), "tcn_model.pwf")
+    # torch.save(model.state_dict(), "tcn_model.pwf")
 
 

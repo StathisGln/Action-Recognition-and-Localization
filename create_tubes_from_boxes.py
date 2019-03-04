@@ -57,7 +57,6 @@ def create_tube(boxes, im_info_3d, sample_duration):
     # print('boxes :',boxes)
     batch_size = boxes.size(0)
     n_actions = boxes.size(1)
-
     # gt_tubes = torch.Tensor((batch_size, n_actions, 7)).type_as(boxes)
     t1 = torch.zeros(batch_size, n_actions).type_as(boxes)
     t2 = torch.zeros(batch_size, n_actions).type_as(boxes)
@@ -108,6 +107,7 @@ def create_tube_numpy(boxes, im_info_3d, sample_duration):
     t1 = np.zeros((batch_size, n_actions))
     t2 = np.zeros((batch_size, n_actions))
     labels = np.zeros((batch_size, n_actions))
+    # print('boxes.shape :',boxes.shape)
     for i in range(batch_size):
         for j in range(boxes.shape[1]):
             k = boxes[i,j].nonzero()
@@ -118,8 +118,9 @@ def create_tube_numpy(boxes, im_info_3d, sample_duration):
             else:
                 t1[i,j] = k[0][0]
                 t2[i,j] = k[0][-1]
+                # print('t1 :', t1, ' t2 :',t2)
                 labels[i,j] = boxes[i,j,k[0][0],4]
-                
+
     mins = np.min(boxes, 2)
     x1 = mins[:, :, 0]
     y1 = mins[:, :, 1]

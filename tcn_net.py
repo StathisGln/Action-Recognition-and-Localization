@@ -12,7 +12,7 @@ from act_rnn import Act_RNN
 
 
 class tcn_net(nn.Module):
-    def __init__(self, classes, sample_duration, sample_size, input_channels, channel_sizes, kernel_size, dropout):
+    def __init__(self, classes, sample_duration, sample_size):
         super(tcn_net, self).__init__()
 
         self.classes = classes
@@ -33,26 +33,25 @@ class tcn_net(nn.Module):
 
         ## init act_rnn hidden state_
         batch_size = clips.size(0)
-        
         if n_frames < 17:
-            indexes = [0]
+            n_clips = 1
         else:
-            indexes = range(0, (n_frames.data - self.sample_duration  ), int(self.sample_duration/2))
+            n_clips = len(range(0, n_frames-self.sample_duration, int(self.sample_duration/2)))
 
         # features = torch.zeros(1,len(indexes),512).type_as(clips)
-        features = torch.zeros(1,len(indexes),256).type_as(clips)
+        features = torch.zeros(1,n_clips,256).type_as(clips)
         rois = torch.zeros(max_dim, 7).type_as(clips)
 
         # for every sequence extract features
-        for i in indexes:
+        for i in range(n_clips):
 
-            lim = min(i+self.sample_duration, (n_frames.item()))
-            vid_indices = torch.arange(i,lim).long()
-            rois[:,1:] = gt_tubes[:,int(i*2/self.sample_duration),:6]
-            rois[:,3] = rois[:,3] - i
-            rois[:,6] = rois[:,6] - i
+            rois[:,1:] = gt_tubes[:,i,:6]
+            rois[:,3] = rois[:,3] - i * int(self.sample_duration/2) 
+            rois[:,6] = rois[:,6] - i * int(self.sample_duration/2)
 
-            vid_seg = clips[:,:,vid_indices]
+            # print('After rois :', rois, ' i :', i)
+            vid_seg = clips[:,i]
+            # print('vid_seg.shape :',vid_seg.shape)
 
             outputs = self.base_model(vid_seg)
             # print(' outputs.shape: ',outputs.shape)

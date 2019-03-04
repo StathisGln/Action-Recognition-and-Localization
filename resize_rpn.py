@@ -46,7 +46,7 @@ def resize_rpn_np(gt_rois, h,w, sample_size):
 
     top = int(max(0, np.round((sample_size - target_h) / 2)))
     left = int(max(0, np.round((sample_size - target_w) / 2)))
-
+    gt_rois_new = np.zeros(gt_rois.shape)
     # top = int(max(0, np.round((h - sample_size) / 2)))
     # left = int(max(0, np.round((w - sample_size) / 2)))
     # bottom = height - top - target_h
@@ -54,12 +54,12 @@ def resize_rpn_np(gt_rois, h,w, sample_size):
     # print('gt_rois.shape :',gt_rois.shape)
     # print('top {}, left {}'.format(top,left))
     # print('w {}, h {}, sample {} w.type {} h.type {}'.format(w, h, sample_size, w.type(), h.type()))
-    gt_rois[:,0] = (np.round(gt_rois[:,0]  * scale) + left)
-    gt_rois[:,1] = (np.round(gt_rois[:,1]  * scale) + top )
-    gt_rois[:,2] = (np.round(gt_rois[:,2]  * scale) + left)
-    gt_rois[:,3] = (np.round(gt_rois[:,3]  * scale) + top)
+    gt_rois_new[:,0] = (np.round(gt_rois[:,0]  * scale) + left)
+    gt_rois_new[:,1] = (np.round(gt_rois[:,1]  * scale) + top )
+    gt_rois_new[:,2] = (np.round(gt_rois[:,2]  * scale) + left)
+    gt_rois_new[:,3] = (np.round(gt_rois[:,3]  * scale) + top)
     # print('gt_Rois :',gt_rois)
-    return gt_rois
+    return gt_rois_new
 
 def resize_rpn_multirois(gt_rois, h,w, sample_size):
     '''
