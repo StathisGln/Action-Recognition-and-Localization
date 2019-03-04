@@ -129,7 +129,7 @@ if __name__ == '__main__':
     sample_duration = 16  # len(images)
 
     batch_size = 2
-    # n_threads = 4
+    n_threads = 2
 
     # # get mean
     mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
@@ -168,7 +168,7 @@ if __name__ == '__main__':
     data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
                  split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
-    data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
+    data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size, num_workers=n_threads,
                                               shuffle=True)
 
     n_classes = len(classes)
@@ -177,14 +177,6 @@ if __name__ == '__main__':
     #          TCN valiables          #
     ###################################
     
-    # input_channels = 512
-    input_channels = 256
-    nhid = 25 ## number of hidden units per levels
-    levels = 3
-    channel_sizes = [nhid] * levels
-    kernel_size = 2 # 7
-    dropout = 0.05
-
     lr = 0.1
     lr_decay_step = 15
     lr_decay_gamma = 0.1
@@ -253,19 +245,19 @@ if __name__ == '__main__':
 
             loss_temp += loss.item()
 
-    #     print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
-    #     ep+1,loss_temp/step, lr))
+        print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
+        ep+1,loss_temp/step, lr))
         
-    #     if ( ep + 1 ) % 5 == 0: # validation time
-    #         val_data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
-    #                      temporal_transform=temporal_transform, json_file = boxes_file,
-    #                      split_txt_path=splt_txt_path, mode='val', classes_idx=cls2idx)
-    #         val_data_loader = torch.utils.data.DataLoader(val_data, batch_size=batch_size,
-    #                                                   shuffle=True, num_workers=n_threads, pin_memory=True)
+        if ( ep + 1 ) % 5 == 0: # validation time
+            val_data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
+                         temporal_transform=temporal_transform, json_file = boxes_file,
+                         split_txt_path=splt_txt_path, mode='val', classes_idx=cls2idx)
+            val_data_loader = torch.utils.data.DataLoader(val_data, batch_size=batch_size,
+                                                      shuffle=True, num_workers=n_threads, pin_memory=True)
 
-    #         validate_tcn(model, val_data, val_data_loader)
-    #     if ( ep + 1 ) % 5 == 0:
-    #         torch.save(model.state_dict(), "tcn_model.pwf")
-    # torch.save(model.state_dict(), "tcn_model.pwf")
+            validate_tcn(model, val_data, val_data_loader)
+        if ( ep + 1 ) % 5 == 0:
+            torch.save(model.state_dict(), "tcn_model.pwf")
+    torch.save(model.state_dict(), "tcn_model.pwf")
 
 
