@@ -178,13 +178,17 @@ def connect_tubes(tubes, tubes_curr, p_tubes, pooled_feats, rois_label, index): 
         tubes = [[i] for i in zip([0] * tubes_curr.size(1), range(0,tubes_curr.size(1)))]
 
     # print('p_tubes[0] :',p_tubes[0])
+    # print('tubes :',tubes)
     for tb in range(start, tubes_curr.size(0)):
     # for tb in range(start, 2):
+
+        # if (index == 8 and tb==2):
+        #     break
 
         ## firstly get last tubes
         tubes_last = np.array([i[-1] for i in tubes])
         # print('tubes_last :',tubes_last)
-
+        # print('len(tubes_last) :', tubes_last.shape)
         last_tubes = torch.zeros(tubes_last.shape[0],8).type_as(p_tubes)
         for j in range(tubes_last.shape[0]):
             last_tubes[j] = p_tubes[tubes_last[j,0],tubes_last[j,1],:] # the last tubes
@@ -205,23 +209,20 @@ def connect_tubes(tubes, tubes_curr, p_tubes, pooled_feats, rois_label, index): 
         # print('connect_indices.shape  :',connect_indices.shape )
         if (connect_indices.nelement() == 0):
             print('no connection')
-
-        connect_indices = connect_indices[:,1]
+        else:
+            connect_indices = connect_indices[:,1]
         
         for i in connect_indices:
             # print('max_index.shape :',max_index.shape)
             # print('[tb, max_index[i.item()]] :',[tb, max_index[0,i.item()].item()])
             # print('len(tubes) :',len(tubes))
             # print('i.item() :',i.item())
-            tubes[i.item()] += [(tb, max_index[0,i.item()].item())]
+            tubes[i.item()] += [(tb+index, max_index[0,i.item()].item())]
             
             # tubes[i] += [tubes_curr[0,max_index[0,i]].cpu().tolist()]
         if rest_indice[0].size != 0:
             for i in rest_indice[0]:
-                tubes += [[(tb, i)]]
-
-    # print('tubes :',tubes)
-    # print('len(tubes) :',len(tubes))
+                tubes += [[(tb+index, i)]]
     return tubes
 
 if __name__ == '__main__':

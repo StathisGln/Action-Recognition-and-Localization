@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import glob
-
+from functools import reduce
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -64,8 +64,8 @@ class Model(nn.Module):
 
         f_tubes = []
         for step, dt in enumerate(data_loader):
-            if step == 1:
-                return -1
+            # if step == 2:
+            #     return -1
             clips,  (h, w),  gt_tubes, gt_rois, im_info, n_acts = dt
             clips_ = clips.to(device)
             gt_tubes_ = gt_tubes.to(device)
@@ -94,35 +94,18 @@ class Model(nn.Module):
             print('p_tubes.type() :',p_tubes.type())
             print('tubes.type() :',tubes.type())
             print('----------Connect TUBEs----------')
-            tubes = connect_tubes(f_tubes,tubes, p_tubes, pooled_f, rois_label, step)
-        return 0
+            f_tubes = connect_tubes(f_tubes,tubes, p_tubes, pooled_f, rois_label, step*batch_size)
+            
 
-        # for i in indexes:
-
-        #     lim = min(i+self.sample_duration, (n_frames))
-        #     vid_indices = torch.arange(i,lim).long()
-
-        #     vid_seg = input_video[:,:,vid_indices]
-        #     gt_rois_seg = gt_rois[:,:,vid_indices]
-        #     ## TODO remove that and just filter gt_tubes
-        #     gt_tubes_seg = create_tube(gt_rois_seg, im_info, 16)
-        #     # print('gt_tubes_seg.shape :',gt_tubes_seg.shape)
-        #     # print('gt_tubes_seg :',gt_tubes_seg)
-        #     # print('gt_tubes :',gt_tubes)
-        #     ## run ACT_net
-        #     rois,  bbox_pred, rois_feat, \
-        #     rpn_loss_cls,  rpn_loss_bbox, \
-        #     act_loss_cls,  act_loss_bbox, rois_label = self.act_net(vid_seg,
-        #                                                             im_info,
-        #                                                             gt_tubes_seg,
-        #                                                             gt_rois_seg,
-        #                                                             num_boxes)
-        #     # print('rois :', rois)
-        #     tubes, pooled_feats = connect_tubes(tubes,rois, pooled_feats, rois_feat, rois_label, i)
-
-        # ###################################
-        # #           Time for TCN          #
-        # ###################################
+        print('len(tubes) :',len(tubes))
+        max_seq = reduce(lambda x, y: y if len(y) > len(x) else x, f_tubes)
+        max_length = len(max_seq)
+        print('max_seq :',max_seq)
+        print('max_length :',max_length)
+        
+        # ######################################
+        # #           Time for Linear          #
+        # ######################################
 
         # # classification probability
         # cls_prob = torch.zeros((len(tubes),self.n_classes)).type_as(input_video)
