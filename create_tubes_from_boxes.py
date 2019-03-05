@@ -98,6 +98,77 @@ def create_tube(boxes, im_info_3d, sample_duration):
     # print('ret :',ret)
     return ret
 
+def create_tube_from_tubes(boxes):
+
+    mins, _ = torch.min(boxes, 0)
+    x1 = mins[0]
+    y1 = mins[1]
+    t1 = mins[2]
+
+    maxs, _ = torch.max(boxes, 0)
+    x2 = maxs[3]
+    y2 = maxs[4]
+    t2 = maxs[5]
+    
+    # print('x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(x1, y1, t1, x2, y2, t2))
+    # print('shapes :x1 {} y1 {} t1 {} x2 {} y2 {} t2 {} labels {}'.format(
+    #     x1.shape, y1.shape, t1.shape, x2.shape, y2.shape, t2.shape, labels.shape))
+    ret = torch.stack((x1, y1, t1, x2, y2, t2)).unsqueeze(0).type_as(boxes)
+
+    return ret
+
+
+def create_video_tube_numpy(boxes):
+
+    print('boxes.shape :',boxes.shape)
+    n_actions = boxes.shape[0]
+
+    boxes[np.where(boxes == -1)] = 0
+
+    t1 = np.zeros(( n_actions), dtype=np.int)
+    t2 = np.zeros(( n_actions), dtype=np.int)
+    x1 = np.zeros(( n_actions), dtype=np.int)
+    y1 = np.zeros(( n_actions), dtype=np.int)
+    x2 = np.zeros(( n_actions), dtype=np.int)
+    y2 = np.zeros(( n_actions), dtype=np.int)
+    labels = np.zeros(( n_actions))
+    # print('boxes.shape :',boxes.shape)
+    for j in range(boxes.shape[0]):
+        k = boxes[j].nonzero()
+        # print('boxes :',boxes[j])
+        # print(k)
+        if k[0].size == 0 :
+            continue
+        else:
+            t1[j] = k[0][0]
+            t2[j] = k[0][-1]
+            labels[j] = boxes[j,k[0][0],4]
+            # print('t1[j] :',t1[j])
+            # print('t2[j] :',t2[j])
+            # print('boxes[j, t1[j]:t2[j]+1] :',boxes[j, t1[j]:t2[j]+1])
+            mins = np.min(boxes[j, t1[j]:t2[j]+1], 0)
+            x1[j] = mins[ 0]
+            y1[j] = mins[ 1]
+
+            maxs = np.max(boxes[j, t1[j]:t2[j]+1], 0)
+            x2[j] = maxs[ 2]
+            y2[j] = maxs[ 3]
+
+    # x1 = x1.clip(0, w-1)
+    # y1 = y1.clip(0, h-1)
+    # x2 = x2.clip(0, w-1)
+    # y2 = y2.clip(0, h-1)
+    # t1 = t1.clip(0, sample_duration)
+    # t2 = t2.clip(0, sample_duration)
+    print('x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(x1, y1, t1, x2, y2, t2))
+    print('shapes :x1 {} y1 {} t1 {} x2 {} y2 {} t2 {} labels {}'.format(
+        x1.shape, y1.shape, t1.shape, x2.shape, y2.shape, t2.shape, labels.shape))
+    ret = np.stack((x1, y1, t1, x2, y2, t2, labels)).transpose(1,0)
+                       
+    print('ret.shape :',ret.shape)
+    print('ret :',ret)
+    return ret
+
 
 def create_tube_numpy(boxes, im_info_3d, sample_duration):
 

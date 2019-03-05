@@ -15,6 +15,7 @@ from create_tubes_from_boxes import create_tube_list
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
+from resize_rpn import resize_boxes, resize_tube
 
 np.random.seed(42)
 
@@ -182,7 +183,8 @@ def make_correct_ucf_dataset(dataset_path,  boxes_file, mode='train'):
 
 def prepare_samples (video_path, boxes, sample_duration, step):
     dataset = []
-
+    print('sample_duration :',sample_duration)
+    print('step :',step)
     # with open(boxes_file, 'rb') as fp:
     #     boxes_data = pickle.load(fp)
 
@@ -209,27 +211,6 @@ def prepare_samples (video_path, boxes, sample_duration, step):
     print('len(dataset) :',len(dataset))
     return dataset, n_actions, n_frames
 
-def make_sub_samples(video_path, sample_duration, step):
-    dataset = []
-
-    n_frames = len(os.listdir(video_path))
-
-    begin_t = 1
-    end_t = n_frames
-    sample = {
-        'video': video_path,
-        'segment': [begin_t, end_t],
-        'n_frames': n_frames,
-    }
-
-    for i in range(1, (n_frames - sample_duration + 1), step):
-        sample_i = copy.deepcopy(sample)
-        sample_i['frame_indices'] = list(range(i, i + sample_duration))
-        sample_i['segment'] = torch.IntTensor([i, i + sample_duration - 1])
-        dataset.append(sample_i)
-    print('len(dataset) :',len(dataset))
-    return dataset
-
 
 def make_dataset(dataset_path, boxes_file):
     dataset = []
@@ -252,7 +233,8 @@ def make_dataset(dataset_path, boxes_file):
             n_frames = values['numf']
             annots = values['annotations']
             n_actions = len(annots)
-
+            # # pos 0 --> starting frame, pos 1 --> ending frame
+            # s_e_fr = np.zeros((n_actions, 2)) 
             rois = np.zeros((n_actions,n_frames,5))
             rois[:,:,4] = -1 
 
@@ -260,6 +242,8 @@ def make_dataset(dataset_path, boxes_file):
                 sample = annots[k]
                 s_frame = sample['sf']
                 e_frame = sample['ef']
+                # s_e_fr[k,0] = s_frame
+                # s_e_fr[k,1] = e_frame
                 s_label = sample['label']
                 boxes   = sample['boxes']
                 rois[k,s_frame:e_frame,:4] = boxes
@@ -269,7 +253,8 @@ def make_dataset(dataset_path, boxes_file):
                 'video': video_path,
                 'n_actions' : n_actions,
                 'boxes' : rois,
-                'n_frames' : n_frames
+                'n_frames' : n_frames,
+                # 's_e_fr' : s_e_fr
             }
             dataset.append(sample_i)
 
@@ -287,18 +272,14 @@ class video_names(data.Dataset):
     def __getitem__(self, index):
 
         vid_name = self.data[index]['video']
-        if 'PoleVault/v_PoleVault_g06_c02' == vid_name :
-            print('index :',index)
         n_persons = self.data[index]['n_actions']
         boxes = self.data[index]['boxes']
         n_frames = self.data[index]['n_frames']
+        # s_e_fr = self.data[index]['s_e_fr']
         boxes_lst = boxes.tolist()
         rois_fr = [[z+[j] for j,z in enumerate(boxes_lst[i])] for i in range(len(boxes_lst))]
         rois_gp =[[[list(g),i] for i,g in groupby(w, key=lambda x: x[:][4])] for w in rois_fr] # [person, [action, class]
 
-        # print('boxes :',boxes.shape)
-        # print(len(rois_gp))
-        # print('n_frames :',n_frames)
         new_rois = []
         for i in rois_gp:
             # print(len(i))
@@ -322,12 +303,12 @@ class video_names(data.Dataset):
 class single_video(data.Dataset):
     def __init__(self, dataset_folder, video_path, frames_dur=16, sample_size=112,
                  spatial_transform=None, temporal_transform=None, boxes=None,
-                 sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None):
+                 get_loader=get_default_video_loader, mode='train', classes_idx=None):
 
         self.mode = mode
         self.dataset_folder = dataset_folder
         self.data, self.n_actions, n_frames = prepare_samples(
-                    video_path, boxes, sample_duration, int(sample_duration/2))
+                    video_path, boxes, frames_dur, int(frames_dur/2))
 
         self.spatial_transform = spatial_transform
         self.temporal_transform = temporal_transform
@@ -347,6 +328,7 @@ class single_video(data.Dataset):
         name = self.data[index]['video_name']   # video path
         path = self.data[index]['video_path']
         rois = self.data[index]['boxes']
+
         n_frames = self.data[index]['n_frames']
         frame_indices = self.data[index]['frame_indices']
         abs_path = os.path.join(self.dataset_folder, path)
@@ -367,7 +349,10 @@ class single_video(data.Dataset):
         rois_sample_tensor = rois_Tensor[:,rois_indx,:]
         rois_sample_tensor[:,:,2] = rois_sample_tensor[:,:,0] + rois_sample_tensor[:,:,2]
         rois_sample_tensor[:,:,3] = rois_sample_tensor[:,:,1] + rois_sample_tensor[:,:,3]
-        rois_sample = rois_sample_tensor.tolist()
+        # print('rois_sample_tensor :',rois_sample_tensor)
+        rois_sample_tensor_r = resize_boxes(rois_sample_tensor, h,w,self.sample_size)
+        # print('rois_sample_tensor_r :',rois_sample_tensor_r)
+        rois_sample = rois_sample_tensor_r.tolist()
 
         rois_fr = [[z+[j] for j,z in enumerate(rois_sample[i])] for i in range(len(rois_sample))]
         rois_gp =[[[list(g),i] for i,g in groupby(w, key=lambda x: x[:][4])] for w in rois_fr] # [person, [action, class]
@@ -388,7 +373,7 @@ class single_video(data.Dataset):
             ret_tubes = torch.zeros(self.n_actions,7)
             n_acts = 0
         else:
-            final_rois = torch.zeros((num_actions,16,5)) # num_actions x [x1,y1,x2,y2,label]
+            final_rois = torch.zeros((num_actions,self.sample_duration,5)) # num_actions x [x1,y1,x2,y2,label]
             for i in range(num_actions):
                 # for every action:
                 for j in range(len(final_rois_list[i])):

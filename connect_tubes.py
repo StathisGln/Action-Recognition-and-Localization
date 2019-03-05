@@ -5,6 +5,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from create_tubes_from_boxes import create_tube_from_tubes
+
 def bbox_overlaps_batch_3d(tubes, tubes_curr):
     """
     tubes: (N, 6) ndarray of float
@@ -14,150 +16,182 @@ def bbox_overlaps_batch_3d(tubes, tubes_curr):
     """
     batch_size = tubes_curr.size(0)
     
-    if tubes.dim() == 2:
-        N = tubes.size(0)
-        K = tubes_curr.size(1)
 
-        # print('N {} K {}'.format(N,K))
+    N = tubes.size(0)
+    K = tubes_curr.size(1)
 
-        tubes = tubes[:,1:7]
-        tubes_curr = tubes_curr[:,:,1:7]
+    # print('N {} K {}'.format(N,K))
 
-        # print('tubes :',tubes)
-        # print('tubes_curr :',tubes_curr)
-        tubes = tubes.view(1,N,6).expand(batch_size, N, 6).contiguous()
+    tubes = tubes[:,1:7]
+    tubes_curr = tubes_curr[:,:,1:7]
 
-        tubes_curr_x = (tubes_curr[:, :, 3] - tubes_curr[:, :, 0] + 1)
-        tubes_curr_y = (tubes_curr[:, :, 4] - tubes_curr[:, :, 1] + 1)
-        tubes_curr_t  = (tubes_curr[:, :, 5] - tubes_curr[:, :, 2] + 1)
-        
-        # print('tubes_curr_x.shape :',tubes_curr_x)
-        # print('tubes_curr_y.shape :',tubes_curr_y)
-        # print('tubes_curr_t.shape :',tubes_curr_t)
+    # print('tubes :',tubes)
+    # print('tubes_curr :',tubes_curr)
+    tubes = tubes.view(1,N,6).expand(batch_size, N, 6).contiguous()
 
-        tubes_curr_area_xy = (tubes_curr_x * tubes_curr_y ).view(batch_size, 1, K)
-        # print('tubes_curr_area_xy :',tubes_curr_area_xy)
+    tubes_curr_x = (tubes_curr[:, :, 3] - tubes_curr[:, :, 0] + 1)
+    tubes_curr_y = (tubes_curr[:, :, 4] - tubes_curr[:, :, 1] + 1)
+    tubes_curr_t  = (tubes_curr[:, :, 5] - tubes_curr[:, :, 2] + 1)
 
-        tubes_boxes_x = (tubes[:, :, 3] - tubes[:, :, 0] + 1)
-        tubes_boxes_y = (tubes[:, :, 4] - tubes[:, :, 1] + 1)
-        tubes_boxes_t = (tubes[:, :, 5] - tubes[:, :, 2] + 1)
+    # print('tubes_curr_x.shape :',tubes_curr_x)
+    # print('tubes_curr_y.shape :',tubes_curr_y)
+    # print('tubes_curr_t.shape :',tubes_curr_t)
 
-        # print('tubes_boxes_x.shape :',tubes_boxes_x)
-        # print('tubes_boxes_y.shape :',tubes_boxes_y)
-        # print('tubes_boxes_t.shape :',tubes_boxes_t)
+    tubes_curr_area_xy = (tubes_curr_x * tubes_curr_y ).view(batch_size, 1, K)
+    # print('tubes_curr_area_xy :',tubes_curr_area_xy)
 
-        tubes_area_xy = (tubes_boxes_x * tubes_boxes_y ).view(batch_size, N, 1)  # for 1 frame
-        # print('tubes_area_xy :',tubes_area_xy)
-        
-        gt_area_zero = (tubes_curr_x == 1) & (tubes_curr_y == 1) & (tubes_curr_t == 1)
-        tubes_area_zero = (tubes_boxes_x == 1) & (tubes_boxes_y == 1) & (tubes_boxes_t == 1)
+    tubes_boxes_x = (tubes[:, :, 3] - tubes[:, :, 0] + 1)
+    tubes_boxes_y = (tubes[:, :, 4] - tubes[:, :, 1] + 1)
+    tubes_boxes_t = (tubes[:, :, 5] - tubes[:, :, 2] + 1)
 
-        boxes = tubes.view(batch_size, N, 1, 6)
-        boxes = boxes.expand(batch_size, N, K, 6)
+    # print('tubes_boxes_x.shape :',tubes_boxes_x)
+    # print('tubes_boxes_y.shape :',tubes_boxes_y)
+    # print('tubes_boxes_t.shape :',tubes_boxes_t)
 
-        # print('boxes :',boxes)
+    tubes_area_xy = (tubes_boxes_x * tubes_boxes_y ).view(batch_size, N, 1)  # for 1 frame
+    # print('tubes_area_xy :',tubes_area_xy)
 
-        query_boxes = tubes_curr.view(batch_size, 1, K, 6)
-        query_boxes = query_boxes.expand(batch_size, N, K, 6)
+    gt_area_zero = (tubes_curr_x == 1) & (tubes_curr_y == 1) & (tubes_curr_t == 1)
+    tubes_area_zero = (tubes_boxes_x == 1) & (tubes_boxes_y == 1) & (tubes_boxes_t == 1)
 
-        # print('query_boxes :',query_boxes )
-        
-        iw = (torch.min(boxes[:, :, :, 3], query_boxes[:, :, :, 3]) -
-              torch.max(boxes[:, :, :, 0], query_boxes[:, :, :, 0]) + 1)
-        iw[iw < 0] = 0
+    boxes = tubes.view(batch_size, N, 1, 6)
+    boxes = boxes.expand(batch_size, N, K, 6)
 
-        ih = (torch.min(boxes[:, :, :, 4], query_boxes[:, :, :, 4]) -
-              torch.max(boxes[:, :, :, 1], query_boxes[:, :, :, 1]) + 1)
-        ih[ih < 0] = 0
+    # print('boxes :',boxes)
 
-        it = (torch.min(boxes[:, :, :, 5], query_boxes[:, :, :, 5]) -
-              torch.max(boxes[:, :, :, 2], query_boxes[:, :, :, 2]) + 1)
-        it[it < 0] = 0
+    query_boxes = tubes_curr.view(batch_size, 1, K, 6)
+    query_boxes = query_boxes.expand(batch_size, N, K, 6)
 
-        # print('iw :',iw)
-        # print('ih :',ih)
-        # print('it.shape :',it.shape)
-        ua_xy = tubes_area_xy + tubes_curr_area_xy - (iw * ih )
-        overlaps_xy = iw * ih / ua_xy
+    # print('query_boxes :',query_boxes )
 
-        # print('overlaps_xy :',overlaps_xy)
-        ua_t = tubes_boxes_t.view(batch_size,N,1) + tubes_curr_t.view(batch_size,1,K) - it
-        overlaps_t = it / ua_t 
-        # print('overlaps_t :',overlaps_t)
-        overlaps = overlaps_xy * (overlaps_t * 3) # 2.5 because time_dim reduces / 3
+    iw = (torch.min(boxes[:, :, :, 3], query_boxes[:, :, :, 3]) -
+          torch.max(boxes[:, :, :, 0], query_boxes[:, :, :, 0]) + 1)
+    iw[iw < 0] = 0
 
-        overlaps.masked_fill_(gt_area_zero.view(
-            batch_size, 1, K).expand(batch_size, N, K), 0)
-        overlaps.masked_fill_(tubes_area_zero.view(
-            batch_size, N, 1).expand(batch_size, N, K), -1)
+    ih = (torch.min(boxes[:, :, :, 4], query_boxes[:, :, :, 4]) -
+          torch.max(boxes[:, :, :, 1], query_boxes[:, :, :, 1]) + 1)
+    ih[ih < 0] = 0
 
-    elif tubes.dim() == 3:
-        N = tubes.size(1)
-        K = tubes_curr.size(1)
+    it = (torch.min(boxes[:, :, :, 5], query_boxes[:, :, :, 5]) -
+          torch.max(boxes[:, :, :, 2], query_boxes[:, :, :, 2]) + 1)
+    it[it < 0] = 0
 
-        if tubes.size(2) == 6:
-            tubes = tubes[:, :, :6].contiguous()
-        else:
-            tubes = tubes[:, :, 1:7].contiguous()
+    # print('iw :',iw)
+    # print('ih :',ih)
+    # print('it.shape :',it.shape)
+    ua_xy = tubes_area_xy + tubes_curr_area_xy - (iw * ih )
+    overlaps_xy = iw * ih / ua_xy
 
+    # print('overlaps_xy :',overlaps_xy)
+    ua_t = tubes_boxes_t.view(batch_size,N,1) + tubes_curr_t.view(batch_size,1,K) - it
+    sb_t = tubes_boxes_t.view(batch_size,N,1) + tubes_curr_t.view(batch_size,1,K) - 2 * it
+    overlaps_iou_t = it / ua_t
+    overlaps_sub_t = sb_t / ua_t
+    print('overlaps_iou_t.shape :',overlaps_iou_t.shape)
+    print('overlaps_sub_t.shape :',overlaps_sub_t.shape)
+    overlaps_pre_t = torch.stack((overlaps_iou_t,overlaps_sub_t))
+    overlaps_t = torch.mean(overlaps_pre_t,0)
+    print('overlaps_pre_t.shape :',overlaps_pre_t.shape)
+    print('overlaps_t :',overlaps_t.shape)
+    print('overlaps_xy.shape :',overlaps_xy.shape)
+    overlaps = overlaps_xy * (overlaps_t * 2) # 2.5 because time_dim reduces / 3
 
-        if tubes_curr.size(2) == 6:
-            tubes_curr = tubes_curr[:, :, :6].contiguous()
-        else:
-            tubes_curr = tubes_curr[:, :, 1:7].contiguous()
-    
-        tubes_curr = tubes_curr[:, :, :6].contiguous()
-
-        tubes_curr_x = (tubes_curr[:, :, 3] - tubes_curr[:, :, 0] + 1)
-        tubes_curr_y = (tubes_curr[:, :, 4] - tubes_curr[:, :, 1] + 1)
-        tubes_curr_t = (tubes_curr[:, :, 5] - tubes_curr[:, :, 2] + 1)
-
-        tubes_curr_area_xy = (tubes_curr_x * tubes_curr_y ).view(batch_size, 1, K)
-
-        tubes_boxes_x = (tubes[:, :, 3] - tubes[:, :, 0] + 1)
-        tubes_boxes_y = (tubes[:, :, 4] - tubes[:, :, 1] + 1)
-        tubes_boxes_t = (tubes[:, :, 5] - tubes[:, :, 2] + 1)
-
-        tubes_area_xy = (tubes_boxes_x *
-                        tubes_boxes_y ).view(batch_size, N, 1)
-
-        # print('tubes_area.shape :',tubes_area.shape)
-        gt_area_zero = (tubes_curr_x == 1) & (tubes_curr_y == 1) & (tubes_curr_t == 1)
-        tubes_area_zero = (tubes_boxes_x == 1) & (tubes_boxes_y == 1) & (tubes_boxes_t == 1)
-
-        boxes = tubes.view(batch_size, N, 1, 6).expand(batch_size, N, K, 6)
-        query_boxes = tubes_curr.view(
-            batch_size, 1, K, 6).expand(batch_size, N, K, 6)
-
-        iw = (torch.min(boxes[:, :, :, 3], query_boxes[:, :, :, 3]) -
-              torch.max(boxes[:, :, :, 0], query_boxes[:, :, :, 0]) + 1)
-        iw[iw < 0] = 0
-
-        ih = (torch.min(boxes[:, :, :, 4], query_boxes[:, :, :, 4]) -
-              torch.max(boxes[:, :, :, 1], query_boxes[:, :, :, 1]) + 1)
-        ih[ih < 0] = 0
-
-        it = (torch.min(boxes[:, :, :, 5], query_boxes[:, :, :, 5]) -
-              torch.max(boxes[:, :, :, 2], query_boxes[:, :, :, 2]) + 1)
-        it[it < 0] = 0
-
-        ua_xy = tubes_area_xy + tubes_curr_area_xy - (iw * ih )
-        overlaps_xy = iw * ih / ua_xy
-
-        ua_t = tubes_boxes_t.view(batch_size,N,1) + tubes_curr_t.view(batch_size,1,K) - it
-        overlaps_t = it / ua_t
-
-        overlaps = overlaps_xy 
-
-        # mask the overlap here.
-        overlaps.masked_fill_(gt_area_zero.view(
-            batch_size, 1, K).expand(batch_size, N, K), 0)
-        overlaps.masked_fill_(tubes_area_zero.view(
-            batch_size, N, 1).expand(batch_size, N, K), -1)
-    else:
-        raise ValueError('tubes    input dimension is not correct.')
+    overlaps.masked_fill_(gt_area_zero.view(
+        batch_size, 1, K).expand(batch_size, N, K), 0)
+    overlaps.masked_fill_(tubes_area_zero.view(
+        batch_size, N, 1).expand(batch_size, N, K), -1)
 
     return overlaps
+
+def tubes_overlaps(tubes, gt_tube):
+    """
+    tubes: (N, 6) ndarray of float
+    gt_tube: (b, K, 7) ndarray of float
+
+    overlaps: (N, K) ndarray of overlap between boxes and query_boxes
+    """
+    batch_size = gt_tube.size(0)
+    
+
+    N = tubes.size(0)
+    K = gt_tube.size(1)
+
+    # print('N {} K {}'.format(N,K))
+
+    gt_tube = gt_tube[:,:,:6]
+    # print('gt_tube :',gt_tube)
+    tubes = tubes.view(1,N,6).expand(batch_size, N, 6).contiguous()
+
+    gt_tube_x = (gt_tube[:, :, 3] - gt_tube[:, :, 0] + 1)
+    gt_tube_y = (gt_tube[:, :, 4] - gt_tube[:, :, 1] + 1)
+    gt_tube_t  = (gt_tube[:, :, 5] - gt_tube[:, :, 2] + 1)
+
+    # print('gt_tube_x.shape :',gt_tube_x)
+    # print('gt_tube_y.shape :',gt_tube_y)
+    # print('gt_tube_t.shape :',gt_tube_t)
+
+    # gt_tube_area = (gt_tube_x * gt_tube_y * gt_tube_t ).view(batch_size, 1, K)
+    gt_tube_area_xy = (gt_tube_x * gt_tube_y  ).view(batch_size, 1, K)
+    # print('gt_tube_area_xy :',gt_tube_area_xy)
+
+    tubes_boxes_x = (tubes[:, :, 3] - tubes[:, :, 0] + 1)
+    tubes_boxes_y = (tubes[:, :, 4] - tubes[:, :, 1] + 1)
+    tubes_boxes_t = (tubes[:, :, 5] - tubes[:, :, 2] + 1)
+
+    # print('tubes_boxes_x.shape :',tubes_boxes_x)
+    # print('tubes_boxes_y.shape :',tubes_boxes_y)
+    # print('tubes_boxes_t.shape :',tubes_boxes_t)
+
+    # tubes_area = (tubes_boxes_x * tubes_boxes_y * tubes_boxes_t).view(batch_size, N, 1)  # for 1 frame
+    tubes_area_xy = (tubes_boxes_x * tubes_boxes_y ).view(batch_size, N, 1)  # for 1 frame
+
+    gt_area_zero = (gt_tube_x == 1) & (gt_tube_y == 1) & (gt_tube_t == 1)
+    tubes_area_zero = (tubes_boxes_x == 1) & (tubes_boxes_y == 1) & (tubes_boxes_t == 1)
+
+    boxes = tubes.view(batch_size, N, 1, 6)
+    boxes = boxes.expand(batch_size, N, K, 6)
+
+    # print('boxes :',boxes)
+
+    query_boxes = gt_tube.view(batch_size, 1, K, 6)
+    query_boxes = query_boxes.expand(batch_size, N, K, 6)
+
+    # print('query_boxes :',query_boxes )
+
+    iw = (torch.min(boxes[:, :, :, 3], query_boxes[:, :, :, 3]) -
+          torch.max(boxes[:, :, :, 0], query_boxes[:, :, :, 0]) + 1)
+    iw[iw < 0] = 0
+
+    ih = (torch.min(boxes[:, :, :, 4], query_boxes[:, :, :, 4]) -
+          torch.max(boxes[:, :, :, 1], query_boxes[:, :, :, 1]) + 1)
+    ih[ih < 0] = 0
+
+    it = (torch.min(boxes[:, :, :, 5], query_boxes[:, :, :, 5]) -
+          torch.max(boxes[:, :, :, 2], query_boxes[:, :, :, 2]) + 1)
+    it[it < 0] = 0
+
+    # print('iw :',iw)
+    # print('ih :',ih)
+    # print('it.shape :',it.shape)
+    # ua = tubes_area + gt_tube_area - (iw * ih * it )
+    # overlaps = iw * ih * it / ua
+
+    ua_xy = tubes_area_xy + gt_tube_area_xy - (iw * ih  )
+    overlaps_xy = iw * ih  / ua_xy
+
+    # # print('overlaps_xy :',overlaps_xy)
+    ua_t = tubes_boxes_t.view(batch_size,N,1) + gt_tube_t.view(batch_size,1,K) - it
+    overlaps_t = it / ua_t 
+    # print('overlaps_t :',overlaps_t)
+    overlaps = overlaps_xy * overlaps_t 
+
+    overlaps.masked_fill_(gt_area_zero.view(
+        batch_size, 1, K).expand(batch_size, N, K), 0)
+    overlaps.masked_fill_(tubes_area_zero.view(
+        batch_size, N, 1).expand(batch_size, N, K), -1)
+
+    return overlaps
+
 
 def connect_tubes(tubes, tubes_curr, p_tubes, pooled_feats, rois_label, index): # tubes are the already connected and tubes_curr are the new
     '''
@@ -216,13 +250,8 @@ def connect_tubes(tubes, tubes_curr, p_tubes, pooled_feats, rois_label, index): 
             connect_indices = connect_indices[:,1]
         
         for i in connect_indices:
-            # print('max_index.shape :',max_index.shape)
-            # print('[tb, max_index[i.item()]] :',[tb, max_index[0,i.item()].item()])
-            # print('len(tubes) :',len(tubes))
-            # print('i.item() :',i.item())
             tubes[i.item()] += [(tb+index, max_index[0,i.item()].item())]
-            
-            # tubes[i] += [tubes_curr[0,max_index[0,i]].cpu().tolist()]
+
         if rest_indice[0].size != 0:
             for i in rest_indice[0]:
                 tubes += [[(tb+index, i)]]
@@ -238,23 +267,18 @@ def remove_tubes(tubes, index):
     '''
 
     f_tubes = []
-    print('index :',index)
-    print('len(tubes) :',len(tubes))
+    # print('index :',index)
+    # print('len(tubes) :',len(tubes))
     for i in tubes:
         if not(len(i) == 1 and i[0][0] < index):
             f_tubes.append(i)
-        # else:
-        #     print(i)
-        #     print('i[0] :',i[0][0])
-
-    # print('tubes :',tubes)
-    # print('f_tubes :',f_tubes)
-    # print('len(tubes) :',len(tubes))
-    # print('len(f_tubes) :',len(f_tubes))
     return f_tubes
 
-def get_gt_tubes_feats_label(f_tubes, features, rois_label):
-
+def get_gt_tubes_feats_label(f_tubes, p_tubes, features, rois_label, video_tubes):
+    '''
+    f_tubes : contains the position of each tube in p_tubes
+    p_tubes : contains the actual tube 
+    '''
     tube_label = np.zeros((len(f_tubes)))
     for i in range(len(f_tubes)):
         tb = f_tubes[i]
@@ -264,8 +288,29 @@ def get_gt_tubes_feats_label(f_tubes, features, rois_label):
             tube_label_[j] = rois_label[tb[j][0],tb[j][1]]
         tube_label[i] = tube_label_[0] if np.all(tube_label_ == tube_label_[0]) else 0
 
-    print(tube_label)
-    
+    ### calculate max_overlap and keep
+    fg_tubes = np.where(tube_label != 0)[0]
+    # print('fg_tubes :',fg_tubes)
+    # print('fg_tubes.size :',fg_tubes.size)
+
+    # if fg_tubes == 0 : # no fg_tubes
+    #     return 
+    proposed_seq = torch.zeros(len(fg_tubes),6).type_as(p_tubes)
+    for i in range(fg_tubes.shape[0]):
+
+        tube_pos = f_tubes[i]
+        tmp_tube = torch.zeros((len(tube_pos),6))
+        for j in range(len(tube_pos)):
+            tmp_tube[j] = p_tubes[tube_pos[j][0]][tube_pos[j][1]][1:7]
+        proposed_seq[i] = create_tube_from_tubes(tmp_tube)
+        if i < 10 :
+            print(tube_pos)
+            print(tmp_tube)
+
+    print('proposed_seq :',proposed_seq.shape)
+    print('video_tubes :',video_tubes)
+    overlaps = tubes_overlaps(proposed_seq, video_tubes)
+    print(overlaps)
 
 if __name__ == '__main__':
 

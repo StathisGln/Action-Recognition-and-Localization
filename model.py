@@ -10,8 +10,9 @@ from torch.autograd import Variable
 from action_net import ACT_net
 from tcn import TCN
 
-from create_tubes_from_boxes import create_tube
+from create_tubes_from_boxes import create_video_tube_numpy
 from connect_tubes import connect_tubes, get_gt_tubes_feats_label
+from resize_rpn import resize_boxes, resize_tube
 
 from video_dataset import single_video
 
@@ -29,7 +30,7 @@ class Model(nn.Module):
         self.classes = actions
         self.n_classes = len(actions)
 
-        self.act_net = ACT_net(actions)
+        self.act_net = ACT_net(actions,sample_duration)
 
         ## general options
         self.sample_duration = sample_duration
@@ -50,7 +51,9 @@ class Model(nn.Module):
         num_images = 1
         rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images)
 
-        data = single_video(dataset_folder, vid_path, self.sample_duration, self.sample_size, spatial_transform=spatial_transform,
+        print('self.sample_duration :',self.sample_duration)
+        print('self.step :',self.step)
+        data = single_video(dataset_folder, vid_path, frames_dur= self.sample_duration, sample_size =self.sample_size, spatial_transform=spatial_transform,
                         temporal_transform=temporal_transform, boxes=boxes,
                         mode=mode, classes_idx=cls2idx)
 
@@ -58,7 +61,7 @@ class Model(nn.Module):
                                               shuffle=False)
         n_clips = data.__len__()
         max_sim_actions = data.__max_sim_actions__()
-
+        
         features = torch.zeros(n_clips, rois_per_image, 512, self.sample_duration).to(device)
         p_tubes = torch.zeros(n_clips, rois_per_image,  8).to(device) # all the proposed rois
 
@@ -72,11 +75,14 @@ class Model(nn.Module):
 
         for step, dt in enumerate(data_loader):
 
-            if step == 2:
-                break
+            # if step == 1:
+            #     break
 
             clips,  (h, w),  gt_tubes, gt_rois, im_info, n_acts = dt
+
             clips_ = clips.to(device)
+            h_ = h.to(device)
+            w_ = w.to(device)
             gt_tubes_ = gt_tubes.to(device)
             im_info_ = im_info.to(device)
             n_acts_ = n_acts.to(device)
@@ -96,7 +102,8 @@ class Model(nn.Module):
                                                                     gt_tubes_,
                                                                     None, n_acts_
                                                                     )
-            pooled_f = pooled_feat.view(-1,rois_per_image,512,16)
+            print('pooled_feat.shape :',pooled_feat.shape)
+            pooled_f = pooled_feat.view(-1,rois_per_image,512,self.sample_duration)
 
             indexes = (torch.arange(0, tubes.size(0))* 8).unsqueeze(1)
             indexes = indexes.expand(tubes.size(0),tubes.size(1)).type_as(tubes)
@@ -106,7 +113,10 @@ class Model(nn.Module):
 
             idx_s = step * batch_size 
             idx_e = step * batch_size + batch_size
-
+            print('idx_s :',idx_s)
+            print('idx_e :',idx_e)
+            print('pooled_f.shape :',pooled_f.shape)
+            print('features.shape :',features.shape)
             features[idx_s:idx_e] = pooled_f
             p_tubes[idx_s:idx_e] = tubes
 
@@ -134,7 +144,13 @@ class Model(nn.Module):
         print('tubes_labels :',tubes_labels.shape)
 
         if self.training:
-            get_gt_tubes_feats_label(f_tubes, features, tubes_labels)
+
+            ## first get video tube
+            video_tubes = create_video_tube_numpy(boxes)
+            video_tubes = torch.from_numpy(video_tubes).type_as(gt_tubes_)
+            video_tubes_r =  resize_tube(video_tubes.unsqueeze(0), h_,w_,self.sample_size)
+
+            get_gt_tubes_feats_label(f_tubes, p_tubes, features, tubes_labels, video_tubes_r)
             
         ##############################################
 

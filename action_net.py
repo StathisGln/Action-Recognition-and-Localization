@@ -78,25 +78,25 @@ def _make_layer( block, planes, blocks, stride=1, inplanes=256):
 
 class ACT_net(nn.Module):
     """ action tube proposal """
-    def __init__(self, actions):
+    def __init__(self, actions,sample_duration):
         super(ACT_net, self).__init__()
 
         self.classes = actions
         self.n_classes = len(actions)
-
+        self.sample_duration = sample_duration
         # loss
         self.act_loss_cls = 0
         self.act_loss_bbox = 0
 
         # cfg.POOLING_SIZE
         self.pooling_size = 7
-        self.spatial_scale = 1.0/16.0
+        self.spatial_scale = 1.0/sample_duration
 
         # define rpn
         self.act_rpn = _RPN(256)
         self.act_proposal_target = _ProposalTargetLayer(2) ## background/ foreground
         self.act_proposal_target_single = _ProposalTargetLayer_single(2) ## background/ foreground
-        self.time_dim =16
+        self.time_dim =sample_duration
         self.temp_scale = 1.
         self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale)
 
@@ -148,10 +148,12 @@ class ACT_net(nn.Module):
         # print('rois_target.shape :',rois_target.shape)
         rois = Variable(rois)
         rois_s = rois[:,:,:7]
-        # print('rois_s :', rois_s)
+        # print('rois_s :', rois_s.shape)
         # do roi align based on predicted rois
+        # print('base_feat.shape :', base_feat.shape)
+        # print('rois_s.view(-1,7).shape :',rois_s.view(-1,7).shape)
         pooled_feat = self.act_roi_align(base_feat, rois_s.view(-1,7))
-        # print('pooled_feat.shape :',pooled_feat.shape)
+        print('pooled_feat.shape :',pooled_feat.shape)
         # # feed pooled features to top model
         # print('pooled_feat.shape :', pooled_feat.shape)
         pooled_feat = self._head_to_tail(pooled_feat)
@@ -223,7 +225,7 @@ class ACT_net(nn.Module):
 
         resnet_shortcut = 'A'
         sample_size = 112
-        self.sample_duration = 16  # len(images)
+        # self.sample_duration = 16  # len(images)
 
         model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
                          sample_size=sample_size, sample_duration=self.sample_duration,
