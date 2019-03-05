@@ -69,7 +69,8 @@ if __name__ == '__main__':
     data_loader = torch.utils.data.DataLoader(vid_names, batch_size=batch_size,
                                               shuffle=False)
     
-    vid_path, n_actions, boxes = vid_names[1505]
+    # vid_path, n_actions, boxes = vid_names[1505]
+    vid_path, n_actions, boxes = vid_names[500]
     print('vid_path :',vid_path)
     print('n_action :',n_actions)
     print('boxes.shape :',boxes.shape)

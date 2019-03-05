@@ -11,7 +11,7 @@ from action_net import ACT_net
 from tcn import TCN
 
 from create_tubes_from_boxes import create_tube
-from connect_tubes import connect_tubes, connect_gt_tubes
+from connect_tubes import connect_tubes, get_gt_tubes_feats_label
 
 from video_dataset import single_video
 
@@ -72,8 +72,8 @@ class Model(nn.Module):
 
         for step, dt in enumerate(data_loader):
 
-            # if step == 1:
-            #     return -1
+            if step == 2:
+                break
 
             clips,  (h, w),  gt_tubes, gt_rois, im_info, n_acts = dt
             clips_ = clips.to(device)
@@ -83,14 +83,12 @@ class Model(nn.Module):
 
             off_set = torch.zeros(gt_tubes.shape).type_as(gt_tubes)
             print('gt_tubes.size() :',gt_tubes.size())
-            print('gt_tubes :',gt_tubes)
             
             indexes = (torch.arange(0, gt_tubes.size(0))* 8).unsqueeze(1)
             indexes = indexes.expand(gt_tubes.size(0),gt_tubes.size(1)).type_as(gt_tubes_)
             gt_tubes_[:,:,2] = gt_tubes_[:,:,2] - indexes
             gt_tubes_[:,:,5] = gt_tubes_[:,:,5] - indexes
 
-            print('gt_tubes_ :',gt_tubes_ )
             tubes,  bbox_pred, pooled_feat, \
             rpn_loss_cls,  rpn_loss_bbox, \
             act_loss_cls,  act_loss_bbox, rois_label = self.act_net(clips_,
@@ -99,6 +97,12 @@ class Model(nn.Module):
                                                                     None, n_acts_
                                                                     )
             pooled_f = pooled_feat.view(-1,rois_per_image,512,16)
+
+            indexes = (torch.arange(0, tubes.size(0))* 8).unsqueeze(1)
+            indexes = indexes.expand(tubes.size(0),tubes.size(1)).type_as(tubes)
+
+            tubes[:,:,3] = tubes[:,:,3] + indexes
+            tubes[:,:,6] = tubes[:,:,6] + indexes
 
             idx_s = step * batch_size 
             idx_e = step * batch_size + batch_size
@@ -111,10 +115,9 @@ class Model(nn.Module):
                 tubes_labels[idx_s:idx_e] = rois_label.squeeze(-1)
                 
             # print('----------Out TPN----------')
-            # print('f_tubes.type() :',f_tubes.type())
-            # print('p_tubes.type() :',p_tubes.type())
-            # print('tubes.type() :',tubes.type())
-            # print('----------Connect TUBEs----------')
+            # # print('p_tubes.type() :',p_tubes.type())
+            # # print('tubes.type() :',tubes.type())
+            print('----------Connect TUBEs----------')
 
             f_tubes = connect_tubes(f_tubes,tubes, p_tubes, pooled_f, rois_label, step*batch_size)
 
@@ -122,14 +125,19 @@ class Model(nn.Module):
         #          Choose Tubes for RCNN\TCN          #
         ###############################################
 
-        print('pooled_f :',features)
         print('pooled_f.shape :',features.shape)
 
         ## TODO choose tubes layer 
 
-        print('f_gt_tubes :',f_gt_tubes)
-        print('f_gt_tubes.shape :',f_gt_tubes.shape)
-        
+        # print('f_gt_tubes.shape :',f_gt_tubes.shape)
+        # print('tubes_labels :',tubes_labels)
+        print('tubes_labels :',tubes_labels.shape)
+
+        if self.training:
+            get_gt_tubes_feats_label(f_tubes, features, tubes_labels)
+            
+        ##############################################
+
         max_seq = reduce(lambda x, y: y if len(y) > len(x) else x, f_tubes)
         max_length = len(max_seq)
         # print('max_seq :',max_seq)
