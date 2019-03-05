@@ -77,8 +77,22 @@ if __name__ == '__main__':
     # # vid_path = 'PoleVault/v_PoleVault_g06_c02'
     mode = 'train'
     print('**********Start**********')    
-    ret = model(device, dataset_folder, vid_path, spatial_transform, temporal_transform, boxes, mode, cls2idx, n_actions)
-    # print('**********VGIKE**********')
-    # # print('rois.shape :',rois.shape)
-    # # print('rois :',rois)
 
+    
+
+    tubes,  bbox_pred, \
+    prob_out, rpn_loss_cls, \
+    rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(device, dataset_folder, \
+                                                     vid_path, spatial_transform, \
+                                                     temporal_transform, boxes, \
+                                                     mode, cls2idx, n_actions)
+
+    print('**********VGIKE**********')
+
+
+
+    print('tubes.shape :',tubes.shape)
+    # print('tubes :',tubes)    
+
+    print('bbox_pred.shape :',bbox_pred.shape)
+    print('prob_out.shape :',prob_out.shape)

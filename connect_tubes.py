@@ -87,13 +87,13 @@ def bbox_overlaps_batch_3d(tubes, tubes_curr):
     sb_t = tubes_boxes_t.view(batch_size,N,1) + tubes_curr_t.view(batch_size,1,K) - 2 * it
     overlaps_iou_t = it / ua_t
     overlaps_sub_t = sb_t / ua_t
-    print('overlaps_iou_t.shape :',overlaps_iou_t.shape)
-    print('overlaps_sub_t.shape :',overlaps_sub_t.shape)
+    # print('overlaps_iou_t.shape :',overlaps_iou_t.shape)
+    # print('overlaps_sub_t.shape :',overlaps_sub_t.shape)
     overlaps_pre_t = torch.stack((overlaps_iou_t,overlaps_sub_t))
     overlaps_t = torch.mean(overlaps_pre_t,0)
-    print('overlaps_pre_t.shape :',overlaps_pre_t.shape)
-    print('overlaps_t :',overlaps_t.shape)
-    print('overlaps_xy.shape :',overlaps_xy.shape)
+    # print('overlaps_pre_t.shape :',overlaps_pre_t.shape)
+    # print('overlaps_t :',overlaps_t.shape)
+    # print('overlaps_xy.shape :',overlaps_xy.shape)
     overlaps = overlaps_xy * (overlaps_t * 2) # 2.5 because time_dim reduces / 3
 
     overlaps.masked_fill_(gt_area_zero.view(
@@ -119,6 +119,7 @@ def tubes_overlaps(tubes, gt_tube):
     # print('N {} K {}'.format(N,K))
 
     gt_tube = gt_tube[:,:,:6]
+    tubes = tubes[:,1:7]
     # print('gt_tube :',gt_tube)
     tubes = tubes.view(1,N,6).expand(batch_size, N, 6).contiguous()
 
@@ -130,8 +131,8 @@ def tubes_overlaps(tubes, gt_tube):
     # print('gt_tube_y.shape :',gt_tube_y)
     # print('gt_tube_t.shape :',gt_tube_t)
 
-    # gt_tube_area = (gt_tube_x * gt_tube_y * gt_tube_t ).view(batch_size, 1, K)
-    gt_tube_area_xy = (gt_tube_x * gt_tube_y  ).view(batch_size, 1, K)
+    gt_tube_area = (gt_tube_x * gt_tube_y * gt_tube_t ).view(batch_size, 1, K)
+    # gt_tube_area_xy = (gt_tube_x * gt_tube_y  ).view(batch_size, 1, K)
     # print('gt_tube_area_xy :',gt_tube_area_xy)
 
     tubes_boxes_x = (tubes[:, :, 3] - tubes[:, :, 0] + 1)
@@ -142,8 +143,8 @@ def tubes_overlaps(tubes, gt_tube):
     # print('tubes_boxes_y.shape :',tubes_boxes_y)
     # print('tubes_boxes_t.shape :',tubes_boxes_t)
 
-    # tubes_area = (tubes_boxes_x * tubes_boxes_y * tubes_boxes_t).view(batch_size, N, 1)  # for 1 frame
-    tubes_area_xy = (tubes_boxes_x * tubes_boxes_y ).view(batch_size, N, 1)  # for 1 frame
+    tubes_area = (tubes_boxes_x * tubes_boxes_y * tubes_boxes_t).view(batch_size, N, 1)  # for 1 frame
+    # tubes_area_xy = (tubes_boxes_x * tubes_boxes_y ).view(batch_size, N, 1)  # for 1 frame
 
     gt_area_zero = (gt_tube_x == 1) & (gt_tube_y == 1) & (gt_tube_t == 1)
     tubes_area_zero = (tubes_boxes_x == 1) & (tubes_boxes_y == 1) & (tubes_boxes_t == 1)
@@ -173,17 +174,17 @@ def tubes_overlaps(tubes, gt_tube):
     # print('iw :',iw)
     # print('ih :',ih)
     # print('it.shape :',it.shape)
-    # ua = tubes_area + gt_tube_area - (iw * ih * it )
-    # overlaps = iw * ih * it / ua
+    ua = tubes_area + gt_tube_area - (iw * ih * it )
+    overlaps = iw * ih * it / ua
 
-    ua_xy = tubes_area_xy + gt_tube_area_xy - (iw * ih  )
-    overlaps_xy = iw * ih  / ua_xy
+    # ua_xy = tubes_area_xy + gt_tube_area_xy - (iw * ih  )
+    # overlaps_xy = iw * ih  / ua_xy
 
-    # # print('overlaps_xy :',overlaps_xy)
-    ua_t = tubes_boxes_t.view(batch_size,N,1) + gt_tube_t.view(batch_size,1,K) - it
-    overlaps_t = it / ua_t 
-    # print('overlaps_t :',overlaps_t)
-    overlaps = overlaps_xy * overlaps_t 
+    # # # print('overlaps_xy :',overlaps_xy)
+    # ua_t = tubes_boxes_t.view(batch_size,N,1) + gt_tube_t.view(batch_size,1,K) - it
+    # overlaps_t = it / ua_t 
+    # # print('overlaps_t :',overlaps_t)
+    # overlaps = overlaps_xy * overlaps_t 
 
     overlaps.masked_fill_(gt_area_zero.view(
         batch_size, 1, K).expand(batch_size, N, K), 0)
@@ -275,6 +276,25 @@ def remove_tubes(tubes, index):
     return f_tubes
 
 def get_gt_tubes_feats_label(f_tubes, p_tubes, features, rois_label, video_tubes):
+
+    '''
+    for each aera search for the position that corresponds to the gt_tube
+    '''
+
+    gt_tb_feat = torch.zeros(features.size(0), video_tubes.size(1), features.size(2), features.size(3))
+
+    for i in range(video_tubes.size(0)):
+
+        tb = p_tubes[i]
+        gt_tb = video_tubes[i]
+        overlaps = tubes_overlaps(tb, gt_tb.unsqueeze(0))
+        pos, max_indices = torch.max(overlaps, 1)
+        gt_tb_feat[i] = features[i,max_indices]
+        
+    return gt_tb_feat
+
+
+def get_tubes_feats_label(f_tubes, p_tubes, features, rois_label, video_tubes):
     '''
     f_tubes : contains the position of each tube in p_tubes
     p_tubes : contains the actual tube 
@@ -303,14 +323,15 @@ def get_gt_tubes_feats_label(f_tubes, p_tubes, features, rois_label, video_tubes
         for j in range(len(tube_pos)):
             tmp_tube[j] = p_tubes[tube_pos[j][0]][tube_pos[j][1]][1:7]
         proposed_seq[i] = create_tube_from_tubes(tmp_tube)
-        if i < 10 :
-            print(tube_pos)
-            print(tmp_tube)
+        # if i < 10 :
+        #     print(tube_pos)
+        #     print(tmp_tube)
+        #     print('proposed_seq[i] :',proposed_seq[i])
 
-    print('proposed_seq :',proposed_seq.shape)
-    print('video_tubes :',video_tubes)
+    # print('proposed_seq :',proposed_seq.shape)
+    # print('video_tubes :',video_tubes)
     overlaps = tubes_overlaps(proposed_seq, video_tubes)
-    print(overlaps)
+    # print(overlaps)
 
 if __name__ == '__main__':
 

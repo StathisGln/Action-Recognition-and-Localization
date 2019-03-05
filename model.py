@@ -88,12 +88,12 @@ class Model(nn.Module):
             n_acts_ = n_acts.to(device)
 
             off_set = torch.zeros(gt_tubes.shape).type_as(gt_tubes)
-            print('gt_tubes.size() :',gt_tubes.size())
+            # print('gt_tubes.size() :',gt_tubes.size())
             
             indexes = (torch.arange(0, gt_tubes.size(0))* 8).unsqueeze(1)
             indexes = indexes.expand(gt_tubes.size(0),gt_tubes.size(1)).type_as(gt_tubes_)
-            gt_tubes_[:,:,2] = gt_tubes_[:,:,2] - indexes
-            gt_tubes_[:,:,5] = gt_tubes_[:,:,5] - indexes
+            gt_tubes_[:,:,2] = (gt_tubes_[:,:,2] - indexes).clamp_(min=0)
+            gt_tubes_[:,:,5] = (gt_tubes_[:,:,5] - indexes).clamp_(min=0)
 
             tubes,  bbox_pred, pooled_feat, \
             rpn_loss_cls,  rpn_loss_bbox, \
@@ -102,7 +102,7 @@ class Model(nn.Module):
                                                                     gt_tubes_,
                                                                     None, n_acts_
                                                                     )
-            print('pooled_feat.shape :',pooled_feat.shape)
+            # print('pooled_feat.shape :',pooled_feat.shape)
             pooled_f = pooled_feat.view(-1,rois_per_image,512,self.sample_duration)
 
             indexes = (torch.arange(0, tubes.size(0))* 8).unsqueeze(1)
@@ -113,10 +113,10 @@ class Model(nn.Module):
 
             idx_s = step * batch_size 
             idx_e = step * batch_size + batch_size
-            print('idx_s :',idx_s)
-            print('idx_e :',idx_e)
-            print('pooled_f.shape :',pooled_f.shape)
-            print('features.shape :',features.shape)
+            # print('idx_s :',idx_s)
+            # print('idx_e :',idx_e)
+            # print('pooled_f.shape :',pooled_f.shape)
+            # print('features.shape :',features.shape)
             features[idx_s:idx_e] = pooled_f
             p_tubes[idx_s:idx_e] = tubes
 
@@ -131,26 +131,27 @@ class Model(nn.Module):
 
             f_tubes = connect_tubes(f_tubes,tubes, p_tubes, pooled_f, rois_label, step*batch_size)
 
+            print('----------End Tubes----------')
+
         ###############################################
         #          Choose Tubes for RCNN\TCN          #
         ###############################################
 
-        print('pooled_f.shape :',features.shape)
 
         ## TODO choose tubes layer 
 
         # print('f_gt_tubes.shape :',f_gt_tubes.shape)
         # print('tubes_labels :',tubes_labels)
-        print('tubes_labels :',tubes_labels.shape)
+        # print('tubes_labels :',tubes_labels.shape)
 
         if self.training:
 
             ## first get video tube
-            video_tubes = create_video_tube_numpy(boxes)
-            video_tubes = torch.from_numpy(video_tubes).type_as(gt_tubes_)
-            video_tubes_r =  resize_tube(video_tubes.unsqueeze(0), h_,w_,self.sample_size)
+            # video_tubes = create_video_tube_numpy(boxes)
+            # video_tubes = torch.from_numpy(video_tubes).type_as(gt_tubes_)
+            # video_tubes_r =  resize_tube(video_tubes.unsqueeze(0), h_,w_,self.sample_size)
 
-            get_gt_tubes_feats_label(f_tubes, p_tubes, features, tubes_labels, video_tubes_r)
+            gt_tubes_feats = get_gt_tubes_feats_label(f_tubes, p_tubes, features, tubes_labels, f_gt_tubes)
             
         ##############################################
 

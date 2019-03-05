@@ -153,7 +153,7 @@ class ACT_net(nn.Module):
         # print('base_feat.shape :', base_feat.shape)
         # print('rois_s.view(-1,7).shape :',rois_s.view(-1,7).shape)
         pooled_feat = self.act_roi_align(base_feat, rois_s.view(-1,7))
-        print('pooled_feat.shape :',pooled_feat.shape)
+        # print('pooled_feat.shape :',pooled_feat.shape)
         # # feed pooled features to top model
         # print('pooled_feat.shape :', pooled_feat.shape)
         pooled_feat = self._head_to_tail(pooled_feat)
