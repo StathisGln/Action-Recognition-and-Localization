@@ -39,7 +39,7 @@ class Model(nn.Module):
         # For now a linear classifier only
         self.linear = nn.Linear(512, self.n_classes)
 
-    def forward(self, device, dataset_folder, vid_path, spatial_transform, temporal_transform, boxes_file, mode, cls2idx, num_actions):
+    def forward(self, device, dataset_folder, vid_path, spatial_transform, temporal_transform, boxes, mode, cls2idx, num_actions):
         '''
         TODO describe procedure
         '''
@@ -51,7 +51,7 @@ class Model(nn.Module):
         rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images)
 
         data = single_video(dataset_folder, vid_path, self.sample_duration, self.sample_size, spatial_transform=spatial_transform,
-                        temporal_transform=temporal_transform, json_file=boxes_file,
+                        temporal_transform=temporal_transform, boxes=boxes,
                         mode=mode, classes_idx=cls2idx)
 
         data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,

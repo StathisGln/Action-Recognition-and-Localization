@@ -66,16 +66,18 @@ if __name__ == '__main__':
     model.to(device)
 
     vid_names = video_names(dataset_folder, boxes_file)
-    vid_path, n_actions = vid_names[10]
-
-    print('vid_path :', vid_path )
-    print('n_actions :', n_actions )
-
-    vid_path = 'PoleVault/v_PoleVault_g06_c02'
+    data_loader = torch.utils.data.DataLoader(vid_names, batch_size=batch_size,
+                                              shuffle=False)
+    
+    vid_path, n_actions, boxes = vid_names[1505]
+    print('vid_path :',vid_path)
+    print('n_action :',n_actions)
+    print('boxes.shape :',boxes.shape)
+    # # vid_path = 'PoleVault/v_PoleVault_g06_c02'
     mode = 'train'
     print('**********Start**********')    
-    ret = model(device, dataset_folder, vid_path, spatial_transform, temporal_transform, boxes_file, mode, cls2idx, n_actions)
-    print('**********VGIKE**********')
-    # print('rois.shape :',rois.shape)
-    # print('rois :',rois)
+    ret = model(device, dataset_folder, vid_path, spatial_transform, temporal_transform, boxes, mode, cls2idx, n_actions)
+    # print('**********VGIKE**********')
+    # # print('rois.shape :',rois.shape)
+    # # print('rois :',rois)
 

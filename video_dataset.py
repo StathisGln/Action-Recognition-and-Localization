@@ -180,42 +180,15 @@ def make_correct_ucf_dataset(dataset_path,  boxes_file, mode='train'):
     print('max_frames :', max_frames)
     return dataset, max_sim_actions, max_frames
 
-def prepare_samples (video_path, boxes_file, sample_duration, step):
+def prepare_samples (video_path, boxes, sample_duration, step):
     dataset = []
 
-    with open(boxes_file, 'rb') as fp:
-        boxes_data = pickle.load(fp)
+    # with open(boxes_file, 'rb') as fp:
+    #     boxes_data = pickle.load(fp)
 
-    max_sim_actions = -1
-    max_frames = -1
-        
     name = video_path.split('/')[-1]
-    values = boxes_data[video_path]
-    n_frames = values['numf']
-    annots = values['annotations']
-    n_actions = len(annots)
-
-    rois = np.zeros((n_actions,n_frames,5))
-    rois[:,:,4] = -1 
-    cls = values['label']
-
-    # find max simultaneous actions
-    if n_actions > max_sim_actions:
-        max_sim_actions = n_actions
-
-    # find max number of frames
-    if n_frames > max_frames:
-        max_frames = n_frames
-
-    ## prepare data
-    for k  in range(n_actions):
-        sample = annots[k]
-        s_frame = sample['sf']
-        e_frame = sample['ef']
-        s_label = sample['label']
-        boxes   = sample['boxes']
-        rois[k,s_frame:e_frame,:4] = boxes
-        rois[k,s_frame:e_frame,4]  = s_label
+    n_actions = boxes.shape[0]
+    n_frames = boxes.shape[1]
 
     begin_t = 1
     end_t = n_frames
@@ -224,20 +197,17 @@ def prepare_samples (video_path, boxes_file, sample_duration, step):
         'video_name' : name,
         'segment': [begin_t, end_t],
         'n_frames': n_frames,
-        'all_boxes': rois
     }
 
     for i in range(1, (n_frames - sample_duration + 1), step):
         sample_i = copy.deepcopy(sample)
         sample_i['frame_indices'] = list(range(i, i + sample_duration))
         sample_i['segment'] = torch.IntTensor([i, i + sample_duration - 1])
-        sample_i['boxes'] = rois[:,range(i, i + sample_duration)]
+        sample_i['boxes'] = boxes[:,range(i, i + sample_duration)]
         dataset.append(sample_i)
 
     print('len(dataset) :',len(dataset))
-    print('max_sim_actions :',max_sim_actions)
-    print('max_frames :', max_frames)
-    return dataset, max_sim_actions, max_frames
+    return dataset, n_actions, n_frames
 
 def make_sub_samples(video_path, sample_duration, step):
     dataset = []
@@ -317,6 +287,8 @@ class video_names(data.Dataset):
     def __getitem__(self, index):
 
         vid_name = self.data[index]['video']
+        if 'PoleVault/v_PoleVault_g06_c02' == vid_name :
+            print('index :',index)
         n_persons = self.data[index]['n_actions']
         boxes = self.data[index]['boxes']
         n_frames = self.data[index]['n_frames']
@@ -326,12 +298,12 @@ class video_names(data.Dataset):
 
         # print('boxes :',boxes.shape)
         # print(len(rois_gp))
-        print('n_frames :',n_frames)
+        # print('n_frames :',n_frames)
         new_rois = []
         for i in rois_gp:
-            print(len(i))
+            # print(len(i))
             for k in i:
-                print(k[1])
+                # print(k[1])
                 if k[1] != -1.0 : # not background
                     tube_rois = np.zeros((n_frames,5))
                     tube_rois[:,4] = -1 
@@ -349,23 +321,22 @@ class video_names(data.Dataset):
 
 class single_video(data.Dataset):
     def __init__(self, dataset_folder, video_path, frames_dur=16, sample_size=112,
-                 spatial_transform=None, temporal_transform=None, json_file=None,
+                 spatial_transform=None, temporal_transform=None, boxes=None,
                  sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None):
 
         self.mode = mode
         self.dataset_folder = dataset_folder
-        self.data, self.max_sim_actions, max_frames = prepare_samples(
-                    video_path, json_file, sample_duration, int(sample_duration/2))
+        self.data, self.n_actions, n_frames = prepare_samples(
+                    video_path, boxes, sample_duration, int(sample_duration/2))
 
         self.spatial_transform = spatial_transform
         self.temporal_transform = temporal_transform
         self.loader = get_loader()
         self.sample_duration = frames_dur
         self.sample_size = sample_size
-        self.json_file = json_file
         self.classes_idx = classes_idx
 
-        self.tensor_dim = len(range(0, max_frames-self.sample_duration, int(self.sample_duration/2)))
+        self.tensor_dim = len(range(0, n_frames-self.sample_duration, int(self.sample_duration/2)))
     def __getitem__(self, index):
         """
         Args:
@@ -413,8 +384,8 @@ class single_video(data.Dataset):
         num_actions = len(final_rois_list) # number of actions
 
         if num_actions == 0:
-            f_rois = torch.zeros(self.max_sim_actions,self.sample_duration,5)
-            ret_tubes = torch.zeros(self.max_sim_actions,7)
+            f_rois = torch.zeros(self.n_actions,self.sample_duration,5)
+            ret_tubes = torch.zeros(self.n_actions,7)
             n_acts = 0
         else:
             final_rois = torch.zeros((num_actions,16,5)) # num_actions x [x1,y1,x2,y2,label]
@@ -429,7 +400,7 @@ class single_video(data.Dataset):
             gt_tubes = create_tube_list(rois_gp,[w,h], self.sample_duration) ## problem when having 2 actions simultaneously
             n_acts = gt_tubes.size(0)
             
-            ret_tubes = torch.zeros(self.max_sim_actions,7)
+            ret_tubes = torch.zeros(self.n_actions,7)
 
             ret_tubes[:n_acts,:] = gt_tubes
 
@@ -437,7 +408,7 @@ class single_video(data.Dataset):
             ret_tubes[:n_acts,5] = ret_tubes[:n_acts,5] + frame_indices[0]-1
 
             ## f_rois
-            f_rois = torch.zeros(self.max_sim_actions,self.sample_duration,5)
+            f_rois = torch.zeros(self.n_actions,self.sample_duration,5)
             f_rois[:n_acts,:,:] = final_rois[:n_acts]
 
         ## im_info
@@ -448,7 +419,7 @@ class single_video(data.Dataset):
         return len(self.data)
 
     def __max_sim_actions__(self):
-        return self.max_sim_actions
+        return self.n_actions
 
 
 
