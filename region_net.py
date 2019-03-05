@@ -121,6 +121,7 @@ class _RPN(nn.Module):
             # print('rpn_label.shape :',rpn_label.shape)
 
             self.rpn_loss_cls =  F.cross_entropy(rpn_cls_score, rpn_label)
+            # print('rpn_cls_score.shape :',rpn_cls_score.shape)
             # print('self.rpn_loss_cls :',self.rpn_loss_cls)
             fg_cnt = torch.sum(rpn_label.data.ne(0))
 

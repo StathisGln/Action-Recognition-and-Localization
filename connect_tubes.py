@@ -282,16 +282,21 @@ def get_gt_tubes_feats_label(f_tubes, p_tubes, features, rois_label, video_tubes
     '''
 
     gt_tb_feat = torch.zeros(features.size(0), video_tubes.size(1), features.size(2), features.size(3))
-
+    gt_list = [[] for i in range( video_tubes.size(1))]
     for i in range(video_tubes.size(0)):
 
         tb = p_tubes[i]
         gt_tb = video_tubes[i]
         overlaps = tubes_overlaps(tb, gt_tb.unsqueeze(0))
-        pos, max_indices = torch.max(overlaps, 1)
-        gt_tb_feat[i] = features[i,max_indices]
-        
-    return gt_tb_feat
+        values, max_indices = torch.max(overlaps, 1)
+        for j in range(video_tubes.size(1)):
+            pos_ = (i,max_indices[0,j].item())
+            if values[0,j] < 0.5:
+                continue
+            gt_list[j] += [pos_]
+            gt_tb_feat[i,j] = features[i,max_indices[0,j]]
+
+    return gt_tb_feat, gt_list
 
 
 def get_tubes_feats_label(f_tubes, p_tubes, features, rois_label, video_tubes):

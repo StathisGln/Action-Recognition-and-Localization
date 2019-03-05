@@ -68,11 +68,15 @@ class Model(nn.Module):
         f_tubes = []
 
         if self.training:
-            f_gt_tubes_list = []
+            
             f_gt_tubes = torch.zeros(n_clips,num_actions,7).to(device) # gt_tubes
             f_gt_feats = torch.zeros(n_clips,num_actions,7).to(device) # gt_tubes' feat
             tubes_labels = torch.zeros(n_clips,rois_per_image).to(device) # tubes rois
-
+            loops = int(np.ceil(n_clips / batch_size))
+            rpn_loss_cls_ = torch.zeros((loops)).to(device)
+            rpn_loss_bbox_ = torch.zeros((loops)).to(device)
+            act_loss_bbox_ = torch.zeros((loops)).to(device)
+            
         for step, dt in enumerate(data_loader):
 
             # if step == 1:
@@ -102,6 +106,14 @@ class Model(nn.Module):
                                                                     gt_tubes_,
                                                                     None, n_acts_
                                                                     )
+            
+            # print('rpn_loss_cls :',rpn_loss_cls)
+            # print('rpn_loss_cls :',rpn_loss_cls.mean())
+            # print('rpn_loss_cls.shape :',rpn_loss_cls.shape)
+            # print('act_loss_bbox :',act_loss_bbox)
+            # print('act_loss_bbox :',act_loss_bbox.mean())
+            # print('act_loss_bbox.shape :',act_loss_bbox.shape)
+
             # print('pooled_feat.shape :',pooled_feat.shape)
             pooled_f = pooled_feat.view(-1,rois_per_image,512,self.sample_duration)
 
@@ -123,7 +135,9 @@ class Model(nn.Module):
             if self.training:
                 f_gt_tubes[idx_s:idx_e] = gt_tubes
                 tubes_labels[idx_s:idx_e] = rois_label.squeeze(-1)
-                
+                rpn_loss_cls_[step] = rpn_loss_cls
+                rpn_loss_bbox_[step] = rpn_loss_bbox
+                act_loss_bbox_[step] = act_loss_bbox
             # print('----------Out TPN----------')
             # # print('p_tubes.type() :',p_tubes.type())
             # # print('tubes.type() :',tubes.type())
@@ -137,12 +151,10 @@ class Model(nn.Module):
         #          Choose Tubes for RCNN\TCN          #
         ###############################################
 
-
         ## TODO choose tubes layer 
-
-        # print('f_gt_tubes.shape :',f_gt_tubes.shape)
-        # print('tubes_labels :',tubes_labels)
-        # print('tubes_labels :',tubes_labels.shape)
+        # print('rpn_loss_cls_ :',rpn_loss_cls_)
+        # print('rpn_loss_bbox_ :',rpn_loss_bbox_)
+        # print('act_loss_bbox_ :',act_loss_bbox_)
 
         if self.training:
 
@@ -151,7 +163,7 @@ class Model(nn.Module):
             # video_tubes = torch.from_numpy(video_tubes).type_as(gt_tubes_)
             # video_tubes_r =  resize_tube(video_tubes.unsqueeze(0), h_,w_,self.sample_size)
 
-            gt_tubes_feats = get_gt_tubes_feats_label(f_tubes, p_tubes, features, tubes_labels, f_gt_tubes)
+            gt_tubes_feats,gt_tubes_list = get_gt_tubes_feats_label(f_tubes, p_tubes, features, tubes_labels, f_gt_tubes)
             
         ##############################################
 

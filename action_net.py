@@ -108,6 +108,7 @@ class ACT_net(nn.Module):
 
         # print('----------Inside TPN net----------')
         batch_size = im_data.size(0)
+
         im_info = im_info.data
         if self.training:
             gt_tubes = gt_tubes.data
