@@ -106,7 +106,7 @@ class ACT_net(nn.Module):
 
     def forward(self, im_data, im_info, gt_tubes, gt_rois, num_boxes):
 
-        print('----------Inside TPN net----------')
+        # print('----------Inside TPN net----------')
         batch_size = im_data.size(0)
         im_info = im_info.data
         if self.training:
@@ -153,9 +153,9 @@ class ACT_net(nn.Module):
         pooled_feat = self.act_roi_align(base_feat, rois_s.view(-1,7))
         # print('pooled_feat.shape :',pooled_feat.shape)
         # # feed pooled features to top model
-        print('pooled_feat.shape :', pooled_feat.shape)
+        # print('pooled_feat.shape :', pooled_feat.shape)
         pooled_feat = self._head_to_tail(pooled_feat)
-        print('pooled_feat.shape :', pooled_feat.shape)
+        # print('pooled_feat.shape :', pooled_feat.shape)
         n_rois = pooled_feat.size(0)
         # print('pooled_feat.shape :',pooled_feat.shape)
         # # compute bbox offset

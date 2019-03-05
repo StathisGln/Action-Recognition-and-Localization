@@ -11,7 +11,7 @@ from action_net import ACT_net
 from tcn import TCN
 
 from create_tubes_from_boxes import create_tube
-from connect_tubes import connect_tubes
+from connect_tubes import connect_tubes, connect_gt_tubes
 
 from video_dataset import single_video
 
@@ -39,7 +39,7 @@ class Model(nn.Module):
         # For now a linear classifier only
         self.linear = nn.Linear(512, self.n_classes)
 
-    def forward(self, device, dataset_folder, vid_path, spatial_transform, temporal_transform, boxes_file, mode, cls2idx):
+    def forward(self, device, dataset_folder, vid_path, spatial_transform, temporal_transform, boxes_file, mode, cls2idx, num_actions):
         '''
         TODO describe procedure
         '''
@@ -63,17 +63,34 @@ class Model(nn.Module):
         p_tubes = torch.zeros(n_clips, rois_per_image,  8).to(device) # all the proposed rois
 
         f_tubes = []
+
+        if self.training:
+            f_gt_tubes_list = []
+            f_gt_tubes = torch.zeros(n_clips,num_actions,7).to(device) # gt_tubes
+            f_gt_feats = torch.zeros(n_clips,num_actions,7).to(device) # gt_tubes' feat
+            tubes_labels = torch.zeros(n_clips,rois_per_image).to(device) # tubes rois
+
         for step, dt in enumerate(data_loader):
-            # if step == 2:
+
+            # if step == 1:
             #     return -1
+
             clips,  (h, w),  gt_tubes, gt_rois, im_info, n_acts = dt
             clips_ = clips.to(device)
             gt_tubes_ = gt_tubes.to(device)
             im_info_ = im_info.to(device)
             n_acts_ = n_acts.to(device)
 
-            # print('tubes :',gt_tubes_)
-            # print('gt_rois :',gt_rois)
+            off_set = torch.zeros(gt_tubes.shape).type_as(gt_tubes)
+            print('gt_tubes.size() :',gt_tubes.size())
+            print('gt_tubes :',gt_tubes)
+            
+            indexes = (torch.arange(0, gt_tubes.size(0))* 8).unsqueeze(1)
+            indexes = indexes.expand(gt_tubes.size(0),gt_tubes.size(1)).type_as(gt_tubes_)
+            gt_tubes_[:,:,2] = gt_tubes_[:,:,2] - indexes
+            gt_tubes_[:,:,5] = gt_tubes_[:,:,5] - indexes
+
+            print('gt_tubes_ :',gt_tubes_ )
             tubes,  bbox_pred, pooled_feat, \
             rpn_loss_cls,  rpn_loss_bbox, \
             act_loss_cls,  act_loss_bbox, rois_label = self.act_net(clips_,
@@ -89,56 +106,74 @@ class Model(nn.Module):
             features[idx_s:idx_e] = pooled_f
             p_tubes[idx_s:idx_e] = tubes
 
-            print('----------Out TPN----------')
+            if self.training:
+                f_gt_tubes[idx_s:idx_e] = gt_tubes
+                tubes_labels[idx_s:idx_e] = rois_label.squeeze(-1)
+                
+            # print('----------Out TPN----------')
             # print('f_tubes.type() :',f_tubes.type())
-            print('p_tubes.type() :',p_tubes.type())
-            print('tubes.type() :',tubes.type())
-            print('----------Connect TUBEs----------')
-            f_tubes = connect_tubes(f_tubes,tubes, p_tubes, pooled_f, rois_label, step*batch_size)
-            
+            # print('p_tubes.type() :',p_tubes.type())
+            # print('tubes.type() :',tubes.type())
+            # print('----------Connect TUBEs----------')
 
-        print('len(tubes) :',len(tubes))
+            f_tubes = connect_tubes(f_tubes,tubes, p_tubes, pooled_f, rois_label, step*batch_size)
+
+        ###############################################
+        #          Choose Tubes for RCNN\TCN          #
+        ###############################################
+
+        print('pooled_f :',features)
+        print('pooled_f.shape :',features.shape)
+
+        ## TODO choose tubes layer 
+
+        print('f_gt_tubes :',f_gt_tubes)
+        print('f_gt_tubes.shape :',f_gt_tubes.shape)
+        
         max_seq = reduce(lambda x, y: y if len(y) > len(x) else x, f_tubes)
         max_length = len(max_seq)
-        print('max_seq :',max_seq)
-        print('max_length :',max_length)
+        # print('max_seq :',max_seq)
+        # print('max_length :',max_length)
+
+        ## calculate input rois
+        ## TODO create tensor
+        f_feat_mean = torch.zeros(len(f_tubes),512).to(device)
         
+        for i in range(len(f_tubes)):
+
+            seq = f_tubes[i]
+            # print('seq :',seq)
+            feats = torch.Tensor(len(seq),512)
+            for j in range(len(seq)):
+                # print('features[seq[j]].mean(1).shape :',features[seq[j]].mean(1).shape)
+                feats[j] = features[seq[j]].mean(1)
+                
+            # print('torch.mean(feats,1) :',torch.mean(feats,0).shape)
+            # print('torch.mean(feats,1).unsqueeze(0).shape :',torch.mean(feats,0).unsqueeze(0).shape)
+            f_feat_mean[i,:] = torch.mean(feats,0).unsqueeze(0)
+
+        # ### get gt_tubes
+        # if self.training:
+            
         # ######################################
         # #           Time for Linear          #
         # ######################################
 
+        ## TODO : to add TCN or RNN
+
+        cls_loss = 0
+        prob_out = self.linear(f_feat_mean)
+        # print('prob_out.shape :',prob_out.shape)
         # # classification probability
-        # cls_prob = torch.zeros((len(tubes),self.n_classes)).type_as(input_video)
-        # # classification loss
-        # cls_loss = torch.zeros(len(tubes)).type_as(input_video)
-        # max_dim = -1
-        # target = torch.zeros(len(tubes)).type_as(input_video)
-        # for i in range(len(tubes)):
-        #     # get tubes to tensor
-        #     tubes_t = torch.Tensor(tubes[i]).type_as(input_video)
-        #     if (len(tubes[i]) > max_dim):
-        #         max_dim = len(tubes[i])
-        #     feat = torch.zeros(len(tubes[i]),512,16).type_as(input_video)
-        #     feat = Variable(feat)
-
-        #     if self.training:
-        #         target[i] = tubes_t[0,7].long()
-
-        #     for j in range(len(pooled_feats[i])):
-        #         feat[j] = pooled_feats[i][j]
-
-        #     feat = feat.permute(1,0,2).mean(2).unsqueeze(0)
-        #     tmp_prob = self.tcn_net(feat)
-        #     cls_prob[i] = F.softmax(tmp_prob,1)
 
         # if self.training:
         #     target = torch.ceil(target)
         #     cls_loss = F.cross_entropy(cls_prob, target.long())
 
-        # if self.training:
-        #     return rois, bbox_pred,  cls_prob, rpn_loss_cls, rpn_loss_bbox, act_loss_bbox, cls_loss
-        # else:
-        #     return tubes, bbox_pred, cls_prob
+        if self.training:
+            return tubes, bbox_pred,  prob_out, rpn_loss_cls, rpn_loss_bbox, act_loss_bbox, cls_loss, 
+        else:
+            return tubes, bbox_pred, prob_out
 
     def create_architecture(self):
 

@@ -224,9 +224,9 @@ def prepare_samples (video_path, boxes_file, sample_duration, step):
         'video_name' : name,
         'segment': [begin_t, end_t],
         'n_frames': n_frames,
+        'all_boxes': rois
     }
 
-    print('rois.shape :',rois.shape)
     for i in range(1, (n_frames - sample_duration + 1), step):
         sample_i = copy.deepcopy(sample)
         sample_i['frame_indices'] = list(range(i, i + sample_duration))
@@ -261,323 +261,91 @@ def make_sub_samples(video_path, sample_duration, step):
     return dataset
 
 
-def make_dataset(dataset_path,  boxes_file, mode='train'):
+def make_dataset(dataset_path, boxes_file):
     dataset = []
+
     classes = next(os.walk(dataset_path, True))[1]
 
-    with open(boxes_file, 'r') as fp:
-        boxes_data = json.load(fp)
+    with open(boxes_file, 'rb') as fp:
+        boxes_data = pickle.load(fp)
 
-    assert classes != (None), 'classes must not be None, Check dataset path'
+    for cls in classes:
+        videos = next(os.walk(os.path.join(dataset_path,cls), True))[1]
+        for vid in videos:
 
-    for vid, data in boxes_data.items():
-        # print(vid)
-        f_coords = data['f_coords']
-        each_frame = data['each_frame']
-        rois = data['rois']
-        action_exist = data['action_exist']
-        cls = data['class']
-        n_frames = data['n_frames']
-        name = vid.split('/')[-1].split('.')[0]
-        video_sample = {
-            'video_name' : name,
-            'abs_path' : os.path.join(dataset_path, cls, name),
-            'class' : cls,
-            'n_frames' : n_frames,
-            'f_coords' : f_coords,
-            'action_exist' : action_exist,
-            'each_frame' : each_frame,
-            'rois' : rois
+            video_path = os.path.join(cls,vid)
+            if video_path not in boxes_data:
+                # print('OXI to ',video_path)
+                continue
+
+            values= boxes_data[video_path]
+            n_frames = values['numf']
+            annots = values['annotations']
+            n_actions = len(annots)
+
+            rois = np.zeros((n_actions,n_frames,5))
+            rois[:,:,4] = -1 
+
+            for k  in range(n_actions):
+                sample = annots[k]
+                s_frame = sample['sf']
+                e_frame = sample['ef']
+                s_label = sample['label']
+                boxes   = sample['boxes']
+                rois[k,s_frame:e_frame,:4] = boxes
+                rois[k,s_frame:e_frame,4]  = s_label
+
+            sample_i = {
+                'video': video_path,
+                'n_actions' : n_actions,
+                'boxes' : rois,
+                'n_frames' : n_frames
             }
-        dataset.append(video_sample)
+            dataset.append(sample_i)
 
-    print('len(dataset) :',len(dataset))
+    print(len(dataset))
+
     return dataset
 
+class video_names(data.Dataset):
+    def __init__(self, dataset_folder, boxes_file):
 
-
-class Video(data.Dataset):
-    def __init__(self, video_path, frames_dur=16, 
-                 spatial_transform=None, temporal_transform=None, json_file=None,
-                 sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None):
-
-        self.mode = mode
-        self.data, self.max_sim_actions, max_frames = make_correct_ucf_dataset(
-                    video_path, json_file, self.mode)
-
-        self.spatial_transform = spatial_transform
-        self.temporal_transform = temporal_transform
-        self.loader = get_loader()
-        self.sample_duration = frames_dur
-        self.json_file = json_file
-        self.classes_idx = classes_idx
-
-        self.tensor_dim = len(range(0, max_frames, int(sample_duration/2)))
-    def __getitem__(self, index):
-        """
-        Args:
-            index (int): Index
-        Returns:
-            tuple: (image, target) where target is class_index of the target class.
-        """
-        name = self.data[index]['video_name']   # video path
-        cls  = self.data[index]['class']
-        path = self.data[index]['abs_path']
-        rois = self.data[index]['rois']
-
-        
-        n_frames = len(glob.glob(path+ '/*.jpg'))
-        # print('n_frames :',n_frames, ' files ', sorted(glob.glob(path+ '/*.jpg')))
-        # print('path :',path,  ' n_frames :', n_frames, 'index :',index)        
-
-        ## get  random frames from the video 
-        time_index = np.random.randint(
-            0, n_frames - self.sample_duration - 1) + 1
-
-        frame_indices = list(
-            range(time_index, time_index + self.sample_duration))  # get the corresponding frames
-        # print('frame_indices :', frame_indices)
-
-        if self.temporal_transform is not None:
-            frame_indices = self.temporal_transform(frame_indices)
-        clip = self.loader(path, frame_indices)
-        # print('clip : ',len(clip))
-        ## get original height and width
-        w, h = clip[0].size
-        if self.spatial_transform is not None:
-            clip = [self.spatial_transform(img) for img in clip]
-        clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
-        # print('clip :', clip.shape)
-        ## get bboxes and create gt tubes
-        rois_Tensor = torch.Tensor(rois)
-        # print('rois.shape :',rois.shape)
-        # print('rois :', rois)
-        # print('rois_Tensor.shape :',rois_Tensor.shape)
-        rois_sample_tensor = rois_Tensor[:,np.array(frame_indices),:]
-        # print('rois_sample_tensor :',rois_sample_tensor)
-        # print('rois_sample_tensor.shape :',rois_sample_tensor.shape)
-        rois_sample_tensor[:,:,2] = rois_sample_tensor[:,:,0] + rois_sample_tensor[:,:,2]
-        rois_sample_tensor[:,:,3] = rois_sample_tensor[:,:,1] + rois_sample_tensor[:,:,3]
-        rois_sample = rois_sample_tensor.tolist()
-
-        rois_fr = [[z+[j] for j,z in enumerate(rois_sample[i])] for i in range(len(rois_sample))]
-        rois_gp =[[[list(g),i] for i,g in groupby(w, key=lambda x: x[:][4])] for w in rois_fr] # [person, [action, class]
-
-        # print('rois_gp :',rois_gp)
-        # print('len(rois_gp) :',len(rois_gp))
-
-        final_rois_list = []
-        for p in rois_gp: # for each person
-            for r in p:
-                if r[1] > -1 :
-                    final_rois_list.append(r[0])
-
-        # print('final_rois_list :',final_rois_list)
-        # print('len(final_rois_list) :',len(final_rois_list))
-
-        # if final_rois == []: # empty ==> only background, no gt_tube exists
-        #     final_rois = [0] * 7
-        #     gt_tubes = torch.Tensor([[0,0,0,0,0,0,0]])
-
-
-        num_actions = len(final_rois_list)
-
-
-        if num_actions == 0:
-            final_rois = torch.zeros(1,16,5)
-            gt_tubes = torch.zeros(1,7)
-        else:
-            final_rois = torch.zeros((num_actions,16,5)) # num_actions x [x1,y1,x2,y2,label]
-            for i in range(num_actions):
-                # for every action:
-                for j in range(len(final_rois_list[i])):
-                    # for every rois
-                    # print('final_rois_list[i][j][:5] :',final_rois_list[i][j][:5])
-                    pos = final_rois_list[i][j][5]
-                    final_rois[i,pos,:]= torch.Tensor(final_rois_list[i][j][:5])
-
-            # # print('final_rois :',final_rois)
-            gt_tubes = create_tube_list(rois_gp,[w,h], self.sample_duration) ## problem when having 2 actions simultaneously
-
-
-        ret_tubes = torch.zeros(self.max_sim_actions,7)
-        n_acts = gt_tubes.size(0)
-        ret_tubes[:n_acts,:] = gt_tubes
-
-        # print('ret_tubes :',ret_tubes)
-        # print('ret_tubes.shape :',ret_tubes.shape)
-        ## f_rois
-        f_rois = torch.zeros(self.max_sim_actions,self.sample_duration,5)
-        f_rois[:n_acts,:,:] = final_rois[:n_acts]
-
-        # print('gt_tubes :',gt_tubes)
-        # print(type(gt_tubes))
-        # print('gt_tubes.shape :',gt_tubes.shape)
-        # print('final_rois.shape :', final_rois.shape)
-        if self.mode == 'train':
-            # print('clips.shape :',clip.shape)
-            # print('h {} w{}'.format(h,w))
-            # print('gt_tubes :',gt_tubes)
-            # return clip,  h, w,  gt_tubes, final_rois
-            return clip,  h, w,  ret_tubes, f_rois, n_acts
-        else:
-            # return clip,  (h, w),  gt_tubes, final_rois,  self.data[index]['abs_path']
-            return clip,  h, w,  gt_tubes, final_rois,  self.data[index]['abs_path'], frame_indices
-
-    def __len__(self):
-        return len(self.data)
-
-
-class Video_UCF(data.Dataset):
-    def __init__(self, video_path, frames_dur=8, 
-                 spatial_transform=None, temporal_transform=None, json_file=None,
-                 sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None):
-
-        self.mode = mode
-        self.data, self.max_sim_actions = make_correct_ucf_dataset(
-                    video_path, json_file, self.mode)
-
-        self.spatial_transform = spatial_transform
-        self.temporal_transform = temporal_transform
-        self.loader = get_loader()
-        self.sample_duration = frames_dur
-        self.json_file = json_file
-        self.classes_idx = classes_idx
+        self.dataset_folder = dataset_folder
+        self.boxes_file = boxes_file
+        self.data = make_dataset(dataset_folder, boxes_file)
 
     def __getitem__(self, index):
-        """
-        Args:
-            index (int): Index
-        Returns:
-            tuple: (image, target) where target is class_index of the target class.
-        """
-        name = self.data[index]['video_name']   # video path
-        cls  = self.data[index]['class']
-        path = self.data[index]['abs_path']
-        rois = self.data[index]['rois']
 
-        
-        n_frames = len(glob.glob(path+ '/*.jpg'))
-        # print('n_frames :',n_frames, ' files ', sorted(glob.glob(path+ '/*.jpg')))
-        # print('path :',path,  ' n_frames :', n_frames, 'index :',index)        
-
-
-        frame_indices = list(
-            range(1,n_frames))  # get the corresponding frames
-
-        if self.temporal_transform is not None:
-            frame_indices = self.temporal_transform(frame_indices)
-        clip = self.loader(path, frame_indices)
-
-        ## get original height and width
-        w, h = clip[0].size
-        if self.spatial_transform is not None:
-            clip = [self.spatial_transform(img) for img in clip]
-        clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
-        # print('clip :', clip.shape)
-
-        rois_Tensor = torch.Tensor(rois)
-        print('rois.shape :',rois.shape)
-        # print('rois :', rois)
-        # print('rois_Tensor.shape :',rois_Tensor.shape)
-        rois_Tensor[:,:,2] = rois_Tensor[:,:,0] + rois_Tensor[:,:,2]
-        rois_Tensor[:,:,3] = rois_Tensor[:,:,1] + rois_Tensor[:,:,3]
-        rois_sample = rois_Tensor.tolist()
-
-        rois_fr = [[z+[j] for j,z in enumerate(rois_sample[i])] for i in range(len(rois_sample))]
+        vid_name = self.data[index]['video']
+        n_persons = self.data[index]['n_actions']
+        boxes = self.data[index]['boxes']
+        n_frames = self.data[index]['n_frames']
+        boxes_lst = boxes.tolist()
+        rois_fr = [[z+[j] for j,z in enumerate(boxes_lst[i])] for i in range(len(boxes_lst))]
         rois_gp =[[[list(g),i] for i,g in groupby(w, key=lambda x: x[:][4])] for w in rois_fr] # [person, [action, class]
 
-        # print('rois_gp :',rois_gp)
-        # print('len(rois_gp) :',len(rois_gp))
-
-        final_rois_list = []
-        for p in rois_gp: # for each person
-            for r in p:
-                if r[1] > -1 :
-                    final_rois_list.append(r[0])
-
-        # print('final_rois_list :',final_rois_list)
-        # print('len(final_rois_list) :',len(final_rois_list))
-
-        # if final_rois == []: # empty ==> only background, no gt_tube exists
-        #     final_rois = [0] * 7
-        #     gt_tubes = torch.Tensor([[0,0,0,0,0,0,0]])
-
-
-        num_actions = len(final_rois_list)
-
-
-        if num_actions == 0:
-            final_rois = torch.zeros(1,16,5)
-            gt_tubes = torch.zeros(1,7)
-        else:
-            final_rois = torch.zeros((num_actions,n_frames,5)) # num_actions x [x1,y1,x2,y2,label]
-            for i in range(num_actions):
-                # for every action:
-                for j in range(len(final_rois_list[i])):
-                    # for every rois
-                    # print('final_rois_list[i][j][:5] :',final_rois_list[i][j][:5])
-                    pos = final_rois_list[i][j][5]
-                    final_rois[i,pos,:]= torch.Tensor(final_rois_list[i][j][:5])
-
-            # # print('final_rois :',final_rois)
-            gt_tubes = create_tube_list(rois_gp,[w,h], n_frames) ## problem when having 2 actions simultaneously
-
-
-        ret_tubes = torch.zeros(self.max_sim_actions,7)
-        n_acts = gt_tubes.size(0)
-        ret_tubes[:n_acts,:] = gt_tubes
-
-        # print('ret_tubes :',ret_tubes)
-        # print('ret_tubes.shape :',ret_tubes.shape)
-        ## f_rois
-        f_rois = torch.zeros(self.max_sim_actions,n_frames,5)
-        f_rois[:n_acts,:,:] = final_rois[:n_acts]
-
-        # print('gt_tubes :',gt_tubes)
-        # print(type(gt_tubes))
-        # print('gt_tubes.shape :',gt_tubes.shape)
-        # print('final_rois.shape :', final_rois.shape)
-        if self.mode == 'train':
-            # print('clips.shape :',clip.shape)
-            # print('h {} w{}'.format(h,w))
-            # print('gt_tubes :',gt_tubes)
-            # return clip,  h, w,  gt_tubes, final_rois
-            return clip,  h, w,  ret_tubes, f_rois, n_acts
-        else:
-            # return clip,  (h, w),  gt_tubes, final_rois,  self.data[index]['abs_path']
-            return clip,  h, w,  gt_tubes, final_rois,  self.data[index]['abs_path'], frame_indices
-
+        # print('boxes :',boxes.shape)
+        # print(len(rois_gp))
+        print('n_frames :',n_frames)
+        new_rois = []
+        for i in rois_gp:
+            print(len(i))
+            for k in i:
+                print(k[1])
+                if k[1] != -1.0 : # not background
+                    tube_rois = np.zeros((n_frames,5))
+                    tube_rois[:,4] = -1 
+                    s_f = k[0][0][-1]
+                    e_f = k[0][-1][-1] + 1
+                    tube_rois[s_f : e_f] = np.array([k[0][i][:5] for i in range(len(k[0]))])
+                    new_rois.append(tube_rois.tolist())
+        new_rois_np = np.array(new_rois)
+        return vid_name, n_persons, new_rois_np
+    
     def __len__(self):
+
         return len(self.data)
 
-# class Video_UCF(data.Dataset):
-#     def __init__(self, video_path, frames_dur=8, 
-#                  spatial_transform=None, temporal_transform=None, json_file=None,
-#                  sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None):
-
-#         self.mode = mode
-#         self.data= make_sub_samples(
-#                     video_path, sample_duration, step=int(sample_duration/2))
-
-#         self.spatial_transform = spatial_transform
-#         self.temporal_transform = temporal_transform
-#         self.loader = get_loader()
-#         self.sample_duration = sample_duration
-#         self.json_file = json_file
-#         self.classes_idx = classes_idx
-
-#     def __getitem__(self, index):
-#         """
-#         Args:
-#             index (int): Index
-#         Returns:
-#             tuple: (image, target) where target is class_index of the target class.
-#         """
-
-#         frame_indices =self.data[index]['frame_indices']
-#     def __len__(self):
-#         return len(self.data)
 
 class single_video(data.Dataset):
     def __init__(self, dataset_folder, video_path, frames_dur=16, sample_size=112,
@@ -615,6 +383,7 @@ class single_video(data.Dataset):
         if self.temporal_transform is not None:
             frame_indices = self.temporal_transform(frame_indices)
         clip = self.loader(abs_path, frame_indices)
+
         ## get original height and width
         w, h = clip[0].size
         if self.spatial_transform is not None:
@@ -640,11 +409,8 @@ class single_video(data.Dataset):
             for r in p:
                 if r[1] > -1 :
                     final_rois_list.append(r[0])
-        # print('rois_gp :',rois_gp)
-        # print('final_rois_list :',final_rois_list)
-        # print('len(final_rois_list) :',len(final_rois_list))
 
-        num_actions = len(final_rois_list)
+        num_actions = len(final_rois_list) # number of actions
 
         if num_actions == 0:
             f_rois = torch.zeros(self.max_sim_actions,self.sample_duration,5)
@@ -688,54 +454,60 @@ class single_video(data.Dataset):
 
 if __name__ == '__main__':
 
-    # dataset_folder = '/gpu-data/sgal/UCF-101-frames'
+    dataset_folder = '/gpu-data2/sgal/UCF-101-frames'
     boxes_file = '/gpu-data/sgal/pyannot.pkl'
 
-    sample_size = 112
-    sample_duration = 16  # len(images)
+    data = video_names(dataset_folder=dataset_folder, boxes_file=boxes_file)
+    # ret = data[40]
+    ret = data[500]
+    # # dataset_folder = '/gpu-data/sgal/UCF-101-frames'
+    # boxes_file = '/gpu-data/sgal/pyannot.pkl'
 
-    batch_size = 10
-    n_threads = 0
+    # sample_size = 112
+    # sample_duration = 16  # len(images)
 
-    # # get mean
-    mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
+    # batch_size = 10
+    # n_threads = 0
+
+    # # # get mean
+    # mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
 
 
-    actions = ['Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
-               'Diving','Fencing','FloorGymnastics','GolfSwing','HorseRiding','IceDancing',
-               'LongJump','PoleVault','RopeClimbing','SalsaSpin','SkateBoarding','Skiing',
-               'Skijet','SoccerJuggling','Surfing','TennisSwing','TrampolineJumping',
-               'VolleyballSpiking','WalkingWithDog']
+    # actions = ['Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
+    #            'Diving','Fencing','FloorGymnastics','GolfSwing','HorseRiding','IceDancing',
+    #            'LongJump','PoleVault','RopeClimbing','SalsaSpin','SkateBoarding','Skiing',
+    #            'Skijet','SoccerJuggling','Surfing','TennisSwing','TrampolineJumping',
+    #            'VolleyballSpiking','WalkingWithDog']
 
-    cls2idx = {actions[i]: i for i in range(0, len(actions))}
+    # cls2idx = {actions[i]: i for i in range(0, len(actions))}
 
-    spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
-                                 ToTensor(),
-                                 Normalize(mean, [1, 1, 1])])
-    temporal_transform = LoopPadding(sample_duration)
+    # spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
+    #                              ToTensor(),
+    #                              Normalize(mean, [1, 1, 1])])
+    # temporal_transform = LoopPadding(sample_duration)
 
-    # data = Video_UCF(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
-    #              temporal_transform=temporal_transform, json_file=boxes_file,
-    #              mode='train', classes_idx=cls2idx)
-    dataset_folder = '/gpu-data2/sgal/UCF-101-frames'
-    vid_path = 'PoleVault/v_PoleVault_g06_c02'
-    prepare_samples(vid_path, boxes_file,16,8)
-    data = single_video(dataset_folder, vid_path, 16, sample_size, spatial_transform=spatial_transform,
-                        temporal_transform=temporal_transform, json_file=boxes_file,
-                        mode='train', classes_idx=cls2idx)
+    # # data = Video_UCF(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
+    # #              temporal_transform=temporal_transform, json_file=boxes_file,
+    # #              mode='train', classes_idx=cls2idx)
+    # dataset_folder = '/gpu-data2/sgal/UCF-101-frames'
+    # vid_path = 'PoleVault/v_PoleVault_g06_c02'
+    # prepare_samples(vid_path, boxes_file,16,8)
+    # data = single_video(dataset_folder, vid_path, 16, sample_size, spatial_transform=spatial_transform,
+    #                     temporal_transform=temporal_transform, json_file=boxes_file,
+    #                     mode='train', classes_idx=cls2idx)
 
-    data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
-                                              shuffle=False, num_workers=n_threads, pin_memory=True)
+    # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
+    #                                           shuffle=False, num_workers=n_threads, pin_memory=True)
 
-    for step, dt in enumerate(data_loader):
+    # for step, dt in enumerate(data_loader):
 
-         clip,  (h, w),  ret_tubes, f_rois, im_info, n_acts = dt
-         print('clip.shape :',clip.shape)
-         print('h :',h)
-         print('w :',w)
-         print('ret_tubes :',ret_tubes)
-         print('ret_tubes.shape :',ret_tubes.shape)
-         print('f_rois.shape :',f_rois.shape)
-         print('n_acts :',n_acts)
-         print('im_info.shape :',im_info.shape)
-         print('im_info :',im_info)
+    #      clip,  (h, w),  ret_tubes, f_rois, im_info, n_acts = dt
+    #      print('clip.shape :',clip.shape)
+    #      print('h :',h)
+    #      print('w :',w)
+    #      print('ret_tubes :',ret_tubes)
+    #      print('ret_tubes.shape :',ret_tubes.shape)
+    #      print('f_rois.shape :',f_rois.shape)
+    #      print('n_acts :',n_acts)
+    #      print('im_info.shape :',im_info.shape)
+    #      print('im_info :',im_info)

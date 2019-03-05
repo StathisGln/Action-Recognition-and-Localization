@@ -128,8 +128,9 @@ class _ProposalTargetLayer(nn.Module):
         examples.
         """
         # overlaps: (rois x gt_boxes)
-
+        # print('all_rois :',all_rois)
         overlaps = bbox_overlaps_batch_3d(all_rois, gt_boxes)
+
         # print('overlaps.shape :',overlaps.shape)
         max_overlaps, gt_assignment = torch.max(overlaps, 2)
 
@@ -164,13 +165,23 @@ class _ProposalTargetLayer(nn.Module):
             fg_num_rois = fg_inds.numel()
 
             # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
+            # print(max_overlaps_single)
+            # print(cfg.TRAIN.BG_THRESH_HI)
+            # print(cfg.TRAIN.BG_THRESH_LO)
+            # print(max_overlaps_single < cfg.TRAIN.BG_THRESH_HI)
+            # print(max_overlaps_single >= cfg.TRAIN.BG_THRESH_LO)
             bg_inds = torch.nonzero((max_overlaps_single < cfg.TRAIN.BG_THRESH_HI) &
                                     (max_overlaps_single >= cfg.TRAIN.BG_THRESH_LO)).view(-1)
             bg_num_rois = bg_inds.numel()
 
+
+            # print('fg_inds :',fg_inds)
+            # print('fg_num_rois :',fg_num_rois)
+
+            # print('bg_inds :',bg_inds)
+            # print('bg_num_rois :',bg_num_rois)
             
             if fg_num_rois > 0 and bg_num_rois > 0:
-                # print('1')
                 # sampling fg
                 fg_rois_per_this_image = min(fg_rois_per_image, fg_num_rois)
 
@@ -192,9 +203,7 @@ class _ProposalTargetLayer(nn.Module):
                 bg_inds = bg_inds[rand_num]
 
             elif fg_num_rois > 0 and bg_num_rois == 0:
-                # print('2')
                 # sampling fg
-                #rand_num = torch.floor(torch.rand(rois_per_image) * fg_num_rois).long().cuda()
                 rand_num = np.floor(np.random.rand(rois_per_image) * fg_num_rois)
                 rand_num = torch.from_numpy(rand_num).type_as(gt_boxes).long()
                 fg_inds = fg_inds[rand_num]
@@ -222,7 +231,6 @@ class _ProposalTargetLayer(nn.Module):
 
             # The indices that we're selecting (both fg and bg)
             keep_inds = torch.cat([fg_inds, bg_inds], 0)
-
             # Select sampled values from various arrays:
             labels_batch[i].copy_(labels[i][keep_inds])
 

@@ -849,7 +849,6 @@ def bbox_overlaps_batch_3d(anchors, gt_boxes):
 
         overlaps = overlaps_xy * overlaps_t
 
-
         # mask the overlap here.
         overlaps.masked_fill_(gt_area_zero.view(
             batch_size, 1, K).expand(batch_size, N, K), 0)

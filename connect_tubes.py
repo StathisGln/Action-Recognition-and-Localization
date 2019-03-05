@@ -169,7 +169,7 @@ def connect_tubes(tubes, tubes_curr, p_tubes, pooled_feats, rois_label, index): 
     index :
     '''
     # iou_thresh = 0.3
-    iou_thresh = 0.5
+    iou_thresh = 0.35
     start = 0
     # print('tubes_curr.shape :',tubes_curr.shape)
     
@@ -197,6 +197,7 @@ def connect_tubes(tubes, tubes_curr, p_tubes, pooled_feats, rois_label, index): 
         overlaps = bbox_overlaps_batch_3d(last_tubes, new_tubes.unsqueeze(0))
 
         max_overlaps, max_index = torch.max(overlaps,2) # max_overlaps contains the most likely new tubes to be connected
+        # print('max_overlaps :',max_overlaps)
         max_overlaps = torch.where(max_overlaps > iou_thresh, max_overlaps, torch.zeros_like(max_overlaps).type_as(max_overlaps))
         connect_indices = max_overlaps.nonzero() ## [:,1] # connect_indices says which pre tubes to connect
 
@@ -220,6 +221,63 @@ def connect_tubes(tubes, tubes_curr, p_tubes, pooled_feats, rois_label, index): 
             tubes[i.item()] += [(tb+index, max_index[0,i.item()].item())]
             
             # tubes[i] += [tubes_curr[0,max_index[0,i]].cpu().tolist()]
+        if rest_indice[0].size != 0:
+            for i in rest_indice[0]:
+                tubes += [[(tb+index, i)]]
+    return tubes
+
+def connect_gt_tubes(f_gt_tubes_list, known_gt_tubes, p_tubes, rois_label, index):
+    '''
+    tubes : a list containing the position in p_tubes for each tube, in each sequence
+    tubes_curr : proposed tubes according to last loop
+    p_tubes : all the proposed tubes
+    pooled_feats : 
+    rois_label : each tube label
+    index :
+    '''
+
+    iou_thresh = 0.35
+    start = 0
+
+    print('p_tubes :',p_tubes)
+    if len(f_gt_tubes_list) == 0: # first batch_size
+        start = 1
+        rois_label = torch.Tensor([[12, 0, 12, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
+
+        ## get only gt_tubes
+        tubes = [[i] for i in zip([0] * p_tubes.size(1), range(0,p_tubes.size(1))) if rois_label[i] != 0]
+
+    # for tb in range(start, tubes_curr.size(0)):
+    for tb in range(start, 2):
+
+        # if (index == 8 and tb==2):
+        #     break
+
+        ## firstly get last tubes
+        tubes_last = np.array([i[-1] for i in tubes])
+        last_tubes = torch.zeros(tubes_last.shape[0],8).type_as(p_tubes)
+        for j in range(tubes_last.shape[0]):
+            last_tubes[j] = p_tubes[tubes_last[j,0],tubes_last[j,1],:] # the last tubes
+        print('last_tubes :',last_tubes)
+        new_tubes = p_tubes[tb]
+        print('new_tubes :',new_tubes)
+        overlaps = bbox_overlaps_batch_3d(last_tubes, new_tubes.unsqueeze(0))
+
+        max_overlaps, max_index = torch.max(overlaps,2) # max_overlaps contains the most likely new tubes to be connected
+        max_overlaps = torch.where(max_overlaps > iou_thresh, max_overlaps, torch.zeros_like(max_overlaps).type_as(max_overlaps))
+        connect_indices = max_overlaps.nonzero() ## [:,1] # connect_indices says which pre tubes to connect
+
+        max_index_np = max_index[0].cpu().numpy()
+        poss_indices = np.arange(0,new_tubes.size(0))
+        rest_indice = np.where(np.isin(poss_indices,max_index_np)==False)
+        if (connect_indices.nelement() == 0):
+            print('no connection')
+        else:
+            connect_indices = connect_indices[:,1]
+        
+        for i in connect_indices:
+            tubes[i.item()] += [(tb+index, max_index[0,i.item()].item())]
+            
         if rest_indice[0].size != 0:
             for i in rest_indice[0]:
                 tubes += [[(tb+index, i)]]

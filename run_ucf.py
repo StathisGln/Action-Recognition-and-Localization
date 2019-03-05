@@ -10,7 +10,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from resnet_3D import resnet34
-from simple_dataset import Video
+from video_dataset import video_names
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
@@ -52,32 +52,29 @@ if __name__ == '__main__':
                                  Normalize(mean, [1, 1, 1])])
     temporal_transform = LoopPadding(sample_duration)
 
-    # data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
-    #              temporal_transform=temporal_transform, json_file = boxes_file,
-    #              split_txt_path=split_txt_path, mode='train', classes_idx=cls2idx)
-    # # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
-    # #                                           shuffle=True, num_workers=n_threads, pin_memory=True)
-
     n_classes = len(classes)
 
     # Init action_net
     model = Model(classes, sample_duration, sample_size)
     model.create_architecture()
-    if torch.cuda.device_count() > 1:
-        print('Using {} GPUs!'.format(torch.cuda.device_count()))
 
+    if torch.cuda.device_count() > 1:
+
+        print('Using {} GPUs!'.format(torch.cuda.device_count()))
         model = nn.DataParallel(model)
 
     model.to(device)
 
-    print('**********Start**********')
-    # ret = model(clips_t, target_t,
-    #             im_info_t,
-    #             gt_tubes_t, None,
-    #             n_frames_t, num_boxes, max_dim=1, phase=2)
+    vid_names = video_names(dataset_folder, boxes_file)
+    vid_path, n_actions = vid_names[10]
+
+    print('vid_path :', vid_path )
+    print('n_actions :', n_actions )
+
     vid_path = 'PoleVault/v_PoleVault_g06_c02'
     mode = 'train'
-    ret = model(device, dataset_folder, vid_path, spatial_transform, temporal_transform, boxes_file, mode, cls2idx)
+    print('**********Start**********')    
+    ret = model(device, dataset_folder, vid_path, spatial_transform, temporal_transform, boxes_file, mode, cls2idx, n_actions)
     print('**********VGIKE**********')
     # print('rois.shape :',rois.shape)
     # print('rois :',rois)
