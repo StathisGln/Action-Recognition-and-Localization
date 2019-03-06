@@ -9,14 +9,15 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-from resnet_3D import resnet34
 from video_dataset import video_names
+from create_video_id import get_vid_dict
+
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
+
 from model import Model
-from resize_rpn import resize_rpn, resize_tube
-import pdb
+
 
 np.random.seed(42)
 
@@ -27,8 +28,12 @@ if __name__ == '__main__':
     print("Device being used:", device)
 
     dataset_folder = '/gpu-data2/sgal/UCF-101-frames'
-    boxes_file = '/gpu-data/sgal/pyannot.pkl'
+    boxes_file = '/gpu-data2/sgal/pyannot.pkl'
 
+    ### get videos id
+
+    vid2idx,vid_names = get_vid_dict(dataset_folder)
+    
     sample_size = 112
     sample_duration = 16  # len(images)
 
@@ -58,33 +63,35 @@ if __name__ == '__main__':
     model = Model(classes, sample_duration, sample_size)
     model.create_architecture()
 
-    if torch.cuda.device_count() > 1:
+    # if torch.cuda.device_count() > 1:
 
-        print('Using {} GPUs!'.format(torch.cuda.device_count()))
-        model = nn.DataParallel(model)
+    #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
+    #     model = nn.DataParallel(model)
 
     model.to(device)
 
-    vid_names = video_names(dataset_folder, boxes_file)
+    vid_name_loader = video_names(dataset_folder, boxes_file, vid2idx)
     data_loader = torch.utils.data.DataLoader(vid_names, batch_size=batch_size,
                                               shuffle=False)
     
     # vid_path, n_actions, boxes = vid_names[1505]
-    vid_path, n_actions, boxes = vid_names[500]
-    print('vid_path :',vid_path)
+    vid_id, boxes, n_frames,n_actions = vid_name_loader[500]
+    print('vid_id :',vid_id)
     print('n_action :',n_actions)
+    print('n_frames :',n_frames)
     print('boxes.shape :',boxes.shape)
     # # vid_path = 'PoleVault/v_PoleVault_g06_c02'
     mode = 'train'
     print('**********Start**********')    
 
-    
 
+    boxes_ = boxes[:n_actions, :n_frames]
+    print('boxes_ :',boxes_.shape)
     tubes,  bbox_pred, \
     prob_out, rpn_loss_cls, \
     rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(device, dataset_folder, \
-                                                     vid_path, spatial_transform, \
-                                                     temporal_transform, boxes, \
+                                                     vid_names, vid_id, spatial_transform, \
+                                                     temporal_transform, boxes_, \
                                                      mode, cls2idx, n_actions)
 
     print('**********VGIKE**********')

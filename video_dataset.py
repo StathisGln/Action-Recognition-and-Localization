@@ -139,7 +139,7 @@ def make_correct_ucf_dataset(dataset_path,  boxes_file, mode='train'):
     max_sim_actions = -1
     max_frames = -1
     for vid, values in boxes_data.items():
-        print('vid :',vid)
+        # print('vid :',vid)
         name = vid.split('/')[-1]
         n_frames = values['numf']
         annots = values['annotations']
@@ -181,11 +181,10 @@ def make_correct_ucf_dataset(dataset_path,  boxes_file, mode='train'):
     print('max_frames :', max_frames)
     return dataset, max_sim_actions, max_frames
 
-def prepare_samples (video_path, boxes, sample_duration, step):
+def prepare_samples (vid_names, vid_id, boxes, sample_duration, step):
     dataset = []
-    # with open(boxes_file, 'rb') as fp:
-    #     boxes_data = pickle.load(fp)
 
+    video_path = vid_names[vid_id]
     name = video_path.split('/')[-1]
     n_actions = boxes.shape[0]
     n_frames = boxes.shape[1]
@@ -217,6 +216,8 @@ def make_dataset(dataset_path, boxes_file):
     with open(boxes_file, 'rb') as fp:
         boxes_data = pickle.load(fp)
 
+    max_frames = -1
+    max_actions = -1
     for cls in classes:
         videos = next(os.walk(os.path.join(dataset_path,cls), True))[1]
         for vid in videos:
@@ -230,6 +231,11 @@ def make_dataset(dataset_path, boxes_file):
             n_frames = values['numf']
             annots = values['annotations']
             n_actions = len(annots)
+            if n_frames > max_frames:
+                max_frames = n_frames
+
+            if n_actions > max_actions:
+                max_actions = n_actions
             # # pos 0 --> starting frame, pos 1 --> ending frame
             # s_e_fr = np.zeros((n_actions, 2)) 
             rois = np.zeros((n_actions,n_frames,5))
@@ -256,15 +262,16 @@ def make_dataset(dataset_path, boxes_file):
             dataset.append(sample_i)
 
     print(len(dataset))
-
-    return dataset
+    print('max_frames :',max_frames)
+    return dataset, max_frames, max_actions
 
 class video_names(data.Dataset):
-    def __init__(self, dataset_folder, boxes_file):
+    def __init__(self, dataset_folder, boxes_file, vid2idx):
 
         self.dataset_folder = dataset_folder
         self.boxes_file = boxes_file
-        self.data = make_dataset(dataset_folder, boxes_file)
+        self.vid2idx = vid2idx
+        self.data, self.max_frames, self.max_actions = make_dataset(dataset_folder, boxes_file)
 
     def __getitem__(self, index):
 
@@ -290,7 +297,18 @@ class video_names(data.Dataset):
                     tube_rois[s_f : e_f] = np.array([k[0][i][:5] for i in range(len(k[0]))])
                     new_rois.append(tube_rois.tolist())
         new_rois_np = np.array(new_rois)
-        return vid_name, n_persons, new_rois_np
+
+        n_actions = new_rois_np.shape[0]
+        print('n_actions :',n_actions)
+
+        final_boxes = np.zeros((self.max_actions, self.max_frames, new_rois_np.shape[2]))
+        print('final_boxes :',final_boxes.shape)
+        final_boxes[:n_actions,:n_frames, :] = new_rois_np
+
+        print('vid_name :',vid_name)
+        vid_id = self.vid2idx[vid_name]
+        
+        return vid_id, final_boxes, n_frames, n_actions
     
     def __len__(self):
 
@@ -298,14 +316,14 @@ class video_names(data.Dataset):
 
 
 class single_video(data.Dataset):
-    def __init__(self, dataset_folder, video_path, frames_dur=16, sample_size=112,
+    def __init__(self, dataset_folder, vid_names, vid_id,frames_dur=16, sample_size=112,
                  spatial_transform=None, temporal_transform=None, boxes=None,
                  get_loader=get_default_video_loader, mode='train', classes_idx=None):
 
         self.mode = mode
         self.dataset_folder = dataset_folder
         self.data, self.n_actions, n_frames = prepare_samples(
-                    video_path, boxes, frames_dur, int(frames_dur/2))
+                    vid_names, vid_id, boxes, frames_dur, int(frames_dur/2))
 
         self.spatial_transform = spatial_transform
         self.temporal_transform = temporal_transform
