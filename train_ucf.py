@@ -17,7 +17,7 @@ from create_video_id import get_vid_dict
 from video_dataset import video_names
 from model import Model
 
-def validate_tcn(model,  val_data, val_data_loader):
+def validate_model(model,  val_data, val_data_loader):
 
     ###
     max_dim = 1
@@ -48,68 +48,6 @@ def validate_tcn(model,  val_data, val_data_loader):
     print('|                   |')
     print('|  Correct : {: >6} |'.format(correct))
     print(' ------------------- ')
-    
-
-def preprocess_data(device, clip, n_frames, gt_bboxes, h, w, sample_size, sample_duration, target, mode):
-
-
-    gt_bboxes[:,:,[0,2]] = gt_bboxes[:,:,[0,2]].clamp_(min=0, max=w.item())
-    gt_bboxes[:,:,[1,3]] = gt_bboxes[:,:,[1,3]].clamp_(min=0, max=h.item())
-
-    gt_bboxes = torch.round(gt_bboxes)
-    gt_bboxes_r = resize_rpn(gt_bboxes, h.item(),w.item(),sample_size)
-
-    ## add gt_bboxes_r class_int
-    target = target.unsqueeze(0).unsqueeze(2)
-    target = target.expand(1, gt_bboxes_r.size(1), 1).type_as(gt_bboxes)
-
-    gt_bboxes_r = torch.cat((gt_bboxes_r[:,:, :4],target),dim=2).type_as(gt_bboxes)
-    im_info_tube = torch.Tensor([[w,h,]*gt_bboxes_r.shape[0]]).to(device)
-
-    if mode == 'train' or mode == 'val':
-
-        if n_frames < 17:
-            indexes = [0]
-        else:
-            indexes = range(0, (n_frames -sample_duration  ), int(sample_duration/2))
-
-        gt_tubes = torch.zeros((gt_bboxes.size(0),len(indexes),7)).to(device)
-        # print('n_frames :',n_frames)
-        for i in indexes :
-            lim = min(i+sample_duration, (n_frames.item()-1))
-            # print('lim :', lim)
-            vid_indices = torch.arange(i,lim).long().to(device)
-            # print('vid_indices :',vid_indices)
-
-            gt_rois_seg = gt_bboxes_r[:, vid_indices]
-            gt_tubes_seg = create_tube(gt_rois_seg.unsqueeze(0),torch.Tensor([[sample_size,sample_size]]).type_as(gt_bboxes), sample_duration)
-            # print('gt_tubes_seg.shape :',gt_tubes_seg.shape)
-            gt_tubes_seg[:,:,2] = i
-            gt_tubes_seg[:,:,5] = i+sample_duration-1
-            gt_tubes[0,int(i/sample_duration*2)] = gt_tubes_seg
-
-
-            gt_tubes = torch.round(gt_tubes)
-
-    else:
-        gt_tubes =  create_tube(np.expand_dims(gt_bboxes_r,0), np.array([[sample_size,sample_size]]), n_frames)                
-
-    f_rois = torch.zeros((1,n_frames,5)).type_as(gt_bboxes) # because only 1 action can have simultaneously
-    b_frames = gt_bboxes_r.size(1)
-
-    f_rois[:,:b_frames,:] = gt_bboxes_r
-
-    # print('gt_tubes :',gt_tubes)
-    # if (n_frames < 16):
-    #     print(f_rois)
-
-    if (b_frames != n_frames):
-        print('\n LATHOSSSSSS\n', 'n_frames :', n_frames, ' b_frames :',b_frames)
-        exit(1)
-    # print('f_rois.shape :',f_rois.shape)
-    # print('gt_tubes :',gt_tubes)
-    # print(gt_bboxes)
-    return gt_tubes, f_rois
 
 if __name__ == '__main__':
     
@@ -138,6 +76,9 @@ if __name__ == '__main__':
                'VolleyballSpiking','WalkingWithDog']
 
     cls2idx = {actions[i]: i for i in range(0, len(actions))}
+
+    ### get videos id
+    vid2idx,vid_names = get_vid_dict(dataset_folder)
 
     spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
                                  ToTensor(),
@@ -184,8 +125,8 @@ if __name__ == '__main__':
     #          Train starts here          #
     #######################################
 
-    vid_names = video_names(dataset_folder, boxes_file)
-    data_loader = torch.utils.data.DataLoader(vid_names, batch_size=batch_size,
+    vid_name_loader = video_names(dataset_folder, boxes_file, vid2idx)
+    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
                                               shuffle=True)
 
     epochs = 40
@@ -208,21 +149,23 @@ if __name__ == '__main__':
             if step == 2:
                 break
 
-            vid_path,  boxes, n_frames, n_actions, = data
+            vid_id, boxes, n_frames, n_actions = data
             
             ###################################
             #          Function here          #
             ###################################
 
             mode = 'train'
-            print('vid_path', vid_path)
-            print('boxes.shape :',boxes.shape)
+            boxes_ = boxes.to(device)
+            vid_id_ = vid_id.to(device)
+            n_frames_ = n_frames.to(device)
+            n_actions_ = n_actions.to(device)
             tubes,  bbox_pred, \
             prob_out, rpn_loss_cls, \
             rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(device, dataset_folder, \
-                                                             vid_id, spatial_transform, \
-                                                             temporal_transform, boxes, \
-                                                             mode, cls2idx, n_actions,)
+                                                             vid_names, vid_id_, spatial_transform, \
+                                                             temporal_transform, boxes_, \
+                                                             mode, cls2idx, n_actions_,n_frames_)
 
             out_prob, tcn_loss = model( clips, target, gt_tubes_r, n_frames, max_dim=1)
             loss = tcn_loss.mean()
@@ -244,7 +187,7 @@ if __name__ == '__main__':
     #         val_data_loader = torch.utils.data.DataLoader(val_data, batch_size=batch_size,
     #                                                   shuffle=True, num_workers=n_threads, pin_memory=True)
 
-    #         validate_tcn(model, val_data, val_data_loader)
+    #         validate_model(model, val_data, val_data_loader)
     #     if ( ep + 1 ) % 5 == 0:
     #         torch.save(model.state_dict(), "model.pwf")
     # torch.save(model.state_dict(), "model.pwf")

@@ -40,7 +40,7 @@ class Model(nn.Module):
         # For now a linear classifier only
         self.linear = nn.Linear(512, self.n_classes)
 
-    def forward(self, device, dataset_folder, vid_names, vid_id, spatial_transform, temporal_transform, boxes, mode, cls2idx, num_actions):
+    def forward(self, device, dataset_folder, vid_names, vid_id, spatial_transform, temporal_transform, boxes, mode, cls2idx, num_actions, num_frames):
         '''
         TODO describe procedure
         '''
@@ -50,6 +50,9 @@ class Model(nn.Module):
 
         num_images = 1
         rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images)
+
+        print('boxes.shape :',boxes.shape)
+        boxes = boxes[:num_actions, :num_frames].squeeze(0)
 
         data = single_video(dataset_folder, vid_names, vid_id, frames_dur= self.sample_duration, sample_size =self.sample_size,
                             spatial_transform=spatial_transform, temporal_transform=temporal_transform, boxes=boxes,
