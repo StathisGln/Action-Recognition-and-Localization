@@ -120,7 +120,7 @@ def create_tube_from_tubes(boxes):
 
 def create_video_tube_numpy(boxes):
 
-    print('boxes.shape :',boxes.shape)
+    # print('boxes.shape :',boxes.shape)
     n_actions = boxes.shape[0]
 
     boxes[np.where(boxes == -1)] = 0
@@ -160,13 +160,13 @@ def create_video_tube_numpy(boxes):
     # y2 = y2.clip(0, h-1)
     # t1 = t1.clip(0, sample_duration)
     # t2 = t2.clip(0, sample_duration)
-    print('x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(x1, y1, t1, x2, y2, t2))
-    print('shapes :x1 {} y1 {} t1 {} x2 {} y2 {} t2 {} labels {}'.format(
-        x1.shape, y1.shape, t1.shape, x2.shape, y2.shape, t2.shape, labels.shape))
+    # print('x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(x1, y1, t1, x2, y2, t2))
+    # print('shapes :x1 {} y1 {} t1 {} x2 {} y2 {} t2 {} labels {}'.format(
+        # x1.shape, y1.shape, t1.shape, x2.shape, y2.shape, t2.shape, labels.shape))
     ret = np.stack((x1, y1, t1, x2, y2, t2, labels)).transpose(1,0)
                        
-    print('ret.shape :',ret.shape)
-    print('ret :',ret)
+    # print('ret.shape :',ret.shape)
+    # print('ret :',ret)
     return ret
 
 

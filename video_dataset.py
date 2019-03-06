@@ -183,8 +183,6 @@ def make_correct_ucf_dataset(dataset_path,  boxes_file, mode='train'):
 
 def prepare_samples (video_path, boxes, sample_duration, step):
     dataset = []
-    print('sample_duration :',sample_duration)
-    print('step :',step)
     # with open(boxes_file, 'rb') as fp:
     #     boxes_data = pickle.load(fp)
 
@@ -208,7 +206,6 @@ def prepare_samples (video_path, boxes, sample_duration, step):
         sample_i['boxes'] = boxes[:,range(i, i + sample_duration)]
         dataset.append(sample_i)
 
-    print('len(dataset) :',len(dataset))
     return dataset, n_actions, n_frames
 
 

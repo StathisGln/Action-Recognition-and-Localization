@@ -102,9 +102,8 @@ def resize_tube(gt_rois, h_tensor,w_tensor, sample_size):
     size shape is [h,w]
     '''
     batch_size = gt_rois.size(0)
-    print('batch_size :',batch_size)
+
     for i in range(batch_size):
-        print('i :',i)
         h = h_tensor[i].float()
         w = w_tensor[i].float()
 

@@ -89,10 +89,12 @@ if __name__ == '__main__':
 
     print('**********VGIKE**********')
 
-
-
     print('tubes.shape :',tubes.shape)
     # print('tubes :',tubes)    
 
     print('bbox_pred.shape :',bbox_pred.shape)
     print('prob_out.shape :',prob_out.shape)
+    print('rpn_loss_cls :',rpn_loss_cls)
+    print('rpn_loss_bbox :',rpn_loss_bbox)
+    print('act_loss_bbox :',act_loss_bbox)
+    print('cls_loss :',cls_loss)

@@ -11,7 +11,7 @@ from action_net import ACT_net
 from tcn import TCN
 
 from create_tubes_from_boxes import create_video_tube_numpy
-from connect_tubes import connect_tubes, get_gt_tubes_feats_label
+from connect_tubes import connect_tubes, get_gt_tubes_feats_label, get_tubes_feats_label
 from resize_rpn import resize_boxes, resize_tube
 
 from video_dataset import single_video
@@ -51,8 +51,6 @@ class Model(nn.Module):
         num_images = 1
         rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images)
 
-        print('self.sample_duration :',self.sample_duration)
-        print('self.step :',self.step)
         data = single_video(dataset_folder, vid_path, frames_dur= self.sample_duration, sample_size =self.sample_size, spatial_transform=spatial_transform,
                         temporal_transform=temporal_transform, boxes=boxes,
                         mode=mode, classes_idx=cls2idx)
@@ -141,11 +139,11 @@ class Model(nn.Module):
             # print('----------Out TPN----------')
             # # print('p_tubes.type() :',p_tubes.type())
             # # print('tubes.type() :',tubes.type())
-            print('----------Connect TUBEs----------')
+            # print('----------Connect TUBEs----------')
 
             f_tubes = connect_tubes(f_tubes,tubes, p_tubes, pooled_f, rois_label, step*batch_size)
 
-            print('----------End Tubes----------')
+            # print('----------End Tubes----------')
 
         ###############################################
         #          Choose Tubes for RCNN\TCN          #
@@ -158,13 +156,29 @@ class Model(nn.Module):
 
         if self.training:
 
-            ## first get video tube
-            # video_tubes = create_video_tube_numpy(boxes)
-            # video_tubes = torch.from_numpy(video_tubes).type_as(gt_tubes_)
-            # video_tubes_r =  resize_tube(video_tubes.unsqueeze(0), h_,w_,self.sample_size)
+            f_rpn_loss_cls = rpn_loss_cls_.mean()
+            f_rpn_loss_bbox = rpn_loss_bbox_.mean()
+            f_act_loss_bbox = act_loss_bbox_.mean()
 
-            gt_tubes_feats,gt_tubes_list = get_gt_tubes_feats_label(f_tubes, p_tubes, features, tubes_labels, f_gt_tubes)
+            ## first get video tube
+            video_tubes = create_video_tube_numpy(boxes)
+            video_tubes = torch.from_numpy(video_tubes).type_as(gt_tubes_)
+            video_tubes_r =  resize_tube(video_tubes.unsqueeze(0), h_,w_,self.sample_size)
             
+            # get gt tubes and feats
+            gt_tubes_feats,gt_tubes_list = get_gt_tubes_feats_label(f_tubes, p_tubes, features, tubes_labels, f_gt_tubes)
+
+            # get some background tubes
+            bg_tubes = get_tubes_feats_label(f_tubes, p_tubes, features, tubes_labels, video_tubes_r)
+
+            # print('bg_tubes :',bg_tubes)
+            # print('gt_tubes_list :',gt_tubes_list)
+            f_tubes = gt_tubes_list + bg_tubes
+            gt_lbl = torch.Tensor([f_gt_tubes[gt_tubes_list[i][0][0],i,6].item() for i in range(len(gt_tubes_list))]).type_as(f_gt_tubes)
+            bg_lbl = torch.zeros((len(bg_tubes))).type_as(f_gt_tubes)
+            
+            target_lbl = torch.cat((gt_lbl,bg_lbl),0)
+
         ##############################################
 
         max_seq = reduce(lambda x, y: y if len(y) > len(x) else x, f_tubes)
@@ -179,12 +193,11 @@ class Model(nn.Module):
         for i in range(len(f_tubes)):
 
             seq = f_tubes[i]
-            # print('seq :',seq)
             feats = torch.Tensor(len(seq),512)
             for j in range(len(seq)):
                 # print('features[seq[j]].mean(1).shape :',features[seq[j]].mean(1).shape)
                 feats[j] = features[seq[j]].mean(1)
-                
+            # print(feats)
             # print('torch.mean(feats,1) :',torch.mean(feats,0).shape)
             # print('torch.mean(feats,1).unsqueeze(0).shape :',torch.mean(feats,0).unsqueeze(0).shape)
             f_feat_mean[i,:] = torch.mean(feats,0).unsqueeze(0)
@@ -203,12 +216,11 @@ class Model(nn.Module):
         # print('prob_out.shape :',prob_out.shape)
         # # classification probability
 
-        # if self.training:
-        #     target = torch.ceil(target)
-        #     cls_loss = F.cross_entropy(cls_prob, target.long())
+        if self.training:
+            cls_loss = F.cross_entropy(prob_out, target_lbl.long())
 
         if self.training:
-            return tubes, bbox_pred,  prob_out, rpn_loss_cls, rpn_loss_bbox, act_loss_bbox, cls_loss, 
+            return tubes, bbox_pred,  prob_out, f_rpn_loss_cls, f_rpn_loss_bbox, f_act_loss_bbox, cls_loss, 
         else:
             return tubes, bbox_pred, prob_out
 
