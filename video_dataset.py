@@ -359,7 +359,7 @@ class single_video(data.Dataset):
         clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
 
         ## get bboxes and create gt tubes
-        rois_Tensor = torch.Tensor(rois)
+        rois_Tensor = rois
         rois_indx = np.array(frame_indices) - frame_indices[0]
         rois_sample_tensor = rois_Tensor[:,rois_indx,:]
         rois_sample_tensor[:,:,2] = rois_sample_tensor[:,:,0] + rois_sample_tensor[:,:,2]

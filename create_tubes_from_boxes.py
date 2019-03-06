@@ -118,6 +118,56 @@ def create_tube_from_tubes(boxes):
     return ret
 
 
+def create_video_tube(boxes):
+
+
+    n_actions = boxes.shape[0]
+    # print('n_actions :',n_actions)
+    boxes = boxes.clamp_(min=0)
+
+    t1 = torch.zeros(( n_actions)).type_as(boxes)
+    t2 = torch.zeros(( n_actions)).type_as(boxes)
+    x1 = torch.zeros(( n_actions)).type_as(boxes)
+    y1 = torch.zeros(( n_actions)).type_as(boxes)
+    x2 = torch.zeros(( n_actions)).type_as(boxes)
+    y2 = torch.zeros(( n_actions)).type_as(boxes)
+    labels = torch.zeros(( n_actions)).type_as(boxes)
+    # print('boxes.shape :',boxes.shape)
+    for j in range(boxes.shape[0]):
+        k = boxes[j].nonzero()
+        # print('boxes :',boxes[j])
+        # print(k)
+        if k[0].size == 0 :
+            continue
+        else:
+            t1[j] = k[0,0]
+            t2[j] = k[-1,0]
+            labels[j] = boxes[j,k[0,0],4]
+
+            mins,_ = torch.min(boxes[j, k[0,0]:k[-1,0]], 0)
+            x1[j] = mins[ 0]
+            y1[j] = mins[ 1]
+
+            maxs,_ = torch.max(boxes[j, k[0,0]:k[-1,0]], 0)
+            x2[j] = maxs[ 2]
+            y2[j] = maxs[ 3]
+
+    # x1 = x1.clip(0, w-1)
+    # y1 = y1.clip(0, h-1)
+    # x2 = x2.clip(0, w-1)
+    # y2 = y2.clip(0, h-1)
+    # t1 = t1.clip(0, sample_duration)
+    # t2 = t2.clip(0, sample_duration)
+    # print('x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(x1, y1, t1, x2, y2, t2))
+    # print('shapes :x1 {} y1 {} t1 {} x2 {} y2 {} t2 {} labels {}'.format(
+    #     x1.shape, y1.shape, t1.shape, x2.shape, y2.shape, t2.shape, labels.shape))
+    ret = torch.stack((x1, y1, t1, x2, y2, t2, labels)).permute(1,0)
+    # print('ret.type() :',ret.type())
+    # print('ret.shape :',ret.shape)
+    # print('ret :',ret)
+    return ret
+
+
 def create_video_tube_numpy(boxes):
 
     # print('boxes.shape :',boxes.shape)

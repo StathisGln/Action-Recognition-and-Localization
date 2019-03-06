@@ -93,12 +93,12 @@ class ACT_net(nn.Module):
         self.spatial_scale = 1.0/sample_duration
 
         # define rpn
-        self.act_rpn = _RPN(256)
-        self.act_proposal_target = _ProposalTargetLayer(2) ## background/ foreground
-        self.act_proposal_target_single = _ProposalTargetLayer_single(2) ## background/ foreground
+        self.act_rpn = _RPN(256).cuda()
+        self.act_proposal_target = _ProposalTargetLayer(2).cuda() ## background/ foreground
+        self.act_proposal_target_single = _ProposalTargetLayer_single(2).cuda() ## background/ foreground
         self.time_dim =sample_duration
         self.temp_scale = 1.
-        self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale)
+        self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale).cuda()
 
     def create_architecture(self):
         self._init_modules()

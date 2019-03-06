@@ -129,7 +129,8 @@ if __name__ == '__main__':
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
                                               shuffle=True)
 
-    epochs = 40
+    # epochs = 40
+    epochs = 1
     
     for ep in range(epochs):
 
@@ -160,9 +161,10 @@ if __name__ == '__main__':
             vid_id_ = vid_id.to(device)
             n_frames_ = n_frames.to(device)
             n_actions_ = n_actions.to(device)
+
             tubes,  bbox_pred, \
             prob_out, rpn_loss_cls, \
-            rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(device, dataset_folder, \
+            rpn_loss_bbox, act_loss_bbox,  cls_loss =  model( dataset_folder, \
                                                              vid_names, vid_id_, spatial_transform, \
                                                              temporal_transform, boxes_, \
                                                              mode, cls2idx, n_actions_,n_frames_)

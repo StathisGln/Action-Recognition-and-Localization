@@ -10,7 +10,7 @@ from torch.autograd import Variable
 from action_net import ACT_net
 from tcn import TCN
 
-from create_tubes_from_boxes import create_video_tube_numpy
+from create_tubes_from_boxes import create_video_tube
 from connect_tubes import connect_tubes, get_gt_tubes_feats_label, get_tubes_feats_label
 from resize_rpn import resize_boxes, resize_tube
 
@@ -30,7 +30,7 @@ class Model(nn.Module):
         self.classes = actions
         self.n_classes = len(actions)
 
-        self.act_net = ACT_net(actions,sample_duration)
+        self.act_net = ACT_net(actions,sample_duration).cuda()
 
         ## general options
         self.sample_duration = sample_duration
@@ -38,21 +38,22 @@ class Model(nn.Module):
         self.step = int(self.sample_duration/2)
 
         # For now a linear classifier only
-        self.linear = nn.Linear(512, self.n_classes)
+        self.linear = nn.Linear(512, self.n_classes).cuda()
 
-    def forward(self, device, dataset_folder, vid_names, vid_id, spatial_transform, temporal_transform, boxes, mode, cls2idx, num_actions, num_frames):
+    def forward(self, dataset_folder, vid_names, vid_id, spatial_transform, temporal_transform, boxes, mode, cls2idx, num_actions, num_frames):
         '''
         TODO describe procedure
         '''
 
         ## define a dataloader for the whole video
         batch_size = 8
-
+        
         num_images = 1
         rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images)
 
         print('boxes.shape :',boxes.shape)
-        boxes = boxes[:num_actions, :num_frames].squeeze(0)
+        boxes = boxes[:,:num_actions, :num_frames].squeeze(0)
+        print('boxes.shape :',boxes.shape)
 
         data = single_video(dataset_folder, vid_names, vid_id, frames_dur= self.sample_duration, sample_size =self.sample_size,
                             spatial_transform=spatial_transform, temporal_transform=temporal_transform, boxes=boxes,
@@ -63,40 +64,43 @@ class Model(nn.Module):
         n_clips = data.__len__()
         max_sim_actions = data.__max_sim_actions__()
         
-        features = torch.zeros(n_clips, rois_per_image, 512, self.sample_duration).to(device)
-        p_tubes = torch.zeros(n_clips, rois_per_image,  8).to(device) # all the proposed rois
+        features = torch.zeros(n_clips, rois_per_image, 512, self.sample_duration).cuda()
+        p_tubes = torch.zeros(n_clips, rois_per_image,  8).cuda() # all the proposed rois
 
         f_tubes = []
 
         if self.training:
             
-            f_gt_tubes = torch.zeros(n_clips,num_actions,7).to(device) # gt_tubes
-            f_gt_feats = torch.zeros(n_clips,num_actions,7).to(device) # gt_tubes' feat
-            tubes_labels = torch.zeros(n_clips,rois_per_image).to(device) # tubes rois
+            f_gt_tubes = torch.zeros(n_clips,num_actions,7).cuda() # gt_tubes
+            f_gt_feats = torch.zeros(n_clips,num_actions,7).cuda() # gt_tubes' feat
+            tubes_labels = torch.zeros(n_clips,rois_per_image).cuda()  # tubes rois
             loops = int(np.ceil(n_clips / batch_size))
-            rpn_loss_cls_ = torch.zeros((loops)).to(device)
-            rpn_loss_bbox_ = torch.zeros((loops)).to(device)
-            act_loss_bbox_ = torch.zeros((loops)).to(device)
-            
+            rpn_loss_cls_ = torch.zeros((loops)).cuda() 
+            rpn_loss_bbox_ = torch.zeros((loops)).cuda()
+            act_loss_bbox_ = torch.zeros((loops)).cuda()
+
+        print(' f_gt_tubes.device() :',f_gt_tubes.device)
+        print('tubes_labels.device :',tubes_labels.device)
         for step, dt in enumerate(data_loader):
 
             # if step == 1:
             #     break
 
-            clips,  (h, w),  gt_tubes, gt_rois, im_info, n_acts = dt
+            clips,  (h, w),  gt_tubes, _, im_info, n_acts = dt
 
-            clips_ = clips.to(device)
-            h_ = h.to(device)
-            w_ = w.to(device)
-            gt_tubes_ = gt_tubes.to(device)
-            im_info_ = im_info.to(device)
-            n_acts_ = n_acts.to(device)
+            print('gt_tubes :',gt_tubes.shape)
+            clips_ = clips.cuda() #.to(device)
+            h_ = h.cuda() #.to(device)
+            w_ = w.cuda() #.to(device)
+            gt_tubes_ = gt_tubes.type_as(clips_).cuda() #.to(device)
+            im_info_ = im_info.cuda()  #.to(device)
+            n_acts_ = n_acts.cuda() #.to(device)
 
-            off_set = torch.zeros(gt_tubes.shape).type_as(gt_tubes)
-            # print('gt_tubes.size() :',gt_tubes.size())
             
             indexes = (torch.arange(0, gt_tubes.size(0))* 8).unsqueeze(1)
-            indexes = indexes.expand(gt_tubes.size(0),gt_tubes.size(1)).type_as(gt_tubes_)
+            indexes = indexes.expand(gt_tubes.size(0),gt_tubes.size(1)).type_as(gt_tubes_).cuda() #.to(device)
+            # print('gt_tubes.type() :',gt_tubes_.type(), ' device :', gt_tubes_.device)
+            # print('indexes.type() :',indexes.type(), ' indexes.device() :',indexes.device)
             gt_tubes_[:,:,2] = (gt_tubes_[:,:,2] - indexes).clamp_(min=0)
             gt_tubes_[:,:,5] = (gt_tubes_[:,:,5] - indexes).clamp_(min=0)
 
@@ -134,6 +138,9 @@ class Model(nn.Module):
             p_tubes[idx_s:idx_e] = tubes
 
             if self.training:
+                print('gt_tubes.shape :',gt_tubes.shape)
+                print('f_gt_tubes.shape ',f_gt_tubes.shape)
+                print('f_gt_tubes.shape ',f_gt_tubes[idx_s:idx_e].shape)
                 f_gt_tubes[idx_s:idx_e] = gt_tubes
                 tubes_labels[idx_s:idx_e] = rois_label.squeeze(-1)
                 rpn_loss_cls_[step] = rpn_loss_cls
@@ -164,8 +171,8 @@ class Model(nn.Module):
             f_act_loss_bbox = act_loss_bbox_.mean()
 
             ## first get video tube
-            video_tubes = create_video_tube_numpy(boxes)
-            video_tubes = torch.from_numpy(video_tubes).type_as(gt_tubes_)
+            video_tubes = create_video_tube(boxes.type_as(clips_))
+            # print('video_tubes.type() :',video_tubes.type())
             video_tubes_r =  resize_tube(video_tubes.unsqueeze(0), h_,w_,self.sample_size)
             
             # get gt tubes and feats
@@ -191,7 +198,7 @@ class Model(nn.Module):
 
         ## calculate input rois
         ## TODO create tensor
-        f_feat_mean = torch.zeros(len(f_tubes),512).to(device)
+        f_feat_mean = torch.zeros(len(f_tubes),512).cuda() #.to(device)
         
         for i in range(len(f_tubes)):
 
