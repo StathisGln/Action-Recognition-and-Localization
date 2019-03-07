@@ -226,7 +226,6 @@ class ACT_net(nn.Module):
 
         resnet_shortcut = 'A'
         sample_size = 112
-        # self.sample_duration = 16  # len(images)
 
         model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
                          sample_size=sample_size, sample_duration=self.sample_duration,

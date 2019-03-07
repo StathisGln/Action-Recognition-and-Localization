@@ -86,13 +86,18 @@ if __name__ == '__main__':
 
 
     boxes_ = boxes[:n_actions, :n_frames]
+    boxes_ = boxes.to(device)
+    vid_id_ = vid_id.to(device)
+    n_frames_ = n_frames.to(device)
+    n_actions_ = n_actions.to(device)
+
     print('boxes_ :',boxes_.shape)
     tubes,  bbox_pred, \
     prob_out, rpn_loss_cls, \
-    rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(device, dataset_folder, \
-                                                     vid_names, vid_id, spatial_transform, \
-                                                     temporal_transform, boxes_, \
-                                                     mode, cls2idx, n_actions)
+    rpn_loss_bbox, act_loss_bbox,  cls_loss =  model( dataset_folder, \
+                                                      vid_names, vid_id, spatial_transform, \
+                                                      temporal_transform, boxes_, \
+                                                      mode, cls2idx, n_actions_, n_frames_)
 
     print('**********VGIKE**********')
 
