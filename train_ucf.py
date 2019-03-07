@@ -63,7 +63,7 @@ if __name__ == '__main__':
     sample_size = 112
     sample_duration = 16  # len(images)
 
-    batch_size = 2
+    batch_size = 1
 
     # # get mean
     mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
@@ -131,7 +131,15 @@ if __name__ == '__main__':
 
     # epochs = 40
     epochs = 1
-    
+
+    n_devs = torch.cuda.device_count()
+    if torch.cuda.device_count() > 1:
+
+        print('Using {} GPUs!'.format(torch.cuda.device_count()))
+        model.module.act_net = nn.DataParallel(model.module.act_net)
+
+    model.module.act_net = model.module.act_net.cuda()
+
     for ep in range(epochs):
 
         model.train()
@@ -149,7 +157,7 @@ if __name__ == '__main__':
 
             # if step == 2:
             #     break
-
+            print('step :',step)
             vid_id, boxes, n_frames, n_actions = data
             
             ###################################
@@ -164,7 +172,7 @@ if __name__ == '__main__':
 
             tubes,  bbox_pred, \
             prob_out, rpn_loss_cls, \
-            rpn_loss_bbox, act_loss_bbox,  cls_loss =  model( dataset_folder, \
+            rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(n_devs, dataset_folder, \
                                                              vid_names, vid_id_, spatial_transform, \
                                                              temporal_transform, boxes_, \
                                                              mode, cls2idx, n_actions_,n_frames_)
@@ -189,8 +197,8 @@ if __name__ == '__main__':
     #                                                   shuffle=True, num_workers=n_threads, pin_memory=True)
 
     #         validate_model(model, val_data, val_data_loader)
-    #     if ( ep + 1 ) % 5 == 0:
-    #         torch.save(model.state_dict(), "model.pwf")
-    # torch.save(model.state_dict(), "model.pwf")
+        if ( ep + 1 ) % 5 == 0:
+            torch.save(model.state_dict(), "model.pwf")
+    torch.save(model.state_dict(), "model.pwf")
 
 

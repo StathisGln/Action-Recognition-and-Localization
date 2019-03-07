@@ -357,8 +357,8 @@ class single_video(data.Dataset):
         frame_indices = self.data[index]['frame_indices']
         abs_path = os.path.join(self.dataset_folder, path)
 
-        if self.temporal_transform is not None:
-            frame_indices = self.temporal_transform(frame_indices)
+        # if self.temporal_transform is not None:
+        #     frame_indices = self.temporal_transform(frame_indices)
         clip = self.loader(abs_path, frame_indices)
 
         ## get original height and width

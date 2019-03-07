@@ -181,7 +181,7 @@ class ACT_net(nn.Module):
         # cls_score = self.act_cls_score(pooled_feat_mean)
         # cls_prob = F.softmax(cls_score, 1)
 
-        act_loss_cls = 0
+        # act_loss_cls = 0
         act_loss_bbox = 0
 
         if self.training:
@@ -197,8 +197,9 @@ class ACT_net(nn.Module):
 
         if self.training:
           rois_label = rois_label.view(batch_size, rois.size(1),-1)
-          return rois,  bbox_pred, pooled_feat, rpn_loss_cls, rpn_loss_bbox, act_loss_cls, act_loss_bbox, rois_label
-          # return rois,  0, 0, 0, 0, 0, 0, 0, 0, 0,
+          return rois,  bbox_pred, pooled_feat, rpn_loss_cls, rpn_loss_bbox, act_loss_bbox, rois_label
+          # return rois.cuda(),  bbox_pred.cuda(), pooled_feat.cuda(), rpn_loss_cls.cuda(), rpn_loss_bbox.cuda(), act_loss_bbox.cuda(), rois_label.cuda()
+        
         return rois,  bbox_pred, pooled_feat, None, None, None, None, None, 
 
     def _init_weights(self):
