@@ -47,14 +47,12 @@ class Model(nn.Module):
 
         ## define a dataloader for the whole video
         batch_size = 8
-        
+        # print('dir(self.module) :',dir(self.module))
         num_images = 1
         rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images)
-
         print('boxes.shape :',boxes.shape)
         boxes = boxes[:,:num_actions, :num_frames].squeeze(0)
         print('boxes.shape :',boxes.shape)
-
         data = single_video(dataset_folder, vid_names, vid_id, frames_dur= self.sample_duration, sample_size =self.sample_size,
                             spatial_transform=spatial_transform, temporal_transform=temporal_transform, boxes=boxes,
                             mode=mode, classes_idx=cls2idx)
@@ -63,7 +61,6 @@ class Model(nn.Module):
                                               shuffle=False)
         n_clips = data.__len__()
         max_sim_actions = data.__max_sim_actions__()
-        
         features = torch.zeros(n_clips, rois_per_image, 512, self.sample_duration).cuda()
         p_tubes = torch.zeros(n_clips, rois_per_image,  8).cuda() # all the proposed rois
 
@@ -79,16 +76,12 @@ class Model(nn.Module):
             rpn_loss_bbox_ = torch.zeros((loops)).cuda()
             act_loss_bbox_ = torch.zeros((loops)).cuda()
 
-        print(' f_gt_tubes.device() :',f_gt_tubes.device)
-        print('tubes_labels.device :',tubes_labels.device)
         for step, dt in enumerate(data_loader):
 
             # if step == 1:
             #     break
 
             clips,  (h, w),  gt_tubes, _, im_info, n_acts = dt
-
-            print('gt_tubes :',gt_tubes.shape)
             clips_ = clips.cuda() #.to(device)
             h_ = h.cuda() #.to(device)
             w_ = w.cuda() #.to(device)
@@ -96,13 +89,16 @@ class Model(nn.Module):
             im_info_ = im_info.cuda()  #.to(device)
             n_acts_ = n_acts.cuda() #.to(device)
 
-            
             indexes = (torch.arange(0, gt_tubes.size(0))* 8).unsqueeze(1)
             indexes = indexes.expand(gt_tubes.size(0),gt_tubes.size(1)).type_as(gt_tubes_).cuda() #.to(device)
             # print('gt_tubes.type() :',gt_tubes_.type(), ' device :', gt_tubes_.device)
             # print('indexes.type() :',indexes.type(), ' indexes.device() :',indexes.device)
-            gt_tubes_[:,:,2] = (gt_tubes_[:,:,2] - indexes).clamp_(min=0)
-            gt_tubes_[:,:,5] = (gt_tubes_[:,:,5] - indexes).clamp_(min=0)
+            print('before gt_tubes_ :',gt_tubes_)
+            print('before gt_tubes_ :',gt_tubes_.shape)
+            print('indexes :',indexes)
+            # gt_tubes_[:,:,2] = (gt_tubes_[:,:,2] - indexes).clamp_(min=0)
+            # gt_tubes_[:,:,5] = (gt_tubes_[:,:,5] - indexes).clamp_(min=0)
+            # print('before gt_tubes_ :',gt_tubes_)
 
             tubes,  bbox_pred, pooled_feat, \
             rpn_loss_cls,  rpn_loss_bbox, \
@@ -122,11 +118,11 @@ class Model(nn.Module):
             # print('pooled_feat.shape :',pooled_feat.shape)
             pooled_f = pooled_feat.view(-1,rois_per_image,512,self.sample_duration)
 
-            indexes = (torch.arange(0, tubes.size(0))* 8).unsqueeze(1)
-            indexes = indexes.expand(tubes.size(0),tubes.size(1)).type_as(tubes)
+            indexes_ = (torch.arange(0, tubes.size(0))* 8).unsqueeze(1)
+            indexes_ = indexes_.expand(tubes.size(0),tubes.size(1)).type_as(tubes)
 
-            tubes[:,:,3] = tubes[:,:,3] + indexes
-            tubes[:,:,6] = tubes[:,:,6] + indexes
+            tubes[:,:,3] = tubes[:,:,3] + indexes_
+            tubes[:,:,6] = tubes[:,:,6] + indexes_
 
             idx_s = step * batch_size 
             idx_e = step * batch_size + batch_size
@@ -138,10 +134,18 @@ class Model(nn.Module):
             p_tubes[idx_s:idx_e] = tubes
 
             if self.training:
+                # print('gt_tubes.shape :',gt_tubes.shape)
+                # print('f_gt_tubes.shape ',f_gt_tubes.shape)
+                # print('f_gt_tubes.shape ',f_gt_tubes[idx_s:idx_e].shape)
+                print('indexes.shape :',indexes.shape)
                 print('gt_tubes.shape :',gt_tubes.shape)
-                print('f_gt_tubes.shape ',f_gt_tubes.shape)
-                print('f_gt_tubes.shape ',f_gt_tubes[idx_s:idx_e].shape)
-                f_gt_tubes[idx_s:idx_e] = gt_tubes
+                indexes = (torch.arange(0, gt_tubes.size(0))* 8).unsqueeze(1)
+                indexes = indexes.expand(gt_tubes.size(0),gt_tubes.size(1)).type_as(gt_tubes_).cuda() #.to(device)
+
+                gt_tubes_[:,:,2] = gt_tubes_[:,:,2] + indexes
+                gt_tubes_[:,:,5] = gt_tubes_[:,:,5] + indexes
+                print('gt_tubes_ :',gt_tubes_)
+                f_gt_tubes[idx_s:idx_e] = gt_tubes_
                 tubes_labels[idx_s:idx_e] = rois_label.squeeze(-1)
                 rpn_loss_cls_[step] = rpn_loss_cls
                 rpn_loss_bbox_[step] = rpn_loss_bbox
@@ -172,21 +176,30 @@ class Model(nn.Module):
 
             ## first get video tube
             video_tubes = create_video_tube(boxes.type_as(clips_))
-            # print('video_tubes.type() :',video_tubes.type())
             video_tubes_r =  resize_tube(video_tubes.unsqueeze(0), h_,w_,self.sample_size)
             
             # get gt tubes and feats
+            print('f_gt_tubes :',f_gt_tubes)
             gt_tubes_feats,gt_tubes_list = get_gt_tubes_feats_label(f_tubes, p_tubes, features, tubes_labels, f_gt_tubes)
 
             # get some background tubes
             bg_tubes = get_tubes_feats_label(f_tubes, p_tubes, features, tubes_labels, video_tubes_r)
-
-            # print('bg_tubes :',bg_tubes)
-            # print('gt_tubes_list :',gt_tubes_list)
-            f_tubes = gt_tubes_list + bg_tubes
-            gt_lbl = torch.Tensor([f_gt_tubes[gt_tubes_list[i][0][0],i,6].item() for i in range(len(gt_tubes_list))]).type_as(f_gt_tubes)
+            print('vid_id :',vid_id)
+            print('video_tubes_r :',video_tubes_r)
+            print('f_gt_tubes.shape  :',f_gt_tubes.shape )
+            print('gt_tubes_list) :',gt_tubes_list)
+            print('len(gt_tubes_list) :',len(gt_tubes_list))
+            # gt_lbl = torch.Tensor([f_gt_tubes[gt_tubes_list[i][0][0],i,6].item() for i in range(len(gt_tubes_list))]).type_as(f_gt_tubes)
+            gt_lbl = torch.zeros(len(gt_tubes_list)).type_as(f_gt_tubes)
+            for i in torch.arange(len(gt_tubes_list)).long().cuda():
+                print('i :', i)
+                print(' gt_tubes_list[i][0][0],i,6 :',gt_tubes_list[i][0][0],i,6)
+                print(' f_gt_tubes[gt_tubes_list[i][0][0],i,6] :',f_gt_tubes[gt_tubes_list[i][0][0],i,6])
+                gt_lbl[i] = f_gt_tubes[gt_tubes_list[i][0][0],i,6]
             bg_lbl = torch.zeros((len(bg_tubes))).type_as(f_gt_tubes)
             
+            ## concate fb, bg tubes
+            f_tubes = gt_tubes_list + bg_tubes
             target_lbl = torch.cat((gt_lbl,bg_lbl),0)
 
         ##############################################

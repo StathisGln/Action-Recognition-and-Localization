@@ -41,7 +41,7 @@ class _AnchorTargetLayer(nn.Module):
         self._scales = scales
         anchor_scales = scales
         self.anchor_duration = anchor_duration
-        self._anchors = torch.from_numpy(generate_anchors(scales=np.array(anchor_scales), ratios=np.array(ratios), time_dim=anchor_duration)).float().cuda()
+        self._anchors = torch.from_numpy(generate_anchors(scales=np.array(anchor_scales), ratios=np.array(ratios), time_dim=anchor_duration)).float()
         self._num_anchors = self._anchors.size(0)
 
 
@@ -78,15 +78,18 @@ class _AnchorTargetLayer(nn.Module):
         shift_y = np.arange(0, feat_height) * self._feat_stride
         shift_z = np.arange(0, feat_time)
         shift_x, shift_y, shift_z = np.meshgrid(shift_x, shift_y, shift_z)
+        dev = gt_tubes.device
         shifts = torch.from_numpy(np.vstack((shift_x.ravel(), shift_y.ravel(), shift_z.ravel(),
                                              shift_x.ravel(), shift_y.ravel(), shift_z.ravel())).transpose())
-        shifts = shifts.contiguous().type_as(rpn_cls_score).float()
-
+        shifts = shifts.contiguous().type_as(rpn_cls_score).float().to(dev)
+        self._anchors = self._anchors.to(dev)
         A = self._num_anchors
         K = shifts.size(0)
         # print("A {}, K {}".format(A,K))
 
-        self._anchors = self._anchors.type_as(gt_tubes) # move to specific gpu.
+        print('self._anchors.device :',self._anchors.device)
+        print('shifts.device :',shifts.device)
+        # self._anchors = self._anchors.type_as(gt_tubes) # move to specific gpu.
         # print('self._anchors :',self._anchors)
         # print('self._anchors.shape :',self._anchors.shape)
         all_anchors = self._anchors.view(1, A, 6) + shifts.view(K, 1, 6)
@@ -118,7 +121,9 @@ class _AnchorTargetLayer(nn.Module):
         bbox_inside_weights = gt_tubes.new(batch_size, inds_inside.size(0)).zero_()
         bbox_outside_weights = gt_tubes.new(batch_size, inds_inside.size(0)).zero_()
         # print('anchors.shape :',anchors.shape)
-        overlaps = bbox_overlaps_batch_3d(anchors, gt_tubes)
+        print('gt_tubes.device :',gt_tubes.device)
+        print('anchors.device :',anchors.device)
+        overlaps = bbox_overlaps_batch_3d(anchors, gt_tubes.to(dev))
         # print('overlaps.shape :',overlaps.shape)
         indx = np.where(overlaps.cpu().numpy() > 0.3)
         # print(indx)
@@ -176,7 +181,7 @@ class _AnchorTargetLayer(nn.Module):
                 # See https://github.com/pytorch/pytorch/issues/1868 for more details.
                 # use numpy instead.
                 #rand_num = torch.randperm(fg_inds.size(0)).type_as(gt_boxes).long()
-                rand_num = torch.from_numpy(np.random.permutation(fg_inds.size(0))).type_as(gt_tubes).long()
+                rand_num = torch.from_numpy(np.random.permutation(fg_inds.size(0))).type_as(gt_tubes).long().to(dev)
                 disable_inds = fg_inds[rand_num[:fg_inds.size(0)-num_fg]]
                 labels[i][disable_inds] = -1
 
@@ -189,13 +194,13 @@ class _AnchorTargetLayer(nn.Module):
                 bg_inds = torch.nonzero(labels[i] == 0).view(-1)
                 #rand_num = torch.randperm(bg_inds.size(0)).type_as(gt_boxes).long()
 
-                rand_num = torch.from_numpy(np.random.permutation(bg_inds.size(0))).type_as(gt_tubes).long()
+                rand_num = torch.from_numpy(np.random.permutation(bg_inds.size(0))).type_as(gt_tubes).long().to(dev)
                 disable_inds = bg_inds[rand_num[:bg_inds.size(0)-num_bg]]
                 labels[i][disable_inds] = -1
 
         offset = torch.arange(0, batch_size)*gt_tubes.size(1)
 
-        argmax_overlaps = argmax_overlaps + offset.view(batch_size, 1).type_as(argmax_overlaps)
+        argmax_overlaps = argmax_overlaps + offset.view(batch_size, 1).type_as(argmax_overlaps).to(dev)
         bbox_targets = _compute_targets_batch(anchors, gt_tubes.view(-1,7)[argmax_overlaps.view(-1), :].view(batch_size, -1, 7))
         # print('bbox_targets :',bbox_targets.shape)
         # use a single value instead of 4 values for easy index.
@@ -261,10 +266,10 @@ def _unmap(data, count, inds, batch_size, fill=0):
     size count) """
 
     if data.dim() == 2:
-        ret = torch.Tensor(batch_size, count).fill_(fill).type_as(data)
+        ret = torch.Tensor(batch_size, count).fill_(fill).type_as(data).to(data.device)
         ret[:, inds] = data
     else:
-        ret = torch.Tensor(batch_size, count, data.size(2)).fill_(fill).type_as(data)
+        ret = torch.Tensor(batch_size, count, data.size(2)).fill_(fill).type_as(data).to(data.device)
         ret[:, inds,:] = data
     return ret
 
@@ -276,4 +281,4 @@ def _compute_targets_batch(ex_rois, gt_rois):
     # print('gt_rois[:,:, [0,1,3,4] :',gt_rois[:,:, [0,1,3,4]])
     # print('ex_rois.shape :',ex_rois.shape)
     # print('gt_rois.shape :',gt_rois.shape)
-    return bbox_transform_batch_3d(ex_rois, gt_rois[:,:, :7])
+    return bbox_transform_batch_3d(ex_rois, gt_rois[:,:, :7].to(ex_rois.device))

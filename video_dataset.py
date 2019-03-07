@@ -10,7 +10,7 @@ import glob
 import json
 import pickle
 from itertools import groupby
-from create_tubes_from_boxes import create_tube_list
+from create_tubes_from_boxes import create_tube_list,create_tube
 
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
@@ -197,7 +197,6 @@ def prepare_samples (vid_names, vid_id, boxes, sample_duration, step):
         'segment': [begin_t, end_t],
         'n_frames': n_frames,
     }
-
     for i in range(1, (n_frames - sample_duration + 1), step):
         sample_i = copy.deepcopy(sample)
         sample_i['frame_indices'] = list(range(i, i + sample_duration))
@@ -226,6 +225,12 @@ def make_dataset(dataset_path, boxes_file):
             if video_path not in boxes_data:
                 # print('OXI to ',video_path)
                 continue
+            # print('video_path :',video_path)
+            #  TrampolineJumping/v_TrampolineJumping_g17_c03
+            # if(video_path == 'IceDancing/v_IceDancing_g06_c04'):
+
+            #     print('edsdfes')
+            #     print('n_frames :',n_frames)
 
             values= boxes_data[video_path]
             n_frames = values['numf']
@@ -299,16 +304,20 @@ class video_names(data.Dataset):
         new_rois_np = np.array(new_rois)
 
         n_actions = new_rois_np.shape[0]
-        print('n_actions :',n_actions)
 
         final_boxes = np.zeros((self.max_actions, self.max_frames, new_rois_np.shape[2]))
-        print('final_boxes :',final_boxes.shape)
         final_boxes[:n_actions,:n_frames, :] = new_rois_np
 
-        print('vid_name :',vid_name)
-        vid_id = self.vid2idx[vid_name]
+        vid_id = np.array([self.vid2idx[vid_name]],dtype=np.int64)
+        n_frames_np = np.array([n_frames], dtype=np.int64)
+        n_actions_np = np.array([n_actions], dtype=np.int64)
+        # 'IceDancing/v_IceDancing_g06_c04'
+        # if vid_name == 'IceDancing/v_IceDancing_g06_c04': # 'TrampolineJumping/v_TrampolineJumping_g17_c03':
+        #     print('index :',index)
         
-        return vid_id, final_boxes, n_frames, n_actions
+        # if vid_id == 895:
+        #     print('index :',index)
+        return vid_id, final_boxes, n_frames_np, n_actions_np
     
     def __len__(self):
 
@@ -364,56 +373,21 @@ class single_video(data.Dataset):
         rois_sample_tensor = rois_Tensor[:,rois_indx,:]
         rois_sample_tensor[:,:,2] = rois_sample_tensor[:,:,0] + rois_sample_tensor[:,:,2]
         rois_sample_tensor[:,:,3] = rois_sample_tensor[:,:,1] + rois_sample_tensor[:,:,3]
-        # print('rois_sample_tensor :',rois_sample_tensor)
         rois_sample_tensor_r = resize_boxes(rois_sample_tensor, h,w,self.sample_size)
-        # print('rois_sample_tensor_r :',rois_sample_tensor_r)
-        rois_sample = rois_sample_tensor_r.tolist()
-
-        rois_fr = [[z+[j] for j,z in enumerate(rois_sample[i])] for i in range(len(rois_sample))]
-        rois_gp =[[[list(g),i] for i,g in groupby(w, key=lambda x: x[:][4])] for w in rois_fr] # [person, [action, class]
-
-        # print('rois_gp :',rois_gp)
-        # print('len(rois_gp) :',len(rois_gp))
-
-        final_rois_list = []
-        for p in rois_gp: # for each person
-            for r in p:
-                if r[1] > -1 :
-                    final_rois_list.append(r[0])
-
-        num_actions = len(final_rois_list) # number of actions
-
-        if num_actions == 0:
-            f_rois = torch.zeros(self.n_actions,self.sample_duration,5)
-            ret_tubes = torch.zeros(self.n_actions,7)
-            n_acts = 0
-        else:
-            final_rois = torch.zeros((num_actions,self.sample_duration,5)) # num_actions x [x1,y1,x2,y2,label]
-            for i in range(num_actions):
-                # for every action:
-                for j in range(len(final_rois_list[i])):
-                    # for every rois
-                    pos = final_rois_list[i][j][5]
-                    final_rois[i,pos,:]= torch.Tensor(final_rois_list[i][j][:5])
-
-            # # print('final_rois :',final_rois)
-            gt_tubes = create_tube_list(rois_gp,[w,h], self.sample_duration) ## problem when having 2 actions simultaneously
-            n_acts = gt_tubes.size(0)
-            
-            ret_tubes = torch.zeros(self.n_actions,7)
-
-            ret_tubes[:n_acts,:] = gt_tubes
-
-            ret_tubes[:n_acts,2] = ret_tubes[:n_acts,2] + frame_indices[0]-1
-            ret_tubes[:n_acts,5] = ret_tubes[:n_acts,5] + frame_indices[0]-1
-
-            ## f_rois
-            f_rois = torch.zeros(self.n_actions,self.sample_duration,5)
-            f_rois[:n_acts,:,:] = final_rois[:n_acts]
-
+        print('rois_sample_tensor_r :',rois_sample_tensor_r)
+        # rois_sample = rois_sample_tensor_r.tolist()
+        frms = torch.arange(0,self.sample_duration).unsqueeze(-1).unsqueeze(0)
+        frms = frms.expand(rois_sample_tensor_r.size(0),frms.size(1), frms.size(2)).type_as(rois_sample_tensor_r)
+        tubes = create_tube(rois_sample_tensor_r.unsqueeze(0), torch.Tensor([[h,w]*rois_sample_tensor_r.size(0)]), self.sample_duration)
+        tubes = tubes.squeeze(0)
+        print('tubes :',tubes)
+        padding_lines = tubes[:,-1].squeeze(0).lt(0).nonzero().view(-1)
+        for i in padding_lines:
+            tubes[i] = torch.zeros((7))
+        print('after tubes :',tubes)
         ## im_info
         im_info = torch.Tensor([self.sample_size, self.sample_size, self.sample_duration] )
-        return clip,  (h, w),  ret_tubes, f_rois, im_info, n_acts
+        return clip,  (h, w),  tubes, rois_sample_tensor_r, im_info, rois_sample_tensor_r.size(0)
 
     def __len__(self):
         return len(self.data)

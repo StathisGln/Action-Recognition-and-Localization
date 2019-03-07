@@ -110,12 +110,15 @@ def tubes_overlaps(tubes, gt_tube):
 
     overlaps: (N, K) ndarray of overlap between boxes and query_boxes
     """
+    print('Inside tubes_overlaps')
     batch_size = gt_tube.size(0)
     N = tubes.size(0)
     K = gt_tube.size(1)
 
     gt_tube = gt_tube[:,:,:6]
     tubes = tubes[:,1:7]
+    print('gt_tube :',gt_tube)
+    print('tubes :',tubes)
     tubes = tubes.view(1,N,6).expand(batch_size, N, 6).contiguous()
 
     gt_tube_x = (gt_tube[:, :, 3] - gt_tube[:, :, 0] + 1)
@@ -179,10 +182,11 @@ def tubes_overlaps_batch(tubes, gt_tube):
 
     overlaps: (N, K) ndarray of overlap between boxes and query_boxes
     """
+
     batch_size = gt_tube.size(0)
     N = tubes.size(0)
     K = gt_tube.size(1)
-
+    print('N {} K {} tubes.size() {}, gt_tube.size() {}, batch_size {}'.format(N,K,tubes.size(),gt_tube.shape, batch_size))
     gt_tube = gt_tube[:,:,:6]
     tubes = tubes.view(1,N,6).expand(batch_size, N, 6).contiguous()
 
@@ -295,6 +299,9 @@ def connect_tubes(tubes, tubes_curr, p_tubes, pooled_feats, rois_label, index): 
         # print('connect_indices.shape  :',connect_indices.shape )
         if (connect_indices.nelement() == 0):
             print('no connection')
+            # print('new_tubes.shape :',new_tubes.shape)
+            for i in range(new_tubes.size(0)):
+                tubes += [[(tb+index, i)]]
         else:
             connect_indices = connect_indices[:,1]
         
@@ -331,19 +338,26 @@ def get_gt_tubes_feats_label(f_tubes, p_tubes, features, rois_label, video_tubes
 
     gt_tb_feat = torch.zeros(features.size(0), video_tubes.size(1), features.size(2), features.size(3))
     gt_list = [[] for i in range( video_tubes.size(1))]
+    print('gt_list :',gt_list)
     for i in range(video_tubes.size(0)):
-
+        print('i ==> ',i)
         tb = p_tubes[i]
+        print('tb :',tb)
         gt_tb = video_tubes[i]
+        print('gt_tb :',gt_tb)
         overlaps = tubes_overlaps(tb, gt_tb.unsqueeze(0))
+        print('overlaps :',overlaps)
         values, max_indices = torch.max(overlaps, 1)
+        print('values :',values)
+        print('max_indices :',max_indices)
         for j in range(video_tubes.size(1)):
             pos_ = (i,max_indices[0,j].item())
+            print('pos_ :',pos_)
             if values[0,j] < 0.5:
                 continue
             gt_list[j] += [pos_]
             gt_tb_feat[i,j] = features[i,max_indices[0,j]]
-
+        print('gt_list :',gt_list)
     return gt_tb_feat, gt_list
 
 def get_tubes_feats_label(f_tubes, p_tubes, features, rois_label, video_tubes):
@@ -387,6 +401,8 @@ def get_tubes_feats_label(f_tubes, p_tubes, features, rois_label, video_tubes):
 
     # print('proposed_seq :',proposed_seq.shape)
     # print('video_tubes :',video_tubes.shape)
+    if proposed_seq.size(0) < 1:
+        return []
     overlaps = tubes_overlaps_batch(proposed_seq, video_tubes)
     max_overlaps,gt_assignment = torch.max(overlaps,2)
     max_overlaps = max_overlaps.squeeze(0)

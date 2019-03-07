@@ -135,8 +135,10 @@ class _RPN(nn.Module):
             rpn_bbox_outside_weights = Variable(rpn_bbox_outside_weights)
             rpn_bbox_targets = Variable(rpn_bbox_targets)
 
-            self.rpn_loss_box =  _smooth_l1_loss(rpn_bbox_pred, rpn_bbox_targets, rpn_bbox_inside_weights,
-                                                               rpn_bbox_outside_weights, sigma=3, dim=[1,2,3,4])
+            self.rpn_loss_box =  _smooth_l1_loss(rpn_bbox_pred, rpn_bbox_targets.to(rpn_bbox_pred.device), \
+                                                 rpn_bbox_inside_weights.to(rpn_bbox_pred.device), \
+                                                 rpn_bbox_outside_weights.to(rpn_bbox_pred.device), \
+                                                 sigma=3, dim=[1,2,3,4])
             # print('self.rpn_loss_box :',self.rpn_loss_box)
             # print('self.rpn_loss_box :',self.rpn_loss_box)
 

@@ -147,8 +147,8 @@ if __name__ == '__main__':
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(ep+1, epochs))
         for step, data  in enumerate(data_loader):
 
-            if step == 2:
-                break
+            # if step == 2:
+            #     break
 
             vid_id, boxes, n_frames, n_actions = data
             
@@ -169,8 +169,7 @@ if __name__ == '__main__':
                                                              temporal_transform, boxes_, \
                                                              mode, cls2idx, n_actions_,n_frames_)
 
-            out_prob, tcn_loss = model( clips, target, gt_tubes_r, n_frames, max_dim=1)
-            loss = tcn_loss.mean()
+            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + cls_loss.mean()
 
             # backw\ard
             optimizer.zero_grad()

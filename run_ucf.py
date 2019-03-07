@@ -18,7 +18,7 @@ from temporal_transforms import LoopPadding
 
 from model import Model
 
-
+np.set_printoptions(threshold=np.nan)
 np.random.seed(42)
 
 if __name__ == '__main__':
@@ -71,11 +71,15 @@ if __name__ == '__main__':
     model.to(device)
 
     vid_name_loader = video_names(dataset_folder, boxes_file, vid2idx)
-    data_loader = torch.utils.data.DataLoader(vid_names, batch_size=batch_size,
+    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
                                               shuffle=False)
+    # vid_id : [895]
+
+    for step, t in enumerate(data_loader):
+        continue
     
     # vid_path, n_actions, boxes = vid_names[1505]
-    vid_id, boxes, n_frames,n_actions = vid_name_loader[500]
+    vid_id, boxes, n_frames,n_actions = vid_name_loader[3105]
     print('vid_id :',vid_id)
     print('n_action :',n_actions)
     print('n_frames :',n_frames)
@@ -85,17 +89,18 @@ if __name__ == '__main__':
     print('**********Start**********')    
 
 
-    boxes_ = boxes[:n_actions, :n_frames]
-    boxes_ = boxes.to(device)
-    vid_id_ = vid_id.to(device)
-    n_frames_ = n_frames.to(device)
-    n_actions_ = n_actions.to(device)
 
+    vid_id_ = torch.Tensor([vid_id]).to(device).long()
+    n_frames_ = torch.Tensor([n_frames]).to(device).long()
+    n_actions_ = torch.Tensor([n_actions]).to(device).long()
+    boxes_ = torch.from_numpy(boxes).unsqueeze(0).to(device)
+    # boxes_ = boxes_[:n_actions_, :n_frames_]
+    print(boxes[:4,:333])
     print('boxes_ :',boxes_.shape)
     tubes,  bbox_pred, \
     prob_out, rpn_loss_cls, \
     rpn_loss_bbox, act_loss_bbox,  cls_loss =  model( dataset_folder, \
-                                                      vid_names, vid_id, spatial_transform, \
+                                                      vid_names, vid_id_, spatial_transform, \
                                                       temporal_transform, boxes_, \
                                                       mode, cls2idx, n_actions_, n_frames_)
 
