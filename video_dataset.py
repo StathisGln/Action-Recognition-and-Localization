@@ -374,17 +374,15 @@ class single_video(data.Dataset):
         rois_sample_tensor[:,:,2] = rois_sample_tensor[:,:,0] + rois_sample_tensor[:,:,2]
         rois_sample_tensor[:,:,3] = rois_sample_tensor[:,:,1] + rois_sample_tensor[:,:,3]
         rois_sample_tensor_r = resize_boxes(rois_sample_tensor, h,w,self.sample_size)
-        print('rois_sample_tensor_r :',rois_sample_tensor_r)
+        # print('rois_sample_tensor_r :',rois_sample_tensor_r)
         # rois_sample = rois_sample_tensor_r.tolist()
         frms = torch.arange(0,self.sample_duration).unsqueeze(-1).unsqueeze(0)
         frms = frms.expand(rois_sample_tensor_r.size(0),frms.size(1), frms.size(2)).type_as(rois_sample_tensor_r)
         tubes = create_tube(rois_sample_tensor_r.unsqueeze(0), torch.Tensor([[h,w]*rois_sample_tensor_r.size(0)]), self.sample_duration)
         tubes = tubes.squeeze(0)
-        print('tubes :',tubes)
         padding_lines = tubes[:,-1].squeeze(0).lt(0).nonzero().view(-1)
         for i in padding_lines:
             tubes[i] = torch.zeros((7))
-        print('after tubes :',tubes)
         ## im_info
         im_info = torch.Tensor([self.sample_size, self.sample_size, self.sample_duration] )
         return clip,  (h, w),  tubes, rois_sample_tensor_r, im_info, rois_sample_tensor_r.size(0)

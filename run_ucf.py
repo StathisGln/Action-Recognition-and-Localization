@@ -95,8 +95,6 @@ if __name__ == '__main__':
     n_actions_ = torch.Tensor([n_actions]).to(device).long()
     boxes_ = torch.from_numpy(boxes).unsqueeze(0).to(device)
     # boxes_ = boxes_[:n_actions_, :n_frames_]
-    print(boxes[:4,:333])
-    print('boxes_ :',boxes_.shape)
     tubes,  bbox_pred, \
     prob_out, rpn_loss_cls, \
     rpn_loss_bbox, act_loss_bbox,  cls_loss =  model( dataset_folder, \

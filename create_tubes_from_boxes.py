@@ -78,11 +78,8 @@ def create_tube(boxes, im_info_3d, sample_duration):
                 t1[i,j] = k[0,0]
                 t2[i,j] = k[-1,0]
                 labels[i,j] = boxes[i,j,k[0,0],4]
-                # print('t1 :',t1)
-                # print('t2 :',t2)
-                # print('labesl :',labels)
+
                 mins, _ = torch.min(boxes[i,j,k[0,0]:k[-1,0]+1], 0)
-                print('mins :',mins)
                 x1[i,j] = mins[0]
                 y1[i,j] = mins[1]
 

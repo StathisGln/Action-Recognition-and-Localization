@@ -50,9 +50,7 @@ class Model(nn.Module):
         # print('dir(self.module) :',dir(self.module))
         num_images = 1
         rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images)
-        print('boxes.shape :',boxes.shape)
         boxes = boxes[:,:num_actions, :num_frames].squeeze(0)
-        print('boxes.shape :',boxes.shape)
         data = single_video(dataset_folder, vid_names, vid_id, frames_dur= self.sample_duration, sample_size =self.sample_size,
                             spatial_transform=spatial_transform, temporal_transform=temporal_transform, boxes=boxes,
                             mode=mode, classes_idx=cls2idx)
@@ -93,9 +91,9 @@ class Model(nn.Module):
             indexes = indexes.expand(gt_tubes.size(0),gt_tubes.size(1)).type_as(gt_tubes_).cuda() #.to(device)
             # print('gt_tubes.type() :',gt_tubes_.type(), ' device :', gt_tubes_.device)
             # print('indexes.type() :',indexes.type(), ' indexes.device() :',indexes.device)
-            print('before gt_tubes_ :',gt_tubes_)
-            print('before gt_tubes_ :',gt_tubes_.shape)
-            print('indexes :',indexes)
+            # print('before gt_tubes_ :',gt_tubes_)
+            # print('before gt_tubes_ :',gt_tubes_.shape)
+            # print('indexes :',indexes)
             # gt_tubes_[:,:,2] = (gt_tubes_[:,:,2] - indexes).clamp_(min=0)
             # gt_tubes_[:,:,5] = (gt_tubes_[:,:,5] - indexes).clamp_(min=0)
             # print('before gt_tubes_ :',gt_tubes_)
@@ -137,19 +135,18 @@ class Model(nn.Module):
                 # print('gt_tubes.shape :',gt_tubes.shape)
                 # print('f_gt_tubes.shape ',f_gt_tubes.shape)
                 # print('f_gt_tubes.shape ',f_gt_tubes[idx_s:idx_e].shape)
-                print('indexes.shape :',indexes.shape)
-                print('gt_tubes.shape :',gt_tubes.shape)
                 indexes = (torch.arange(0, gt_tubes.size(0))* 8).unsqueeze(1)
                 indexes = indexes.expand(gt_tubes.size(0),gt_tubes.size(1)).type_as(gt_tubes_).cuda() #.to(device)
 
                 gt_tubes_[:,:,2] = gt_tubes_[:,:,2] + indexes
                 gt_tubes_[:,:,5] = gt_tubes_[:,:,5] + indexes
-                print('gt_tubes_ :',gt_tubes_)
+
                 f_gt_tubes[idx_s:idx_e] = gt_tubes_
                 tubes_labels[idx_s:idx_e] = rois_label.squeeze(-1)
                 rpn_loss_cls_[step] = rpn_loss_cls
                 rpn_loss_bbox_[step] = rpn_loss_bbox
                 act_loss_bbox_[step] = act_loss_bbox
+
             # print('----------Out TPN----------')
             # # print('p_tubes.type() :',p_tubes.type())
             # # print('tubes.type() :',tubes.type())
@@ -179,22 +176,19 @@ class Model(nn.Module):
             video_tubes_r =  resize_tube(video_tubes.unsqueeze(0), h_,w_,self.sample_size)
             
             # get gt tubes and feats
-            print('f_gt_tubes :',f_gt_tubes)
+            # print('f_gt_tubes :',f_gt_tubes)
             gt_tubes_feats,gt_tubes_list = get_gt_tubes_feats_label(f_tubes, p_tubes, features, tubes_labels, f_gt_tubes)
 
             # get some background tubes
             bg_tubes = get_tubes_feats_label(f_tubes, p_tubes, features, tubes_labels, video_tubes_r)
-            print('vid_id :',vid_id)
-            print('video_tubes_r :',video_tubes_r)
-            print('f_gt_tubes.shape  :',f_gt_tubes.shape )
-            print('gt_tubes_list) :',gt_tubes_list)
-            print('len(gt_tubes_list) :',len(gt_tubes_list))
+            # print('vid_id :',vid_id)
+            # print('video_tubes_r :',video_tubes_r)
+            # print('f_gt_tubes.shape  :',f_gt_tubes.shape )
+            # print('gt_tubes_list) :',gt_tubes_list)
+            # print('len(gt_tubes_list) :',len(gt_tubes_list))
             # gt_lbl = torch.Tensor([f_gt_tubes[gt_tubes_list[i][0][0],i,6].item() for i in range(len(gt_tubes_list))]).type_as(f_gt_tubes)
             gt_lbl = torch.zeros(len(gt_tubes_list)).type_as(f_gt_tubes)
             for i in torch.arange(len(gt_tubes_list)).long().cuda():
-                print('i :', i)
-                print(' gt_tubes_list[i][0][0],i,6 :',gt_tubes_list[i][0][0],i,6)
-                print(' f_gt_tubes[gt_tubes_list[i][0][0],i,6] :',f_gt_tubes[gt_tubes_list[i][0][0],i,6])
                 gt_lbl[i] = f_gt_tubes[gt_tubes_list[i][0][0],i,6]
             bg_lbl = torch.zeros((len(bg_tubes))).type_as(f_gt_tubes)
             

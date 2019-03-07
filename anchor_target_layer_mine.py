@@ -87,8 +87,6 @@ class _AnchorTargetLayer(nn.Module):
         K = shifts.size(0)
         # print("A {}, K {}".format(A,K))
 
-        print('self._anchors.device :',self._anchors.device)
-        print('shifts.device :',shifts.device)
         # self._anchors = self._anchors.type_as(gt_tubes) # move to specific gpu.
         # print('self._anchors :',self._anchors)
         # print('self._anchors.shape :',self._anchors.shape)
@@ -121,8 +119,6 @@ class _AnchorTargetLayer(nn.Module):
         bbox_inside_weights = gt_tubes.new(batch_size, inds_inside.size(0)).zero_()
         bbox_outside_weights = gt_tubes.new(batch_size, inds_inside.size(0)).zero_()
         # print('anchors.shape :',anchors.shape)
-        print('gt_tubes.device :',gt_tubes.device)
-        print('anchors.device :',anchors.device)
         overlaps = bbox_overlaps_batch_3d(anchors, gt_tubes.to(dev))
         # print('overlaps.shape :',overlaps.shape)
         indx = np.where(overlaps.cpu().numpy() > 0.3)
