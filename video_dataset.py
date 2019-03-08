@@ -93,6 +93,20 @@ def get_video_names_and_annotations(data, subset):
 
     return video_names, annotations
 
+def get_file_names(spt_path, mode, split_number=1):
+        
+    file_name =  '{}list{:0>2}.txt'.format(mode,split_number)
+
+    with open(os.path.join(spt_path, file_name)) as fp:
+
+        lines = fp.readlines()
+        files = [i.split()[0][:-4] for i in lines]
+
+    data =  [ i.split('/') for i in files]
+    file_names = [i[1] for i in data]
+    classes = list(set([i[0] for i in data]))
+
+    return file_names
 
 def create_tcn_dataset(split_txt_path, json_path, classes, mode):
 
@@ -207,7 +221,7 @@ def prepare_samples (vid_names, vid_id, boxes, sample_duration, step):
     return dataset, n_actions, n_frames
 
 
-def make_dataset(dataset_path, boxes_file):
+def make_dataset(dataset_path, spt_path, boxes_file, mode, file_name):
     dataset = []
 
     classes = next(os.walk(dataset_path, True))[1]
@@ -215,6 +229,7 @@ def make_dataset(dataset_path, boxes_file):
     with open(boxes_file, 'rb') as fp:
         boxes_data = pickle.load(fp)
 
+    file_names = get_file_names(spt_path, mode, split_number=1)
     max_frames = -1
     max_actions = -1
     for cls in classes:
@@ -222,7 +237,7 @@ def make_dataset(dataset_path, boxes_file):
         for vid in videos:
 
             video_path = os.path.join(cls,vid)
-            if video_path not in boxes_data:
+            if video_path not in boxes_data or vid in file_names:
                 # print('OXI to ',video_path)
                 continue
             # print('video_path :',video_path)
@@ -271,12 +286,13 @@ def make_dataset(dataset_path, boxes_file):
     return dataset, max_frames, max_actions
 
 class video_names(data.Dataset):
-    def __init__(self, dataset_folder, boxes_file, vid2idx):
+    def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, file_name, mode='train'):
 
         self.dataset_folder = dataset_folder
         self.boxes_file = boxes_file
         self.vid2idx = vid2idx
-        self.data, self.max_frames, self.max_actions = make_dataset(dataset_folder, boxes_file)
+        self.mode = mode
+        self.data, self.max_frames, self.max_actions = make_dataset(spt_path, dataset_folder, boxes_file, mode, file_name)
 
     def __getitem__(self, index):
 

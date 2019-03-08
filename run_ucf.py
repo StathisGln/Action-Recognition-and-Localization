@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     dataset_folder = '/gpu-data2/sgal/UCF-101-frames'
     boxes_file = '/gpu-data2/sgal/pyannot.pkl'
-
+    spt_path = '/gpu-data2/sgal/UCF101_Action_detection_splits/'
     ### get videos id
 
     vid2idx,vid_names = get_vid_dict(dataset_folder)

@@ -59,6 +59,7 @@ if __name__ == '__main__':
 
     dataset_folder = '/gpu-data2/sgal/UCF-101-frames'
     boxes_file = '/gpu-data2/sgal/pyannot.pkl'
+    spt_path = '/gpu-data2/sgal/UCF101_Action_detection_splits/'
 
     sample_size = 112
     sample_duration = 16  # len(images)
@@ -95,10 +96,10 @@ if __name__ == '__main__':
     model = Model(actions, sample_duration, sample_size)
     model.create_architecture()
 
-    if torch.cuda.device_count() > 1:
+    # if torch.cuda.device_count() > 1:
 
-        print('Using {} GPUs!'.format(torch.cuda.device_count()))
-        model = nn.DataParallel(model)
+    #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
+    #     model = nn.DataParallel(model)
 
     model.to(device)
 
@@ -125,7 +126,7 @@ if __name__ == '__main__':
     #          Train starts here          #
     #######################################
 
-    vid_name_loader = video_names(dataset_folder, boxes_file, vid2idx)
+    vid_name_loader = video_names(dataset_folder, spt_path, boxes_file, vid2idx)
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
                                               shuffle=True)
 
@@ -136,9 +137,17 @@ if __name__ == '__main__':
     if torch.cuda.device_count() > 1:
 
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
-        model.module.act_net = nn.DataParallel(model.module.act_net)
+        model.act_net = nn.DataParallel(model.act_net)
 
-    model.module.act_net = model.module.act_net.cuda()
+    model.act_net = model.act_net.cuda()
+
+    # if torch.cuda.device_count() > 1:
+
+    #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
+    #     model.module.act_net = nn.DataParallel(model.module.act_net)
+
+    # model.module.act_net = model.module.act_net.cuda()
+
 
     for ep in range(epochs):
 
