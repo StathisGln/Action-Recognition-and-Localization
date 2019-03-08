@@ -221,7 +221,7 @@ def prepare_samples (vid_names, vid_id, boxes, sample_duration, step):
     return dataset, n_actions, n_frames
 
 
-def make_dataset(dataset_path, spt_path, boxes_file, mode, file_name):
+def make_dataset(dataset_path, spt_path, boxes_file, mode):
     dataset = []
 
     classes = next(os.walk(dataset_path, True))[1]
@@ -237,7 +237,7 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode, file_name):
         for vid in videos:
 
             video_path = os.path.join(cls,vid)
-            if video_path not in boxes_data or vid in file_names:
+            if video_path not in boxes_data or not(vid in file_names):
                 # print('OXI to ',video_path)
                 continue
             # print('video_path :',video_path)
@@ -286,13 +286,13 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode, file_name):
     return dataset, max_frames, max_actions
 
 class video_names(data.Dataset):
-    def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, file_name, mode='train'):
+    def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train'):
 
         self.dataset_folder = dataset_folder
         self.boxes_file = boxes_file
         self.vid2idx = vid2idx
         self.mode = mode
-        self.data, self.max_frames, self.max_actions = make_dataset(spt_path, dataset_folder, boxes_file, mode, file_name)
+        self.data, self.max_frames, self.max_actions = make_dataset( dataset_folder, spt_path, boxes_file, mode)
 
     def __getitem__(self, index):
 

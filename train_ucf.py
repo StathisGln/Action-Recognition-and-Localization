@@ -198,14 +198,14 @@ if __name__ == '__main__':
         print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
         ep+1,loss_temp/step, lr))
         
-    #     if ( ep + 1 ) % 5 == 0: # validation time
-    #         val_data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
-    #                      temporal_transform=temporal_transform, json_file = boxes_file,
-    #                      split_txt_path=splt_txt_path, mode='val', classes_idx=cls2idx)
-    #         val_data_loader = torch.utils.data.DataLoader(val_data, batch_size=batch_size,
-    #                                                   shuffle=True, num_workers=n_threads, pin_memory=True)
+        if ( ep + 1 ) % 5 == 0: # validation time
+            val_data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
+                         temporal_transform=temporal_transform, json_file = boxes_file,
+                         split_txt_path=splt_txt_path, mode='val', classes_idx=cls2idx)
+            val_data_loader = torch.utils.data.DataLoader(val_data, batch_size=batch_size,
+                                                      shuffle=True, num_workers=n_threads, pin_memory=True)
 
-    #         validate_model(model, val_data, val_data_loader)
+            validate_model(model, val_data, val_data_loader)
         if ( ep + 1 ) % 5 == 0:
             torch.save(model.state_dict(), "model.pwf")
     torch.save(model.state_dict(), "model.pwf")
