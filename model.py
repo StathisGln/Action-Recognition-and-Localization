@@ -74,9 +74,9 @@ class Model(nn.Module):
             tubes_labels = torch.zeros(n_clips,rois_per_image).cuda()  # tubes rois
             loops = int(np.ceil(n_clips / batch_size))
 
-            rpn_loss_cls_ = torch.zeros(loops * n_devs).cuda() 
-            rpn_loss_bbox_ = torch.zeros(loops * n_devs).cuda()
-            act_loss_bbox_ = torch.zeros(loops * n_devs).cuda()
+            rpn_loss_cls_  = torch.zeros(loops).cuda() 
+            rpn_loss_bbox_ = torch.zeros(loops).cuda()
+            act_loss_bbox_ = torch.zeros(loops).cuda()
 
         for step, dt in enumerate(data_loader):
 
@@ -90,26 +90,12 @@ class Model(nn.Module):
             gt_tubes_ = gt_tubes.type_as(clips_).cuda()
             im_info_ = im_info.cuda()
             n_acts_ = n_acts.cuda()
-            print('n_acts :',n_acts)
-            # clips_ = clips.cuda() #.to(device)
-            # h_ = h.cuda() #.to(device)
-            # w_ = w.cuda() #.to(device)
-            # gt_tubes_ = gt_tubes.type_as(clips_).cuda() #.to(device)
-            # im_info_ = im_info.cuda()  #.to(device)
-            # n_acts_ = n_acts.cuda() #.to(device)
 
-
+            print('gt_tubes_.device:',gt_tubes_.device)
             indexes = (torch.arange(0, gt_tubes.size(0))* 8).unsqueeze(1)
             indexes = indexes.expand(gt_tubes.size(0),gt_tubes.size(1)).type_as(gt_tubes_).cuda() #.to(device)
-            # print('gt_tubes.type() :',gt_tubes_.type(), ' device :', gt_tubes_.device)
-            # print('indexes.type() :',indexes.type(), ' indexes.device() :',indexes.device)
-            # print('before gt_tubes_ :',gt_tubes_)
-            # print('before gt_tubes_ :',gt_tubes_.shape)
-            # print('indexes :',indexes)
-            # gt_tubes_[:,:,2] = (gt_tubes_[:,:,2] - indexes).clamp_(min=0)
-            # gt_tubes_[:,:,5] = (gt_tubes_[:,:,5] - indexes).clamp_(min=0)
-            # print('before gt_tubes_ :',gt_tubes_)
 
+            print('gt_tubes :',gt_tubes_)
             tubes,  bbox_pred, pooled_feat, \
             rpn_loss_cls,  rpn_loss_bbox, \
             act_loss_bbox, rois_label = self.act_net(clips_,
@@ -118,12 +104,12 @@ class Model(nn.Module):
                                                      None, n_acts_)
             
 
-            # print('rpn_loss_cls :',rpn_loss_cls)
-            # print('rpn_loss_cls :',rpn_loss_cls.mean())
-            # print('rpn_loss_cls.shape :',rpn_loss_cls.shape)
-            # print('act_loss_bbox :',act_loss_bbox)
-            # print('act_loss_bbox :',act_loss_bbox.mean())
-            # print('act_loss_bbox.shape :',act_loss_bbox.shape)
+            print('rpn_loss_cls :',rpn_loss_cls)
+            print('rpn_loss_cls :',rpn_loss_cls.mean())
+            print('rpn_loss_cls.shape :',rpn_loss_cls.shape)
+            print('act_loss_bbox :',act_loss_bbox)
+            print('act_loss_bbox :',act_loss_bbox.mean())
+            print('act_loss_bbox.shape :',act_loss_bbox.shape)
 
             # print('pooled_feat.shape :',pooled_feat.shape)
             pooled_f = pooled_feat.view(-1,rois_per_image,512,self.sample_duration)
@@ -163,9 +149,9 @@ class Model(nn.Module):
                 f_gt_tubes[idx_s:idx_e] = gt_tubes_
                 tubes_labels[idx_s:idx_e] = rois_label.squeeze(-1)
 
-                rpn_loss_cls_[idx_s_:idx_e_] = rpn_loss_cls.unsqueeze(0)
-                rpn_loss_bbox_[idx_s_:idx_e_] = rpn_loss_bbox.unsqueeze(0)
-                act_loss_bbox_[idx_s_:idx_e_] = act_loss_bbox.unsqueeze(0)
+                rpn_loss_cls_[step] = rpn_loss_cls.mean().unsqueeze(0)
+                rpn_loss_bbox_[step] = rpn_loss_bbox.mean().unsqueeze(0)
+                act_loss_bbox_[step] = act_loss_bbox.mean().unsqueeze(0)
 
             # print('----------Out TPN----------')
             # # print('p_tubes.type() :',p_tubes.type())

@@ -286,21 +286,29 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
     return dataset, max_frames, max_actions
 
 class video_names(data.Dataset):
-    def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train'):
+    def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader,):
 
         self.dataset_folder = dataset_folder
         self.boxes_file = boxes_file
         self.vid2idx = vid2idx
         self.mode = mode
         self.data, self.max_frames, self.max_actions = make_dataset( dataset_folder, spt_path, boxes_file, mode)
-
+        self.loader = get_loader()
+        
     def __getitem__(self, index):
 
         vid_name = self.data[index]['video']
         n_persons = self.data[index]['n_actions']
         boxes = self.data[index]['boxes']
         n_frames = self.data[index]['n_frames']
-        # s_e_fr = self.data[index]['s_e_fr']
+        
+        ## read one image for h,w
+
+        abs_path = os.path.join(self.dataset_folder, vid_name)
+        print('vid_name :',vid_name)
+        clip = self.loader(abs_path, [1])
+        w, h = clip[0].size
+
         boxes_lst = boxes.tolist()
         rois_fr = [[z+[j] for j,z in enumerate(boxes_lst[i])] for i in range(len(boxes_lst))]
         rois_gp =[[[list(g),i] for i,g in groupby(w, key=lambda x: x[:][4])] for w in rois_fr] # [person, [action, class]
@@ -333,7 +341,7 @@ class video_names(data.Dataset):
         
         # if vid_id == 895:
         #     print('index :',index)
-        return vid_id, final_boxes, n_frames_np, n_actions_np
+        return vid_id, final_boxes, n_frames_np, n_actions_np, h, w
     
     def __len__(self):
 

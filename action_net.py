@@ -106,7 +106,7 @@ class ACT_net(nn.Module):
 
     def forward(self, im_data, im_info, gt_tubes, gt_rois, num_boxes):
 
-        # print('----------Inside TPN net----------')
+        print('----------Inside TPN net----------')
         batch_size = im_data.size(0)
 
         im_info = im_info.data
