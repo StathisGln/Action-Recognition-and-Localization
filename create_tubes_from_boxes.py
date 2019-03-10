@@ -142,11 +142,11 @@ def create_video_tube(boxes):
     # print('boxes.shape :',boxes.shape)
     for j in range(boxes.shape[0]):
         k = boxes[j].nonzero()
-        # print('boxes :',boxes[j])
         # print(k)
         if k.size == 0 :
             continue
         else:
+            # print('k :',k)
             t1[j] = k[0,0]
             t2[j] = k[-1,0]
             labels[j] = boxes[j,k[0,0],4]

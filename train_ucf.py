@@ -16,6 +16,7 @@ from net_utils import adjust_learning_rate
 from create_video_id import get_vid_dict
 from video_dataset import video_names
 from model import Model
+from resize_rpn import resize_tube
 
 torch.backends.cudnn.benchnark=True 
 def bbox_overlaps_batch_3d(tubes, gt_tubes):

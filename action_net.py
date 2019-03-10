@@ -163,10 +163,12 @@ class ACT_net(nn.Module):
         # # feed pooled features to top model
         # print('pooled_feat.shape :', pooled_feat.shape)
         pooled_feat = self._head_to_tail(pooled_feat)
+        # pooled_feat_ = self._head_to_tail(pooled_feat)
         # print('pooled_feat.shape :', pooled_feat.shape)
         n_rois = pooled_feat.size(0)
         # print('pooled_feat.shape :',pooled_feat.shape)
         # # compute bbox offset
+        # pooled_feat_mean = pooled_feat_.mean(2)
         pooled_feat_mean = pooled_feat.mean(2)
         # print('pooled_feat.shape :',pooled_feat_mean.shape)
 
@@ -200,8 +202,8 @@ class ACT_net(nn.Module):
           rois_label = rois_label.view(batch_size, rois.size(1),-1)
           return rois,  bbox_pred, pooled_feat, rpn_loss_cls, rpn_loss_bbox, act_loss_bbox, rois_label
           # return rois.cuda(),  bbox_pred.cuda(), pooled_feat.cuda(), rpn_loss_cls.cuda(), rpn_loss_bbox.cuda(), act_loss_bbox.cuda(), rois_label.cuda()
-        
-        return rois,  bbox_pred, pooled_feat, None, None, None, None, None, 
+
+        return rois,  bbox_pred, pooled_feat, None, None, None, None
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):
