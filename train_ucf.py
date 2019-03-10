@@ -184,9 +184,9 @@ def validate_model(model,  val_data, val_data_loader):
 
 if __name__ == '__main__':
     
-    ###################################
-    #        JHMDB data inits         #
-    ###################################
+    #################################
+    #        UCF data inits         #
+    #################################
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
