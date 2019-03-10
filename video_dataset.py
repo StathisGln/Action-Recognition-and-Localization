@@ -307,7 +307,6 @@ class video_names(data.Dataset):
         ## read one image for h,w
 
         abs_path = os.path.join(self.dataset_folder, vid_name)
-        print('vid_name :',vid_name)
         clip = self.loader(abs_path, [1])
         w, h = clip[0].size
 
@@ -337,12 +336,7 @@ class video_names(data.Dataset):
         vid_id = np.array([self.vid2idx[vid_name]],dtype=np.int64)
         n_frames_np = np.array([n_frames], dtype=np.int64)
         n_actions_np = np.array([n_actions], dtype=np.int64)
-        # 'IceDancing/v_IceDancing_g06_c04'
-        # if vid_name == 'IceDancing/v_IceDancing_g06_c04': # 'TrampolineJumping/v_TrampolineJumping_g17_c03':
-        #     print('index :',index)
-        
-        # if vid_id == 895:
-        #     print('index :',index)
+
         return vid_id, final_boxes, n_frames_np, n_actions_np, h, w
     
     def __len__(self):
@@ -384,11 +378,6 @@ class single_video(data.Dataset):
         frame_indices = self.data[index]['frame_indices']
         abs_path = os.path.join(self.dataset_folder, path)
 
-        # if path.startswith('CricketBowling/v_CricketBowling'):
-        #     print(rois)
-        
-        # if self.temporal_transform is not None:
-        #     frame_indices = self.temporal_transform(frame_indices)
         clip = self.loader(abs_path, frame_indices)
 
         ## get original height and width
@@ -400,7 +389,9 @@ class single_video(data.Dataset):
         ## get bboxes and create gt tubes
         rois_Tensor = rois
         rois_indx = np.array(frame_indices) - frame_indices[0]
+        rois_sample_tensor = torch.zeros((rois_Tensor.size(0), rois_indx.shape[0],5)).type_as(rois_Tensor)
         rois_sample_tensor = rois_Tensor[:,rois_indx,:]
+        
         rois_sample_tensor[:,:,2] = rois_sample_tensor[:,:,0] + rois_sample_tensor[:,:,2]
         rois_sample_tensor[:,:,3] = rois_sample_tensor[:,:,1] + rois_sample_tensor[:,:,3]
         rois_sample_tensor_r = resize_boxes(rois_sample_tensor, h,w,self.sample_size)

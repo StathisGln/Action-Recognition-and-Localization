@@ -46,14 +46,13 @@ class Model(nn.Module):
         '''
 
         ## define a dataloader for the whole video
-        batch_size = 4
-        # print('dir(self.module) :',dir(self.module))
-        # n_devs = torch.cuda.device_count()
-        # print('torch.cuda.device_count() :',torch.cuda.device_count())
+        batch_size = n_devs # 
 
         num_images = 1
         rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images)
         boxes = boxes[:,:num_actions, :num_frames].squeeze(0)
+        print('boxes.type() :',boxes.type())
+        print('boxes.device :',boxes.device)
         data = single_video(dataset_folder, vid_names, vid_id, frames_dur= self.sample_duration, sample_size =self.sample_size,
                             spatial_transform=spatial_transform, temporal_transform=temporal_transform, boxes=boxes,
                             mode=mode, classes_idx=cls2idx)

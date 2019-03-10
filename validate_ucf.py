@@ -150,19 +150,21 @@ def validate_model(model,  val_data, val_data_loader):
 
     for step, data  in enumerate(val_data_loader):
 
-        if step == 2:
+        if step == 1:
             break
         
-        vid_id, boxes, n_frames, n_actions = data
+        vid_id, boxes, n_frames, n_actions, h, w = data
         
         mode = 'test'
         boxes_ = boxes.cuda()
         vid_id_ = vid_id.cuda()
         n_frames_ = n_frames.cuda()
         n_actions_ = n_actions.cuda()
-
+        h_ = h.cuda()
+        w_ = w.cuda()
+        
         ## create video tube
-        video_tubes = create_video_tube(boxes)
+        video_tubes = create_video_tube(boxes.squeeze(0))
         video_tubes_r =  resize_tube(video_tubes.unsqueeze(0), h_,w_,self.sample_size)
 
         tubes,  bbox_pred, \
@@ -257,15 +259,6 @@ if __name__ == '__main__':
 
     model.to(device)
 
-    ################################
-    #          Load model          #
-    ################################
-
-    
-
-    ############################################
-    #          Validation starts here          #
-    ###########################################
 
     n_devs = torch.cuda.device_count()
     if torch.cuda.device_count() > 1:
@@ -274,6 +267,17 @@ if __name__ == '__main__':
         model.act_net = nn.DataParallel(model.act_net)
 
     model.act_net = model.act_net.cuda()
+
+    ################################
+    #          Load model          #
+    ################################
+
+    model_data = torch.load('./model.pwf')
+    model.load_state_dict(model_data)
+
+    ############################################
+    #          Validation starts here          #
+    ###########################################
 
     val_name_loader = video_names(dataset_folder, spt_path, boxes_file, vid2idx, mode='test')
     val_loader = torch.utils.data.DataLoader(val_name_loader, batch_size=batch_size,

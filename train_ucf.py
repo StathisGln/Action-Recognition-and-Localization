@@ -306,7 +306,7 @@ if __name__ == '__main__':
             ###################################
 
             mode = 'train'
-            boxes_ = boxes.to(device)
+            # boxes_ = boxes.to(device)
             vid_id_ = vid_id.to(device)
             n_frames_ = n_frames.to(device)
             n_actions_ = n_actions.to(device)
@@ -315,7 +315,7 @@ if __name__ == '__main__':
             prob_out, rpn_loss_cls, \
             rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(n_devs, dataset_folder, \
                                                              vid_names, vid_id_, spatial_transform, \
-                                                             temporal_transform, boxes_, \
+                                                             temporal_transform, boxes, \
                                                              mode, cls2idx, n_actions_,n_frames_)
 
             loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + cls_loss.mean()
