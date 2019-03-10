@@ -296,7 +296,7 @@ def connect_tubes(tubes, tubes_curr, p_tubes, pooled_feats, rois_label, index): 
         # print('connect_indices  :',connect_indices )
         # print('connect_indices.shape  :',connect_indices.shape )
         if (connect_indices.nelement() == 0):
-            print('no connection')
+            # print('no connection')
             # print('new_tubes.shape :',new_tubes.shape)
             for i in range(new_tubes.size(0)):
                 tubes += [[(tb+index, i)]]

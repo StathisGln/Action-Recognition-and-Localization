@@ -5,52 +5,6 @@ import torch
 
 import json
 import cv2
-
-
-# def create_tube(boxes, im_info_3d):
-
-#     batch_size = boxes.size(0)
-
-#     print(boxes.shape)
-#     labels = boxes[:, 0, 0, 5].unsqueeze(1).cpu().numpy()
-#     print('labels.shape :', labels.shape)
-#     mins, _ = torch.min(boxes, 1)
-#     print('mins :', mins)
-#     x1 = mins[:, :, 0]
-#     y1 = mins[:, :, 1]
-#     t1 = mins[:, :, 4]
-
-#     maxs, _ = torch.max(boxes, 1)
-#     print('maxs :', maxs)
-#     x2 = maxs[:, :, 2]
-#     y2 = maxs[:, :, 3]
-#     t2 = maxs[:, :, 4]
-#     print('t2 :', t2)
-#     for i in range(batch_size):
-#         x1 = x1.clamp_(min=0, max=im_info_3d[i, 1]-1)
-#         y1 = y1.clamp_(min=0, max=im_info_3d[i, 0]-1)
-#         t1 = t1.clamp_(min=im_info_3d[i, 2], max=im_info_3d[i, 3])
-#         x2 = x2.clamp_(min=0, max=im_info_3d[i, 1]-1)
-#         y2 = y2.clamp_(min=0, max=im_info_3d[i, 0]-1)
-#         t2 = t2.clamp_(min=im_info_3d[i, 2], max=im_info_3d[i, 3])
-#     print('t2 :', t2)
-#     x1 = x1[:].cpu().numpy()
-#     y1 = y1[:].cpu().numpy()
-#     print('t1 :', t1, 'im_info_3d.shape ', im_info_3d.shape)
-#     t1 = (t1 - im_info_3d)[:, 2].unsqueeze(1).cpu().numpy()
-#     print('t1 :', t1)
-#     x2 = x2[:].cpu().numpy()
-#     y2 = y2[:].cpu().numpy()
-#     print('t2 :', t2, 't2  - im_info_3d ', t2 - im_info_3d)
-#     t2 = (t2 - im_info_3d)[:, 2].unsqueeze(1).cpu().numpy()
-#     print('t2 :', t2, 'im_info_3d.shape ', im_info_3d.shape)
-
-#     print('x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(x1, y1, t1, x2, y2, t2))
-#     print('shapes :x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(
-#         x1.shape, y1.shape, t1.shape, x2.shape, y2.shape, t2.shape))
-#     ret = torch.Tensor([x1, y1, t1, x2, y2, t2, labels]
-#                        ).permute(1, 2, 0).cuda()
-#     return ret
 def create_tube(boxes, im_info_3d, sample_duration):
 
     # print('boxes.shape :',boxes.shape)
@@ -88,6 +42,54 @@ def create_tube(boxes, im_info_3d, sample_duration):
                 x2[i,j] = maxs[2]
                 y2[i,j] = maxs[3]
     # print(im_info_3d)
+    for i in range(batch_size):
+        x1 = x1.clamp_(min=0, max=im_info_3d[i, 1]-1)
+        y1 = y1.clamp_(min=0, max=im_info_3d[i, 0]-1)
+        x2 = x2.clamp_(min=0, max=im_info_3d[i, 1]-1)
+        y2 = y2.clamp_(min=0, max=im_info_3d[i, 0]-1)
+
+    # print('x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(x1, y1, t1, x2, y2, t2))
+    # print('shapes :x1 {} y1 {} t1 {} x2 {} y2 {} t2 {} labels {}'.format(
+    #     x1.shape, y1.shape, t1.shape, x2.shape, y2.shape, t2.shape, labels.shape))
+    ret = torch.stack((x1, y1, t1, x2, y2, t2, labels)).permute(1,2,0).type_as(boxes)
+
+    # print('ret.shape :',ret.shape)
+    # print('ret :',ret)
+    return ret
+
+def create_tube_with_frames(boxes, im_info_3d, sample_duration):
+
+    batch_size = boxes.size(0)
+    n_actions = boxes.size(1)
+
+    t1 = torch.zeros(batch_size, n_actions).type_as(boxes)
+    t2 = torch.zeros(batch_size, n_actions).type_as(boxes)
+    x1 = torch.zeros(batch_size, n_actions).type_as(boxes)
+    y1 = torch.zeros(batch_size, n_actions).type_as(boxes)
+    x2 = torch.zeros(batch_size, n_actions).type_as(boxes)
+    y2 = torch.zeros(batch_size, n_actions).type_as(boxes)
+    labels = torch.zeros(batch_size, n_actions).type_as(boxes)
+    for i in range(batch_size):
+        for j in range(boxes.size(1)):
+            k = boxes[i,j,:4].gt(0).nonzero()
+
+            if k.nelement() == 0 :
+                continue
+            else:
+                labels[i,j] = boxes[i,j,k[0,0],4]
+                # if labels[i,j] == -1:
+                #     print('boxes[i,j] :',boxes[i,j])
+                mins, _ = torch.min(boxes[i,j,k[0,0]:k[-1,0]+1], 0)
+                x1[i,j] = mins[0]
+                y1[i,j] = mins[1]
+                t1[i,j] = mins[-1]
+                
+                maxs, _ = torch.max(boxes[i,j,k[0,0]:k[-1,0]+1], 0)
+
+                x2[i,j] = maxs[2]
+                y2[i,j] = maxs[3]
+                t2[i,j] = maxs[-1]
+                
     for i in range(batch_size):
         x1 = x1.clamp_(min=0, max=im_info_3d[i, 1]-1)
         y1 = y1.clamp_(min=0, max=im_info_3d[i, 0]-1)

@@ -107,7 +107,7 @@ class _AnchorTargetLayer(nn.Module):
         inds_inside = torch.nonzero(keep).view(-1)
         
         # keep only inside anchors
-        anchors = all_anchors[inds_inside, :]
+        anchors = all_anchors[inds_inside, :].type_as(gt_tubes)
 
         # for i in anchors.cpu().tolist():
         #     if i[2] ==0 and i[5] ==15:

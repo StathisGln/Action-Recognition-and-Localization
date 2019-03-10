@@ -10,7 +10,7 @@ import glob
 import json
 import pickle
 from itertools import groupby
-from create_tubes_from_boxes import create_tube_list,create_tube
+from create_tubes_from_boxes import create_tube_list,create_tube_with_frames
 
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
@@ -216,6 +216,7 @@ def prepare_samples (vid_names, vid_id, boxes, sample_duration, step):
         sample_i['frame_indices'] = list(range(i, i + sample_duration))
         sample_i['segment'] = torch.IntTensor([i, i + sample_duration - 1])
         sample_i['boxes'] = boxes[:,range(i, i + sample_duration)]
+        sample_i['start_fr'] = i-1
         dataset.append(sample_i)
 
     return dataset, n_actions, n_frames
@@ -233,6 +234,7 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
     max_frames = -1
     max_actions = -1
     for cls in classes:
+    # for cls in ['RopeClimbing']:
         videos = next(os.walk(os.path.join(dataset_path,cls), True))[1]
         for vid in videos:
 
@@ -376,11 +378,15 @@ class single_video(data.Dataset):
         name = self.data[index]['video_name']   # video path
         path = self.data[index]['video_path']
         rois = self.data[index]['boxes']
+        start_fr = self.data[index]['start_fr']
 
         n_frames = self.data[index]['n_frames']
         frame_indices = self.data[index]['frame_indices']
         abs_path = os.path.join(self.dataset_folder, path)
 
+        # if path.startswith('CricketBowling/v_CricketBowling'):
+        #     print(rois)
+        
         # if self.temporal_transform is not None:
         #     frame_indices = self.temporal_transform(frame_indices)
         clip = self.loader(abs_path, frame_indices)
@@ -398,18 +404,22 @@ class single_video(data.Dataset):
         rois_sample_tensor[:,:,2] = rois_sample_tensor[:,:,0] + rois_sample_tensor[:,:,2]
         rois_sample_tensor[:,:,3] = rois_sample_tensor[:,:,1] + rois_sample_tensor[:,:,3]
         rois_sample_tensor_r = resize_boxes(rois_sample_tensor, h,w,self.sample_size)
+
+        fr_tensor = torch.Tensor(frame_indices).type_as(rois_sample_tensor_r)-1
+        fr_tensor = fr_tensor.unsqueeze(1).unsqueeze(0).expand(rois_sample_tensor_r.size(0),fr_tensor.size(0), 1)
+        rois_fr = torch.cat((rois_sample_tensor_r,fr_tensor ), dim=2)
+        
         # print('rois_sample_tensor_r :',rois_sample_tensor_r)
         # rois_sample = rois_sample_tensor_r.tolist()
-        frms = torch.arange(0,self.sample_duration).unsqueeze(-1).unsqueeze(0)
-        frms = frms.expand(rois_sample_tensor_r.size(0),frms.size(1), frms.size(2)).type_as(rois_sample_tensor_r)
-        tubes = create_tube(rois_sample_tensor_r.unsqueeze(0), torch.Tensor([[h,w]*rois_sample_tensor_r.size(0)]), self.sample_duration)
+        tubes = create_tube_with_frames(rois_fr.unsqueeze(0), torch.Tensor([[h,w]*rois_sample_tensor_r.size(0)]), self.sample_duration)
         tubes = tubes.squeeze(0)
+        # print('tubes :',tubes)
         padding_lines = tubes[:,-1].squeeze(0).lt(0).nonzero().view(-1)
         for i in padding_lines:
             tubes[i] = torch.zeros((7))
         ## im_info
         im_info = torch.Tensor([self.sample_size, self.sample_size, self.sample_duration] )
-        return clip,  (h, w),  tubes, rois_sample_tensor_r, im_info, rois_sample_tensor_r.size(0)
+        return clip,  (h, w),  tubes, rois_sample_tensor_r, im_info, rois_sample_tensor_r.size(0), start_fr
 
     def __len__(self):
         return len(self.data)
