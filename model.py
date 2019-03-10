@@ -50,7 +50,7 @@ class Model(nn.Module):
 
         num_images = 1
         rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images) if self.training else 10
-        print('rois_per_image :',rois_per_image)
+        # print('rois_per_image :',rois_per_image)
         boxes = boxes[:,:num_actions, :num_frames].squeeze(0)
 
         data = single_video(dataset_folder, vid_names, vid_id, frames_dur= self.sample_duration, sample_size =self.sample_size,
@@ -124,23 +124,9 @@ class Model(nn.Module):
             p_tubes[idx_s:idx_e] = tubes
 
             if self.training:
-                # print('gt_tubes.shape :',gt_tubes.shape)
-                # print('f_gt_tubes.shape ',f_gt_tubes.shape)
-                # print('f_gt_tubes.shape ',f_gt_tubes[idx_s:idx_e].shape)
-                # indexes = (torch.arange(0, gt_tubes.size(0))* 8).unsqueeze(1)
-                # indexes = indexes.expand(gt_tubes.size(0),gt_tubes.size(1)).type_as(gt_tubes).cuda() #.to(device)
-
-                # gt_tubes_[:,:,2] = gt_tubes_[:,:,2] + indexes
-                # gt_tubes_[:,:,5] = gt_tubes_[:,:,5] + indexes
 
                 idx_s_ = step * n_devs 
-                # idx_e_ = min(step * n_devs + n_devs,loops)
                 idx_e_ = step * n_devs + n_devs
-                # print('idx_s_:idx_e_ :',idx_s_,idx_e_)
-                # print('rpn_loss_cls_.shape :',rpn_loss_cls_.shape)
-                # print('rpn_loss_cls :',rpn_loss_cls)
-                # print('rpn_loss_cls :',rpn_loss_cls.shape)
-                # print('gt_tubes :',gt_tubes )
                 f_gt_tubes[idx_s:idx_e] = gt_tubes
                 tubes_labels[idx_s:idx_e] = rois_label.squeeze(-1)
 
@@ -247,3 +233,23 @@ class Model(nn.Module):
     def create_architecture(self):
 
         self.act_net.create_architecture()
+
+    def load_part_model(self, action_model_path=None, linear_path=None):
+
+
+        if action_model_path != None:
+            
+            act_net = ACT_net(self.actions,self.sample_duration)
+            act_net = nn.DataParallel(act_net, device_ids=None)
+            act_data = torch.load(action_model_path)
+            act_net.load(act_data)
+            self.act_net = act_net
+
+        if linear_path != None:
+
+            # linear = nn.Linear(512, self.n_classes).cuda()
+            linear = nn.Linear(256, self.n_classes).cuda()
+            linear_data = torch.load(linear_path)
+            linear.load_state_dict(linear_data)
+            self.linear = linear
+

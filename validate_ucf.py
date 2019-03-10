@@ -32,7 +32,6 @@ def bbox_overlaps_batch_3d(tubes, gt_tubes):
         N = tubes.size(0)
         K = gt_tubes.size(1)
 
-        print('N {} K {}'.format(N,K))
         if tubes.size(-1) > 6:
             tubes = tubes[:,1:]
         tubes = tubes.view(1, N, 6)
@@ -90,17 +89,6 @@ def bbox_overlaps_batch_3d(tubes, gt_tubes):
         ua_xy = tubes_area_xy + gt_tubes_area_xy - (iw * ih )
         ua_t = tubes_boxes_t.unsqueeze(2) + gt_tubes_t - it
 
-        # print('ua.shape :',ua.shape)
-        # print('ua_xy.shape :',ua_xy.shape)
-        # print('tubes_boxes_t.shape :',tubes_boxes_t.shape)
-        # print('gt_tubes_t.shape :',gt_tubes_t.shape)
-        # print('it :',it.shape)
-        # print('ua_t :',ua_t.shape)
-        # print('tubes_area.shape :',tubes_area.shape)
-        # print('tubes_boxes_t.shape :',tubes_boxes_t.unsqueeze(2)
-        #       .shape)
-        # print('gt_tubes_area.shape :',gt_tubes_area.shape)
-        # print('gt_tubes_t.shape :', gt_tubes_t.shape)
         overlaps = iw * ih * it / ua
         overlaps_xy = iw * ih  / ua_xy
         overlaps_t = it / ua_t
@@ -128,8 +116,6 @@ def bbox_overlaps_batch_3d(tubes, gt_tubes):
 
 def validate_model(model,  val_data, val_data_loader, sample_duration, sample_size):
 
-    ###
-
     iou_thresh = 0.5 # Intersection Over Union thresh
     model.eval()
 
@@ -148,14 +134,14 @@ def validate_model(model,  val_data, val_data_loader, sample_duration, sample_si
     correct_preds = torch.zeros(1).long().cuda()
     n_preds = torch.zeros(1).long().cuda()
     preds = torch.zeros(1).long().cuda()
-    ## 2 rois : 1450
     tubes_sum = 0
 
     for step, data  in enumerate(val_data_loader):
 
-        if step == 1:
-            break
-        
+        # if step == 1:
+        #     break
+
+        print('step ==> ', step)
         vid_id, boxes, n_frames, n_actions, h, w = data
         
         mode = 'test'
@@ -176,8 +162,6 @@ def validate_model(model,  val_data, val_data_loader, sample_duration, sample_si
                                              vid_names, vid_id_, spatial_transform, \
                                              temporal_transform, boxes, \
                                              mode, cls2idx, n_actions_,n_frames_)
-        print('tubes.shape :',tubes.shape)
-        print('prob_out.shape :',prob_out.shape)
 
         ## first get predicted classes
         _, preds = torch.max(prob_out,1)
@@ -186,7 +170,7 @@ def validate_model(model,  val_data, val_data_loader, sample_duration, sample_si
         tubes_ = torch.cat((tubes, preds.unsqueeze(1).float()),dim=1)
         
         ## calculate overlaps
-        overlaps, overlaps_xy, overlaps_t = bbox_overlaps_batch_3d(tubes.squeeze(0), video_tubes_r) # check one video each time
+        overlaps, overlaps_xy, overlaps_t = bbox_overlaps_batch_3d(tubes_.squeeze(0), video_tubes_r) # check one video each time
 
         ## for the whole tube
         gt_max_overlaps, _ = torch.max(overlaps, 1)
@@ -207,11 +191,9 @@ def validate_model(model,  val_data, val_data_loader, sample_duration, sample_si
 
         ## for t - area
         gt_max_overlaps_t, _ = torch.max(overlaps_t, 1)
-        gt_max_overlaps_t = torch.where(gt_max_overlaps_t > iou_thresh, gt_max_overlaps_t, torch.zeros_like(gt_max_overlaps_t).type_as(gt_max_overlaps_t))
+        # gt_max_overlaps_t = torch.where(gt_max_overlaps_t > iou_thresh, gt_max_overlaps_t, torch.zeros_like(gt_max_overlaps_t).type_as(gt_max_overlaps_t))
         detected_t =  gt_max_overlaps_t.ne(0).sum()
         pred_indices = gt_max_overlaps_t.nonzero()
-        print('gt_max_overlaps_t :',gt_max_overlaps_t)
-        print('det_t :',pred_indices)
         n_elements_t = gt_max_overlaps_t.nelement()
         true_pos_t += detected_t
         false_neg_t += n_elements_t - detected_t
@@ -223,43 +205,43 @@ def validate_model(model,  val_data, val_data_loader, sample_duration, sample_si
 
             tube_idx, gt_tube_idx = i
 
-            print('tubes[i] :',tubes[tube_idx])
-            print('video_tubes_r[gt_tube_idx] :',video_tubes_r[gt_tube_idx])
+            # print('tubes[i] :',tubes_[tube_idx])
+            # print('video_tubes_r[gt_tube_idx] :',video_tubes_r[gt_tube_idx])
 
-            if tubes[tube_idx,-1] == video_tubes_r[gt_tube_idx,-1]:
+            if tubes[tube_idx,-1] == video_tubes_r[0,gt_tube_idx,-1]:
                 correct += 1
             n_preds += 1
         
-        recall    = true_pos.float()    / (true_pos.float()    + false_neg.float())
-        recall_xy = true_pos_xy.float() / (true_pos_xy.float() + false_neg_xy.float())
-        recall_t  = true_pos_t.float()  / (true_pos_t.float()  + false_neg_t.float())
-        print('recall :',recall)
-        print(' -----------------------')
-        print('|       Validation      |')
-        print('|                       |')
-        print('| Proposed Action Tubes |')
-        print('|                       |')
-        print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
-            step, true_pos.cpu().tolist()[0], false_neg.cpu().tolist()[0], recall.cpu().tolist()[0]))
-        print('|                       |')
-        print('| In xy area            |')
-        print('|                       |')
-        print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
-            step, true_pos_xy.cpu().tolist()[0], false_neg_xy.cpu().tolist()[0], recall_xy.cpu().tolist()[0]))
-        print('|                       |')
-        print('| In time area          |')
-        print('|                       |')
-        print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
-            step, true_pos_t.cpu().tolist()[0], false_neg_t.cpu().tolist()[0], recall_t.cpu().tolist()[0]))
-        print('|                       |')
-        print('| Classification        |')
-        print('|                       |')
-        print('| In {: >6} steps    :  |'.format(step))
-        print('|                       |')
-        print('| Correct preds :       |\n| {: >6} / {: >6}       |'.format( correct, n_preds.cpu().tolist()[0]))
+    recall    = true_pos.float()    / (true_pos.float()    + false_neg.float())
+    recall_xy = true_pos_xy.float() / (true_pos_xy.float() + false_neg_xy.float())
+    recall_t  = true_pos_t.float()  / (true_pos_t.float()  + false_neg_t.float())
+    print('recall :',recall)
+    print(' -----------------------')
+    print('|       Validation      |')
+    print('|                       |')
+    print('| Proposed Action Tubes |')
+    print('|                       |')
+    print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        step, true_pos.cpu().tolist()[0], false_neg.cpu().tolist()[0], recall.cpu().tolist()[0]))
+    print('|                       |')
+    print('| In xy area            |')
+    print('|                       |')
+    print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        step, true_pos_xy.cpu().tolist()[0], false_neg_xy.cpu().tolist()[0], recall_xy.cpu().tolist()[0]))
+    print('|                       |')
+    print('| In time area          |')
+    print('|                       |')
+    print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        step, true_pos_t.cpu().tolist()[0], false_neg_t.cpu().tolist()[0], recall_t.cpu().tolist()[0]))
+    print('|                       |')
+    print('| Classification        |')
+    print('|                       |')
+    print('| In {: >6} steps    :  |'.format(step))
+    print('|                       |')
+    print('| Correct preds :       |\n| {: >6} / {: >6}       |'.format( correct, n_preds.cpu().tolist()[0]))
 
 
-        print(' -----------------------')
+    print(' -----------------------')
 
 if __name__ == '__main__':
     
@@ -323,6 +305,9 @@ if __name__ == '__main__':
 
     model_data = torch.load('./model.pwf')
     model.load_state_dict(model_data)
+    # action_model_path ='./jmdb_model.pwf'
+    # linear_path = './
+    # model.load_part_model(
 
     ############################################
     #          Validation starts here          #
