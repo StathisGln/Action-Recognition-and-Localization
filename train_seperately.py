@@ -17,6 +17,7 @@ from net_utils import adjust_learning_rate
 from resize_rpn import resize_rpn, resize_tube
 
 from model import Model
+from tcn_net import tcn_net
 from action_net import ACT_net
 
 import pdb
@@ -200,7 +201,7 @@ if __name__ == '__main__':
 
     dataset_folder = '/gpu-data2/sgal/UCF-101-frames'
     boxes_file = '/gpu-data2/sgal/pyannot.pkl'
-    spt_path = '/gpu-data2/sgal/UCF101_Action_detection_splits/'
+    split_txt_path = '/gpu-data2/sgal/UCF101_Action_detection_splits/'
 
     sample_size = 112
     sample_duration = 16  # len(images)
@@ -233,10 +234,6 @@ if __name__ == '__main__':
     # ########################################
     # #          Part 1 - train TPN          #
     # ########################################
-
-    # ##########################################
-    # #          Model Initialization          #
-    # ##########################################
 
     # # Init action_net
     # act_model = ACT_net(actions, sample_duration)
@@ -287,9 +284,9 @@ if __name__ == '__main__':
     # #         torch.save(model.state_dict(), "action_net_model.pwf".format(epoch+1))
     # # torch.save(model.state_dict(), "action_net_model.pwf".format(epoch))
 
-    # ###########################################
-    # #          Part 2 - train Linear          #
-    # ###########################################
+    ###########################################
+    #          Part 2 - train Linear          #
+    ###########################################
     
     # first initialize model
 
@@ -305,7 +302,7 @@ if __name__ == '__main__':
 
     # init data_loaders
     
-    vid_name_loader = video_names(dataset_folder, spt_path, boxes_file, vid2idx, mode='train')
+    vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='train')
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1,
                                               shuffle=True)
     # reset learning rate
@@ -329,10 +326,14 @@ if __name__ == '__main__':
 
     ##########################
     
-    epochs = 40 
+    # epochs = 40
+    epochs = 1
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
 
+        # model.train()
+        # model.act_net.eval()
+        
         if epoch % (lr_decay_step + 1) == 0:
             adjust_learning_rate(optimizer, lr_decay_gamma)
             lr *= lr_decay_gamma
@@ -344,4 +345,24 @@ if __name__ == '__main__':
             print('step :',step)
             vid_id, boxes, n_frames, n_actions, h, w = data
 
+            tubes,  bbox_pred, \
+            prob_out, rpn_loss_cls, \
+            rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(n_devs, dataset_folder, \
+                                                             vid_names, vid_id_, spatial_transform, \
+                                                             temporal_transform, boxes, \
+                                                             mode, cls2idx, n_actions_,n_frames_)
 
+            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + cls_loss.mean()
+
+            # backw\ard
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            loss_temp += loss.item()
+
+        print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
+        ep+1,loss_temp/step, lr))
+        if ( ep + 1 ) % 5 == 0:
+            torch.save(model.state_dict(), "linear.pwf")
+    torch.save(model.state_dict(), "linear.pwf")

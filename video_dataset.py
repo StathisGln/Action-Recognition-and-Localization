@@ -418,7 +418,9 @@ class single_video(data.Dataset):
     def __max_sim_actions__(self):
         return self.n_actions
 
+
 class Video_UCF(data.Dataset):
+
     def __init__(self, video_path, frames_dur=8, 
                  spatial_transform=None, temporal_transform=None, json_file=None,
                  sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None):
@@ -426,7 +428,6 @@ class Video_UCF(data.Dataset):
         self.mode = mode
         self.data, self.max_sim_actions = make_correct_ucf_dataset(
                     video_path, json_file, self.mode)
-
         self.spatial_transform = spatial_transform
         self.temporal_transform = temporal_transform
         self.loader = get_loader()
@@ -446,14 +447,15 @@ class Video_UCF(data.Dataset):
         path = self.data[index]['abs_path']
         rois = self.data[index]['rois']
 
-        
         n_frames = len(glob.glob(path+ '/*.jpg'))
 
-        frame_indices = list(
-            range(1,n_frames))  # get the corresponding frames
+        ## get  random frames from the video 
+        time_index = np.random.randint(
+            0, n_frames - self.sample_duration - 1) + 1
 
-        if self.temporal_transform is not None:
-            frame_indices = self.temporal_transform(frame_indices)
+        frame_indices = list(
+            range(time_index, time_index + self.sample_duration))  # get the corresponding frames
+
         clip = self.loader(path, frame_indices)
 
         ## get original height and width
@@ -462,10 +464,12 @@ class Video_UCF(data.Dataset):
             clip = [self.spatial_transform(img) for img in clip]
         clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
 
+        ## get bboxes and create gt tubes
         rois_Tensor = torch.Tensor(rois)
-        rois_Tensor[:,:,2] = rois_Tensor[:,:,0] + rois_Tensor[:,:,2]
-        rois_Tensor[:,:,3] = rois_Tensor[:,:,1] + rois_Tensor[:,:,3]
-        rois_sample = rois_Tensor.tolist()
+        rois_sample_tensor = rois_Tensor[:,np.array(frame_indices),:]
+        rois_sample_tensor[:,:,2] = rois_sample_tensor[:,:,0] + rois_sample_tensor[:,:,2]
+        rois_sample_tensor[:,:,3] = rois_sample_tensor[:,:,1] + rois_sample_tensor[:,:,3]
+        rois_sample = rois_sample_tensor.tolist()
 
         rois_fr = [[z+[j] for j,z in enumerate(rois_sample[i])] for i in range(len(rois_sample))]
         rois_gp =[[[list(g),i] for i,g in groupby(w, key=lambda x: x[:][4])] for w in rois_fr] # [person, [action, class]
@@ -478,26 +482,27 @@ class Video_UCF(data.Dataset):
 
         num_actions = len(final_rois_list)
 
-
         if num_actions == 0:
             final_rois = torch.zeros(1,16,5)
             gt_tubes = torch.zeros(1,7)
         else:
-            final_rois = torch.zeros((num_actions,n_frames,5)) # num_actions x [x1,y1,x2,y2,label]
+            final_rois = torch.zeros((num_actions,16,5)) # num_actions x [x1,y1,x2,y2,label]
             for i in range(num_actions):
                 # for every action:
                 for j in range(len(final_rois_list[i])):
                     # for every rois
+                    # print('final_rois_list[i][j][:5] :',final_rois_list[i][j][:5])
                     pos = final_rois_list[i][j][5]
                     final_rois[i,pos,:]= torch.Tensor(final_rois_list[i][j][:5])
-            gt_tubes = create_tube_list(rois_gp,[w,h], n_frames) ## problem when having 2 actions simultaneously
+
+            # # print('final_rois :',final_rois)
+            gt_tubes = create_tube_list(rois_gp,[w,h], self.sample_duration) ## problem when having 2 actions simultaneously
 
         ret_tubes = torch.zeros(self.max_sim_actions,7)
         n_acts = gt_tubes.size(0)
         ret_tubes[:n_acts,:] = gt_tubes
 
-        ## f_rois
-        f_rois = torch.zeros(self.max_sim_actions,n_frames,5)
+        f_rois = torch.zeros(self.max_sim_actions,self.sample_duration,5)
         f_rois[:n_acts,:,:] = final_rois[:n_acts]
 
         if self.mode == 'train':
@@ -507,7 +512,6 @@ class Video_UCF(data.Dataset):
 
     def __len__(self):
         return len(self.data)
-
 
 
 if __name__ == '__main__':
