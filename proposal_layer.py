@@ -147,6 +147,8 @@ class _ProposalLayer(nn.Module):
 
         # 2. clip predicted boxes to image
         ## if any dimension exceeds the dims of the original image, clamp_ them
+        # print('proposals.shape :',proposals.shape)
+        # print('im_info.shape :',im_info.shape)
         proposals = clip_boxes_3d(proposals, im_info, 1)
         # print('proposals.shape :',proposals.shape)
         # print('proposals :',proposals[0][14000:14100])

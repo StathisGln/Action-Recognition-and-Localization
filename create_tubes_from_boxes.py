@@ -71,7 +71,7 @@ def create_tube_with_frames(boxes, im_info_3d, sample_duration):
     labels = torch.zeros(batch_size, n_actions).type_as(boxes)
     for i in range(batch_size):
         for j in range(boxes.size(1)):
-            k = boxes[i,j,:4].gt(0).nonzero()
+            k = boxes[i,j,:,:4].gt(0).nonzero()
 
             if k.nelement() == 0 :
                 continue

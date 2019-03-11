@@ -36,32 +36,34 @@ class Model(nn.Module):
         self.sample_duration = sample_duration
         self.sample_size = sample_size
         self.step = int(self.sample_duration/2)
-
+        self.p_feat_size = 256 # 512
         # For now a linear classifier only
-        self.linear = nn.Linear(512, self.n_classes).cuda()
+        self.linear = nn.Linear(self.p_feat_size, self.n_classes).cuda()
 
-    def forward(self,n_devs, dataset_folder, vid_names, vid_id, spatial_transform, temporal_transform, boxes, mode, cls2idx, num_actions, num_frames):
+
+    def forward(self,n_devs, dataset_folder, vid_names, vid_id, spatial_transform, temporal_transform, boxes, mode, cls2idx, num_actions, num_frames, h_, w_):
         '''
         TODO describe procedure
         '''
 
         ## define a dataloader for the whole video
         batch_size = n_devs # 
-
+        # num_workers = n_devs * 2
         num_images = 1
         rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images) if self.training else 10
-        # print('rois_per_image :',rois_per_image)
+
         boxes = boxes[:,:num_actions, :num_frames].squeeze(0)
 
-        data = single_video(dataset_folder, vid_names, vid_id, frames_dur= self.sample_duration, sample_size =self.sample_size,
+        data = single_video(dataset_folder,h_,w_, vid_names, vid_id, frames_dur= self.sample_duration, sample_size =self.sample_size,
                             spatial_transform=spatial_transform, temporal_transform=temporal_transform, boxes=boxes,
                             mode=mode, classes_idx=cls2idx)
 
-        data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
+        data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size, # num_workers=num_workers,
                                                   shuffle=False)
         n_clips = data.__len__()
         max_sim_actions = data.__max_sim_actions__()
-        features = torch.zeros(n_clips, rois_per_image, 512, self.sample_duration).cuda()
+
+        features = torch.zeros(n_clips, rois_per_image, self.p_feat_size, self.sample_duration).cuda()
         p_tubes = torch.zeros(n_clips, rois_per_image,  8).cuda() # all the proposed rois
 
         f_tubes = []
@@ -81,10 +83,9 @@ class Model(nn.Module):
 
             # if step == 1:
             #     break
-            clips,  (h, w),  gt_tubes, _, im_info, n_acts, start_fr = dt
+            clips,  gt_tubes, _, im_info, n_acts, start_fr = dt
+
             clips_ = clips.cuda()
-            h_ = h.cuda()
-            w_ = w.cuda()
             gt_tubes_ = gt_tubes.type_as(clips_).cuda()
             im_info_ = im_info.cuda()
             n_acts_ = n_acts.cuda()
@@ -107,7 +108,7 @@ class Model(nn.Module):
             # print('act_loss_bbox.shape :',act_loss_bbox.shape)
 
             # print('pooled_feat.shape :',pooled_feat.shape)
-            pooled_f = pooled_feat.view(-1,rois_per_image,512,self.sample_duration)
+            pooled_f = pooled_feat.view(-1,rois_per_image,self.p_feat_size,self.sample_duration)
             indexes_ = (torch.arange(0, tubes.size(0))*int(self.sample_duration/2) + start_fr[0]).unsqueeze(1)
             indexes_ = indexes_.expand(tubes.size(0),tubes.size(1)).type_as(tubes)
 
@@ -125,8 +126,6 @@ class Model(nn.Module):
 
             if self.training:
 
-                idx_s_ = step * n_devs 
-                idx_e_ = step * n_devs + n_devs
                 f_gt_tubes[idx_s:idx_e] = gt_tubes
                 tubes_labels[idx_s:idx_e] = rois_label.squeeze(-1)
 
@@ -189,7 +188,8 @@ class Model(nn.Module):
 
         ## calculate input rois
         ## TODO create tensor
-        f_feat_mean = torch.zeros(len(f_tubes),512).cuda() #.to(device)
+        f_feat_mean = torch.zeros(len(f_tubes),self.p_feat_size).cuda() #.to(device)
+
         final_video_tubes = torch.zeros(len(f_tubes),6).cuda()
         
         for i in range(len(f_tubes)):
@@ -197,7 +197,7 @@ class Model(nn.Module):
             seq = f_tubes[i]
 
             tmp_tube = torch.Tensor(len(seq),6)
-            feats = torch.Tensor(len(seq),512)
+            feats = torch.Tensor(len(seq),self.p_feat_size)
             for j in range(len(seq)):
                 # print('features[seq[j]].mean(1).shape :',features[seq[j]].mean(1).shape)
                 feats[j] = features[seq[j]].mean(1)
@@ -226,30 +226,31 @@ class Model(nn.Module):
             cls_loss = F.cross_entropy(prob_out, target_lbl.long())
 
         if self.training:
-            return tubes, bbox_pred,  prob_out, f_rpn_loss_cls, f_rpn_loss_bbox, f_act_loss_bbox, cls_loss, 
+            return tubes, bbox_pred,  prob_out, f_rpn_loss_cls.cuda(), f_rpn_loss_bbox.cuda(), f_act_loss_bbox.cuda(), cls_loss, 
         else:
             return final_video_tubes, bbox_pred, prob_out
+        # return  torch.Tensor([0]).cuda(),torch.Tensor([0]).cuda(),Variable(torch.Tensor([0]).cuda()),Variable(torch.Tensor([0]).cuda()),torch.Tensor([0]).cuda(),torch.Tensor([0]).cuda(),   Variable( torch.Tensor([0]).cuda(), requires_grad=True)
 
     def create_architecture(self):
 
         self.act_net.create_architecture()
+
+    def deactivate_action_net_grad(self):
+
+        for p in self.act_net.parameters() : p.requires_grad=False
+        # for key, value in dict(self.named_parameters()).items():
+        #     print(key, value.requires_grad)
 
     def load_part_model(self, action_model_path=None, linear_path=None):
 
 
         if action_model_path != None:
             
-            act_net = ACT_net(self.actions,self.sample_duration)
-            act_net = nn.DataParallel(act_net, device_ids=None)
-            act_data = torch.load(action_model_path)
-            act_net.load(act_data)
-            self.act_net = act_net
+            act_data = torch.load('./action_net_model.pwf')
+            self.act_net.load_state_dict(act_data)
 
         if linear_path != None:
 
-            # linear = nn.Linear(512, self.n_classes).cuda()
-            linear = nn.Linear(256, self.n_classes).cuda()
             linear_data = torch.load(linear_path)
-            linear.load_state_dict(linear_data)
-            self.linear = linear
+            self.linear.load_state_dict(linear_data)
 

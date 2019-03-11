@@ -20,6 +20,7 @@ from resize_rpn import resize_boxes, resize_tube
 np.random.seed(42)
 
 
+
 def pil_loader(path):
     # open path as file to avoid ResourceWarning (https://github.com/python-pillow/Pillow/issues/835)
     with open(path, 'rb') as f:
@@ -141,7 +142,7 @@ def create_tcn_dataset(split_txt_path, json_path, classes, mode):
     return dataset
 
 
-def make_correct_ucf_dataset(dataset_path,  boxes_file, mode='train'):
+def make_correct_ucf_dataset(dataset_path,  boxes_file, split_txt_path, mode='train'):
     dataset = []
     classes = next(os.walk(dataset_path, True))[1]
 
@@ -152,8 +153,13 @@ def make_correct_ucf_dataset(dataset_path,  boxes_file, mode='train'):
 
     max_sim_actions = -1
     max_frames = -1
+    file_names = get_file_names(split_txt_path, mode, split_number=1)
+        
     for vid, values in boxes_data.items():
         # print('vid :',vid)
+        vid_name = vid.split('/')[-1]
+        if vid_name not in file_names:
+            continue
         name = vid.split('/')[-1]
         n_frames = values['numf']
         annots = values['annotations']
@@ -234,10 +240,11 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
     max_frames = -1
     max_actions = -1
     for cls in classes:
-    # for cls in ['RopeClimbing']:
+    # for cls in ['VolleyballSpiking']:
         videos = next(os.walk(os.path.join(dataset_path,cls), True))[1]
         for vid in videos:
-
+        # for vid in ['v_VolleyballSpiking_g11_c06']:
+        # for vid in [' v_VolleyballSpiking_g23_c01']:
             video_path = os.path.join(cls,vid)
             if video_path not in boxes_data or not(vid in file_names):
                 # print('OXI to ',video_path)
@@ -304,6 +311,8 @@ class video_names(data.Dataset):
         boxes = self.data[index]['boxes']
         n_frames = self.data[index]['n_frames']
         
+        print('vid_name :', vid_name)
+        # print('boxes :',boxes)
         ## read one image for h,w
 
         abs_path = os.path.join(self.dataset_folder, vid_name)
@@ -336,7 +345,6 @@ class video_names(data.Dataset):
         vid_id = np.array([self.vid2idx[vid_name]],dtype=np.int64)
         n_frames_np = np.array([n_frames], dtype=np.int64)
         n_actions_np = np.array([n_actions], dtype=np.int64)
-
         return vid_id, final_boxes, n_frames_np, n_actions_np, h, w
     
     def __len__(self):
@@ -345,14 +353,18 @@ class video_names(data.Dataset):
 
 
 class single_video(data.Dataset):
-    def __init__(self, dataset_folder, vid_names, vid_id,frames_dur=16, sample_size=112,
+    def __init__(self, dataset_folder, h, w, vid_names, vid_id,frames_dur=16, sample_size=112,
                  spatial_transform=None, temporal_transform=None, boxes=None,
-                 get_loader=get_default_video_loader, mode='train', classes_idx=None):
+                 get_loader=get_default_video_loader, mode='train', classes_idx=None, ):
 
+        self.h = h
+        self.w = w
         self.mode = mode
         self.dataset_folder = dataset_folder
         self.data, self.n_actions, n_frames = prepare_samples(
                     vid_names, vid_id, boxes, frames_dur, int(frames_dur/2))
+        vid_path = vid_names[vid_id]
+        self.clips = torch.load(os.path.join(dataset_folder,vid_path,'images.pt'))
 
         self.spatial_transform = spatial_transform
         self.temporal_transform = temporal_transform
@@ -373,19 +385,11 @@ class single_video(data.Dataset):
         path = self.data[index]['video_path']
         rois = self.data[index]['boxes']
         start_fr = self.data[index]['start_fr']
-
         n_frames = self.data[index]['n_frames']
         frame_indices = self.data[index]['frame_indices']
         abs_path = os.path.join(self.dataset_folder, path)
 
-        clip = self.loader(abs_path, frame_indices)
-
-        ## get original height and width
-        w, h = clip[0].size
-        if self.spatial_transform is not None:
-            clip = [self.spatial_transform(img) for img in clip]
-        clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
-
+        clip = self.clips
         ## get bboxes and create gt tubes
         rois_Tensor = rois
         rois_indx = np.array(frame_indices) - frame_indices[0]
@@ -394,7 +398,10 @@ class single_video(data.Dataset):
         
         rois_sample_tensor[:,:,2] = rois_sample_tensor[:,:,0] + rois_sample_tensor[:,:,2]
         rois_sample_tensor[:,:,3] = rois_sample_tensor[:,:,1] + rois_sample_tensor[:,:,3]
-        rois_sample_tensor_r = resize_boxes(rois_sample_tensor, h,w,self.sample_size)
+        # print('rois_sample_tensor :',rois_sample_tensor)
+        # print('self.h.type() :',self.h.type())
+        # print('self.h :',self.h)
+        rois_sample_tensor_r = resize_boxes(rois_sample_tensor, self.h,self.w,self.sample_size)
 
         fr_tensor = torch.Tensor(frame_indices).type_as(rois_sample_tensor_r)-1
         fr_tensor = fr_tensor.unsqueeze(1).unsqueeze(0).expand(rois_sample_tensor_r.size(0),fr_tensor.size(0), 1)
@@ -402,15 +409,17 @@ class single_video(data.Dataset):
         
         # print('rois_sample_tensor_r :',rois_sample_tensor_r)
         # rois_sample = rois_sample_tensor_r.tolist()
-        tubes = create_tube_with_frames(rois_fr.unsqueeze(0), torch.Tensor([[h,w]*rois_sample_tensor_r.size(0)]), self.sample_duration)
+        # print('rois_fr :',rois_fr)
+        tubes = create_tube_with_frames(rois_fr.unsqueeze(0), torch.Tensor([[self.h,self.w]*rois_sample_tensor_r.size(0)]), self.sample_duration)
         tubes = tubes.squeeze(0)
         # print('tubes :',tubes)
+        # print('rois_fr :',rois_fr)
         padding_lines = tubes[:,-1].squeeze(0).lt(0).nonzero().view(-1)
         for i in padding_lines:
             tubes[i] = torch.zeros((7))
         ## im_info
         im_info = torch.Tensor([self.sample_size, self.sample_size, self.sample_duration] )
-        return clip,  (h, w),  tubes, rois_sample_tensor_r, im_info, rois_sample_tensor_r.size(0), start_fr
+        return clip,  tubes, rois_sample_tensor_r, im_info, rois_sample_tensor_r.size(0), start_fr
 
     def __len__(self):
         return len(self.data)
@@ -421,17 +430,18 @@ class single_video(data.Dataset):
 
 class Video_UCF(data.Dataset):
 
-    def __init__(self, video_path, frames_dur=8, 
+    def __init__(self, video_path, frames_dur=16, split_txt_path=None, sample_size=112,
                  spatial_transform=None, temporal_transform=None, json_file=None,
-                 sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None):
+                 get_loader=get_default_video_loader, mode='train', classes_idx=None):
 
         self.mode = mode
-        self.data, self.max_sim_actions = make_correct_ucf_dataset(
-                    video_path, json_file, self.mode)
+        self.data, self.max_sim_actions, max_frames = make_correct_ucf_dataset(
+                    video_path, json_file, split_txt_path, self.mode)
         self.spatial_transform = spatial_transform
         self.temporal_transform = temporal_transform
         self.loader = get_loader()
         self.sample_duration = frames_dur
+        self.sample_size = sample_size
         self.json_file = json_file
         self.classes_idx = classes_idx
 
@@ -446,23 +456,29 @@ class Video_UCF(data.Dataset):
         cls  = self.data[index]['class']
         path = self.data[index]['abs_path']
         rois = self.data[index]['rois']
+        n_frames = self.data[index]['n_frames']
 
-        n_frames = len(glob.glob(path+ '/*.jpg'))
 
         ## get  random frames from the video 
         time_index = np.random.randint(
             0, n_frames - self.sample_duration - 1) + 1
-
+        # print('times_index :',time_index)
+        # print('n_frames :',n_frames)
         frame_indices = list(
             range(time_index, time_index + self.sample_duration))  # get the corresponding frames
 
-        clip = self.loader(path, frame_indices)
+        clips = torch.load(os.path.join(path,'images.pt'))
+        clip = clips[:,frame_indices]
 
-        ## get original height and width
-        w, h = clip[0].size
-        if self.spatial_transform is not None:
-            clip = [self.spatial_transform(img) for img in clip]
-        clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
+        # clip = self.loader(path, frame_indices)
+
+        # ## get original height and width
+        # w, h = clip[0].size
+        # if self.spatial_transform is not None:
+        #     clip = [self.spatial_transform(img) for img in clip]
+        # clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
+        w = 320
+        h = 240
 
         ## get bboxes and create gt tubes
         rois_Tensor = torch.Tensor(rois)
@@ -505,10 +521,12 @@ class Video_UCF(data.Dataset):
         f_rois = torch.zeros(self.max_sim_actions,self.sample_duration,5)
         f_rois[:n_acts,:,:] = final_rois[:n_acts]
 
+        im_info = torch.Tensor([self.sample_size, self.sample_size, n_frames])
+
         if self.mode == 'train':
-            return clip,  h, w,  ret_tubes, f_rois, n_acts
+            return clip,  np.array([h], dtype=np.int64), np.array([w],dtype=np.int64),  ret_tubes, f_rois, np.array([n_acts],dtype=np.int64), np.array([n_frames],dtype=np.int64), im_info
         else:
-            return clip,  h, w,  gt_tubes, final_rois,  self.data[index]['abs_path'], frame_indices
+            return clip,  h, w,  gt_tubes, final_rois,  im_info, self.data[index]['abs_path'], frame_indices
 
     def __len__(self):
         return len(self.data)

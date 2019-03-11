@@ -99,7 +99,8 @@ class ACT_net(nn.Module):
         self.time_dim =sample_duration
         self.temp_scale = 1.
         self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale).cuda()
-
+        self.avgpool = nn.AvgPool3d((1, 7, 7), stride=1)
+        
     def create_architecture(self):
         self._init_modules()
         self._init_weights()
@@ -158,11 +159,11 @@ class ACT_net(nn.Module):
         # do roi align based on predicted rois
         # print('base_feat.shape :', base_feat.shape)
         # print('rois_s.view(-1,7).shape :',rois_s.view(-1,7).shape)
-        pooled_feat = self.act_roi_align(base_feat, rois_s.view(-1,7))
+        pooled_feat_ = self.act_roi_align(base_feat, rois_s.view(-1,7))
         # print('pooled_feat.shape :',pooled_feat.shape)
         # # feed pooled features to top model
         # print('pooled_feat.shape :', pooled_feat.shape)
-        pooled_feat = self._head_to_tail(pooled_feat)
+        pooled_feat = self._head_to_tail(pooled_feat_)
         # pooled_feat_ = self._head_to_tail(pooled_feat)
         # print('pooled_feat.shape :', pooled_feat.shape)
         n_rois = pooled_feat.size(0)
@@ -197,13 +198,16 @@ class ACT_net(nn.Module):
 
         bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
         # pooled_feat = pooled_feat.view(batch_size, rois.size(1),-1)
+        pooled_feat_ = self.avgpool(pooled_feat_).cuda()
 
         if self.training:
           rois_label = rois_label.view(batch_size, rois.size(1),-1)
-          return rois,  bbox_pred, pooled_feat, rpn_loss_cls, rpn_loss_bbox, act_loss_bbox, rois_label
-          # return rois.cuda(),  bbox_pred.cuda(), pooled_feat.cuda(), rpn_loss_cls.cuda(), rpn_loss_bbox.cuda(), act_loss_bbox.cuda(), rois_label.cuda()
+          return rois,  bbox_pred, pooled_feat_, \
+            rpn_loss_cls, rpn_loss_bbox, act_loss_bbox, \
+            rois_label
 
-        return rois,  bbox_pred, pooled_feat, None, None, None, None
+
+        return rois,  bbox_pred, pooled_feat_, None, None, None, None
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):
@@ -247,12 +251,9 @@ class ACT_net(nn.Module):
 
         self.act_top = nn.Sequential(model.module.layer4)
         self.act_top_s = nn.Sequential(_make_layer(BasicBlock, 512, 3, stride=2, inplanes=256))
-        # self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg
-        # self.act_bbox_pred = nn.Linear(8192, 6 * self.n_classes) # 2 classes bg/ fg
-        # self.act_cls_score = nn.Linear(8192, self.n_classes)
+
         self.act_bbox_single_frame_pred = nn.Linear(512, 4 )
         self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg
-        # self.act_cls_score = nn.Linear(512, self.n_classes)
 
         # Fix blocks
         for p in self.act_base[0].parameters(): p.requires_grad=False
