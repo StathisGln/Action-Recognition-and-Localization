@@ -116,10 +116,6 @@ class ACT_net(nn.Module):
             # gt_rois =  gt_rois.data
             num_boxes = num_boxes.data
 
-            
-        # print('gt_tubes.device :',gt_tubes.device)
-        # print('gt_tubes :',gt_tubes)
-
         #### modify gt_tubes:
         for i in range(batch_size):
           gt_tubes[i,:,2] = gt_tubes[i,:,2] - start_fr[i].type_as(gt_tubes)
@@ -130,15 +126,12 @@ class ACT_net(nn.Module):
         rois, rpn_loss_cls, rpn_loss_bbox = self.act_rpn(base_feat, im_info, gt_tubes, None, num_boxes)
         # if it is training phrase, then use ground trubut bboxes for refining
         # firstly find xy- reggression boxes
-        # print('rois.shape :',rois.shape)
-        # print('rois :',rois)
+
         if self.training:
           gt_tubes = torch.cat((gt_tubes,torch.ones(gt_tubes.size(0),gt_tubes.size(1),1).type_as(gt_tubes)),dim=2).type_as(gt_tubes)
           roi_data = self.act_proposal_target(rois, gt_tubes, num_boxes)
 
           rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = roi_data
-          # print('rois_label.shape :',rois_label.shape )
-          # print('rois.shape :',rois.shape )
           rois_label = Variable(rois_label.view(-1).long())
           rois_target = Variable(rois_target.view(-1, rois_target.size(2)))
           rois_inside_ws = Variable(rois_inside_ws.view(-1, rois_inside_ws.size(2)))
