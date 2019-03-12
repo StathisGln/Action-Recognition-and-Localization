@@ -11,7 +11,9 @@ from torch.nn.functional import avg_pool3d
 from torch.autograd import Variable
 
 from resnet_3D import resnet34
-from region_net import _RPN
+from region_net import _RPN as _TPN
+from human_reg import _Regression_Layer
+
 from proposal_target_layer_cascade import _ProposalTargetLayer
 from proposal_target_layer_cascade_single_frame import _ProposalTargetLayer as _ProposalTargetLayer_single
 from roi_align_3d.modules.roi_align  import RoIAlignAvg
@@ -93,14 +95,16 @@ class ACT_net(nn.Module):
         self.spatial_scale = 1.0/sample_duration
 
         # define rpn
-        self.act_rpn = _RPN(256).cuda()
+        self.act_tpn = _TPN(256).cuda()
         self.act_proposal_target = _ProposalTargetLayer(2).cuda() ## background/ foreground
         self.act_proposal_target_single = _ProposalTargetLayer_single(2).cuda() ## background/ foreground
         self.time_dim =sample_duration
         self.temp_scale = 1.
         self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale).cuda()
-        self.avgpool = nn.AvgPool3d((1, 7, 7), stride=1)
         
+        self.avgpool = nn.AvgPool3d((1, 7, 7), stride=1)
+        self.reg_layer = _Regression_Layer(256
+)
     def create_architecture(self):
         self._init_modules()
         self._init_weights()
@@ -113,7 +117,7 @@ class ACT_net(nn.Module):
         im_info = im_info.data
         if self.training:
             gt_tubes = gt_tubes.data
-            # gt_rois =  gt_rois.data
+            gt_rois =  gt_rois.data
             num_boxes = num_boxes.data
 
             
@@ -127,7 +131,8 @@ class ACT_net(nn.Module):
 
         # feed image data to base model to obtain base feature map
         base_feat = self.act_base(im_data)
-        rois, rpn_loss_cls, rpn_loss_bbox = self.act_rpn(base_feat, im_info, gt_tubes, None, num_boxes)
+
+        rois, rpn_loss_cls, rpn_loss_bbox = self.act_tpn(base_feat, im_info, gt_tubes, None, num_boxes)
         # if it is training phrase, then use ground trubut bboxes for refining
         # firstly find xy- reggression boxes
         # print('rois.shape :',rois.shape)
@@ -150,9 +155,7 @@ class ACT_net(nn.Module):
           rois_outside_ws = None
           rpn_loss_cls = 0
           rpn_loss_bbox = 0
-        # print('rois.shape :', rois.shape)
-        # print('rois :', rois)
-        # print('rois_target.shape :',rois_target.shape)
+
         rois = Variable(rois)
         rois_s = rois[:,:,:7]
         # print('rois_s :', rois_s.shape)
@@ -160,9 +163,10 @@ class ACT_net(nn.Module):
         # print('base_feat.shape :', base_feat.shape)
         # print('rois_s.view(-1,7).shape :',rois_s.view(-1,7).shape)
         pooled_feat_ = self.act_roi_align(base_feat, rois_s.view(-1,7))
-        # print('pooled_feat.shape :',pooled_feat.shape)
-        # # feed pooled features to top model
-        # print('pooled_feat.shape :', pooled_feat.shape)
+
+        ### regression
+        self.reg_layer(pooled_feat_,rois_s, gt_rois) 
+
         pooled_feat = self._head_to_tail(pooled_feat_)
         # pooled_feat_ = self._head_to_tail(pooled_feat)
         # print('pooled_feat.shape :', pooled_feat.shape)
@@ -222,9 +226,9 @@ class ACT_net(nn.Module):
                 m.bias.data.zero_()
 
         truncated = False
-        normal_init(self.act_rpn.RPN_Conv, 0, 0.01, truncated)
-        normal_init(self.act_rpn.RPN_cls_score, 0, 0.01, truncated)
-        normal_init(self.act_rpn.RPN_bbox_pred, 0, 0.01, truncated)
+        normal_init(self.act_tpn.RPN_Conv, 0, 0.01, truncated)
+        normal_init(self.act_tpn.RPN_cls_score, 0, 0.01, truncated)
+        normal_init(self.act_tpn.RPN_bbox_pred, 0, 0.01, truncated)
         normal_init(self.act_bbox_pred, 0, 0.001, truncated)
         normal_init(self.act_bbox_single_frame_pred, 0, 0.001, truncated)
         # normal_init(self.act_cls_score, 0, 0.001, truncated)
