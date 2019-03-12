@@ -105,8 +105,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     ## 2 rois : 1450
     for step, data  in enumerate(data_loader):
 
-        if step == 2:
-            break
+        # if step == 2:
+        #     break
 
         clips,  (h, w), gt_tubes_r, gt_rois, n_actions, n_frames = data
         clips = clips.to(device)
@@ -151,8 +151,8 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
     ## 2 rois : 1450
     for step, data  in enumerate(data_loader):
 
-        if step == 2:
-            break
+        # if step == 2:
+        #     break
 
         clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
         clips_ = clips.to(device)
@@ -339,8 +339,8 @@ if __name__ == '__main__':
 
         for step, data  in enumerate(data_loader):
 
-            if step == 2:
-                break
+            # if step == 2:
+            #     break
 
             print('step :',step)
             vid_id, boxes, n_frames, n_actions, h, w = data
@@ -442,8 +442,8 @@ if __name__ == '__main__':
 
         for step, data  in enumerate(data_loader):
 
-            if step == 2:
-                break
+            # if step == 2:
+            #     break
 
             print('step :',step)
             vid_id, boxes, n_frames, n_actions, h, w = data
