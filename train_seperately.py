@@ -135,7 +135,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     print('| Proposed Action Tubes |')
     print('|                       |')
     print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
-        step, true_pos.cpu().tolist()[0], false_neg.cpu().tolist()[0], recall.cpu().tolist()[0]))
+        step+1, true_pos.cpu().tolist()[0], false_neg.cpu().tolist()[0], recall.cpu().tolist()[0]))
     print(' -----------------------')
         
 def training(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads, lr,):
@@ -151,8 +151,8 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
     ## 2 rois : 1450
     for step, data  in enumerate(data_loader):
 
-        # if step == 2:
-        #     break
+        if step == 2:
+            break
 
         clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
         clips_ = clips.to(device)
@@ -179,7 +179,7 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         optimizer.step()
 
     print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
-        epoch+1,loss_temp/step, lr))
+        epoch+1,loss_temp/(step+1), lr))
 
     return model, loss_temp
 
@@ -382,18 +382,18 @@ if __name__ == '__main__':
     act_net_path = './action_net_model.pwf'
     linear_path = './linear.pwf'
 
+    torch.backends.cudnn.enabled=False
     model = Model(actions, sample_duration, sample_size)
-    model.create_architecture()
+    model.load_part_model(action_model_path=act_net_path, linear_path = linear_path)
+    # model.load_part_model(action_model_path=None, linear_path = linear_path)
+    # model.create_architecture()
 
-    
     if torch.cuda.device_count() > 1:
 
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
-        model.act_net = nn.DataParallel(model.act_net)
+        model = nn.DataParallel(model)
 
-    model.act_net = model.act_net.cuda()
-
-    model.load_part_model(action_model_path=act_net_path, linear_path = linear_path)
+    model = model.to(device)
 
     # init data_loaders
     
@@ -422,6 +422,7 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(params)
 
     ##########################
+
     
     # epochs = 40
     epochs = 1
@@ -433,9 +434,6 @@ if __name__ == '__main__':
 
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(ep+1, epochs))
 
-        # model.train()
-        # model.act_net.eval()
-        
         if ep % (lr_decay_step + 1) == 0:
             adjust_learning_rate(optimizer, lr_decay_gamma)
             lr *= lr_decay_gamma
@@ -445,22 +443,23 @@ if __name__ == '__main__':
             # if step == 2:
             #     break
 
-            print('step :',step)
+            print('! step :',step)
             vid_id, boxes, n_frames, n_actions, h, w = data
 
             mode = 'train'
 
-            vid_id_ = vid_id.to(device)
-            n_frames_ = n_frames.to(device)
-            n_actions_ = n_actions.to(device)
+            # vid_id_ = vid_id.to(device)
+            # n_frames_ = n_frames.to(device)
+            # n_actions_ = n_actions.to(device)
             # h_ = h.to(device)
             # w_ = w.to(device)
+            # print('boxes.type() :',boxes.type())
             tubes,  bbox_pred, \
             prob_out, rpn_loss_cls, \
             rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(n_devs, dataset_folder, \
-                                                             vid_names, vid_id_, spatial_transform, \
-                                                             temporal_transform, boxes, \
-                                                             mode, cls2idx, n_actions_,n_frames_, h, w)
+                                                             vid_names, vid_id, spatial_transform, \
+                                                             temporal_transform, boxes.cpu(), \
+                                                             mode, cls2idx, n_actions,n_frames, h, w)
 
             loss = cls_loss.mean()
 
@@ -471,8 +470,11 @@ if __name__ == '__main__':
 
             loss_temp += loss.item()
 
+            torch.cuda.empty_cache()
+            torch.cuda.synchronize()
+
         print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
-        ep+1,loss_temp/step, lr))
+        ep+1,loss_temp/(step+1), lr))
         if ( ep + 1 ) % 5 == 0:
             torch.save(model.state_dict(), "model.pwf")
     torch.save(model.state_dict(), "model.pwf")

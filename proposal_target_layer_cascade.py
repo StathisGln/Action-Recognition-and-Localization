@@ -43,7 +43,8 @@ class _ProposalTargetLayer(nn.Module):
         gt_boxes_append[:,:,1:] = gt_boxes[:,:,:7] # in pos 0 is the score
         # gt_boxes_append[:,:,1:] = gt_boxes[:,:,:6] # in pos 0 is the score
         num_rois_pre = all_rois.size(1)
-        # print('all_rois.shape :',all_rois.shape )
+        print('all_rois.shape :',all_rois.shape )
+        print('all_rois :',all_rois)
         # print('nu_rois_pre :', num_rois_pre )
 
         # print('gt_boxes_append.shape :',gt_boxes_append.shape)
@@ -56,7 +57,6 @@ class _ProposalTargetLayer(nn.Module):
         rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images)
         fg_rois_per_image = int(np.round(cfg.TRAIN.FG_FRACTION * rois_per_image))
         fg_rois_per_image = 1 if fg_rois_per_image == 0 else fg_rois_per_image
-
         labels, rois, bbox_targets, bbox_inside_weights = self._sample_rois_pytorch(
             all_rois, gt_boxes, fg_rois_per_image,
             rois_per_image, self._num_classes, num_boxes, num_rois_pre)

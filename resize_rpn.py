@@ -110,8 +110,8 @@ def resize_boxes_np(gt_rois_old, h,w, sample_size):
     gt_rois =np.zeros(gt_rois_old.shape)
 
     w_bigger_h = w > h
-    scale = sample_size / max(h,w)
-
+    scale = (sample_size * 1.0 )/ max(h,w) 
+    # print('scale :',scale)
     if w_bigger_h:
         target_h = int(np.round( h * float(sample_size) / float(w)))
     else:
@@ -132,8 +132,10 @@ def resize_boxes_np(gt_rois_old, h,w, sample_size):
     # print('padding_pos :',padding_pos)
     for i in range(padding_pos[0].shape[0]):
         # print(i)
+        # print('padding_pos[0][i] :',padding_pos[0][i])
+        # print('gt_rois[padding_pos[i,0],padding_pos[i,1]] :',gt_rois[padding_pos[0][i],padding_pos[1][i]])
         # print('gt_rois :',gt_rois)
-        gt_rois[padding_pos[i],padding_pos[i]] = np.array([[0,0,0,0,-1]])
+        gt_rois[padding_pos[0][i],padding_pos[1][i]] = np.array([[0,0,0,0,-1]])
     return gt_rois
 
 

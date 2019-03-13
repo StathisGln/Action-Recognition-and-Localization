@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os
 import numpy as np
 import glob
+from collections import OrderedDict
 
 import torch
 import torch.nn as nn
@@ -93,12 +94,12 @@ class ACT_net(nn.Module):
         self.spatial_scale = 1.0/sample_duration
 
         # define rpn
-        self.act_rpn = _RPN(256).cuda()
-        self.act_proposal_target = _ProposalTargetLayer(2).cuda() ## background/ foreground
-        self.act_proposal_target_single = _ProposalTargetLayer_single(2).cuda() ## background/ foreground
+        self.act_rpn = _RPN(256)
+        self.act_proposal_target = _ProposalTargetLayer(2) ## background/ foreground
+        self.act_proposal_target_single = _ProposalTargetLayer_single(2) ## background/ foreground
         self.time_dim =sample_duration
         self.temp_scale = 1.
-        self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale).cuda()
+        self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale)
         self.avgpool = nn.AvgPool3d((1, 7, 7), stride=1)
         
     def create_architecture(self):
@@ -124,9 +125,12 @@ class ACT_net(nn.Module):
         # feed image data to base model to obtain base feature map
         base_feat = self.act_base(im_data)
         rois, rpn_loss_cls, rpn_loss_bbox = self.act_rpn(base_feat, im_info, gt_tubes, None, num_boxes)
+
         # if it is training phrase, then use ground trubut bboxes for refining
         # firstly find xy- reggression boxes
-
+        
+        print('rois.shape :',rois.shape)
+        print('rois :',rois)
         if self.training:
           gt_tubes = torch.cat((gt_tubes,torch.ones(gt_tubes.size(0),gt_tubes.size(1),1).type_as(gt_tubes)),dim=2).type_as(gt_tubes)
           roi_data = self.act_proposal_target(rois, gt_tubes, num_boxes)
@@ -143,44 +147,19 @@ class ACT_net(nn.Module):
           rois_outside_ws = None
           rpn_loss_cls = 0
           rpn_loss_bbox = 0
-        # print('rois.shape :', rois.shape)
-        # print('rois :', rois)
-        # print('rois_target.shape :',rois_target.shape)
+
         rois = Variable(rois)
-        rois_s = rois[:,:,:7]
-        # print('rois_s :', rois_s.shape)
+
         # do roi align based on predicted rois
-        # print('base_feat.shape :', base_feat.shape)
-        # print('rois_s.view(-1,7).shape :',rois_s.view(-1,7).shape)
-        pooled_feat_ = self.act_roi_align(base_feat, rois_s.view(-1,7))
-        # print('pooled_feat.shape :',pooled_feat.shape)
-        # # feed pooled features to top model
-        # print('pooled_feat.shape :', pooled_feat.shape)
+        pooled_feat_ = self.act_roi_align(base_feat, rois[:,:,:7].view(-1,7))
+
         pooled_feat = self._head_to_tail(pooled_feat_)
-        # pooled_feat_ = self._head_to_tail(pooled_feat)
-        # print('pooled_feat.shape :', pooled_feat.shape)
         n_rois = pooled_feat.size(0)
-        # print('pooled_feat.shape :',pooled_feat.shape)
+
         # # compute bbox offset
-        # pooled_feat_mean = pooled_feat_.mean(2)
-        pooled_feat_mean = pooled_feat.mean(2)
-        # print('pooled_feat.shape :',pooled_feat_mean.shape)
-
-        
-        bbox_pred = self.act_bbox_pred(pooled_feat_mean)
-        # print('bbox_pred.shape :',bbox_pred.shape)
-        # if self.training :
-        #     # select the corresponding columns according to roi labels
-        #     bbox_pred_view = bbox_pred.view(bbox_pred.size(0), int(bbox_pred.size(1) / 4), 4)
-        #     print('bbox_pred_view.shape :',bbox_pred_view.shape)
-        #     print('rois_label.shape :',rois_label.shape)
-
-        #     bbox_pred_select = torch.gather(bbox_pred_view, 1, rois_label.view(rois_label.size(0), 1, 1).expand(rois_label.size(0), 1, 4))
-        #     bbox_pred = bbox_pred_select.squeeze(1)
-
+        pooled_feat = pooled_feat.mean(2)
+        bbox_pred = self.act_bbox_pred(pooled_feat)
         # compute object classification probability
-        # cls_score = self.act_cls_score(pooled_feat_mean)
-        # cls_prob = F.softmax(cls_score, 1)
 
         # act_loss_cls = 0
         act_loss_bbox = 0
@@ -190,8 +169,8 @@ class ACT_net(nn.Module):
             act_loss_bbox = _smooth_l1_loss(bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
 
         bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
-        # pooled_feat = pooled_feat.view(batch_size, rois.size(1),-1)
-        pooled_feat_ = self.avgpool(pooled_feat_).cuda()
+
+        pooled_feat_ = self.avgpool(pooled_feat_)
 
         if self.training:
           rois_label = rois_label.view(batch_size, rois.size(1),-1)
@@ -232,18 +211,23 @@ class ACT_net(nn.Module):
                          sample_size=sample_size, sample_duration=self.sample_duration,
                          last_fc=False)
         model = model
-        model = nn.DataParallel(model, device_ids=None)
 
         self.model_path = '/gpu-data2/sgal/resnet-34-kinetics.pth'
         print("Loading pretrained weights from %s" %(self.model_path))
         model_data = torch.load(self.model_path)
-        model.load_state_dict(model_data['state_dict'])
-        # Build resnet.
-        self.act_base = nn.Sequential(model.module.conv1, model.module.bn1, model.module.relu,
-          model.module.maxpool,model.module.layer1,model.module.layer2, model.module.layer3)
 
-        self.act_top = nn.Sequential(model.module.layer4)
-        self.act_top_s = nn.Sequential(_make_layer(BasicBlock, 512, 3, stride=2, inplanes=256))
+        new_state_dict = OrderedDict()
+        for k, v in model_data['state_dict'].items():
+          name = k[7:] # remove `module.`
+          new_state_dict[name] = v
+
+        model.load_state_dict(new_state_dict)
+        # Build resnet.
+        self.act_base = nn.Sequential(model.conv1, model.bn1, model.relu,
+          model.maxpool,model.layer1,model.layer2, model.layer3)
+
+        self.act_top = nn.Sequential(model.layer4)
+        # self.act_top_s = nn.Sequential(_make_layer(BasicBlock, 512, 3, stride=2, inplanes=256))
 
         self.act_bbox_single_frame_pred = nn.Linear(512, 4 )
         self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg

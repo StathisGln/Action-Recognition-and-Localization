@@ -29,24 +29,24 @@ class _RPN(nn.Module):
         
         # # define the convrelu layers processing input feature map
 
-        self.RPN_Conv = nn.Conv3d(self.din, 512, 3, stride=1, padding=1, bias=True).cuda()
+        self.RPN_Conv = nn.Conv3d(self.din, 512, 3, stride=1, padding=1, bias=True)
 
         # define bg/fg classifcation score layer for each kernel 
         # 2(bg/fg) * 9  (anchors) * 4 (duration : 16,8,4,3)
         self.nc_score_out = len(self.anchor_scales) * len(self.anchor_ratios) * len(self.anchor_duration) * 2 
-        self.RPN_cls_score = nn.Conv3d(512, self.nc_score_out, 1, 1, 0).cuda()
+        self.RPN_cls_score = nn.Conv3d(512, self.nc_score_out, 1, 1, 0)
 
         # define anchor box offset prediction layer
         # 6(coords:x1,y1,t1) * 9 (anchors)  * 4 (duration)
         self.nc_bbox_out = len(self.anchor_scales) * len(self.anchor_ratios) * len(self.anchor_duration) * 6
-        self.RPN_bbox_pred = nn.Conv3d(512, self.nc_bbox_out, 1, 1, 0).cuda() # for regression
+        self.RPN_bbox_pred = nn.Conv3d(512, self.nc_bbox_out, 1, 1, 0) # for regression
 
         ## temporal regression
         # define proposal layer
-        self.RPN_proposal = _ProposalLayer(self.feat_stride, self.anchor_scales, self.anchor_ratios, self.anchor_duration).cuda()
+        self.RPN_proposal = _ProposalLayer(self.feat_stride, self.anchor_scales, self.anchor_ratios, self.anchor_duration)
 
         # define anchor target layer
-        self.RPN_anchor_target = _AnchorTargetLayer(self.feat_stride, self.anchor_scales, self.anchor_ratios, self.anchor_duration).cuda()
+        self.RPN_anchor_target = _AnchorTargetLayer(self.feat_stride, self.anchor_scales, self.anchor_ratios, self.anchor_duration)
 
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0

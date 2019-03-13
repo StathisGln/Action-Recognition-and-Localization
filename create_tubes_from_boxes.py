@@ -105,6 +105,57 @@ def create_tube_with_frames(boxes, im_info_3d, sample_duration):
     # print('ret :',ret)
     return ret
 
+def create_tube_with_frames_np(boxes, im_info_3d, sample_duration):
+
+    batch_size = boxes.shape[0]
+    n_actions = boxes.shape[1]
+
+    t1 = np.zeros((batch_size, n_actions))
+    t2 = np.zeros((batch_size, n_actions))
+    x1 = np.zeros((batch_size, n_actions))
+    y1 = np.zeros((batch_size, n_actions))
+    x2 = np.zeros((batch_size, n_actions))
+    y2 = np.zeros((batch_size, n_actions))
+    labels = np.zeros((batch_size, n_actions))
+    for i in range(batch_size):
+        for j in range(boxes.shape[1]):
+            k = np.where(boxes[i,j,:,:4] > (0))
+
+            if k[0].size == 0 :
+                continue
+            else:
+                labels[i,j] = boxes[i,j,k[0][0],4]
+                # if labels[i,j] == -1:
+                #     print('boxes[i,j] :',boxes[i,j])
+                mins = np.min(boxes[i,j,k[0][0]:k[0][-1]+1], 0)
+
+                x1[i,j] = mins[0]
+                y1[i,j] = mins[1]
+                t1[i,j] = mins[-1]
+                
+                maxs = np.max(boxes[i,j,k[0][0]:k[0][-1]+1], 0)
+
+                x2[i,j] = maxs[2]
+                y2[i,j] = maxs[3]
+                t2[i,j] = maxs[-1]
+                
+    for i in range(batch_size):
+        x1 = np.clip(x1, 0, im_info_3d[i, 1]-1)
+        y1 = np.clip(y1, 0, im_info_3d[i, 0]-1)
+        x2 = np.clip(x2, 0, im_info_3d[i, 1]-1)
+        y2 = np.clip(y2, 0, im_info_3d[i, 0]-1)
+
+    # print('x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(x1, y1, t1, x2, y2, t2))
+    # print('shapes :x1 {} y1 {} t1 {} x2 {} y2 {} t2 {} labels {}'.format(
+    #     x1.shape, y1.shape, t1.shape, x2.shape, y2.shape, t2.shape, labels.shape))
+    ret = np.concatenate((x1, y1, t1, x2, y2, t2, labels))
+    ret = np.transpose(ret, (1,0))
+    # print('ret.shape :',ret.shape)
+    # print('ret :',ret)
+
+    return ret
+
+
 def create_tube_from_tubes(boxes):
 
     mins, _ = torch.min(boxes, 0)

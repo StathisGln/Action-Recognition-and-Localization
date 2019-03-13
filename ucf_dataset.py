@@ -318,8 +318,6 @@ class video_names(data.Dataset):
         print('vid_name :', vid_name)
 
         # abs_path = os.path.join(self.dataset_folder, vid_name)
-        # clip = self.loader(abs_path, [1])
-        # w, h = clip[0].size
         w, h = 320, 240
 
         boxes_lst = boxes.tolist()
@@ -363,7 +361,7 @@ class single_video(data.Dataset):
         self.w = w
         self.mode = mode
         self.dataset_folder = dataset_folder
-        self.data, self.n_actions, self.n_frames = prepare_samples(
+        self.data, self.n_actions, n_frames = prepare_samples(
                     vid_names, vid_id, boxes, frames_dur, int(frames_dur/2))
         vid_path = vid_names[vid_id]
         self.clips = torch.load(os.path.join(dataset_folder,vid_path,'images.pt'))
@@ -375,7 +373,7 @@ class single_video(data.Dataset):
         self.sample_size = sample_size
         self.classes_idx = classes_idx
 
-        self.tensor_dim = len(range(0, self.n_frames-self.sample_duration, int(self.sample_duration/2)))
+        self.tensor_dim = len(range(0, n_frames-self.sample_duration, int(self.sample_duration/2)))
     def __getitem__(self, index):
         """
         Args:
@@ -386,12 +384,12 @@ class single_video(data.Dataset):
         name = self.data[index]['video_name']   # video path
         path = self.data[index]['video_path']
         rois = self.data[index]['boxes']
-        # print('rois :',rois)
         start_fr = self.data[index]['start_fr']
         n_frames = self.data[index]['n_frames']
         frame_indices = self.data[index]['frame_indices']
         abs_path = os.path.join(self.dataset_folder, path)
 
+        print('rois :',rois)
         clip = self.clips
         ## get bboxes and create gt tubes
         rois_indx = np.array(frame_indices) - frame_indices[0]
@@ -413,7 +411,7 @@ class single_video(data.Dataset):
         # print('tubes :',tubes)
         # print('type(tubes) :',type(tubes))
         # print('rois_fr :',rois_fr)
-        padding_lines = np.where(tubes[:,-1] < 1)
+        padding_lines = np.where(tubes[:,-1] < 0)
         for i in padding_lines:
             tubes[i] = torch.zeros((7))
         ## im_info
