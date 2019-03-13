@@ -106,7 +106,7 @@ class ACT_net(nn.Module):
         self._init_modules()
         self._init_weights()
 
-    def forward(self, im_data, im_info, gt_tubes, gt_rois, num_boxes, start_fr):
+    def forward(self, im_data, im_info, gt_tubes, gt_rois,  start_fr):
 
         # print('----------Inside TPN net----------')
         batch_size = im_data.size(0)
@@ -115,16 +115,22 @@ class ACT_net(nn.Module):
         if self.training:
             gt_tubes = gt_tubes.data
             # gt_rois =  gt_rois.data
-            num_boxes = num_boxes.data
 
         #### modify gt_tubes:
+        print('gt_tubes.shape:',gt_tubes.shape)
+        print('gt_tubes :',gt_tubes)
+        print('start_fr :',start_fr)
+        print('batch_size :',batch_size)
         for i in range(batch_size):
+          
           gt_tubes[i,:,2] = gt_tubes[i,:,2] - start_fr[i].type_as(gt_tubes)
           gt_tubes[i,:,5] = gt_tubes[i,:,5] - start_fr[i].type_as(gt_tubes)
 
+        print('gt_tubes :',gt_tubes)
+
         # feed image data to base model to obtain base feature map
         base_feat = self.act_base(im_data)
-        rois, rpn_loss_cls, rpn_loss_bbox = self.act_rpn(base_feat, im_info, gt_tubes, None, num_boxes)
+        rois, rpn_loss_cls, rpn_loss_bbox = self.act_rpn(base_feat, im_info, gt_tubes, None)
 
         # if it is training phrase, then use ground trubut bboxes for refining
         # firstly find xy- reggression boxes

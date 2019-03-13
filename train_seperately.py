@@ -18,10 +18,30 @@ from resize_rpn import resize_rpn, resize_tube
 
 from model import Model
 from action_net import ACT_net
-
+from resize_rpn import resize_boxes
 import pdb
 
 np.random.seed(42)
+
+def preprocess_boxes(boxes, h, w, sample_size, n_frames, n_actions):
+
+    print('edwww boxes.shape :', boxes.shape)
+    print('h :',h)
+    print('w :',w)
+    boxes[..., 2] = boxes[..., 0] + boxes[..., 2]
+    boxes[..., 3] = boxes[..., 1] + boxes[..., 3]
+
+    boxes = boxes[:, :n_actions, :n_frames]
+    boxes = resize_boxes(boxes, h,w,sample_size)
+
+    print('boxes.type() :',boxes.type())
+    print('boxes.shape :',boxes.shape)
+    fr_tensor = torch.arange(0,boxes.size(-2)).unsqueeze(1).unsqueeze(0).unsqueeze(0).type_as(boxes)
+    fr_tensor = fr_tensor.expand((boxes.size(0),)+fr_tensor.shape[1:]).expand((fr_tensor.size(0),)+(boxes.size(1),)+fr_tensor.shape[2:])
+    print('fr_tensor :',fr_tensor.shape)
+    boxes = torch.cat((boxes,fr_tensor),dim=-1)
+    print('after concat boxes.shape :',boxes.shape)
+    return boxes
 
 def bbox_overlaps_batch_3d(tubes, gt_tubes):
     """
@@ -446,6 +466,8 @@ if __name__ == '__main__':
             print('! step :',step)
             vid_id, boxes, n_frames, n_actions, h, w = data
 
+            print('boxes.type() :',boxes.type())
+            boxes = preprocess_boxes(boxes, h, w, sample_size, n_frames, n_actions)
             mode = 'train'
 
             # vid_id_ = vid_id.to(device)
@@ -458,7 +480,7 @@ if __name__ == '__main__':
             prob_out, rpn_loss_cls, \
             rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(n_devs, dataset_folder, \
                                                              vid_names, vid_id, spatial_transform, \
-                                                             temporal_transform, boxes.cpu(), \
+                                                             temporal_transform, boxes, \
                                                              mode, cls2idx, n_actions,n_frames, h, w)
 
             loss = cls_loss.mean()

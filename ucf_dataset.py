@@ -225,7 +225,6 @@ def prepare_samples (vid_names, vid_id, boxes, sample_duration, step):
         sample_i = copy.deepcopy(sample)
         sample_i['frame_indices'] = list(range(i, i + sample_duration))
         sample_i['segment'] = torch.IntTensor([i, i + sample_duration - 1])
-        sample_i['boxes'] = boxes[:,range(i, i + sample_duration)]
         sample_i['start_fr'] = i-1
         dataset.append(sample_i)
 
@@ -353,22 +352,17 @@ class video_names(data.Dataset):
 
 
 class single_video(data.Dataset):
-    def __init__(self, dataset_folder, h, w, vid_names, vid_id,frames_dur=16, sample_size=112,
-                 spatial_transform=None, temporal_transform=None, boxes=None,
-                 get_loader=get_default_video_loader, mode='train', classes_idx=None, ):
+    def __init__(self, dataset_folder, h, w, vid_names, vid_id,frames_dur=16, sample_size=112, boxes=None,
+                 classes_idx=None, ):
 
         self.h = h
         self.w = w
-        self.mode = mode
         self.dataset_folder = dataset_folder
         self.data, self.n_actions, n_frames = prepare_samples(
                     vid_names, vid_id, boxes, frames_dur, int(frames_dur/2))
         vid_path = vid_names[vid_id]
         self.clips = torch.load(os.path.join(dataset_folder,vid_path,'images.pt'))
 
-        self.spatial_transform = spatial_transform
-        self.temporal_transform = temporal_transform
-        self.loader = get_loader()
         self.sample_duration = frames_dur
         self.sample_size = sample_size
         self.classes_idx = classes_idx
@@ -383,40 +377,16 @@ class single_video(data.Dataset):
         """
         name = self.data[index]['video_name']   # video path
         path = self.data[index]['video_path']
-        rois = self.data[index]['boxes']
         start_fr = self.data[index]['start_fr']
         n_frames = self.data[index]['n_frames']
         frame_indices = self.data[index]['frame_indices']
         abs_path = os.path.join(self.dataset_folder, path)
 
-        print('rois :',rois)
+        frame_indices = np.array(frame_indices) - 1
         clip = self.clips
         ## get bboxes and create gt tubes
-        rois_indx = np.array(frame_indices) - frame_indices[0]
-        rois_sample_tensor = np.zeros((rois.shape[0], rois_indx.shape[0],5))
-        rois_sample_tensor = rois[:,rois_indx,:]
-
-        rois_sample_tensor[:,:,2] = rois_sample_tensor[:,:,0] + rois_sample_tensor[:,:,2]
-        rois_sample_tensor[:,:,3] = rois_sample_tensor[:,:,1] + rois_sample_tensor[:,:,3]
-        rois_sample_tensor_r = resize_boxes_np(rois_sample_tensor, self.h.item(),self.w.item(),self.sample_size)
-
-        fr_tensor = np.array(frame_indices)-1
-        fr_tensor = np.expand_dims(np.expand_dims(fr_tensor, axis=1), axis=0)
-        fr_tensor = np.repeat(fr_tensor, rois_sample_tensor_r.shape[0], axis=0)
-
-        rois_fr = np.concatenate((rois_sample_tensor_r,fr_tensor ), axis=2)
-        # print('rois_fr :',rois_fr)
-        # print('rois_sample_tensor :',rois_sample_tensor)
-        tubes = create_tube_with_frames_np(np.expand_dims(rois_fr,axis=0), np.array([[self.h,self.w]*rois_sample_tensor_r.shape[0]]), self.sample_duration)
-        # print('tubes :',tubes)
-        # print('type(tubes) :',type(tubes))
-        # print('rois_fr :',rois_fr)
-        padding_lines = np.where(tubes[:,-1] < 0)
-        for i in padding_lines:
-            tubes[i] = torch.zeros((7))
-        ## im_info
-        im_info = torch.Tensor([self.sample_size, self.sample_size, self.sample_duration] )
-        return clip,  tubes, rois_sample_tensor_r, im_info, rois_sample_tensor_r.shape[0], start_fr
+        im_info = np.array([self.sample_size,self.sample_size])
+        return clip, frame_indices, im_info, start_fr
 
     def __len__(self):
         return len(self.data)

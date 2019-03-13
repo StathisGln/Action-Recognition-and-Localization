@@ -30,7 +30,7 @@ class _ProposalTargetLayer(nn.Module):
         self.BBOX_NORMALIZE_STDS = torch.FloatTensor(cfg.TRAIN.BBOX_NORMALIZE_STDS_3d)
         self.BBOX_INSIDE_WEIGHTS = torch.FloatTensor(cfg.TRAIN.BBOX_INSIDE_WEIGHTS_3d)
 
-    def forward(self, all_rois, gt_boxes,num_boxes):
+    def forward(self, all_rois, gt_boxes):
 
         self.BBOX_NORMALIZE_MEANS = self.BBOX_NORMALIZE_MEANS.type_as(gt_boxes)
         self.BBOX_NORMALIZE_STDS  = self.BBOX_NORMALIZE_STDS.type_as(gt_boxes)
@@ -38,7 +38,6 @@ class _ProposalTargetLayer(nn.Module):
 
         # print('all_rois.device :',all_rois.device)
         # print('gt_boxes :', gt_boxes)
-        num_boxes = num_boxes.long()
         gt_boxes_append = gt_boxes.new(gt_boxes.size()).zero_()
         gt_boxes_append[:,:,1:] = gt_boxes[:,:,:7] # in pos 0 is the score
         # gt_boxes_append[:,:,1:] = gt_boxes[:,:,:6] # in pos 0 is the score
@@ -59,7 +58,7 @@ class _ProposalTargetLayer(nn.Module):
         fg_rois_per_image = 1 if fg_rois_per_image == 0 else fg_rois_per_image
         labels, rois, bbox_targets, bbox_inside_weights = self._sample_rois_pytorch(
             all_rois, gt_boxes, fg_rois_per_image,
-            rois_per_image, self._num_classes, num_boxes, num_rois_pre)
+            rois_per_image, self._num_classes,  num_rois_pre)
 
         bbox_outside_weights = (bbox_inside_weights > 0).float()
         # print('inside cascade rois :',rois)
@@ -124,7 +123,7 @@ class _ProposalTargetLayer(nn.Module):
         return targets
 
 
-    def _sample_rois_pytorch(self, all_rois, gt_boxes, fg_rois_per_image, rois_per_image, num_classes,num_boxes, num_rois_pre):
+    def _sample_rois_pytorch(self, all_rois, gt_boxes, fg_rois_per_image, rois_per_image, num_classes, num_rois_pre):
         """Generate a random sample of RoIs comprising foreground and background
         examples.
         """
@@ -154,8 +153,11 @@ class _ProposalTargetLayer(nn.Module):
         # foreground RoIs
 
         for i in range(batch_size):
-            gt_boxes_single = gt_boxes[i,:num_boxes[i]]
-            # print(gt_boxes_single.shape)
+            gt_boxes_single = gt_boxes[i]
+            gt_indexes = gt_boxes_single[..., -1].gt(0).nonzero().view(-1)
+            print('gt_boxes_indexes :',gt_boxes_indexes)
+            gt_boxes_single = gt_boxes_single[gt_indexes]
+                        
             # print('gt_boxes[:num_boxes[i]] :',gt_boxes_single)
             if gt_boxes_single[:,:7].byte().any() == 0:
                 print('no rois')

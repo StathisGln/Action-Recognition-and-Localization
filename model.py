@@ -10,11 +10,11 @@ from torch.autograd import Variable
 from action_net import ACT_net
 from tcn import TCN
 
-from create_tubes_from_boxes import create_video_tube, create_tube_from_tubes
+from create_tubes_from_boxes import create_video_tube, create_tube_from_tubes, create_tube_with_frames
 from connect_tubes import connect_tubes, get_gt_tubes_feats_label, get_tubes_feats_label
 from resize_rpn import resize_boxes, resize_tube
 
-from video_dataset import single_video
+from ucf_dataset import single_video
 
 from config import cfg
 
@@ -57,10 +57,9 @@ class Model(nn.Module):
         num_workers = n_devs * 4
         num_images = 1
         rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images) if self.training else 10
-        print('boxes.shape :',boxes.shape)
+
         data = single_video(dataset_folder,h_,w_, vid_names, vid_id, frames_dur= self.sample_duration, sample_size =self.sample_size,
-                            spatial_transform=spatial_transform, temporal_transform=temporal_transform, boxes=boxes.numpy(),
-                            mode=mode, classes_idx=cls2idx)
+                            boxes=boxes.cpu().numpy(), classes_idx=cls2idx)
 
         data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size, # num_workers=num_workers, pin_memory=True,
                                                   shuffle=False, num_workers=num_workers)
@@ -89,22 +88,31 @@ class Model(nn.Module):
             print('step :',step)
             # if step == 1:
             #     break
-            clips,  gt_tubes, _, im_info, n_acts, start_fr = dt
-            print('gt_tubes :',gt_tubes)
-            print('gt_tubes.shape :',gt_tubes.shape)
+            clips, frame_indices, im_info, start_fr = dt
+            print('frame_indices :',frame_indices.shape)
+            boxes_ = boxes[:, frame_indices]
+
+            gt_tubes = create_tube_with_frames(boxes_, im_info, self.sample_duration).permute(1,0,2)
+            # print('tubes.shape :',tubes.shape)
+            # print('tubes :',tubes)
+            padding_lines = gt_tubes[:,:,-1].lt(1).nonzero()
+            # print(padding_lines)
+            for i in padding_lines:
+                gt_tubes[i[0],i[1]] = torch.zeros((7)).type_as(gt_tubes)
+
             clips = clips.cuda()
             gt_tubes = gt_tubes.type_as(clips).cuda()
             im_info = im_info.cuda()
-            n_acts = n_acts.cuda()
             start_fr = start_fr.cuda()
 
+            print('gt_tubes.shape :',gt_tubes.shape)
             tubes,  bbox_pred, pooled_feat, \
             rpn_loss_cls,  rpn_loss_bbox, \
             act_loss_bbox, rois_label = self.act_net(clips,
                                                      im_info,
                                                      gt_tubes,
-                                                     None, n_acts,
-                                                      start_fr)
+                                                     None,
+                                                     start_fr)
 
             pooled_feat = pooled_feat.view(-1,rois_per_image,self.p_feat_size,self.sample_duration)
             indexes_ = (torch.arange(0, tubes.size(0))*int(self.sample_duration/2) + start_fr[0].cpu()).unsqueeze(1)

@@ -64,7 +64,7 @@ class _RPN(nn.Module):
         )
         return x
 
-    def forward(self, base_feat, im_info, gt_boxes, gt_rois, num_boxes):
+    def forward(self, base_feat, im_info, gt_boxes, gt_rois):
 
         batch_size = base_feat.size(0)
 
@@ -99,7 +99,7 @@ class _RPN(nn.Module):
 
             assert gt_boxes is not None
             
-            rpn_data = self.RPN_anchor_target((rpn_cls_score.data, gt_boxes, im_info, gt_rois, num_boxes, 16)) # time_limit = 16
+            rpn_data = self.RPN_anchor_target((rpn_cls_score.data, gt_boxes, im_info, gt_rois, self.sample_duration)) # time_limit = 16
 
             # print('rpn_cls_score.shape :',rpn_cls_score.shape) 
             rpn_cls_score = rpn_cls_score_reshape.permute(0, 2, 3,4, 1).contiguous()

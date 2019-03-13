@@ -60,8 +60,7 @@ class _AnchorTargetLayer(nn.Module):
         gt_tubes = input[1]      ## gt tube
         im_info = input[2]       ## im_info
         # gt_rois = input[3]       ## gt rois for each frame
-        num_boxes = input[4]     ## number of gt_boxes 
-        time_limit = input[5]    ## time limit
+        time_limit = input[4]    ## time limit
 
         # map of shape (..., H, W)
 
