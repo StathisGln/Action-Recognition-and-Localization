@@ -16,17 +16,16 @@ class RoIAlign(Module):
                                 self.spatial_scale)(features, rois)
 
 class RoIAlignAvg(Module):
-    def __init__(self, aligned_height, aligned_width, spatial_scale, time_dim):
+    def __init__(self, aligned_height, aligned_width, spatial_scale):
         super(RoIAlignAvg, self).__init__()
 
         self.aligned_width = int(aligned_width)
         self.aligned_height = int(aligned_height)
         self.spatial_scale = float(spatial_scale)
-        self.time_dim = float(time_dim)
     def forward(self, features, rois):
         x =  RoIAlignFunction(self.aligned_height+1, self.aligned_width+1,
-                                self.spatial_scale,self.time_dim)(features, rois )
-        return avg_pool3d(x, kernel_size=2, stride=1)
+                                self.spatial_scale)(features, rois )
+        return avg_pool2d(x, kernel_size=2, stride=1)
 
 class RoIAlignMax(Module):
     def __init__(self, aligned_height, aligned_width, spatial_scale):

@@ -103,8 +103,8 @@ class ACT_net(nn.Module):
         self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale).cuda()
         
         self.avgpool = nn.AvgPool3d((1, 7, 7), stride=1)
-        self.reg_layer = _Regression_Layer(256
-)
+        self.reg_layer = _Regression_Layer(256, self.sample_duration).cuda()
+
     def create_architecture(self):
         self._init_modules()
         self._init_weights()
@@ -165,7 +165,7 @@ class ACT_net(nn.Module):
         pooled_feat_ = self.act_roi_align(base_feat, rois_s.view(-1,7))
 
         ### regression
-        self.reg_layer(pooled_feat_,rois_s, gt_rois) 
+        self.reg_layer(pooled_feat_,rois_s, gt_rois, rois_label) 
 
         pooled_feat = self._head_to_tail(pooled_feat_)
         # pooled_feat_ = self._head_to_tail(pooled_feat)

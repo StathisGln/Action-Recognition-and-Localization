@@ -45,7 +45,8 @@ class Model(nn.Module):
         '''
         TODO describe procedure
         '''
-
+        print('num_actions :',num_actions)
+        print('boxes.shape :',boxes.shape)
         ## define a dataloader for the whole video
         batch_size = n_devs # 
         # num_workers = n_devs * 2
@@ -83,20 +84,21 @@ class Model(nn.Module):
 
             # if step == 1:
             #     break
-            clips,  gt_tubes, _, im_info, n_acts, start_fr = dt
+            clips,  gt_tubes, gt_rois, im_info, n_acts, start_fr = dt
 
             clips_ = clips.cuda()
             gt_tubes_ = gt_tubes.type_as(clips_).cuda()
+            gt_rois_ = gt_rois.type_as(clips_).cuda()
             im_info_ = im_info.cuda()
             n_acts_ = n_acts.cuda()
             start_fr_ = start_fr.cuda()
 
             tubes,  bbox_pred, pooled_feat, \
             rpn_loss_cls,  rpn_loss_bbox, \
-            act_loss_bbox, rois_label = self.act_net(clips,
+            act_loss_bbox, rois_label = self.act_net(clips_,
                                                      im_info,
                                                      gt_tubes.float(),
-                                                     None, n_acts,
+                                                     gt_rois_, n_acts,
                                                      start_fr)
             
             # print('tubes.shape :',tubes.shape)
