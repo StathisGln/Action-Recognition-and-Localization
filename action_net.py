@@ -97,7 +97,7 @@ class ACT_net(nn.Module):
         # define rpn
         self.act_tpn = _TPN(256).cuda()
         self.act_proposal_target = _ProposalTargetLayer(2).cuda() ## background/ foreground
-        self.act_proposal_target_single = _ProposalTargetLayer_single(2).cuda() ## background/ foreground
+
         self.time_dim =sample_duration
         self.temp_scale = 1.
         self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale).cuda()

@@ -8,6 +8,7 @@ from config import cfg
 from proposal_layer import _ProposalLayer
 from anchor_target_layer_mine import _AnchorTargetLayer
 from reg_target import _Regression_TargetLayer
+from roi_align.modules.roi_align  import RoIAlignAvg
 
 from net_utils import _smooth_l1_loss
 
@@ -22,11 +23,15 @@ class _Regression_Layer(nn.Module):
         super(_Regression_Layer, self).__init__()
         self.din = din
         self.sample_duration = sample_duration
-        
+        self.pooling_size = 7
+        self.spatial_scale = 1.0/16
+
         self.Conv = nn.Conv2d(self.din, din*2, 3, stride=1, padding=1, bias=True)
 
         self.avg_pool = nn.AvgPool2d((7, 7), stride=1)
         self.bbox_pred = nn.Linear(din*2,4)
+
+        self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.spatial_scale)
 
         self.reg_target = _Regression_TargetLayer( self.sample_duration)
 
@@ -43,20 +48,39 @@ class _Regression_Layer(nn.Module):
 
         if self.training:
             rois, labels, \
-            bbox_targets, bbox_inside_weights,\
-            bbox_outside_weights = self.reg_target(tubes, gt_rois, torch.Tensor(3))
+            bbox_targets, bbox_inside_ws,\
+            bbox_outside_ws = self.reg_target(tubes, gt_rois, torch.Tensor(3))
+        else:
+
+            offset = torch.arange(0,self.sample_duration)
+            offset_batch = torch.arange(0,batch_size) * self.sample_duration
+
+            ## modify tubes to rois
+            tubes = tubes.unsqueeze(-2).expand(tubes.size(0),tubes.size(1),self.sample_duration,7).contiguous()
+
+            for i in range(batch_size):
+                tubes[i, ..., 0] = offset + offset_batch[i].expand(offset.size())
+
+
+            tubes = tubes.permute(0,2,1,3).contiguous()
+            tubes = tubes.view((-1,)+tubes.shape[2:]) 
+
+            rois = tubes[:,:,[0,1,2,4,5]]
 
             
         ## modify feat
         base_feat = base_feat.permute(0,2,1,3,4).contiguous().view(-1,base_feat.size(1),base_feat.size(3),base_feat.size(4))
+        print('base_feat.shape :',base_feat.shape)
         conv1_feats = self.Conv(base_feat)
-
+        print('conv1_feats.shape :',conv1_feats.shape)
         feat = self.avg_pool(conv1_feats).squeeze()
+        print('feat.shape :',feat.shape)
         bbox_pred = self.bbox_pred(feat) # regression layer
-
+        print('bbox_pred.shape :',bbox_pred.shape)
+        print('bbox_targets.shape :',bbox_targets.shape)
         if self.training:
             # bounding box regression L1 loss
-            rois_loss_bbox = _smooth_l1_loss(bbox_pred, bbox_target, bbox_inside_ws, bbox_outside_ws)
+            rois_loss_bbox = _smooth_l1_loss(bbox_pred, bbox_targets, bbox_inside_ws, bbox_outside_ws)
 
         print(rois_loss_bbox)
         # print('bbox_pred :',bbox_pred.shape)
