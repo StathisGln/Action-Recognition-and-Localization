@@ -67,7 +67,7 @@ class _RPN(nn.Module):
     def forward(self, base_feat, im_info, gt_boxes, gt_rois):
 
         batch_size = base_feat.size(0)
-
+        # print('base_feat.shape :',base_feat.shape)
         # print('Inside region net')
         rpn_conv1 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
         # rpn_conv1 = rpn_conv1.permute(0,1,3,4,2) # move time dim as last dim
@@ -98,8 +98,11 @@ class _RPN(nn.Module):
         if self.training:
 
             assert gt_boxes is not None
-            
-            rpn_data = self.RPN_anchor_target((rpn_cls_score.data, gt_boxes, im_info, gt_rois, self.sample_duration)) # time_limit = 16
+
+            # check if gt_boxes are full empty
+            # print(gt_boxes.nonzero().nelement())
+            # print('gt_boxes :',gt_boxes)
+            rpn_data = self.RPN_anchor_target((rpn_cls_score.data, gt_boxes, im_info, gt_rois)) # time_limit = 16
 
             # print('rpn_cls_score.shape :',rpn_cls_score.shape) 
             rpn_cls_score = rpn_cls_score_reshape.permute(0, 2, 3,4, 1).contiguous()
@@ -107,8 +110,10 @@ class _RPN(nn.Module):
             # print('rpn_cls_score.shape :',rpn_cls_score.shape) 
 
             rpn_label = rpn_data[0].view(batch_size, -1)
+            # print('rpn_label :',rpn_label)
             # print('rpn_label :',rpn_label.shape)
             rpn_keep = Variable(rpn_label.view(-1).ne(-1).nonzero().view(-1))
+            # print('rpn_keep :',rpn_keep)
             # print('rpn_label :',rpn_label.view(-1).shape)
             rpn_cls_score = torch.index_select(rpn_cls_score.view(-1,2), 0, rpn_keep)
             # print('rpn_cls_score.shape :',rpn_cls_score.shape)
@@ -116,13 +121,15 @@ class _RPN(nn.Module):
             # print('rpn_labels :',rpn_label)
             rpn_label = torch.index_select(rpn_label.view(-1), 0, rpn_keep.data)
             rpn_label = Variable(rpn_label.long())
-
+            # print('rpn_label :',rpn_label)
             # print('rpn_cls_score.shape :',rpn_cls_score.shape)
             # print('rpn_label.shape :',rpn_label.shape)
 
             self.rpn_loss_cls =  F.cross_entropy(rpn_cls_score, rpn_label)
             # print('rpn_cls_score.shape :',rpn_cls_score.shape)
+
             # print('self.rpn_loss_cls :',self.rpn_loss_cls)
+
             fg_cnt = torch.sum(rpn_label.data.ne(0))
 
             rpn_bbox_targets, rpn_bbox_inside_weights, rpn_bbox_outside_weights = rpn_data[1:]

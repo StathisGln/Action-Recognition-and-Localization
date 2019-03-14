@@ -201,7 +201,7 @@ def make_correct_ucf_dataset(dataset_path,  boxes_file, split_txt_path, mode='tr
     print('max_frames :', max_frames)
     return dataset, max_sim_actions, max_frames
 
-def prepare_samples (vid_names, vid_id, boxes, sample_duration, step):
+def prepare_samples (vid_names, vid_id, sample_duration, step, n_frames):
 
     """
     function preparing sample for single_video class
@@ -210,8 +210,8 @@ def prepare_samples (vid_names, vid_id, boxes, sample_duration, step):
 
     video_path = vid_names[vid_id]
     name = video_path.split('/')[-1]
-    n_actions = boxes.shape[0]
-    n_frames = boxes.shape[1]
+    # n_actions = boxes.shape[0]
+    # n_frames = boxes.shape[1]
 
     begin_t = 1
     end_t = n_frames
@@ -228,7 +228,7 @@ def prepare_samples (vid_names, vid_id, boxes, sample_duration, step):
         sample_i['start_fr'] = i-1
         dataset.append(sample_i)
 
-    return dataset, n_actions, n_frames
+    return dataset
 
 
 def make_dataset(dataset_path, spt_path, boxes_file, mode):
@@ -253,7 +253,7 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
         for vid in videos:
         # for vid in ['v_TrampolineJumping_g21_c02','v_TrampolineJumping_g10_c01','v_TrampolineJumping_g20_c02','v_TrampolineJumping_g09_c05' , 'v_TrampolineJumping_g10_c06','v_TrampolineJumping_g11_c05']:
         # for vid in ['v_TrampolineJumping_g11_c05','v_TrampolineJumping_g21_c02','v_TrampolineJumping_g10_c01','v_TrampolineJumping_g20_c02','v_TrampolineJumping_g09_c05' , 'v_TrampolineJumping_g10_c06']:
-        # for vid in ['v_TrampolineJumping_g20_c02']:
+        # for vid in ['v_TrampolineJumping_g20_c02']: # empty rois
 
         # for vid in [' v_VolleyballSpiking_g23_c01']:
             video_path = os.path.join(cls,vid)
@@ -352,14 +352,15 @@ class video_names(data.Dataset):
 
 
 class single_video(data.Dataset):
-    def __init__(self, dataset_folder, h, w, vid_names, vid_id,frames_dur=16, sample_size=112, boxes=None,
-                 classes_idx=None, ):
+    def __init__(self, dataset_folder, h, w, vid_names, vid_id,frames_dur=16, sample_size=112, 
+                 classes_idx=None, n_frames=-1, json_file=None):
 
         self.h = h
         self.w = w
         self.dataset_folder = dataset_folder
-        self.data, self.n_actions, n_frames = prepare_samples(
-                    vid_names, vid_id, boxes, frames_dur, int(frames_dur/2))
+        # self.json_file = 
+        self.data = prepare_samples(
+                    vid_names, vid_id, frames_dur, int(frames_dur/2), n_frames)
         vid_path = vid_names[vid_id]
         self.clips = torch.load(os.path.join(dataset_folder,vid_path,'images.pt'))
 
@@ -383,16 +384,17 @@ class single_video(data.Dataset):
         abs_path = os.path.join(self.dataset_folder, path)
 
         frame_indices = np.array(frame_indices) - 1
-        clip = self.clips
+        clip = self.clips.new(3,self.sample_duration,self.sample_size, self.sample_size)
+        clip = self.clips[:,frame_indices]
+        # print('clip.shape :',clip.shape )
+
         ## get bboxes and create gt tubes
-        im_info = np.array([self.sample_size,self.sample_size])
+        im_info = np.array([self.sample_size,self.sample_size, self.sample_duration])
         return clip, frame_indices, im_info, start_fr
 
     def __len__(self):
         return len(self.data)
 
-    def __max_sim_actions__(self):
-        return self.n_actions
 
 
 class Video_UCF(data.Dataset):

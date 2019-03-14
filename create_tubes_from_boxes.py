@@ -59,6 +59,7 @@ def create_tube(boxes, im_info_3d, sample_duration):
 
 def create_tube_with_frames(boxes, im_info_3d, sample_duration):
 
+    # print('boxes.shape :',boxes.shape)
     batch_size = boxes.size(0)
     n_actions = boxes.size(1)
 
@@ -72,10 +73,10 @@ def create_tube_with_frames(boxes, im_info_3d, sample_duration):
     for i in range(batch_size):
         for j in range(boxes.size(1)):
             k = boxes[i,j,:,:4].gt(0).nonzero()
-
             if k.nelement() == 0 :
                 continue
             else:
+
                 labels[i,j] = boxes[i,j,k[0,0],4]
                 # if labels[i,j] == -1:
                 #     print('boxes[i,j] :',boxes[i,j])
@@ -85,7 +86,8 @@ def create_tube_with_frames(boxes, im_info_3d, sample_duration):
                 t1[i,j] = mins[-1]
                 
                 maxs, _ = torch.max(boxes[i,j,k[0,0]:k[-1,0]+1], 0)
-
+                # print('boxes[i,j,k[0,0]:k[-1,0]+1] :',boxes[i,j,k[0,0]:k[-1,0]+1])
+                # print('maxs :',maxs)
                 x2[i,j] = maxs[2]
                 y2[i,j] = maxs[3]
                 t2[i,j] = maxs[-1]
@@ -178,37 +180,43 @@ def create_tube_from_tubes(boxes):
 
 def create_video_tube(boxes):
 
-
-    n_actions = boxes.shape[0]
+    batch_size = boxes.size(0)
+    n_actions = boxes.size(1)
     # print('n_actions :',n_actions)
     boxes = boxes.clamp_(min=0)
 
-    t1 = torch.zeros(( n_actions)).type_as(boxes)
-    t2 = torch.zeros(( n_actions)).type_as(boxes)
-    x1 = torch.zeros(( n_actions)).type_as(boxes)
-    y1 = torch.zeros(( n_actions)).type_as(boxes)
-    x2 = torch.zeros(( n_actions)).type_as(boxes)
-    y2 = torch.zeros(( n_actions)).type_as(boxes)
-    labels = torch.zeros(( n_actions)).type_as(boxes)
+    t1 = torch.zeros((batch_size, n_actions)).type_as(boxes)
+    t2 = torch.zeros((batch_size, n_actions)).type_as(boxes)
+    x1 = torch.zeros((batch_size, n_actions)).type_as(boxes)
+    y1 = torch.zeros((batch_size, n_actions)).type_as(boxes)
+    x2 = torch.zeros((batch_size, n_actions)).type_as(boxes)
+    y2 = torch.zeros((batch_size, n_actions)).type_as(boxes)
+    labels = torch.zeros((batch_size, n_actions)).type_as(boxes)
     # print('boxes.shape :',boxes.shape)
-    for j in range(boxes.shape[0]):
-        k = boxes[j].nonzero()
-        # print(k)
-        if k.size == 0 :
-            continue
-        else:
+    for i in range(batch_size):
+        for j in range(n_actions):
+            k = boxes[i,j,:,:4].nonzero()
+            # print('boxes[i,j,:,:4] :',boxes[i,j,:,:4])
+            # print('boxes[j,:,:4 :',boxes[j,:,:4])
             # print('k :',k)
-            t1[j] = k[0,0]
-            t2[j] = k[-1,0]
-            labels[j] = boxes[j,k[0,0],4]
+            # print('k.shape :',k.shape)
+            if k.nelement() == 0 :
+                continue
+            else:
+                t1[i,j] = k[0,0]
+                t2[i,j] = k[-1,0]
+                labels[i,j] = boxes[i,j,k[0,0],4]
+                # print('k[0,0] :',k[0,0])
+                # print('k[-1,0] :',k[-1,0])
+                mins,_ = torch.min(boxes[i,j, k[0,0]:k[-1,0]], 0)
+                # print('mins :',mins)
+                # print('mins.shape :',mins.shape)
+                x1[i,j] = mins[ 0]
+                y1[i,j] = mins[ 1]
 
-            mins,_ = torch.min(boxes[j, k[0,0]:k[-1,0]], 0)
-            x1[j] = mins[ 0]
-            y1[j] = mins[ 1]
-
-            maxs,_ = torch.max(boxes[j, k[0,0]:k[-1,0]], 0)
-            x2[j] = maxs[ 2]
-            y2[j] = maxs[ 3]
+                maxs,_ = torch.max(boxes[i,j, k[0,0]:k[-1,0]], 0)
+                x2[i,j] = maxs[ 2]
+                y2[i,j] = maxs[ 3]
 
     # x1 = x1.clip(0, w-1)
     # y1 = y1.clip(0, h-1)
@@ -219,7 +227,7 @@ def create_video_tube(boxes):
     # print('x1 {} y1 {} t1 {} x2 {} y2 {} t2 {}'.format(x1, y1, t1, x2, y2, t2))
     # print('shapes :x1 {} y1 {} t1 {} x2 {} y2 {} t2 {} labels {}'.format(
     #     x1.shape, y1.shape, t1.shape, x2.shape, y2.shape, t2.shape, labels.shape))
-    ret = torch.stack((x1, y1, t1, x2, y2, t2, labels)).permute(1,0)
+    ret = torch.stack((x1, y1, t1, x2, y2, t2, labels)).permute(1,2,0)
     # print('ret.type() :',ret.type())
     # print('ret.shape :',ret.shape)
     # print('ret :',ret)

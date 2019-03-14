@@ -91,12 +91,11 @@ class ACT_net(nn.Module):
 
         # cfg.POOLING_SIZE
         self.pooling_size = 7
-        self.spatial_scale = 1.0/sample_duration
+        self.spatial_scale = 1.0/16
 
         # define rpn
         self.act_rpn = _RPN(256)
         self.act_proposal_target = _ProposalTargetLayer(2) ## background/ foreground
-        self.act_proposal_target_single = _ProposalTargetLayer_single(2) ## background/ foreground
         self.time_dim =sample_duration
         self.temp_scale = 1.
         self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale)
@@ -117,16 +116,17 @@ class ACT_net(nn.Module):
             # gt_rois =  gt_rois.data
 
         #### modify gt_tubes:
-        print('gt_tubes.shape:',gt_tubes.shape)
-        print('gt_tubes :',gt_tubes)
-        print('start_fr :',start_fr)
-        print('batch_size :',batch_size)
+        # print('gt_tubes.shape:',gt_tubes.shape)
+        # print('gt_tubes :',gt_tubes)
+        # print('start_fr :',start_fr)
+        # print('batch_size :',batch_size)
         for i in range(batch_size):
           
           gt_tubes[i,:,2] = gt_tubes[i,:,2] - start_fr[i].type_as(gt_tubes)
           gt_tubes[i,:,5] = gt_tubes[i,:,5] - start_fr[i].type_as(gt_tubes)
 
-        print('gt_tubes :',gt_tubes)
+        gt_tubes[:,:,:-1] = gt_tubes[:,:,:-1].clamp_(min=0)
+        # print('gt_tubes :',gt_tubes)
 
         # feed image data to base model to obtain base feature map
         base_feat = self.act_base(im_data)
@@ -135,11 +135,11 @@ class ACT_net(nn.Module):
         # if it is training phrase, then use ground trubut bboxes for refining
         # firstly find xy- reggression boxes
         
-        print('rois.shape :',rois.shape)
-        print('rois :',rois)
+        # print('rois.shape :',rois.shape)
+        # print('rois :',rois)
         if self.training:
           gt_tubes = torch.cat((gt_tubes,torch.ones(gt_tubes.size(0),gt_tubes.size(1),1).type_as(gt_tubes)),dim=2).type_as(gt_tubes)
-          roi_data = self.act_proposal_target(rois, gt_tubes, num_boxes)
+          roi_data = self.act_proposal_target(rois, gt_tubes)
 
           rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = roi_data
           rois_label = Variable(rois_label.view(-1).long())

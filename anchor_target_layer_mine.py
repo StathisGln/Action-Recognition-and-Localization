@@ -60,17 +60,13 @@ class _AnchorTargetLayer(nn.Module):
         gt_tubes = input[1]      ## gt tube
         im_info = input[2]       ## im_info
         # gt_rois = input[3]       ## gt rois for each frame
-        time_limit = input[4]    ## time limit
 
         # map of shape (..., H, W)
 
         ### Not sure about that
-        # print('$$$$$$$$$$')
         batch_size = gt_tubes.size(0)
-
-        # print('time_limit :',time_limit)
+        # print('rpn_cls_score.shape :',rpn_cls_score.shape)
         time, height, width  = rpn_cls_score.size(2), rpn_cls_score.size(3), rpn_cls_score.size(4)
-        # print('time :', time)
         feat_time, feat_height, feat_width,  = rpn_cls_score.size(2), rpn_cls_score.size(3), rpn_cls_score.size(4)
 
         shift_x = np.arange(0, feat_width) * self._feat_stride
@@ -165,8 +161,6 @@ class _AnchorTargetLayer(nn.Module):
         sum_fg = torch.sum((labels == 1).int(), 1)
         sum_bg = torch.sum((labels == 0).int(), 1)
 
-        # print('fg :',sum_fg)
-        # print('bg :',sum_bg)
         for i in range(batch_size):
             # subsample positive labels if we have too many
             if sum_fg[i] > num_fg:
@@ -180,7 +174,6 @@ class _AnchorTargetLayer(nn.Module):
                 disable_inds = fg_inds[rand_num[:fg_inds.size(0)-num_fg]]
                 labels[i][disable_inds] = -1
 
-#           num_bg = cfg.TRAIN.RPN_BATCHSIZE - sum_fg[i]
             num_bg = cfg.TRAIN.RPN_BATCHSIZE - torch.sum((labels == 1).int(), 1)[i]
 
             # subsample negative labels if we have too many
@@ -197,9 +190,7 @@ class _AnchorTargetLayer(nn.Module):
 
         argmax_overlaps = argmax_overlaps + offset.view(batch_size, 1).type_as(argmax_overlaps).to(dev)
         bbox_targets = _compute_targets_batch(anchors, gt_tubes.view(-1,7)[argmax_overlaps.view(-1), :].view(batch_size, -1, 7))
-        # print('bbox_targets :',bbox_targets.shape)
-        # use a single value instead of 4 values for easy index.
-        # print('cfg.TRAIN.RPN_BBOX_INSIDE_WEIGHTS[0] :',cfg.TRAIN.RPN_BBOX_INSIDE_WEIGHTS[0])
+
         bbox_inside_weights[labels==1] = cfg.TRAIN.RPN_BBOX_INSIDE_WEIGHTS[0]
 
         if cfg.TRAIN.RPN_POSITIVE_WEIGHT < 0:
@@ -221,7 +212,10 @@ class _AnchorTargetLayer(nn.Module):
         bbox_outside_weights = _unmap(bbox_outside_weights, total_anchors, inds_inside, batch_size, fill=0)
 
         outputs = []
-
+        # print('labels :',labels)
+        # print('labels.shape :', labels.shape)
+        # print('gt_boxes.shape :', gt_tubes.shape)
+        # print('time :',time)
         labels = labels.view(batch_size, time,height, width, A).permute(0,4,1,2,3).contiguous()
         labels = labels.view(batch_size, 1, A * time* height, width)
         # print('labels.shape :',labels.shape)

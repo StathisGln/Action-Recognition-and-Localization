@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-from video_dataset import Video_UCF, video_names
+from ucf_dataset import Video_UCF, video_names
 
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
@@ -24,23 +24,19 @@ import pdb
 np.random.seed(42)
 
 def preprocess_boxes(boxes, h, w, sample_size, n_frames, n_actions):
+    # print('boxes:',boxes.cpu().tolist())
+    
 
-    print('edwww boxes.shape :', boxes.shape)
-    print('h :',h)
-    print('w :',w)
     boxes[..., 2] = boxes[..., 0] + boxes[..., 2]
     boxes[..., 3] = boxes[..., 1] + boxes[..., 3]
 
     boxes = boxes[:, :n_actions, :n_frames]
     boxes = resize_boxes(boxes, h,w,sample_size)
-
-    print('boxes.type() :',boxes.type())
-    print('boxes.shape :',boxes.shape)
     fr_tensor = torch.arange(0,boxes.size(-2)).unsqueeze(1).unsqueeze(0).unsqueeze(0).type_as(boxes)
     fr_tensor = fr_tensor.expand((boxes.size(0),)+fr_tensor.shape[1:]).expand((fr_tensor.size(0),)+(boxes.size(1),)+fr_tensor.shape[2:])
-    print('fr_tensor :',fr_tensor.shape)
+
     boxes = torch.cat((boxes,fr_tensor),dim=-1)
-    print('after concat boxes.shape :',boxes.shape)
+
     return boxes
 
 def bbox_overlaps_batch_3d(tubes, gt_tubes):
@@ -411,14 +407,15 @@ if __name__ == '__main__':
     if torch.cuda.device_count() > 1:
 
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
-        model = nn.DataParallel(model)
+        model.act_net = nn.DataParallel(model.act_net)
 
+    model.act_net = model.act_net.to(device)
     model = model.to(device)
 
     # init data_loaders
     
     vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train')
-    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1, pin_memory=True,
+    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1,
                                               shuffle=True)    # reset learning rate
 
     lr = 0.1
@@ -466,7 +463,6 @@ if __name__ == '__main__':
             print('! step :',step)
             vid_id, boxes, n_frames, n_actions, h, w = data
 
-            print('boxes.type() :',boxes.type())
             boxes = preprocess_boxes(boxes, h, w, sample_size, n_frames, n_actions)
             mode = 'train'
 

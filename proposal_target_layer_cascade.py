@@ -42,8 +42,8 @@ class _ProposalTargetLayer(nn.Module):
         gt_boxes_append[:,:,1:] = gt_boxes[:,:,:7] # in pos 0 is the score
         # gt_boxes_append[:,:,1:] = gt_boxes[:,:,:6] # in pos 0 is the score
         num_rois_pre = all_rois.size(1)
-        print('all_rois.shape :',all_rois.shape )
-        print('all_rois :',all_rois)
+        # print('all_rois.shape :',all_rois.shape )
+        # print('all_rois :',all_rois)
         # print('nu_rois_pre :', num_rois_pre )
 
         # print('gt_boxes_append.shape :',gt_boxes_append.shape)
@@ -152,20 +152,22 @@ class _ProposalTargetLayer(nn.Module):
         # Guard against the case when an image has fewer than max_fg_rois_per_image
         # foreground RoIs
 
+        # print('edwww gt_boxes:',gt_boxes)
         for i in range(batch_size):
             gt_boxes_single = gt_boxes[i]
-            gt_indexes = gt_boxes_single[..., -1].gt(0).nonzero().view(-1)
-            print('gt_boxes_indexes :',gt_boxes_indexes)
-            gt_boxes_single = gt_boxes_single[gt_indexes]
-                        
+            gt_boxes_indexes = gt_boxes_single[..., -2].gt(0).nonzero().view(-1)
+            
+            # print('gt_boxes_indexes :',gt_boxes_indexes)
+            gt_boxes_single = gt_boxes_single[gt_boxes_indexes]
+            # print('cascade gt_boxes_single:',gt_boxes_single)            
             # print('gt_boxes[:num_boxes[i]] :',gt_boxes_single)
-            if gt_boxes_single[:,:7].byte().any() == 0:
+            if gt_boxes_single.byte().any() == 0:
                 print('no rois')
                 continue
             
             
         
-            max_overlaps_single =max_overlaps[i][:num_boxes[i]+num_rois_pre]
+            max_overlaps_single =max_overlaps[i]
             fg_inds = torch.nonzero(max_overlaps_single >= cfg.TRAIN.FG_THRESH).view(-1)
             fg_num_rois = fg_inds.numel()
 

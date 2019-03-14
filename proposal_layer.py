@@ -38,7 +38,6 @@ class _ProposalLayer(nn.Module):
                                                           ratios=np.array(ratios),
                                                           time_dim=np.array(time_dim))).float()
         self._num_anchors = self._anchors.size(0)
-
         # rois blob: holds R regions of interest, each is a 5-tuple
         # (n, x1, y1, x2, y2) specifying an image batch index n and a
         # rectangle (x1, y1, x2, y2)
@@ -75,7 +74,7 @@ class _ProposalLayer(nn.Module):
         # print('bbox_frame.shape :',bbox_frame.shape)
 
         batch_size = bbox_frame.size(0)
-        print('batch_size : ', batch_size)
+        # print('batch_size : ', batch_size)
         # pre_nms_topN  = cfg[cfg_key].RPN_PRE_NMS_TOP_N
         # post_nms_topN = cfg[cfg_key].RPN_POST_NMS_TOP_N
         # nms_thresh    = cfg[cfg_key].RPN_NMS_THRESH
@@ -150,7 +149,7 @@ class _ProposalLayer(nn.Module):
         ## if any dimension exceeds the dims of the original image, clamp_ them
         # print('proposals.shape :',proposals.shape)
         # print('im_info.shape :',im_info.shape)
-        proposals = clip_boxes_3d(proposals, im_info, self.sample_duration, batch_size)
+        proposals = clip_boxes_3d(proposals, im_info, batch_size)
         # print('proposals.shape :',proposals.shape)
         # print('proposals :',proposals[0][14000:14100])
         # print('proposals :',proposals.cpu().tolist()[:100])
