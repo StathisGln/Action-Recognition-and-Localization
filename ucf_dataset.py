@@ -249,6 +249,7 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
     #TrampolineJumping/v_TrampolineJumping_g10_c01
     for cls in classes:
     # for cls in ['TrampolineJumping']:
+    # for cls in ['Basketball']:
         videos = next(os.walk(os.path.join(dataset_path,cls), True))[1]
         for vid in videos:
         # for vid in ['v_TrampolineJumping_g21_c02','v_TrampolineJumping_g10_c01','v_TrampolineJumping_g20_c02','v_TrampolineJumping_g09_c05' , 'v_TrampolineJumping_g10_c06','v_TrampolineJumping_g11_c05']:
@@ -282,7 +283,7 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
                 sample = annots[k]
                 s_frame = sample['sf']
                 e_frame = sample['ef']
-                s_label = sample['label']
+                s_label = sample['label']+1 ## because annotations start from 0 without background
                 boxes   = sample['boxes']
                 rois[k,s_frame:e_frame,:4] = boxes
                 rois[k,s_frame:e_frame,4]  = s_label
@@ -317,8 +318,6 @@ class video_names(data.Dataset):
         boxes = self.data[index]['boxes']
         n_frames = self.data[index]['n_frames']
         
-        print('vid_name :', vid_name)
-
         # abs_path = os.path.join(self.dataset_folder, vid_name)
         w, h = 320, 240
 
@@ -345,7 +344,7 @@ class video_names(data.Dataset):
 
         vid_id = np.array([self.vid2idx[vid_name]],dtype=np.int64)
         n_frames_np = np.array([n_frames], dtype=np.int64)
-        print('n_frames :',n_frames_np)
+        print('vid_name :', vid_name, ' n_frames :',n_frames_np)
         n_actions_np = np.array([n_actions], dtype=np.int64)
         return vid_id, final_boxes, n_frames_np, n_actions_np, h, w
     

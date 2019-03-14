@@ -29,6 +29,7 @@ def preprocess_boxes(boxes, h, w, sample_size, n_frames, n_actions):
     boxes[..., 3] = boxes[..., 1] + boxes[..., 3]
     boxes = boxes[:, :n_actions, :n_frames]
     boxes = resize_boxes(boxes, h,w,sample_size)
+
     fr_tensor = torch.arange(0,boxes.size(-2)).unsqueeze(1).unsqueeze(0).unsqueeze(0).type_as(boxes)
     fr_tensor = fr_tensor.expand((boxes.size(0),)+fr_tensor.shape[1:]).expand((fr_tensor.size(0),)+(boxes.size(1),)+fr_tensor.shape[2:])
 
