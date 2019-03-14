@@ -84,7 +84,6 @@ class Model(nn.Module):
         # print('loops :',loops)
         for step, dt in enumerate(data_loader):
 
-            print('step :',step)
             # if step == 1:
             #     break
             clips, frame_indices, im_info, start_fr = dt

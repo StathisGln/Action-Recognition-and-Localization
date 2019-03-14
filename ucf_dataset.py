@@ -247,8 +247,8 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
     max_frames = -1
     max_actions = -1
     #TrampolineJumping/v_TrampolineJumping_g10_c01
-    # for cls in classes:
-    for cls in ['TrampolineJumping']:
+    for cls in classes:
+    # for cls in ['TrampolineJumping']:
         videos = next(os.walk(os.path.join(dataset_path,cls), True))[1]
         for vid in videos:
         # for vid in ['v_TrampolineJumping_g21_c02','v_TrampolineJumping_g10_c01','v_TrampolineJumping_g20_c02','v_TrampolineJumping_g09_c05' , 'v_TrampolineJumping_g10_c06','v_TrampolineJumping_g11_c05']:
