@@ -253,9 +253,12 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
         for vid in videos:
         # for vid in ['v_TrampolineJumping_g21_c02','v_TrampolineJumping_g10_c01','v_TrampolineJumping_g20_c02','v_TrampolineJumping_g09_c05' , 'v_TrampolineJumping_g10_c06','v_TrampolineJumping_g11_c05']:
         # for vid in ['v_TrampolineJumping_g11_c05','v_TrampolineJumping_g21_c02','v_TrampolineJumping_g10_c01','v_TrampolineJumping_g20_c02','v_TrampolineJumping_g09_c05' , 'v_TrampolineJumping_g10_c06']:
-        # for vid in ['v_TrampolineJumping_g20_c02']: # empty rois
+        # for vid in ['v_VolleyballSpiking_g14_c03','v_TrampolineJumping_g20_c02']: # empty rois
 
         # for vid in [' v_VolleyballSpiking_g23_c01']:
+        # for vid in ['v_TrampolineJumping_g10_c06']:
+        # for vid in ['v_VolleyballSpiking_g14_c03','v_VolleyballSpiking_g23_c01']:
+
             video_path = os.path.join(cls,vid)
             if video_path not in boxes_data or not(vid in file_names):
                 # print('OXI to ',video_path)

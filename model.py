@@ -81,16 +81,14 @@ class Model(nn.Module):
             rpn_loss_cls_  = torch.zeros(loops) 
             rpn_loss_bbox_ = torch.zeros(loops)
             act_loss_bbox_ = torch.zeros(loops)
-        print('loops :',loops)
+        # print('loops :',loops)
         for step, dt in enumerate(data_loader):
 
             print('step :',step)
             # if step == 1:
             #     break
             clips, frame_indices, im_info, start_fr = dt
-            print('clips.shape :',clips.shape)
             boxes_ = boxes[frame_indices].cuda()
-            # print('boxes_ :',boxes_)
             gt_tubes = create_tube_with_frames(boxes_.permute(0,2,1,3), im_info, self.sample_duration)
             # print('gt_tubes.shape  :',gt_tubes.shape )
             # print('gt_tubes :',gt_tubes)
@@ -102,7 +100,7 @@ class Model(nn.Module):
                 gt_tubes[i[0],i[1]] = torch.zeros((7)).type_as(gt_tubes)
 
             clips = clips.cuda()
-            gt_tubes = gt_tubes.type_as(clips).cuda()
+            gt_tubes_ = gt_tubes.type_as(clips).cuda()
             im_info = im_info.cuda()
             start_fr = start_fr.cuda()
 
@@ -110,7 +108,7 @@ class Model(nn.Module):
             rpn_loss_cls,  rpn_loss_bbox, \
             act_loss_bbox, rois_label = self.act_net(clips,
                                                      im_info,
-                                                     gt_tubes,
+                                                     gt_tubes_,
                                                      None,
                                                      start_fr)
 
@@ -132,6 +130,7 @@ class Model(nn.Module):
                 # print('idx_s :',idx_s)
                 # print('idx_e :',idx_e)
                 # print('f_gt_tubes.shape :',f_gt_tubes.shape)
+
                 f_gt_tubes[idx_s:idx_e] = gt_tubes
                 tubes_labels[idx_s:idx_e] = rois_label.squeeze(-1)
 
@@ -151,7 +150,7 @@ class Model(nn.Module):
         #          Choose Tubes for RCNN\TCN          #
         ###############################################
         # print('f_gt_tubes :',f_gt_tubes)
-
+        # print('f_gt_tubes.shape :',f_gt_tubes.shape)
         if self.training:
 
             f_rpn_loss_cls = rpn_loss_cls_.mean()
@@ -180,7 +179,7 @@ class Model(nn.Module):
             target_lbl = torch.cat((gt_lbl,bg_lbl),0)
 
         ##############################################
-
+        # print('f_tubes :',f_tubes)
         max_seq = reduce(lambda x, y: y if len(y) > len(x) else x, f_tubes)
         max_length = len(max_seq)
 

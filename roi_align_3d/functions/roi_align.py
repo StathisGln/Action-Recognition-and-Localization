@@ -16,12 +16,20 @@ class RoIAlignFunction(Function):
 
     def forward(self, features, rois):
         self.rois = rois
-        # print('self.rois.shape :',self.rois.shape)
-        # print('self.time_dim :',self.time_dim)
         self.feature_size = features.size()
         batch_size, num_channels, data_time, data_height, data_width = features.size()
         num_rois = rois.size(0)
-        # print('rois :',rois)
+
+        # print('num_rois :',num_rois)
+        # print('num_channels :',num_channels)
+        # print('data_time :',data_time)
+        # print('data_height  :',data_height )
+        # print('data_width :',data_width)
+
+        # print('rois :',rois.type())
+        # print('features.type() :',features.type())
+        # print('features.shape :',features.shape)
+
         # print('num_rois {}, num_channels {}, data_time {}, self.aligned_height {}, self.aligned_width {}'.format(
             # num_rois, num_channels, data_time, self.aligned_height, self.aligned_width))
         output = features.new( num_rois, num_channels, self.time_dim, self.aligned_height, self.aligned_width).zero_()
@@ -31,23 +39,12 @@ class RoIAlignFunction(Function):
         # with open('../feats.json', 'w') as fp:
         #     json.dump(dict({'aligned_height':self.aligned_height, 'aligned_width' : self.aligned_width, 'spatial_scale': self.spatial_scale, 'features' :features.cpu().tolist(), 'rois' : rois.cpu().tolist()}), fp)
         # print("Before C: self.spatial_scale :", self.spatial_scale, " self.temp_scale :", self.temp_scale)
-        if features.is_cuda:
-            # print('CUDAAA')
-            # print('features[0][0] :',features[0][0])
-            roi_align_3d.roi_align_forward_cuda(self.aligned_height,
-                                             self.aligned_width,
-                                             self.time_dim,
-                                             self.spatial_scale, self.temp_scale, features,
-                                             rois, output)
-            # print('outttt')
-        else:
-            roi_align.roi_align_forward(self.aligned_height,
-                                        self.aligned_width,
-                                        self.time_dim,
-                                        self.spatial_scale, self._temp_scale, features,
-                                        rois, output)
-        # print('output :',output[0][0][0].cpu().tolist())
-        # print('Eksww output.shape :', output.shape)
+        roi_align_3d.roi_align_forward_cuda(self.aligned_height,
+                                         self.aligned_width,
+                                         self.time_dim,
+                                         self.spatial_scale, self.temp_scale, features,
+                                         rois, output)
+        # print('output :',output[0,0,0])
         return output
 
     def backward(self, grad_output):

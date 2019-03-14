@@ -15,66 +15,10 @@ from resnet_3D import resnet34
 from region_net import _RPN
 from proposal_target_layer_cascade import _ProposalTargetLayer
 from proposal_target_layer_cascade_single_frame import _ProposalTargetLayer as _ProposalTargetLayer_single
-from roi_align_3d.modules.roi_align  import RoIAlignAvg
-from roi_align.modules.roi_align  import RoIAlignAvg as RoIAlignAvg_s
+from roi_align_3d.modules.roi_align  import RoIAlignAvg, RoIAlign
 from net_utils import _smooth_l1_loss
 from bbox_transform import  clip_boxes, bbox_transform_inv, clip_boxes_3d, bbox_transform_inv_3d
 ## code from resnet
-
-def conv3x3(in_planes, out_planes, stride=1):
-  "3x3 convolution with padding"
-  return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
-           padding=1, bias=False)
-
-
-class BasicBlock(nn.Module):
-  expansion = 1
-
-  def __init__(self, inplanes, planes, stride=1, downsample=None):
-    super(BasicBlock, self).__init__()
-    self.conv1 = conv3x3(inplanes, planes, stride)
-    self.bn1 = nn.BatchNorm2d(planes)
-    self.relu = nn.ReLU(inplace=True)
-    self.conv2 = conv3x3(planes, planes)
-    self.bn2 = nn.BatchNorm2d(planes)
-    self.downsample = downsample
-    self.stride = stride
-
-  def forward(self, x):
-    residual = x
-
-    out = self.conv1(x)
-    out = self.bn1(out)
-    out = self.relu(out)
-
-    out = self.conv2(out)
-    out = self.bn2(out)
-
-    if self.downsample is not None:
-      residual = self.downsample(x)
-
-    out += residual
-    out = self.relu(out)
-
-    return out
-
-def _make_layer( block, planes, blocks, stride=1, inplanes=256):
-    downsample = None
-    if stride != 1:
-      downsample = nn.Sequential(
-        nn.Conv2d(inplanes, planes * block.expansion,
-              kernel_size=1, stride=stride, bias=False),
-        nn.BatchNorm2d(planes * block.expansion),
-      )
-
-    layers = []
-    layers.append(block(
-        inplanes, planes, stride, downsample))
-    inplanes = planes * block.expansion
-    for i in range(1, blocks):
-      layers.append(block(inplanes, planes))
-
-    return nn.Sequential(*layers)
 
 
 class ACT_net(nn.Module):
@@ -98,7 +42,7 @@ class ACT_net(nn.Module):
         self.act_proposal_target = _ProposalTargetLayer(2) ## background/ foreground
         self.time_dim =sample_duration
         self.temp_scale = 1.
-        self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale)
+        self.act_roi_align = RoIAlign(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale)
         self.avgpool = nn.AvgPool3d((1, 7, 7), stride=1)
         
     def create_architecture(self):
@@ -129,6 +73,7 @@ class ACT_net(nn.Module):
         # print('gt_tubes :',gt_tubes)
 
         # feed image data to base model to obtain base feature map
+
         base_feat = self.act_base(im_data)
         rois, rpn_loss_cls, rpn_loss_bbox = self.act_rpn(base_feat, im_info, gt_tubes, None)
 
@@ -137,6 +82,7 @@ class ACT_net(nn.Module):
         
         # print('rois.shape :',rois.shape)
         # print('rois :',rois)
+        # print('before cascade ')
         if self.training:
           gt_tubes = torch.cat((gt_tubes,torch.ones(gt_tubes.size(0),gt_tubes.size(1),1).type_as(gt_tubes)),dim=2).type_as(gt_tubes)
           roi_data = self.act_proposal_target(rois, gt_tubes)
@@ -157,8 +103,15 @@ class ACT_net(nn.Module):
         rois = Variable(rois)
 
         # do roi align based on predicted rois
-        pooled_feat_ = self.act_roi_align(base_feat, rois[:,:,:7].view(-1,7))
 
+        # print('rois :',rois)
+        # print('rois[:,:,:7] :',rois[:,:,:7])
+        # print('rois_label :',rois_label)
+        # print('base_feat[0,0,0] :',base_feat)
+        # print('base_feat.shape :',base_feat.shape)
+        # print('rois[:,:,:7].view(-1,7).shape :',rois[:,:,:7].view(-1,7).shape)
+        pooled_feat_ = self.act_roi_align(base_feat, rois[:,:,:7].view(-1,7))
+        # print('pooled_feat_ :',pooled_feat_.shape)
         pooled_feat = self._head_to_tail(pooled_feat_)
         n_rois = pooled_feat.size(0)
 

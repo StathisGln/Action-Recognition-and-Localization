@@ -34,7 +34,6 @@ extern "C" {
 	    // if (index == 50 ){
 	    //   printf("pw %d ph %d pt %d c %d n %d index %d \n",pw,ph,pt,c,n,index);
 	    //   }
-            // bottom_rois += n * 7
 
 	    // if (index==50) printf(" n : %d\n",n);
             float roi_batch_ind = bottom_rois[n * 7 + 0];
@@ -47,16 +46,17 @@ extern "C" {
 
 	    // if (index == 50){
 	    //   printf(" exw %f %f %f %f %f %f %f \n", bottom_rois[0],bottom_rois[1],bottom_rois[2], bottom_rois[3],bottom_rois[4],bottom_rois[5],bottom_rois[6]);
-	    // //   printf("temp_scale %f\n ",temp_scale);
+	    //   printf("temp_scale %f\n ",temp_scale);
 	    //   printf("roi_batch_ind %f roi_start_w %f roi_start_h %f roi_start_t %f roi_end_w %f roi_end_h %f roi_end_t %f\n",
 	    // 	   roi_batch_ind, roi_start_w, roi_start_h,roi_start_t,roi_end_w,roi_end_h, roi_end_t);
 	    // }
-            // Force malformed ROIs to be 1x1
+            // // Force malformed ROIs to be 1x1
             float roi_width = fmaxf(roi_end_w - roi_start_w + 1., 0.);
             float roi_height = fmaxf(roi_end_h - roi_start_h + 1., 0.);
 	    float roi_time = fmaxf(roi_end_t - roi_start_t + 1., 0.);
 	    // if (index == 50){
 	    //   printf("roi_width = %f, roi_height %f, roi_time %f\n",roi_width,roi_height,roi_time);
+	    //   printf("aligned_height %d aligned_width %d time_dim %d\n", aligned_height, aligned_width, time_dim);
 	    // }
             float bin_size_h = roi_height / (aligned_height - 1.);
             float bin_size_w = roi_width / (aligned_width - 1.);
@@ -88,7 +88,7 @@ extern "C" {
 
 	    // if (index==50)
 	    //   printf("h %f w %f t %f\n", h,w,t);
-            // trilinear interpolation = 2 bilinear interpolation + 1 linear interpolation
+            // // trilinear interpolation = 2 bilinear interpolation + 1 linear interpolation
 	    // if( index==50 ) printf("height : %d width %d time %d \n",height,width,time);
             if (h < 0 || h >= height || w < 0 || w >= width || t < 0 || t >= time) {
 	      // if(index==50)
@@ -97,10 +97,10 @@ extern "C" {
             } else {
 	      // if (index ==524225)
 		// if (index ==50)
-		// printf("t %f tstart %d\n",t,tstart);
+		//   printf("t %f tstart %d\n",t,tstart);
                 float h_ratio = h - (float)(hstart);
                 float w_ratio = w - (float)(wstart);
-		float t_ratio = t - (float)(tstart);
+		float t_ratio = 0.0; //t - (float)(tstart);
 		// if (index == 524225){
 		//   printf("index %d h_ratio %f f_ratio %f t_ratio %f\n",index,h_ratio,w_ratio,t_ratio);
 		// }
@@ -117,18 +117,46 @@ extern "C" {
 
                 int downleftback = upleftback + width;
                 int downrightback = downleftback + 1;
+		
+		// if (upleftfront < 0) printf("upleftfront :%d\n", upleftfront);
+		// if (uprightfront < 0) printf("uprightfront :%d\n", uprightfront);
+		// if (downleftfront < 0) printf("downleftfront :%d\n", downleftfront);
+		// if (downrightfront < 0) printf("downrightfront :%d\n", downrightfront);
 
+		// if (upleftback < 0) printf("upleftback :%d\n", upleftback);
+		// if (uprightback < 0) printf("uprightback :%d\n", uprightback);
+		// if (downleftback < 0) printf("downleftback :%d\n", downleftback);
+		// if (downrightback < 0) printf("downrightback :%d\n", downrightback);
+		// if (index ==50){
+		//   printf("upleftfront :%d\n", upleftfront);
+		//   printf("uprightfront :%d\n", uprightfront);
+		//   printf("downleftfront :%d\n", downleftfront);
+		//   printf("downrightfront :%d\n", downrightfront);
+
+		//   printf("upleftback :%d\n", upleftback);
+		//   printf("uprightback :%d\n", uprightback);
+		//   printf("downleftback :%d\n", downleftback);
+		//   printf("downrightback :%d\n", downrightback);
+		// }
 		float front_data = bottom_data[upleftfront] * (1. - h_ratio) * (1. - w_ratio)
                     + bottom_data[uprightfront] * (1. - h_ratio) * w_ratio
                     + bottom_data[downleftfront] * h_ratio * (1. - w_ratio)
                     + bottom_data[downrightfront] * h_ratio * w_ratio;
 
-		float read_data = bottom_data[upleftback] * (1. - h_ratio) * (1. - w_ratio)
+		float rear_data = bottom_data[upleftback] * (1. - h_ratio) * (1. - w_ratio)
                     + bottom_data[uprightback] * (1. - h_ratio) * w_ratio
                     + bottom_data[downleftback] * h_ratio * (1. - w_ratio)
                     + bottom_data[downrightback] * h_ratio * w_ratio;
 
-		top_data[index] = front_data * (1 - t_ratio) + read_data * t_ratio;
+		// if (front_data < 0) printf("front_data :%d\n", front_data);
+		// if (rear_data < 0) printf("rear_data :%d\n", rear_data);
+		// if (index== 50) {
+		//   printf("front_data :%f\n", front_data);
+		//   printf("rear_data :%f\n", rear_data);
+		//   printf("t_ratio :%f\n", t_ratio);
+		//   printf("front_data * (1 - t_ratio) + rear_data * t_ratio %f\n", front_data * (1 - t_ratio) + rear_data * t_ratio);
+		// }
+		top_data[index] = front_data * (1 - t_ratio) + rear_data * t_ratio;
 		// if (index==50)
 		//   printf("top_data[index] %f\n",top_data[index]);
 		

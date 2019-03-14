@@ -14,7 +14,7 @@ int roi_align_forward_cuda(int aligned_height, int aligned_width, int time_dim, 
     float * output_flat = THCudaTensor_data(state, output);
     /* printf("-----Inside roi_align_cuda_c-----\n"); */
     /* printf("spatial_scale : %f temp_scale %f\n", spatial_scale,temp_scale); */
-    // Number of ROIs
+    /* // Number of ROIs */
     int num_rois = THCudaTensor_size(state, rois, 0);
     int size_rois = THCudaTensor_size(state, rois, 1);
     /* printf("size_rois : %d\n",size_rois); */

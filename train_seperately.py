@@ -24,12 +24,9 @@ import pdb
 np.random.seed(42)
 
 def preprocess_boxes(boxes, h, w, sample_size, n_frames, n_actions):
-    # print('boxes:',boxes.cpu().tolist())
-    
 
     boxes[..., 2] = boxes[..., 0] + boxes[..., 2]
     boxes[..., 3] = boxes[..., 1] + boxes[..., 3]
-
     boxes = boxes[:, :n_actions, :n_frames]
     boxes = resize_boxes(boxes, h,w,sample_size)
     fr_tensor = torch.arange(0,boxes.size(-2)).unsqueeze(1).unsqueeze(0).unsqueeze(0).type_as(boxes)
@@ -488,7 +485,6 @@ if __name__ == '__main__':
 
             loss_temp += loss.item()
 
-            torch.cuda.empty_cache()
             torch.cuda.synchronize()
 
         print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(

@@ -97,6 +97,7 @@ def resize_boxes(gt_rois_old, h,w, sample_size):
             padding_pos = gt_rois[i,j,:,-1].lt(1).nonzero()
             if padding_pos.nelement() != 0:
                 gt_rois[i,j,padding_pos] = torch.zeros((5)).type_as(gt_rois)
+
     return gt_rois
 
 def resize_boxes_np(gt_rois_old, h,w, sample_size):

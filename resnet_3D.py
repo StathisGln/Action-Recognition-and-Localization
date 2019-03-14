@@ -20,7 +20,6 @@ def downsample_basic_block(x, planes, stride):
     zero_pads = torch.Tensor(out.size(0), planes - out.size(1),
                              out.size(2), out.size(3),
                              out.size(4)).zero_()
-    print('zero_pads.shape :',zero_pads.shape)
     if isinstance(out.data, torch.cuda.FloatTensor):
         zero_pads = zero_pads.cuda()
 
@@ -51,7 +50,6 @@ class BasicBlock(nn.Module):
 
         out = self.conv2(out)
         out = self.bn2(out)
-        print('out.shape :',out.shape)
         if self.downsample is not None:
             residual = self.downsample(x)
 
@@ -309,21 +307,21 @@ class ResNet_framechange(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        print('first we have: ', x.shape)
+        # print('first we have: ', x.shape)
         x = self.conv1(x)
-        print('after conv1: ', x.shape)
+        # print('after conv1: ', x.shape)
         x = self.bn1(x)
-        print('after bn1: ', x.shape)
+        # print('after bn1: ', x.shape)
         x = self.relu(x)
-        print('after relu: ', x.shape)
+        # print('after relu: ', x.shape)
         x = self.maxpool(x)
-        print('after 1st maxpool shape: ', x.shape)
+        # print('after 1st maxpool shape: ', x.shape)
         layer1 = self.layer1(x)
-        print('after layer1 :', x.shape)
+        # print('after layer1 :', x.shape)
         layer2 = self.layer2(layer1)
-        print('after layer2 :', x.shape)
+        # print('after layer2 :', x.shape)
         layer3 = self.layer3(layer2)
-        print('after layer3 :', x.shape)
+        # print('after layer3 :', x.shape)
         layer4 = self.layer4(layer3)
         layer4 = layer4.squeeze()
 
