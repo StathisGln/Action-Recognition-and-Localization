@@ -51,7 +51,7 @@ def bbox_overlaps_batch_3d(tubes, gt_tubes):
         N = tubes.size(0)
         K = gt_tubes.size(1)
 
-        tubes = tubes[:,1:]
+        tubes = tubes[:,1:7]
         tubes = tubes.view(1, N, 6)
         tubes = tubes.expand(batch_size, N, 6).contiguous()
         gt_tubes = gt_tubes[:, :, :6].contiguous()
@@ -108,9 +108,9 @@ def bbox_overlaps_batch_3d(tubes, gt_tubes):
 def validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads):
 
     iou_thresh = 0.5 # Intersection Over Union thresh
-    data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
-                 temporal_transform=temporal_transform, json_file = boxes_file,
-                 split_txt_path=splt_txt_path, mode='val', classes_idx=cls2idx)
+    data = Video_UCF(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
+                     temporal_transform=temporal_transform, json_file = boxes_file,
+                     split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
                                               shuffle=True, num_workers=n_threads, pin_memory=True)
     model.eval()
@@ -122,24 +122,30 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         # if step == 2:
         #     break
 
-        clips,  (h, w), gt_tubes_r, gt_rois, n_actions, n_frames = data
-        clips = clips.to(device)
-        gt_tubes_r = gt_tubes_r.to(device)
-        n_actions = n_actions.to(device)
-        im_info = torch.Tensor([[sample_size, sample_size, n_frames]] * gt_tubes_r.size(1)).to(device)
-        inputs = Variable(clips)
-        tubes,  bbox_pred, cls_prob   = model(inputs,
-                                             im_info,
-                                             gt_tubes_r, gt_rois,
-                                             n_actions)
+        clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
 
-        overlaps = bbox_overlaps_batch_3d(tubes.squeeze(0), gt_tubes_r) # check one video each time
-        gt_max_overlaps, _ = torch.max(overlaps, 1)
-        gt_max_overlaps = torch.where(gt_max_overlaps > iou_thresh, gt_max_overlaps, torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
-        detected =  gt_max_overlaps.ne(0).sum()
-        n_elements = gt_max_overlaps.nelement()
-        true_pos += detected
-        false_neg += n_elements - detected
+        clips_ = clips.to(device)
+        gt_tubes_r_ = gt_tubes_r.to(device)
+        gt_rois_ = gt_rois.to(device)
+        n_actions_ = n_actions.to(device)
+        im_info_ = im_info.to(device)
+        start_fr = torch.zeros(clips_.size(0)).to(device)
+
+        inputs = Variable(clips_)
+        tubes,  bbox_pred, _, \
+        _,  _, _, _, _, _  = model(inputs,
+                                   im_info_,
+                                   gt_tubes_r_, gt_rois_,
+                                   start_fr)
+
+        for i in range(tubes.size(0)):
+            overlaps = bbox_overlaps_batch_3d(tubes[i].squeeze(0), gt_tubes_r_[i,:n_actions[i]].unsqueeze(0)) # check one video each time
+            gt_max_overlaps, _ = torch.max(overlaps, 1)
+            gt_max_overlaps = torch.where(gt_max_overlaps > iou_thresh, gt_max_overlaps, torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
+            detected =  gt_max_overlaps.ne(0).sum()
+            n_elements = gt_max_overlaps.nelement()
+            true_pos += detected
+            false_neg += n_elements - detected
 
     recall = true_pos.float() / (true_pos.float() + false_neg.float())
     print('recall :',recall)
@@ -165,8 +171,8 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
     ## 2 rois : 1450
     for step, data  in enumerate(data_loader):
 
-        if step == 2:
-            break
+        # if step == 2:
+        #     break
 
         clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
         clips_ = clips.to(device)
@@ -177,14 +183,14 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         start_fr = torch.zeros(clips_.size(0)).to(device)
         
         inputs = Variable(clips_)
-        rois,  bbox_pred, _, \
-        rpn_loss_cls, rpn_loss_bbox, \
-        act_loss_bbox, rois_label  = model(inputs,
-                                           im_info_,
-                                           gt_tubes_r_, gt_rois_,
-                                           n_actions_, start_fr)
-        loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() 
-        # loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() 
+        tubes,  bbox_pred, _, \
+        rpn_loss_cls,  rpn_loss_bbox, \
+        act_loss_bbox, rpn_loss_cls_16,\
+        rpn_loss_bbox_16, rois_label  = model(inputs,
+                                              im_info_,
+                                              gt_tubes_r_, gt_rois_,
+                                              start_fr)
+        loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + rpn_loss_cls_16.mean() + rpn_loss_bbox_16.mean()
         loss_temp += loss.item()
 
         # backw\ard
@@ -235,59 +241,59 @@ if __name__ == '__main__':
     n_classes = len(actions)
 
 
-    # ########################################
-    # #          Part 1 - train TPN          #
-    # ########################################
+    ########################################
+    #          Part 1 - train TPN          #
+    ########################################
 
-    # # Init action_net
-    # act_model = ACT_net(actions, sample_duration)
-    # act_model.create_architecture()
-    # if torch.cuda.device_count() > 1:
-    #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
+    # Init action_net
+    act_model = ACT_net(actions, sample_duration)
+    act_model.create_architecture()
+    if torch.cuda.device_count() > 1:
+        print('Using {} GPUs!'.format(torch.cuda.device_count()))
 
-    #     act_model = nn.DataParallel(act_model)
+        act_model = nn.DataParallel(act_model)
 
-    # act_model.to(device)
+    act_model.to(device)
 
-    # lr = 0.1
-    # lr_decay_step = 10
-    # lr_decay_gamma = 0.1
+    lr = 0.1
+    lr_decay_step = 10
+    lr_decay_gamma = 0.1
     
 
-    # params = []
-    # for key, value in dict(act_model.named_parameters()).items():
-    #     # print(key, value.requires_grad)
-    #     if value.requires_grad:
-    #         print('key :',key)
-    #         if 'bias' in key:
-    #             params += [{'params':[value],'lr':lr*(True + 1), \
-    #                         'weight_decay': False and 0.0005 or 0}]
-    #         else:
-    #             params += [{'params':[value],'lr':lr, 'weight_decay': 0.0005}]
+    params = []
+    for key, value in dict(act_model.named_parameters()).items():
+        # print(key, value.requires_grad)
+        if value.requires_grad:
+            print('key :',key)
+            if 'bias' in key:
+                params += [{'params':[value],'lr':lr*(True + 1), \
+                            'weight_decay': False and 0.0005 or 0}]
+            else:
+                params += [{'params':[value],'lr':lr, 'weight_decay': 0.0005}]
 
-    # lr = lr * 0.1
-    # optimizer = torch.optim.Adam(params)
+    lr = lr * 0.1
+    optimizer = torch.optim.Adam(params)
 
-    # # epochs = 40
-    # epochs = 1
-    # n_devs = torch.cuda.device_count()
-    # for epoch in range(epochs):
-    #     print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
+    # epochs = 40
+    epochs = 5
+    n_devs = torch.cuda.device_count()
+    for epoch in range(epochs):
+        print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
 
-    #     if epoch % (lr_decay_step + 1) == 0:
-    #         adjust_learning_rate(optimizer, lr_decay_gamma)
-    #         lr *= lr_decay_gamma
-
-
-    #         act_model, loss = training(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr)
-
-    #     if (epoch + 1) % (5) == 0:
-    #         validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, n_threads)
+        if epoch % (lr_decay_step + 1) == 0:
+            adjust_learning_rate(optimizer, lr_decay_gamma)
+            lr *= lr_decay_gamma
 
 
-    #     if ( epoch + 1 ) % 5 == 0:
-    #         torch.save(act_model.state_dict(), "action_net_model.pwf".format(epoch+1))
-    # torch.save(act_model.state_dict(), "action_net_model.pwf".format(epoch))
+            act_model, loss = training(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr)
+
+        if (epoch + 1) % (5) == 0:
+            validation(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
+
+
+        if ( epoch + 1 ) % 5 == 0:
+            torch.save(act_model.state_dict(), "action_net_model.pwf".format(epoch+1))
+    torch.save(act_model.state_dict(), "action_net_model.pwf".format(epoch))
 
     # ###########################################
     # #          Part 2 - train Linear          #
@@ -388,128 +394,128 @@ if __name__ == '__main__':
     #         torch.save(model.linear.state_dict(), "linear.pwf")
     # torch.save(model.linear.state_dict(), "linear.pwf")
 
-    ###########################################
-    #          Part 3 - train Linear          #
-    ###########################################
+    # ###########################################
+    # #          Part 3 - train Linear          #
+    # ###########################################
     
-    # first initialize model and load weights
-    # act_net_path = './action_net_model.pwf'
-    # linear_path = './linear.pwf'
+    # # first initialize model and load weights
+    # # act_net_path = './action_net_model.pwf'
+    # # linear_path = './linear.pwf'
 
-    torch.backends.cudnn.benchmark = False
-    model = Model(actions, sample_duration, sample_size)
-    # model.load_part_model(action_model_path=act_net_path, linear_path = linear_path)
-    model.load_part_model()
+    # torch.backends.cudnn.benchmark = False
+    # model = Model(actions, sample_duration, sample_size)
+    # # model.load_part_model(action_model_path=act_net_path, linear_path = linear_path)
+    # model.load_part_model()
 
-    n_devs = torch.cuda.device_count()
-    # model.load_part_model(action_model_path=None, linear_path = None)
+    # n_devs = torch.cuda.device_count()
+    # # model.load_part_model(action_model_path=None, linear_path = None)
+    # # if torch.cuda.device_count() > 1:
+
+    # #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
+    # #     model = nn.DataParallel(model)
+
+    # # model = model.to(device)
     # if torch.cuda.device_count() > 1:
 
     #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
-    #     model = nn.DataParallel(model)
+    #     model.act_net = nn.DataParallel(model.act_net)
+    #     # model = nn.DataParallel(model)
 
+    # model.act_net = model.act_net.to(device)
     # model = model.to(device)
-    if torch.cuda.device_count() > 1:
 
-        print('Using {} GPUs!'.format(torch.cuda.device_count()))
-        model.act_net = nn.DataParallel(model.act_net)
-        # model = nn.DataParallel(model)
-
-    model.act_net = model.act_net.to(device)
-    model = model.to(device)
-
-    # init data_loaders
+    # # init data_loaders
     
-    # vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train')
-    vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='train', sample_size=sample_size)
-    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1,num_workers=4,pin_memory=True,
-                                              shuffle=True)    # reset learning rate
-                                              # shuffle=False)    # reset learning rate
+    # # vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train')
+    # vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='train', sample_size=sample_size)
+    # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1,num_workers=4,pin_memory=True,
+    #                                           shuffle=True)    # reset learning rate
+    #                                           # shuffle=False)    # reset learning rate
 
-    lr = 0.1
-    lr_decay_step = 5
-    lr_decay_gamma = 0.1
+    # lr = 0.1
+    # lr_decay_step = 5
+    # lr_decay_gamma = 0.1
 
-    # reset learning rate
+    # # reset learning rate
 
-    params = []
-    for key, value in dict(model.named_parameters()).items():
-        # print(key, value.requires_grad)
-        if value.requires_grad:
-            print('key :',key)
-            if 'bias' in key:
-                params += [{'params':[value],'lr':lr*(True + 1), \
-                            'weight_decay': False and 0.0005 or 0}]
-            else:
-                params += [{'params':[value],'lr':lr, 'weight_decay': 0.0005}]
+    # params = []
+    # for key, value in dict(model.named_parameters()).items():
+    #     # print(key, value.requires_grad)
+    #     if value.requires_grad:
+    #         print('key :',key)
+    #         if 'bias' in key:
+    #             params += [{'params':[value],'lr':lr*(True + 1), \
+    #                         'weight_decay': False and 0.0005 or 0}]
+    #         else:
+    #             params += [{'params':[value],'lr':lr, 'weight_decay': 0.0005}]
 
-    lr = lr * 0.1
-    optimizer = torch.optim.Adam(params)
+    # lr = lr * 0.1
+    # optimizer = torch.optim.Adam(params)
 
-    ##########################
+    # ##########################
 
     
-    # epochs = 40
-    epochs = 1
+    # # epochs = 40
+    # epochs = 1
 
-    for ep in range(epochs):
+    # for ep in range(epochs):
 
-        model.train()
-        loss_temp = 0
+    #     model.train()
+    #     loss_temp = 0
 
-        print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(ep+1, epochs))
+    #     print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(ep+1, epochs))
 
-        if ep % (lr_decay_step + 1) == 0:
-            adjust_learning_rate(optimizer, lr_decay_gamma)
-            lr *= lr_decay_gamma
+    #     if ep % (lr_decay_step + 1) == 0:
+    #         adjust_learning_rate(optimizer, lr_decay_gamma)
+    #         lr *= lr_decay_gamma
 
-        for step, data  in enumerate(data_loader):
+    #     for step, data  in enumerate(data_loader):
 
-            # if step == 2:
-            #     break
+    #         # if step == 2:
+    #         #     break
 
-            print('! step :',step)
-            vid_id, clips, boxes, n_frames, n_actions, h, w = data
-            # print('clips.type() :',clips.type())
-            # print('clips.type() :',clips.shape)
-            # print('vid_id.shape :',vid_id.shape)
-            # print('boxes.shape :',boxes.shape)
-            # print('n_frames.shape :',n_frames.shape)
-            # print('n_actions.shape :',n_actions.shape)
-            # print('h :',h)
-            # print('w :',w)
+    #         print('! step :',step)
+    #         vid_id, clips, boxes, n_frames, n_actions, h, w = data
+    #         # print('clips.type() :',clips.type())
+    #         # print('clips.type() :',clips.shape)
+    #         # print('vid_id.shape :',vid_id.shape)
+    #         # print('boxes.shape :',boxes.shape)
+    #         # print('n_frames.shape :',n_frames.shape)
+    #         # print('n_actions.shape :',n_actions.shape)
+    #         # print('h :',h)
+    #         # print('w :',w)
 
-            boxes = preprocess_boxes(boxes, h, w, sample_size).to(device)
-            mode = 'train'
+    #         boxes = preprocess_boxes(boxes, h, w, sample_size).to(device)
+    #         mode = 'train'
 
-            vid_id = vid_id.to(device)
-            n_frames = n_frames.to(device)
-            n_actions = n_actions.to(device)
-            h = h.to(device)
-            w = w.to(device)
-            # print('boxes.type() :',boxes.type())
-            # print('----------Before----------')
-            tubes,  bbox_pred, \
-            prob_out, rpn_loss_cls, \
-            rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(n_devs, dataset_folder, \
-                                                             vid_names, clips, vid_id,  \
-                                                             boxes, \
-                                                             mode, cls2idx, n_actions,n_frames, h, w)
+    #         vid_id = vid_id.to(device)
+    #         n_frames = n_frames.to(device)
+    #         n_actions = n_actions.to(device)
+    #         h = h.to(device)
+    #         w = w.to(device)
+    #         # print('boxes.type() :',boxes.type())
+    #         # print('----------Before----------')
+    #         tubes,  bbox_pred, \
+    #         prob_out, rpn_loss_cls, \
+    #         rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(n_devs, dataset_folder, \
+    #                                                          vid_names, clips, vid_id,  \
+    #                                                          boxes, \
+    #                                                          mode, cls2idx, n_actions,n_frames, h, w)
 
-            loss = cls_loss.mean()
+    #         loss = cls_loss.mean()
 
-            # backw\ard
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+    #         # backw\ard
+    #         optimizer.zero_grad()
+    #         loss.backward()
+    #         optimizer.step()
 
             
-            loss_temp += loss.item()
+    #         loss_temp += loss.item()
 
-        print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
-        ep+1,loss_temp/(step+1), lr))
-        if ( ep + 1 ) % 5 == 0:
-            torch.save(model.state_dict(), "model.pwf")
-    torch.save(model.state_dict(), "model.pwf")
+    #     print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
+    #     ep+1,loss_temp/(step+1), lr))
+    #     if ( ep + 1 ) % 5 == 0:
+    #         torch.save(model.state_dict(), "model.pwf")
+    # torch.save(model.state_dict(), "model.pwf")
 
 

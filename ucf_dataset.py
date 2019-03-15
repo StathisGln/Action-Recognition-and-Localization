@@ -478,12 +478,9 @@ class Video_UCF(data.Dataset):
         f_rois = torch.zeros(self.max_sim_actions,self.sample_duration,5)
         f_rois[:n_acts,:,:] = final_rois[:n_acts]
 
-        im_info = torch.Tensor([self.sample_size, self.sample_size, n_frames])
+        im_info = torch.Tensor([self.sample_size, self.sample_size, self.sample_duration])
 
-        if self.mode == 'train':
-            return clip,  np.array([h], dtype=np.int64), np.array([w],dtype=np.int64),  ret_tubes, f_rois, np.array([n_acts],dtype=np.int64), np.array([n_frames],dtype=np.int64), im_info
-        else:
-            return clip,  h, w,  gt_tubes, final_rois,  im_info, self.data[index]['abs_path'], frame_indices
+        return clip,  np.array([h], dtype=np.int64), np.array([w],dtype=np.int64),  ret_tubes, f_rois, np.array([n_acts],dtype=np.int64), np.array([n_frames],dtype=np.int64), im_info
 
     def __len__(self):
         return len(self.data)
