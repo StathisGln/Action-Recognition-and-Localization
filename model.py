@@ -88,9 +88,11 @@ class Model(nn.Module):
             tubes_labels = torch.zeros(n_clips,rois_per_image)  # tubes rois
             loops = int(np.ceil(n_clips / batch_size))
 
-            rpn_loss_cls_  = torch.zeros(loops) 
-            rpn_loss_bbox_ = torch.zeros(loops)
-            act_loss_bbox_ = torch.zeros(loops)
+            rpn_loss_cls_     = torch.zeros(loops) 
+            rpn_loss_bbox_    = torch.zeros(loops)
+            act_loss_bbox_    = torch.zeros(loops)
+            rpn_loss_cls_16_  = torch.zeros(loops) 
+            rpn_loss_bbox_16_ = torch.zeros(loops)
 
         for step, dt in enumerate(data_loader):
 
@@ -99,7 +101,6 @@ class Model(nn.Module):
             # print('step :',step)
             # print('Memory :',torch.cuda.memory_allocated(device=None))
             frame_indices, im_info, start_fr = dt
-            print('frame_indices :',frame_indices)
             boxes_ = boxes[frame_indices].cuda()
             clips_ = clips[frame_indices].cuda()
             # print('boxes_.shape :',boxes_.shape)
@@ -121,7 +122,8 @@ class Model(nn.Module):
 
             tubes,  bbox_pred, pooled_feat, \
             rpn_loss_cls,  rpn_loss_bbox, \
-            act_loss_bbox, rois_label = self.act_net(clips_.permute(0,2,1,3,4),
+            act_loss_bbox, rpn_loss_cls_16,\
+            rpn_loss_bbox_16, rois_label = self.act_net(clips_.permute(0,2,1,3,4),
                                                      im_info,
                                                      gt_tubes_,
                                                      None,
@@ -154,6 +156,8 @@ class Model(nn.Module):
                 rpn_loss_cls_[step] = rpn_loss_cls.mean().unsqueeze(0)
                 rpn_loss_bbox_[step] = rpn_loss_bbox.mean().unsqueeze(0)
                 act_loss_bbox_[step] = act_loss_bbox.mean().unsqueeze(0)
+                rpn_loss_cls_16_[step] = rpn_loss_cls_16.mean().unsqueeze(0)
+                rpn_loss_bbox_16_[step] = rpn_loss_bbox_16.mean().unsqueeze(0)
 
             # print('----------Out TPN----------')
             # # print('p_tubes.type() :',p_tubes.type())

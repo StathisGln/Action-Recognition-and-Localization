@@ -38,7 +38,7 @@ class ACT_net(nn.Module):
         self.spatial_scale = 1.0/16
 
         # define rpn
-        self.act_rpn = _RPN(256)
+        self.act_rpn = _RPN(256, sample_duration)
         self.act_proposal_target = _ProposalTargetLayer(2) ## background/ foreground
         self.time_dim =sample_duration
         self.temp_scale = 1.
@@ -75,14 +75,12 @@ class ACT_net(nn.Module):
         # feed image data to base model to obtain base feature map
 
         base_feat = self.act_base(im_data)
-        rois, rpn_loss_cls, rpn_loss_bbox = self.act_rpn(base_feat, im_info, gt_tubes, None)
+        rois, rpn_loss_cls, rpn_loss_bbox, \
+            rpn_loss_cls_16, rpn_loss_bbox_16 = self.act_rpn(base_feat, im_info, gt_tubes, None)
 
         # if it is training phrase, then use ground trubut bboxes for refining
         # firstly find xy- reggression boxes
         
-        # print('rois.shape :',rois.shape)
-        # print('rois :',rois)
-        # print('before cascade ')
         if self.training:
           gt_tubes = torch.cat((gt_tubes,torch.ones(gt_tubes.size(0),gt_tubes.size(1),1).type_as(gt_tubes)),dim=2).type_as(gt_tubes)
           roi_data = self.act_proposal_target(rois, gt_tubes)
@@ -104,12 +102,6 @@ class ACT_net(nn.Module):
 
         # do roi align based on predicted rois
 
-        # print('rois :',rois)
-        # print('rois[:,:,:7] :',rois[:,:,:7])
-        # print('rois_label :',rois_label)
-        # print('base_feat[0,0,0] :',base_feat)
-        # print('base_feat.shape :',base_feat.shape)
-        # print('rois[:,:,:7].view(-1,7).shape :',rois[:,:,:7].view(-1,7).shape)
         pooled_feat_ = self.act_roi_align(base_feat, rois[:,:,:7].view(-1,7))
         # print('pooled_feat_ :',pooled_feat_.shape)
         pooled_feat = self._head_to_tail(pooled_feat_)
@@ -134,11 +126,12 @@ class ACT_net(nn.Module):
         if self.training:
           rois_label = rois_label.view(batch_size, rois.size(1),-1)
           return rois,  bbox_pred, pooled_feat_, \
-            rpn_loss_cls, rpn_loss_bbox, act_loss_bbox, \
+            rpn_loss_cls, rpn_loss_bbox, act_loss_bbox,\
+            rpn_loss_cls_16, rpn_loss_bbox_16, \
             rois_label
 
 
-        return rois,  bbox_pred, pooled_feat_, None, None, None, None
+        return rois,  bbox_pred, pooled_feat_, None, None, None, None, None, None
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):
