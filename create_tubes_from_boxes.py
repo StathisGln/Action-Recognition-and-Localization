@@ -103,6 +103,11 @@ def create_tube_with_frames(boxes, im_info_3d, sample_duration):
     #     x1.shape, y1.shape, t1.shape, x2.shape, y2.shape, t2.shape, labels.shape))
     ret = torch.stack((x1, y1, t1, x2, y2, t2, labels)).permute(1,2,0).type_as(boxes)
 
+    padding_lines = ret[:,:,-1].lt(1).nonzero()
+
+    for i in padding_lines:
+        ret[i[0],i[1]] = torch.zeros((7)).type_as(ret)
+
     # print('ret.shape :',ret.shape)
     # print('ret :',ret)
     return ret

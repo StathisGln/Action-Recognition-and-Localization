@@ -20,6 +20,8 @@ from config import cfg
 
 from collections import OrderedDict
 
+# import gc
+# from pympler.asizeof import asizeof
 
 class Model(nn.Module):
     """ 
@@ -44,26 +46,34 @@ class Model(nn.Module):
 
 
 
-    def forward(self,n_devs, dataset_folder, vid_names, vid_id, spatial_transform, temporal_transform, boxes, mode, cls2idx, num_actions, num_frames, h_, w_):
+    def forward(self,n_devs, dataset_folder, vid_names, clips, vid_id, boxes, mode, cls2idx, num_actions, num_frames, h_, w_):
         '''
         TODO describe procedure
         '''
+        # print('boxes.shape :',boxes.shape)
         boxes = boxes.squeeze(0).permute(1,0,2).cpu()
+        clips = clips.squeeze(0)
         # print('----------Inside----------')
         # print('boxes.shape :',boxes.shape)
+
         # print('boxes :',boxes.cpu().numpy())
         # print('boxes.type() :',boxes.type())
         ## define a dataloader for the whole video
-        batch_size = 4 # 
-        num_workers = 1
+        boxes = boxes[:num_frames,:num_actions]
+        clips = clips[:num_frames]
+        # print('clips.shape :',clips.shape)
+        # print('clips.shape :',clips.type())
+        # print('boxes.shape :',boxes.shape)
+        # print('boxes :',boxes.cpu().numpy())
+        batch_size = 8 # 
         num_images = 1
         rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images) if self.training else 10
 
         data = single_video(dataset_folder,h_,w_, vid_names, vid_id, frames_dur= self.sample_duration, sample_size =self.sample_size,
                             classes_idx=cls2idx, n_frames=num_frames)
 
-        data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size, # num_workers=num_workers, pin_memory=True,
-                                                  shuffle=False, num_workers=num_workers)
+        data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size, pin_memory=False,# num_workers=num_workers, pin_memory=True,
+                                                  shuffle=False, num_workers=1)
 
         n_clips = data.__len__()
 
@@ -81,31 +91,37 @@ class Model(nn.Module):
             rpn_loss_cls_  = torch.zeros(loops) 
             rpn_loss_bbox_ = torch.zeros(loops)
             act_loss_bbox_ = torch.zeros(loops)
-        # print('loops :',loops)
+
         for step, dt in enumerate(data_loader):
 
             # if step == 1:
             #     break
-            clips, frame_indices, im_info, start_fr = dt
+            # print('step :',step)
+            # print('Memory :',torch.cuda.memory_allocated(device=None))
+            frame_indices, im_info, start_fr = dt
+            print('frame_indices :',frame_indices)
             boxes_ = boxes[frame_indices].cuda()
+            clips_ = clips[frame_indices].cuda()
+            # print('boxes_.shape :',boxes_.shape)
+            # print('clips_.shape :',clips_.shape)
+            # print('boxes_.permute(0,2,1,3) :',boxes_.permute(0,2,1,3).shape)
+            # print('boxes_ :',boxes_.cpu().numpy())
             gt_tubes = create_tube_with_frames(boxes_.permute(0,2,1,3), im_info, self.sample_duration)
-            # print('gt_tubes.shape  :',gt_tubes.shape )
             # print('gt_tubes :',gt_tubes)
-            # print('tubes.shape :',tubes.shape)
-            # print('tubes :',tubes)
-            padding_lines = gt_tubes[:,:,-1].lt(1).nonzero()
-            # print(padding_lines)
-            for i in padding_lines:
-                gt_tubes[i[0],i[1]] = torch.zeros((7)).type_as(gt_tubes)
 
-            clips = clips.cuda()
             gt_tubes_ = gt_tubes.type_as(clips).cuda()
             im_info = im_info.cuda()
             start_fr = start_fr.cuda()
 
+
+            # clips = Variable(clips, volatile=True)
+            # gt_tubes_ = Variable(gt_tubes_, volatile=True)
+            # im_info = Variable(im_info, volatile=True)
+            # start_fr = Variable(start_fr, volatile=True)
+
             tubes,  bbox_pred, pooled_feat, \
             rpn_loss_cls,  rpn_loss_bbox, \
-            act_loss_bbox, rois_label = self.act_net(clips,
+            act_loss_bbox, rois_label = self.act_net(clips_.permute(0,2,1,3,4),
                                                      im_info,
                                                      gt_tubes_,
                                                      None,
@@ -126,12 +142,14 @@ class Model(nn.Module):
 
             if self.training:
                 # print('gt_tubes.shape :',gt_tubes.shape)
+                # print('f_gt_tubes.element_size() * f_gt_tubes.nelement() :',f_gt_tubes.element_size() * f_gt_tubes.nelement())
                 # print('idx_s :',idx_s)
                 # print('idx_e :',idx_e)
                 # print('f_gt_tubes.shape :',f_gt_tubes.shape)
+                # print('f_gt_tubes.device :',f_gt_tubes.device)
 
-                f_gt_tubes[idx_s:idx_e] = gt_tubes
-                tubes_labels[idx_s:idx_e] = rois_label.squeeze(-1)
+                f_gt_tubes[idx_s:idx_e] = gt_tubes.type_as(f_gt_tubes)
+                tubes_labels[idx_s:idx_e] = rois_label.squeeze(-1).type_as(tubes_labels)
 
                 rpn_loss_cls_[step] = rpn_loss_cls.mean().unsqueeze(0)
                 rpn_loss_bbox_[step] = rpn_loss_bbox.mean().unsqueeze(0)
@@ -143,6 +161,7 @@ class Model(nn.Module):
             # print('----------Connect TUBEs----------')
 
             f_tubes = connect_tubes(f_tubes,tubes.cpu(), p_tubes, pooled_feat, rois_label, step*batch_size)
+
             # print('----------End Tubes----------')
 
         ###############################################
@@ -152,9 +171,9 @@ class Model(nn.Module):
         # print('f_gt_tubes.shape :',f_gt_tubes.shape)
         if self.training:
 
-            f_rpn_loss_cls = rpn_loss_cls_.mean()
-            f_rpn_loss_bbox = rpn_loss_bbox_.mean()
-            f_act_loss_bbox = act_loss_bbox_.mean()
+            f_rpn_loss_cls = rpn_loss_cls_.mean().cuda()
+            f_rpn_loss_bbox = rpn_loss_bbox_.mean().cuda()
+            f_act_loss_bbox = act_loss_bbox_.mean().cuda()
 
             ## first get video tube
             # print('boxes.shape :',boxes.shape )
@@ -178,7 +197,6 @@ class Model(nn.Module):
             target_lbl = torch.cat((gt_lbl,bg_lbl),0)
 
         ##############################################
-        # print('f_tubes :',f_tubes)
         max_seq = reduce(lambda x, y: y if len(y) > len(x) else x, f_tubes)
         max_length = len(max_seq)
 
@@ -197,7 +215,7 @@ class Model(nn.Module):
                 # print('features[seq[j]].mean(1).shape :',features[seq[j]].mean(1).shape)
                 feats[j] = features[seq[j]].mean(1)
                 tmp_tube[j] = p_tubes[seq[j]][1:7]
-            final_video_tubes[i] = create_tube_from_tubes(tmp_tube)
+            final_video_tubes[i] = create_tube_from_tubes(tmp_tube).type_as(boxes)
             f_feat_mean[i,:] = torch.mean(feats,0).unsqueeze(0)
         
         # ######################################
@@ -206,25 +224,23 @@ class Model(nn.Module):
 
         ## TODO : to add TCN or RNN
 
-        cls_loss = 0
+        cls_loss = torch.Tensor([0]).cuda()
         prob_out = self.linear(f_feat_mean)
-        # print('prob_out.shape :',prob_out.shape)
+
         # # classification probability
+        if self.training:
+            cls_loss = F.cross_entropy(prob_out.cpu(), target_lbl.long()).cuda()
 
         if self.training:
+            # print('final_video_tubes.type() :',final_video_tubes.type())
+            # print('bbox_pred.type() :',bbox_pred.type() )
             # print('prob_out.type() :',prob_out.type())
-            # print('target_lbl.long() :',target_lbl.long().type())
-            cls_loss = F.cross_entropy(prob_out.cpu(), target_lbl.long())
-
-        if self.training:
-            return tubes, bbox_pred,  prob_out, f_rpn_loss_cls, f_rpn_loss_bbox, f_act_loss_bbox, cls_loss, 
+            # print('f_rpn_loss_cls.type() :',f_rpn_loss_cls.type())
+            # print('f_rpn_loss_bbox.type() :',f_rpn_loss_bbox.type())
+            # print('cls_loss.type() :',cls_loss.type())
+            return final_video_tubes, bbox_pred,  prob_out, f_rpn_loss_cls, f_rpn_loss_bbox, f_act_loss_bbox, cls_loss, 
         else:
             return final_video_tubes, bbox_pred, prob_out
-        # return  torch.Tensor([0]).cuda(),torch.Tensor([0]).cuda(),Variable(torch.Tensor([0]).cuda()),Variable(torch.Tensor([0]).cuda()),torch.Tensor([0]).cuda(),torch.Tensor([0]).cuda(),   Variable( torch.Tensor([0]).cuda(), requires_grad=True)
-
-    # def create_architecture(self):
-
-    #     self.act_net.create_architecture()
 
     def deactivate_action_net_grad(self):
 

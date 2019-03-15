@@ -23,16 +23,16 @@ import pdb
 
 np.random.seed(42)
 
-def preprocess_boxes(boxes, h, w, sample_size, n_frames, n_actions):
+def preprocess_boxes(boxes, h, w, sample_size):
 
     boxes[..., 2] = boxes[..., 0] + boxes[..., 2]
     boxes[..., 3] = boxes[..., 1] + boxes[..., 3]
-    boxes = boxes[:, :n_actions, :n_frames]
-    boxes = resize_boxes(boxes, h,w,sample_size)
+    # boxes = boxes[:, :n_actions, :n_frames]
+    for i in range(boxes.size(0)):
+        boxes[i] = resize_boxes(boxes[i].unsqueeze(0), h[i],w[i],sample_size)
 
     fr_tensor = torch.arange(0,boxes.size(-2)).unsqueeze(1).unsqueeze(0).unsqueeze(0).type_as(boxes)
-    fr_tensor = fr_tensor.expand((boxes.size(0),)+fr_tensor.shape[1:]).expand((fr_tensor.size(0),)+(boxes.size(1),)+fr_tensor.shape[2:])
-
+    fr_tensor = fr_tensor.expand((boxes.size(0),)+fr_tensor.shape[1:]).expand((boxes.size(0),)+(boxes.size(1),)+fr_tensor.shape[2:])
     boxes = torch.cat((boxes,fr_tensor),dim=-1)
 
     return boxes
@@ -393,28 +393,38 @@ if __name__ == '__main__':
     ###########################################
     
     # first initialize model and load weights
-    act_net_path = './action_net_model.pwf'
-    linear_path = './linear.pwf'
+    # act_net_path = './action_net_model.pwf'
+    # linear_path = './linear.pwf'
 
-    torch.backends.cudnn.enabled=False
+    torch.backends.cudnn.benchmark = False
     model = Model(actions, sample_duration, sample_size)
-    model.load_part_model(action_model_path=act_net_path, linear_path = linear_path)
-    # model.load_part_model(action_model_path=None, linear_path = linear_path)
-    # model.create_architecture()
+    # model.load_part_model(action_model_path=act_net_path, linear_path = linear_path)
+    model.load_part_model()
 
+    n_devs = torch.cuda.device_count()
+    # model.load_part_model(action_model_path=None, linear_path = None)
+    # if torch.cuda.device_count() > 1:
+
+    #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
+    #     model = nn.DataParallel(model)
+
+    # model = model.to(device)
     if torch.cuda.device_count() > 1:
 
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
         model.act_net = nn.DataParallel(model.act_net)
+        # model = nn.DataParallel(model)
 
     model.act_net = model.act_net.to(device)
     model = model.to(device)
 
     # init data_loaders
     
-    vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train')
-    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1,
+    # vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train')
+    vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='train', sample_size=sample_size)
+    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1,num_workers=4,pin_memory=True,
                                               shuffle=True)    # reset learning rate
+                                              # shuffle=False)    # reset learning rate
 
     lr = 0.1
     lr_decay_step = 5
@@ -441,7 +451,7 @@ if __name__ == '__main__':
     
     # epochs = 40
     epochs = 1
-    n_devs = torch.cuda.device_count()
+
     for ep in range(epochs):
 
         model.train()
@@ -459,22 +469,31 @@ if __name__ == '__main__':
             #     break
 
             print('! step :',step)
-            vid_id, boxes, n_frames, n_actions, h, w = data
+            vid_id, clips, boxes, n_frames, n_actions, h, w = data
+            # print('clips.type() :',clips.type())
+            # print('clips.type() :',clips.shape)
+            # print('vid_id.shape :',vid_id.shape)
+            # print('boxes.shape :',boxes.shape)
+            # print('n_frames.shape :',n_frames.shape)
+            # print('n_actions.shape :',n_actions.shape)
+            # print('h :',h)
+            # print('w :',w)
 
-            boxes = preprocess_boxes(boxes, h, w, sample_size, n_frames, n_actions)
+            boxes = preprocess_boxes(boxes, h, w, sample_size).to(device)
             mode = 'train'
 
-            # vid_id_ = vid_id.to(device)
-            # n_frames_ = n_frames.to(device)
-            # n_actions_ = n_actions.to(device)
-            # h_ = h.to(device)
-            # w_ = w.to(device)
+            vid_id = vid_id.to(device)
+            n_frames = n_frames.to(device)
+            n_actions = n_actions.to(device)
+            h = h.to(device)
+            w = w.to(device)
             # print('boxes.type() :',boxes.type())
+            # print('----------Before----------')
             tubes,  bbox_pred, \
             prob_out, rpn_loss_cls, \
             rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(n_devs, dataset_folder, \
-                                                             vid_names, vid_id, spatial_transform, \
-                                                             temporal_transform, boxes, \
+                                                             vid_names, clips, vid_id,  \
+                                                             boxes, \
                                                              mode, cls2idx, n_actions,n_frames, h, w)
 
             loss = cls_loss.mean()
@@ -484,9 +503,8 @@ if __name__ == '__main__':
             loss.backward()
             optimizer.step()
 
+            
             loss_temp += loss.item()
-
-            torch.cuda.synchronize()
 
         print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
         ep+1,loss_temp/(step+1), lr))

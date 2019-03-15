@@ -53,13 +53,13 @@ class ACT_net(nn.Module):
 
         # print('----------Inside TPN net----------')
         batch_size = im_data.size(0)
-
         im_info = im_info.data
         if self.training:
             gt_tubes = gt_tubes.data
             # gt_rois =  gt_rois.data
 
         #### modify gt_tubes:
+        # print('batch_size :',batch_size)
         # print('gt_tubes.shape:',gt_tubes.shape)
         # print('gt_tubes :',gt_tubes)
         # print('start_fr :',start_fr)
@@ -170,23 +170,27 @@ class ACT_net(nn.Module):
                          sample_size=sample_size, sample_duration=self.sample_duration,
                          last_fc=False)
         model = model
-
+        model = nn.DataParallel(model, device_ids=None)
         self.model_path = '/gpu-data2/sgal/resnet-34-kinetics.pth'
         print("Loading pretrained weights from %s" %(self.model_path))
         model_data = torch.load(self.model_path)
 
-        new_state_dict = OrderedDict()
-        for k, v in model_data['state_dict'].items():
-          name = k[7:] # remove `module.`
-          new_state_dict[name] = v
+        # new_state_dict = OrderedDict()
+        # for k, v in model_data['state_dict'].items():
+        #   name = k[7:] # remove `module.`
+        #   new_state_dict[name] = v
 
-        model.load_state_dict(new_state_dict)
+        # model.load_state_dict(new_state_dict)
+        model.load_state_dict(model_data['state_dict'])
+
         # Build resnet.
-        self.act_base = nn.Sequential(model.conv1, model.bn1, model.relu,
-          model.maxpool,model.layer1,model.layer2, model.layer3)
+        # self.act_base = nn.Sequential(model.conv1, model.bn1, model.relu,
+        #   model.maxpool,model.layer1,model.layer2, model.layer3)
+        self.act_base = nn.Sequential(model.module.conv1, model.module.bn1, model.module.relu,
+          model.module.maxpool,model.module.layer1,model.module.layer2, model.module.layer3)
 
-        self.act_top = nn.Sequential(model.layer4)
-        # self.act_top_s = nn.Sequential(_make_layer(BasicBlock, 512, 3, stride=2, inplanes=256))
+
+        self.act_top = nn.Sequential(model.module.layer4)
 
         self.act_bbox_single_frame_pred = nn.Linear(512, 4 )
         self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg

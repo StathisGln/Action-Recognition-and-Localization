@@ -162,7 +162,6 @@ class _ProposalTargetLayer(nn.Module):
             # print('cascade gt_boxes_single:',gt_boxes_single)            
             # print('gt_boxes[:num_boxes[i]] :',gt_boxes_single)
             if gt_boxes_single.byte().any() == 0:
-                print('no rois')
                 continue
             
             
@@ -208,13 +207,13 @@ class _ProposalTargetLayer(nn.Module):
                 bg_rois_per_this_image = rois_per_image
                 fg_rois_per_this_image = 0
             else:
-                print('gt_boxes :',gt_boxes)
-                print('i :',i)
-                print('gt_boxes_single :',gt_boxes_single)
-                print('max_overlaps_single :',max_overlaps_single.cpu().tolist())
-                print('num_boxes[i] :',num_boxes[i])
-                print('num_rois_pre :',num_rois_pre)
-                print('all_rois :',all_rois.cpu().tolist())
+                # print('gt_boxes :',gt_boxes)
+                # print('i :',i)
+                # print('gt_boxes_single :',gt_boxes_single)
+                # print('max_overlaps_single :',max_overlaps_single.cpu().tolist())
+                # print('num_boxes[i] :',num_boxes[i])
+                # print('num_rois_pre :',num_rois_pre)
+                # print('all_rois :',all_rois.cpu().tolist())
                 raise ValueError("bg_num_rois = 0 and fg_num_rois = 0, this should not happen!")
 
             # The indices that we're selecting (both fg and bg)

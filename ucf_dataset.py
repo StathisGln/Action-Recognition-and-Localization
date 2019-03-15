@@ -109,38 +109,6 @@ def get_file_names(spt_path, mode, split_number=1):
 
     return file_names
 
-def create_tcn_dataset(split_txt_path, json_path, classes, mode):
-
-    videos = []
-    dataset = []
-    txt_files = glob.glob(split_txt_path+'/*1.txt')  # 1rst split
-    for txt in txt_files:
-        class_name = txt.split('/')[-1][:-16]
-        class_idx = classes.index(class_name)
-        with open(txt, 'r') as fp:
-            lines = fp.readlines()
-        for l in lines:
-            spl = l.split()
-            if spl[1] == '1' and mode == 'train':  # train video
-                vid_name = spl[0][:-4]
-                videos.append(vid_name)
-            elif spl[1] == '2' and mode == 'test':  # train video
-                vid_name = spl[0][:-4]
-                videos.append(vid_name)
-
-        with open(os.path.join(json_path, class_name+'.json'), 'r') as fp:
-            data = json.load(fp)
-        for feat in data.keys():
-            if feat in videos:
-                sample = {
-                    'video': feat,
-                    'class': class_name,
-                    'class_idx': class_idx
-                }
-                dataset.append(sample)
-    print(len(dataset))
-    return dataset
-
 
 def make_correct_ucf_dataset(dataset_path,  boxes_file, split_txt_path, mode='train'):
     dataset = []
@@ -248,10 +216,13 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
     max_actions = -1
     #TrampolineJumping/v_TrampolineJumping_g10_c01
     for cls in classes:
+    # for cls in ['Biking']:
+    # for cls in ['GolfSwing']:
     # for cls in ['TrampolineJumping']:
     # for cls in ['Basketball']:
         videos = next(os.walk(os.path.join(dataset_path,cls), True))[1]
         for vid in videos:
+        # for vid in [ 'v_Biking_g22_c03','v_Biking_g03_c03','v_Biking_g13_c03','v_Biking_g23_c02','v_Biking_g12_c03']:
         # for vid in ['v_TrampolineJumping_g21_c02','v_TrampolineJumping_g10_c01','v_TrampolineJumping_g20_c02','v_TrampolineJumping_g09_c05' , 'v_TrampolineJumping_g10_c06','v_TrampolineJumping_g11_c05']:
         # for vid in ['v_TrampolineJumping_g11_c05','v_TrampolineJumping_g21_c02','v_TrampolineJumping_g10_c01','v_TrampolineJumping_g20_c02','v_TrampolineJumping_g09_c05' , 'v_TrampolineJumping_g10_c06']:
         # for vid in ['v_VolleyballSpiking_g14_c03','v_TrampolineJumping_g20_c02']: # empty rois
@@ -259,6 +230,7 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
         # for vid in [' v_VolleyballSpiking_g23_c01']:
         # for vid in ['v_TrampolineJumping_g10_c06']:
         # for vid in ['v_VolleyballSpiking_g14_c03','v_VolleyballSpiking_g23_c01']:
+        # for vid in ['v_GolfSwing_g17_c05','v_GolfSwing_g15_c05','v_GolfSwing_g14_c05','v_GolfSwing_g18_c05','v_GolfSwing_g19_c05','v_GolfSwing_g12_c05','v_GolfSwing_g11_c05']:
 
             video_path = os.path.join(cls,vid)
             if video_path not in boxes_data or not(vid in file_names):
@@ -270,6 +242,7 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
             annots = values['annotations']
             n_actions = len(annots)
             if n_frames > max_frames:
+                print('vid :',vid, 'max_frames :',n_frames)
                 max_frames = n_frames
 
             if n_actions > max_actions:
@@ -302,9 +275,10 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
     return dataset, max_frames, max_actions
 
 class video_names(data.Dataset):
-    def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader,):
+    def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader, sample_size=112):
 
         self.dataset_folder = dataset_folder
+        self.sample_size = sample_size
         self.boxes_file = boxes_file
         self.vid2idx = vid2idx
         self.mode = mode
@@ -346,7 +320,15 @@ class video_names(data.Dataset):
         n_frames_np = np.array([n_frames], dtype=np.int64)
         print('vid_name :', vid_name, ' n_frames :',n_frames_np)
         n_actions_np = np.array([n_actions], dtype=np.int64)
-        return vid_id, final_boxes, n_frames_np, n_actions_np, h, w
+
+        clips = torch.load(os.path.join(self.dataset_folder,vid_name,'images.pt'))
+        # print('clips.shape :',clips.shape)
+        
+        f_clips = torch.zeros(self.max_frames,3,self.sample_size,self.sample_size)
+        # print('f_clips.shape :',f_clips.shape)
+        # print('n_frames :',n_frames )
+        f_clips[:n_frames] = clips.permute(1,0,2,3)
+        return vid_id, f_clips, final_boxes, n_frames_np, n_actions_np, h, w
     
     def __len__(self):
 
@@ -364,8 +346,8 @@ class single_video(data.Dataset):
         self.data = prepare_samples(
                     vid_names, vid_id, frames_dur, int(frames_dur/2), n_frames)
         vid_path = vid_names[vid_id]
-        self.clips = torch.load(os.path.join(dataset_folder,vid_path,'images.pt'))
-
+        # self.clips = torch.load(os.path.join(dataset_folder,vid_path,'images.pt'))
+        self.temporal_transform = LoopPadding(frames_dur)
         self.sample_duration = frames_dur
         self.sample_size = sample_size
         self.classes_idx = classes_idx
@@ -386,13 +368,17 @@ class single_video(data.Dataset):
         abs_path = os.path.join(self.dataset_folder, path)
 
         frame_indices = np.array(frame_indices) - 1
-        clip = self.clips.new(3,self.sample_duration,self.sample_size, self.sample_size)
-        clip = self.clips[:,frame_indices]
+        frame_indices = self.temporal_transform(frame_indices)
+
+        # clip = self.clips.new(3,self.sample_duration,self.sample_size, self.sample_size)
+        # clip = self.clips[:,frame_indices]
         # print('clip.shape :',clip.shape )
 
         ## get bboxes and create gt tubes
         im_info = np.array([self.sample_size,self.sample_size, self.sample_duration])
-        return clip, frame_indices, im_info, start_fr
+        # return clip, frame_indices, im_info, start_fr
+        return frame_indices, im_info, start_fr
+
 
     def __len__(self):
         return len(self.data)

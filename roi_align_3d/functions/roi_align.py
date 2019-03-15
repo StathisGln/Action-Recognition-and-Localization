@@ -40,11 +40,10 @@ class RoIAlignFunction(Function):
         #     json.dump(dict({'aligned_height':self.aligned_height, 'aligned_width' : self.aligned_width, 'spatial_scale': self.spatial_scale, 'features' :features.cpu().tolist(), 'rois' : rois.cpu().tolist()}), fp)
         # print("Before C: self.spatial_scale :", self.spatial_scale, " self.temp_scale :", self.temp_scale)
         roi_align_3d.roi_align_forward_cuda(self.aligned_height,
-                                         self.aligned_width,
-                                         self.time_dim,
-                                         self.spatial_scale, self.temp_scale, features,
-                                         rois, output)
-        # print('output :',output[0,0,0])
+                                            self.aligned_width,
+                                            self.time_dim,
+                                            self.spatial_scale, self.temp_scale, features.cuda(),
+                                            rois.cuda(), output.cuda())
         return output
 
     def backward(self, grad_output):
