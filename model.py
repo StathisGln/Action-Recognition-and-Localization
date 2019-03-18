@@ -65,7 +65,7 @@ class Model(nn.Module):
         # print('clips.shape :',clips.type())
         # print('boxes.shape :',boxes.shape)
         # print('boxes :',boxes.cpu().numpy())
-        batch_size = 8 # 
+        batch_size = 16 # 
         num_images = 1
         rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images) if self.training else 10
 
@@ -73,7 +73,8 @@ class Model(nn.Module):
                             classes_idx=cls2idx, n_frames=num_frames)
 
         data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size, pin_memory=False,# num_workers=num_workers, pin_memory=True,
-                                                  shuffle=False, num_workers=1)
+                                                  # shuffle=False, num_workers=8)
+                                                  shuffle=False)
 
         n_clips = data.__len__()
 
@@ -103,13 +104,18 @@ class Model(nn.Module):
             frame_indices, im_info, start_fr = dt
             boxes_ = boxes[frame_indices].cuda()
             clips_ = clips[frame_indices].cuda()
-            # print('boxes_.shape :',boxes_.shape)
+
             # print('clips_.shape :',clips_.shape)
+            # print('boxes_.permute(0,2,1,3) :',boxes_.shape)
             # print('boxes_.permute(0,2,1,3) :',boxes_.permute(0,2,1,3).shape)
+
             # print('boxes_ :',boxes_.cpu().numpy())
             gt_tubes = create_tube_with_frames(boxes_.permute(0,2,1,3), im_info, self.sample_duration)
             # print('gt_tubes :',gt_tubes)
-
+            # print('boxes_.shape :',boxes_)
+            # print('gt_tubes :',gt_tubes)
+            # print('boxes_.shape :',boxes_.shape)
+            # print('gt_tubes :',gt_tubes.shape)
             gt_tubes_ = gt_tubes.type_as(clips).cuda()
             im_info = im_info.cuda()
             start_fr = start_fr.cuda()

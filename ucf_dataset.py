@@ -242,7 +242,6 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
             annots = values['annotations']
             n_actions = len(annots)
             if n_frames > max_frames:
-                print('vid :',vid, 'max_frames :',n_frames)
                 max_frames = n_frames
 
             if n_actions > max_actions:
@@ -318,7 +317,7 @@ class video_names(data.Dataset):
 
         vid_id = np.array([self.vid2idx[vid_name]],dtype=np.int64)
         n_frames_np = np.array([n_frames], dtype=np.int64)
-        print('vid_name :', vid_name, ' n_frames :',n_frames_np)
+        # print('vid_name :', vid_name, ' n_frames :',n_frames_np)
         n_actions_np = np.array([n_actions], dtype=np.int64)
 
         clips = torch.load(os.path.join(self.dataset_folder,vid_name,'images.pt'))

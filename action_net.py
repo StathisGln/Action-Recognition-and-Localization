@@ -103,6 +103,7 @@ class ACT_net(nn.Module):
         # do roi align based on predicted rois
 
         pooled_feat_ = self.act_roi_align(base_feat, rois[:,:,:7].view(-1,7))
+
         # print('pooled_feat_ :',pooled_feat_.shape)
         pooled_feat = self._head_to_tail(pooled_feat_)
         n_rois = pooled_feat.size(0)
