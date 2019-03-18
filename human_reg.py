@@ -40,11 +40,7 @@ class _Regression_Layer(nn.Module):
         batch_size = base_feat.size(0)
         
         offset = torch.arange(0,self.sample_duration)
-
         ## modify tubes and rois_label
-        tubes = tubes.unsqueeze(-2).expand(tubes_.size(0),tubes_.size(1),self.sample_duration,7).contiguous()
-        tubes[..., 0] = offset
-        tubes = tubes.permute(0,2,1,3).contiguous().view(batch_size, -1,7)
 
         if self.training:
             rois, labels, \
@@ -71,7 +67,6 @@ class _Regression_Layer(nn.Module):
             tubes = tubes.view((-1,)+tubes.shape[2:]) 
 
             rois = tubes[:,:,[0,1,2,4,5]]
-        print('rois.shape :', rois.shape)
             
         ## modify feat
         base_feat = base_feat.permute(0,2,1,3,4).contiguous().view(-1,base_feat.size(1),base_feat.size(3),base_feat.size(4))
@@ -88,7 +83,7 @@ class _Regression_Layer(nn.Module):
 
             return bbox_pred, rois_loss_bbox
 
-        return bbox_pred
+        return bbox_pred, None
 
     
 if __name__ == '__main__':

@@ -74,6 +74,7 @@ def resize_boxes(gt_rois_old, h,w, sample_size):
     gt_rois =torch.zeros(gt_rois_old.size()).type_as(gt_rois_old)
 
     w_bigger_h = w > h
+
     scale = (sample_size / max(h,w).float()).type_as(gt_rois_old)
     # print('scale.type() :',scale.type())
     # print('gt_rois_old.type() :',gt_rois_old.type())
@@ -85,18 +86,17 @@ def resize_boxes(gt_rois_old, h,w, sample_size):
     top = int(max(0, np.round(((sample_size) - target_h) / 2)))
     left = int(max(0, np.round(((sample_size) - target_w) / 2)))
 
-    padding_pos = gt_rois_old[:,:,4].lt(0).nonzero()
+    gt_rois[:,:,:, 0] = (torch.round(gt_rois_old[:,:,:, 0]  * float(scale)) + left)
+    gt_rois[:,:,:, 1] = (torch.round(gt_rois_old[:,:,:, 1]  * float(scale)) + top )
+    gt_rois[:,:,:, 2] = (torch.round(gt_rois_old[:,:,:, 2]  * float(scale)) + left)
+    gt_rois[:,:,:, 3] = (torch.round(gt_rois_old[:,:,:, 3]  * float(scale)) + top)
+    gt_rois[:,:,:, 4] = gt_rois_old[:,:,:, 4]
 
-    gt_rois[:,:,0] = (torch.round(gt_rois_old[:,:,0]  * float(scale)) + left)
-    gt_rois[:,:,1] = (torch.round(gt_rois_old[:,:,1]  * float(scale)) + top )
-    gt_rois[:,:,2] = (torch.round(gt_rois_old[:,:,2]  * float(scale)) + left)
-    gt_rois[:,:,3] = (torch.round(gt_rois_old[:,:,3]  * float(scale)) + top)
-    gt_rois[:,:,4] = gt_rois_old[:,:,4]
-
-
-    for i in range(padding_pos.size(0)):
-        gt_rois[padding_pos[i][0],padding_pos[i][1]] = torch.Tensor([[0,0,0,0,-1]])
-
+    for i in range(gt_rois.size(0)):
+        for j in range(gt_rois.size(1)): # num_action
+            padding_pos = gt_rois[i,j,:,-1].lt(1).nonzero()
+            if padding_pos.nelement() != 0:
+                gt_rois[i,j,padding_pos] = torch.zeros((5)).type_as(gt_rois)
     return gt_rois
 
 def resize_boxes_np(gt_rois_old, h,w, sample_size):
@@ -110,8 +110,8 @@ def resize_boxes_np(gt_rois_old, h,w, sample_size):
     gt_rois =np.zeros(gt_rois_old.shape)
 
     w_bigger_h = w > h
-    scale = sample_size / max(h,w)
-
+    scale = (sample_size * 1.0 )/ max(h,w) 
+    # print('scale :',scale)
     if w_bigger_h:
         target_h = int(np.round( h * float(sample_size) / float(w)))
     else:
@@ -132,8 +132,10 @@ def resize_boxes_np(gt_rois_old, h,w, sample_size):
     # print('padding_pos :',padding_pos)
     for i in range(padding_pos[0].shape[0]):
         # print(i)
+        # print('padding_pos[0][i] :',padding_pos[0][i])
+        # print('gt_rois[padding_pos[i,0],padding_pos[i,1]] :',gt_rois[padding_pos[0][i],padding_pos[1][i]])
         # print('gt_rois :',gt_rois)
-        gt_rois[padding_pos[i],padding_pos[i]] = np.array([[0,0,0,0,-1]])
+        gt_rois[padding_pos[0][i],padding_pos[1][i]] = np.array([[0,0,0,0,-1]])
     return gt_rois
 
 

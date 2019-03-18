@@ -16,7 +16,7 @@ class RoIAlignFunction(Function):
         self.rois = rois
         # print('self.rois.shape :',self.rois.shape)
         self.feature_size = features.size()
-        print('features_size :',features.size())
+
         batch_size, num_channels, data_height, data_width = features.size() # num_channels = 256, data_time = 16, 7, 7
         num_rois = rois.size(0)
         output = features.new(num_rois, num_channels, self.aligned_height, self.aligned_width).zero_()

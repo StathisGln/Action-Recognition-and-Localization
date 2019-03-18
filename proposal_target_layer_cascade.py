@@ -30,7 +30,7 @@ class _ProposalTargetLayer(nn.Module):
         self.BBOX_NORMALIZE_STDS = torch.FloatTensor(cfg.TRAIN.BBOX_NORMALIZE_STDS_3d)
         self.BBOX_INSIDE_WEIGHTS = torch.FloatTensor(cfg.TRAIN.BBOX_INSIDE_WEIGHTS_3d)
 
-    def forward(self, all_rois, gt_boxes,num_boxes):
+    def forward(self, all_rois, gt_boxes):
 
         self.BBOX_NORMALIZE_MEANS = self.BBOX_NORMALIZE_MEANS.type_as(gt_boxes)
         self.BBOX_NORMALIZE_STDS  = self.BBOX_NORMALIZE_STDS.type_as(gt_boxes)
@@ -38,12 +38,12 @@ class _ProposalTargetLayer(nn.Module):
 
         # print('all_rois.device :',all_rois.device)
         # print('gt_boxes :', gt_boxes)
-        num_boxes = num_boxes.long()
         gt_boxes_append = gt_boxes.new(gt_boxes.size()).zero_()
         gt_boxes_append[:,:,1:] = gt_boxes[:,:,:7] # in pos 0 is the score
         # gt_boxes_append[:,:,1:] = gt_boxes[:,:,:6] # in pos 0 is the score
         num_rois_pre = all_rois.size(1)
         # print('all_rois.shape :',all_rois.shape )
+        # print('all_rois :',all_rois)
         # print('nu_rois_pre :', num_rois_pre )
 
         # print('gt_boxes_append.shape :',gt_boxes_append.shape)
@@ -56,10 +56,9 @@ class _ProposalTargetLayer(nn.Module):
         rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images)
         fg_rois_per_image = int(np.round(cfg.TRAIN.FG_FRACTION * rois_per_image))
         fg_rois_per_image = 1 if fg_rois_per_image == 0 else fg_rois_per_image
-
         labels, rois, bbox_targets, bbox_inside_weights = self._sample_rois_pytorch(
             all_rois, gt_boxes, fg_rois_per_image,
-            rois_per_image, self._num_classes, num_boxes, num_rois_pre)
+            rois_per_image, self._num_classes,  num_rois_pre)
 
         bbox_outside_weights = (bbox_inside_weights > 0).float()
         # print('inside cascade rois :',rois)
@@ -124,7 +123,7 @@ class _ProposalTargetLayer(nn.Module):
         return targets
 
 
-    def _sample_rois_pytorch(self, all_rois, gt_boxes, fg_rois_per_image, rois_per_image, num_classes,num_boxes, num_rois_pre):
+    def _sample_rois_pytorch(self, all_rois, gt_boxes, fg_rois_per_image, rois_per_image, num_classes, num_rois_pre):
         """Generate a random sample of RoIs comprising foreground and background
         examples.
         """
@@ -153,17 +152,21 @@ class _ProposalTargetLayer(nn.Module):
         # Guard against the case when an image has fewer than max_fg_rois_per_image
         # foreground RoIs
 
+        # print('edwww gt_boxes:',gt_boxes)
         for i in range(batch_size):
-            gt_boxes_single = gt_boxes[i,:num_boxes[i]]
-            # print(gt_boxes_single.shape)
+            gt_boxes_single = gt_boxes[i]
+            gt_boxes_indexes = gt_boxes_single[..., -2].gt(0).nonzero().view(-1)
+            
+            # print('gt_boxes_indexes :',gt_boxes_indexes)
+            gt_boxes_single = gt_boxes_single[gt_boxes_indexes]
+            # print('cascade gt_boxes_single:',gt_boxes_single)            
             # print('gt_boxes[:num_boxes[i]] :',gt_boxes_single)
-            if gt_boxes_single[:,:7].byte().any() == 0:
-                print('no rois')
+            if gt_boxes_single.byte().any() == 0:
                 continue
             
             
         
-            max_overlaps_single =max_overlaps[i][:num_boxes[i]+num_rois_pre]
+            max_overlaps_single =max_overlaps[i]
             fg_inds = torch.nonzero(max_overlaps_single >= cfg.TRAIN.FG_THRESH).view(-1)
             fg_num_rois = fg_inds.numel()
 
@@ -204,13 +207,13 @@ class _ProposalTargetLayer(nn.Module):
                 bg_rois_per_this_image = rois_per_image
                 fg_rois_per_this_image = 0
             else:
-                print('gt_boxes :',gt_boxes)
-                print('i :',i)
-                print('gt_boxes_single :',gt_boxes_single)
-                print('max_overlaps_single :',max_overlaps_single.cpu().tolist())
-                print('num_boxes[i] :',num_boxes[i])
-                print('num_rois_pre :',num_rois_pre)
-                print('all_rois :',all_rois.cpu().tolist())
+                # print('gt_boxes :',gt_boxes)
+                # print('i :',i)
+                # print('gt_boxes_single :',gt_boxes_single)
+                # print('max_overlaps_single :',max_overlaps_single.cpu().tolist())
+                # print('num_boxes[i] :',num_boxes[i])
+                # print('num_rois_pre :',num_rois_pre)
+                # print('all_rois :',all_rois.cpu().tolist())
                 raise ValueError("bg_num_rois = 0 and fg_num_rois = 0, this should not happen!")
 
             # The indices that we're selecting (both fg and bg)

@@ -15,10 +15,24 @@ from create_tubes_from_boxes import create_tube_list,create_tube_with_frames_np
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
-from resize_rpn import resize_boxes_np, resize_tube
+from resize_rpn import resize_boxes_np, resize_tube, resize_boxes
 
 np.random.seed(42)
 
+def preprocess_boxes(boxes, h, w, sample_size):
+
+    boxes[..., 2] = boxes[..., 0] + boxes[..., 2]
+    boxes[..., 3] = boxes[..., 1] + boxes[..., 3]
+
+    for i in range(boxes.shape[0]):
+        boxes[i] = resize_boxes_np(np.expand_dims( boxes[i], axis=0), h,w,sample_size)
+
+    fr_tensor = np.expand_dims( np.expand_dims( np.arange(0,boxes.shape[-2]), axis=1), axis=0)
+    fr_tensor = np.repeat(fr_tensor, boxes.shape[0], axis=0)
+
+    boxes = np.concatenate((boxes, fr_tensor), axis=-1)
+
+    return boxes
 
 
 def pil_loader(path):
@@ -54,6 +68,7 @@ def video_loader(video_dir_path, frame_indices, image_loader):
         if os.path.exists(image_path):
             video.append(image_loader(image_path))
         else:
+            print('image_path {} doesn\'t exist'.format(image_path))
             return video
 
     return video
@@ -108,38 +123,6 @@ def get_file_names(spt_path, mode, split_number=1):
     classes = list(set([i[0] for i in data]))
 
     return file_names
-
-def create_tcn_dataset(split_txt_path, json_path, classes, mode):
-
-    videos = []
-    dataset = []
-    txt_files = glob.glob(split_txt_path+'/*1.txt')  # 1rst split
-    for txt in txt_files:
-        class_name = txt.split('/')[-1][:-16]
-        class_idx = classes.index(class_name)
-        with open(txt, 'r') as fp:
-            lines = fp.readlines()
-        for l in lines:
-            spl = l.split()
-            if spl[1] == '1' and mode == 'train':  # train video
-                vid_name = spl[0][:-4]
-                videos.append(vid_name)
-            elif spl[1] == '2' and mode == 'test':  # train video
-                vid_name = spl[0][:-4]
-                videos.append(vid_name)
-
-        with open(os.path.join(json_path, class_name+'.json'), 'r') as fp:
-            data = json.load(fp)
-        for feat in data.keys():
-            if feat in videos:
-                sample = {
-                    'video': feat,
-                    'class': class_name,
-                    'class_idx': class_idx
-                }
-                dataset.append(sample)
-    print(len(dataset))
-    return dataset
 
 
 def make_correct_ucf_dataset(dataset_path,  boxes_file, split_txt_path, mode='train'):
@@ -201,7 +184,7 @@ def make_correct_ucf_dataset(dataset_path,  boxes_file, split_txt_path, mode='tr
     print('max_frames :', max_frames)
     return dataset, max_sim_actions, max_frames
 
-def prepare_samples (vid_names, vid_id, boxes, sample_duration, step):
+def prepare_samples (vid_names, vid_id, sample_duration, step, n_frames):
 
     """
     function preparing sample for single_video class
@@ -210,8 +193,8 @@ def prepare_samples (vid_names, vid_id, boxes, sample_duration, step):
 
     video_path = vid_names[vid_id]
     name = video_path.split('/')[-1]
-    n_actions = boxes.shape[0]
-    n_frames = boxes.shape[1]
+    # n_actions = boxes.shape[0]
+    # n_frames = boxes.shape[1]
 
     begin_t = 1
     end_t = n_frames
@@ -225,11 +208,10 @@ def prepare_samples (vid_names, vid_id, boxes, sample_duration, step):
         sample_i = copy.deepcopy(sample)
         sample_i['frame_indices'] = list(range(i, i + sample_duration))
         sample_i['segment'] = torch.IntTensor([i, i + sample_duration - 1])
-        sample_i['boxes'] = boxes[:,range(i, i + sample_duration)]
         sample_i['start_fr'] = i-1
         dataset.append(sample_i)
 
-    return dataset, n_actions, n_frames
+    return dataset
 
 
 def make_dataset(dataset_path, spt_path, boxes_file, mode):
@@ -248,15 +230,23 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
     max_frames = -1
     max_actions = -1
     #TrampolineJumping/v_TrampolineJumping_g10_c01
-    # for cls in classes:
-    for cls in ['TrampolineJumping']:
+    for cls in classes:
+    # for cls in ['Biking']:
+    # for cls in ['GolfSwing']:
+    # for cls in ['TrampolineJumping']:
+    # for cls in ['Basketball']:
         videos = next(os.walk(os.path.join(dataset_path,cls), True))[1]
         for vid in videos:
+        # for vid in [ 'v_Biking_g22_c03','v_Biking_g03_c03','v_Biking_g13_c03','v_Biking_g23_c02','v_Biking_g12_c03']:
         # for vid in ['v_TrampolineJumping_g21_c02','v_TrampolineJumping_g10_c01','v_TrampolineJumping_g20_c02','v_TrampolineJumping_g09_c05' , 'v_TrampolineJumping_g10_c06','v_TrampolineJumping_g11_c05']:
         # for vid in ['v_TrampolineJumping_g11_c05','v_TrampolineJumping_g21_c02','v_TrampolineJumping_g10_c01','v_TrampolineJumping_g20_c02','v_TrampolineJumping_g09_c05' , 'v_TrampolineJumping_g10_c06']:
-        # for vid in ['v_TrampolineJumping_g20_c02']:
+        # for vid in ['v_VolleyballSpiking_g14_c03','v_TrampolineJumping_g20_c02']: # empty rois
 
         # for vid in [' v_VolleyballSpiking_g23_c01']:
+        # for vid in ['v_TrampolineJumping_g10_c06']:
+        # for vid in ['v_VolleyballSpiking_g14_c03','v_VolleyballSpiking_g23_c01']:
+        # for vid in ['v_GolfSwing_g17_c05','v_GolfSwing_g15_c05','v_GolfSwing_g14_c05','v_GolfSwing_g18_c05','v_GolfSwing_g19_c05','v_GolfSwing_g12_c05','v_GolfSwing_g11_c05']:
+
             video_path = os.path.join(cls,vid)
             if video_path not in boxes_data or not(vid in file_names):
                 # print('OXI to ',video_path)
@@ -280,7 +270,7 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
                 sample = annots[k]
                 s_frame = sample['sf']
                 e_frame = sample['ef']
-                s_label = sample['label']
+                s_label = sample['label']+1 ## because annotations start from 0 without background
                 boxes   = sample['boxes']
                 rois[k,s_frame:e_frame,:4] = boxes
                 rois[k,s_frame:e_frame,4]  = s_label
@@ -299,13 +289,20 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
     return dataset, max_frames, max_actions
 
 class video_names(data.Dataset):
-    def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader,):
+    def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader, sample_size=112):
 
         self.dataset_folder = dataset_folder
+        self.sample_size = sample_size
         self.boxes_file = boxes_file
         self.vid2idx = vid2idx
         self.mode = mode
         self.data, self.max_frames, self.max_actions = make_dataset( dataset_folder, spt_path, boxes_file, mode)
+        self.loader = get_loader()
+        mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
+        spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
+                                     ToTensor(),
+                                     Normalize(mean, [1, 1, 1])])
+        self.spatial_transform=spatial_transform
         # self.loader = get_loader()
         
     def __getitem__(self, index):
@@ -315,12 +312,10 @@ class video_names(data.Dataset):
         boxes = self.data[index]['boxes']
         n_frames = self.data[index]['n_frames']
         
-        print('vid_name :', vid_name)
-
         # abs_path = os.path.join(self.dataset_folder, vid_name)
-        # clip = self.loader(abs_path, [1])
-        # w, h = clip[0].size
         w, h = 320, 240
+
+        boxes = preprocess_boxes(boxes, h, w, self.sample_size)
 
         boxes_lst = boxes.tolist()
         rois_fr = [[z+[j] for j,z in enumerate(boxes_lst[i])] for i in range(len(boxes_lst))]
@@ -345,9 +340,25 @@ class video_names(data.Dataset):
 
         vid_id = np.array([self.vid2idx[vid_name]],dtype=np.int64)
         n_frames_np = np.array([n_frames], dtype=np.int64)
-        print('n_frames :',n_frames_np)
+        # print('vid_name :', vid_name, ' n_frames :',n_frames_np)
         n_actions_np = np.array([n_actions], dtype=np.int64)
-        return vid_id, final_boxes, n_frames_np, n_actions_np, h, w
+
+        # clips = torch.load(os.path.join(self.dataset_folder,vid_name,'images.pt'))
+        # # print('clips.shape :',clips.shape)
+        frame_indices= list(
+            range( 1, n_frames+1))
+        path = os.path.join(self.dataset_folder, vid_name)
+        clip = self.loader(path, frame_indices)
+        clip = [self.spatial_transform(img) for img in clip]
+        # print('len(clip) :',len(clip))
+        # print('clip[0].shape :',clip[0].shape)
+        clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
+
+        f_clips = torch.zeros(self.max_frames,3,self.sample_size,self.sample_size)
+        # print('f_clips.shape :',f_clips.shape)
+        # print('n_frames :',n_frames )
+        f_clips[:n_frames] = clip.permute(1,0,2,3)
+        return vid_id, f_clips, final_boxes, n_frames_np, n_actions_np, h, w
     
     def __len__(self):
 
@@ -355,27 +366,23 @@ class video_names(data.Dataset):
 
 
 class single_video(data.Dataset):
-    def __init__(self, dataset_folder, h, w, vid_names, vid_id,frames_dur=16, sample_size=112,
-                 spatial_transform=None, temporal_transform=None, boxes=None,
-                 get_loader=get_default_video_loader, mode='train', classes_idx=None, ):
+    def __init__(self, dataset_folder, h, w, vid_names, vid_id,frames_dur=16, sample_size=112, 
+                 classes_idx=None, n_frames=-1, json_file=None):
 
         self.h = h
         self.w = w
-        self.mode = mode
         self.dataset_folder = dataset_folder
-        self.data, self.n_actions, self.n_frames = prepare_samples(
-                    vid_names, vid_id, boxes, frames_dur, int(frames_dur/2))
+        # self.json_file = 
+        self.data = prepare_samples(
+                    vid_names, vid_id, frames_dur, int(frames_dur/2), n_frames)
         vid_path = vid_names[vid_id]
-        self.clips = torch.load(os.path.join(dataset_folder,vid_path,'images.pt'))
-
-        self.spatial_transform = spatial_transform
-        self.temporal_transform = temporal_transform
-        self.loader = get_loader()
+        # self.clips = torch.load(os.path.join(dataset_folder,vid_path,'images.pt'))
+        self.temporal_transform = LoopPadding(frames_dur)
         self.sample_duration = frames_dur
         self.sample_size = sample_size
         self.classes_idx = classes_idx
 
-        self.tensor_dim = len(range(0, self.n_frames-self.sample_duration, int(self.sample_duration/2)))
+        self.tensor_dim = len(range(0, n_frames-self.sample_duration, int(self.sample_duration/2)))
     def __getitem__(self, index):
         """
         Args:
@@ -385,49 +392,27 @@ class single_video(data.Dataset):
         """
         name = self.data[index]['video_name']   # video path
         path = self.data[index]['video_path']
-        rois = self.data[index]['boxes']
-        # print('rois :',rois)
         start_fr = self.data[index]['start_fr']
         n_frames = self.data[index]['n_frames']
         frame_indices = self.data[index]['frame_indices']
         abs_path = os.path.join(self.dataset_folder, path)
 
-        clip = self.clips
+        frame_indices = np.array(frame_indices) - 1
+        frame_indices = self.temporal_transform(frame_indices)
+
+        # clip = self.clips.new(3,self.sample_duration,self.sample_size, self.sample_size)
+        # clip = self.clips[:,frame_indices]
+        # print('clip.shape :',clip.shape )
+
         ## get bboxes and create gt tubes
-        rois_indx = np.array(frame_indices) - frame_indices[0]
-        print('rois_indx :',rois_indx)
-        print('rois.shape :',rois.shape)
-        rois_sample_tensor = np.zeros((rois.shape[0], rois_indx.shape[0],5))
+        im_info = np.array([self.sample_size,self.sample_size, self.sample_duration])
+        # return clip, frame_indices, im_info, start_fr
+        return frame_indices, im_info, start_fr
 
-        rois_sample_tensor = rois[:,rois_indx,:]
-
-        rois_sample_tensor[:,:,2] = rois_sample_tensor[:,:,0] + rois_sample_tensor[:,:,2]
-        rois_sample_tensor[:,:,3] = rois_sample_tensor[:,:,1] + rois_sample_tensor[:,:,3]
-        rois_sample_tensor_r = resize_boxes_np(rois_sample_tensor, self.h.item(),self.w.item(),self.sample_size)
-
-        fr_tensor = np.array(frame_indices)-1
-        fr_tensor = np.expand_dims(np.expand_dims(fr_tensor, axis=1), axis=0)
-        fr_tensor = np.repeat(fr_tensor, rois_sample_tensor_r.shape[0], axis=0)
-
-        rois_fr = np.concatenate((rois_sample_tensor_r,fr_tensor ), axis=2)
-        # print('rois_fr :',rois_fr)
-        # print('rois_sample_tensor :',rois_sample_tensor)
-        tubes = create_tube_with_frames_np(np.expand_dims(rois_fr,axis=0), np.array([[self.h,self.w]*rois_sample_tensor_r.shape[0]]), self.sample_duration)
-        # print('tubes :',tubes)
-        # print('type(tubes) :',type(tubes))
-        # print('rois_fr :',rois_fr)
-        padding_lines = np.where(tubes[:,-1] < 1)
-        for i in padding_lines:
-            tubes[i] = torch.zeros((7))
-        ## im_info
-        im_info = torch.Tensor([self.sample_size, self.sample_size, self.sample_duration] )
-        return clip,  tubes, rois_sample_tensor_r, im_info, rois_sample_tensor_r.shape[0], start_fr
 
     def __len__(self):
         return len(self.data)
 
-    def __max_sim_actions__(self):
-        return self.n_actions
 
 
 class Video_UCF(data.Dataset):
@@ -523,12 +508,9 @@ class Video_UCF(data.Dataset):
         f_rois = torch.zeros(self.max_sim_actions,self.sample_duration,5)
         f_rois[:n_acts,:,:] = final_rois[:n_acts]
 
-        im_info = torch.Tensor([self.sample_size, self.sample_size, n_frames])
+        im_info = torch.Tensor([self.sample_size, self.sample_size, self.sample_duration])
 
-        if self.mode == 'train':
-            return clip,  np.array([h], dtype=np.int64), np.array([w],dtype=np.int64),  ret_tubes, f_rois, np.array([n_acts],dtype=np.int64), np.array([n_frames],dtype=np.int64), im_info
-        else:
-            return clip,  h, w,  gt_tubes, final_rois,  im_info, self.data[index]['abs_path'], frame_indices
+        return clip,  np.array([h], dtype=np.int64), np.array([w],dtype=np.int64),  ret_tubes, f_rois, np.array([n_acts],dtype=np.int64), np.array([n_frames],dtype=np.int64), im_info
 
     def __len__(self):
         return len(self.data)

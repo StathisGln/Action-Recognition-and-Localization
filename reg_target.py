@@ -174,8 +174,7 @@ class _Regression_TargetLayer(nn.Module):
             gt_indexes = gt_boxes_single[...,-1].gt(0).nonzero().view(-1)
             gt_boxes_single = gt_boxes_single[gt_indexes]
 
-            if gt_boxes_single[:,:7].byte().any() == 0:
-                print('no rois')
+            if gt_boxes_single.byte().any() == 0:
                 continue
 
             max_overlaps_single =max_overlaps[i]

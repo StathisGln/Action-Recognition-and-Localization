@@ -373,12 +373,13 @@ def clip_boxes(boxes, im_shape, batch_size):
 
 def clip_boxes_3d(boxes, im_shape, batch_size):
     for i in range(batch_size):
-        boxes[i, :, 0::6]=boxes[i, :, 0::6].clamp_(min=0, max=im_shape[i, 1]-1)
-        boxes[i, :, 1::6]=boxes[i, :, 1::6].clamp_(0, im_shape[i, 0]-1)
-        boxes[i, :, 2::6]=boxes[i, :, 2::6].clamp_(0, im_shape[i, 2]-1)
-        boxes[i, :, 3::6]=boxes[i, :, 3::6].clamp_(0, im_shape[i, 1]-1)
-        boxes[i, :, 4::6]=boxes[i, :, 4::6].clamp_(0, im_shape[i, 0]-1)
-        boxes[i, :, 5::6]=boxes[i, :, 5::6].clamp_(0, im_shape[i, 2]-1)
+
+        boxes[i, :, 0::6]=boxes[i, :, 0::6].clamp_(min=0, max=im_shape[i, 1].item()-1)
+        boxes[i, :, 1::6]=boxes[i, :, 1::6].clamp_(0, im_shape[i, 0].item()-1)
+        boxes[i, :, 2::6]=boxes[i, :, 2::6].clamp_(0, im_shape[i, 2].item()-1)
+        boxes[i, :, 3::6]=boxes[i, :, 3::6].clamp_(0, im_shape[i, 1].item()-1)
+        boxes[i, :, 4::6]=boxes[i, :, 4::6].clamp_(0, im_shape[i, 0].item()-1)
+        boxes[i, :, 5::6]=boxes[i, :, 5::6].clamp_(0, im_shape[i, 2].item()-1)
         # boxes[i, :, 0::6].clamp_(0, im_shape[i, 1]-1)
         # boxes[i, :, 1::6].clamp_(0, im_shape[i, 0]-1)
         # boxes[i, :, 2::6].clamp_(0, im_shape[i, 2]-1)
