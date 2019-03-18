@@ -60,7 +60,7 @@ class Model(nn.Module):
                             mode=mode, classes_idx=cls2idx)
 
         data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size, # num_workers=num_workers,
-                                                  shuffle=False)
+                                                  shuffle=False, pin_memory=True)
         n_clips = data.__len__()
         max_sim_actions = data.__max_sim_actions__()
 

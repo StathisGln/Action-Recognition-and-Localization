@@ -239,11 +239,12 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
     file_names = get_file_names(spt_path, mode, split_number=1)
     max_frames = -1
     max_actions = -1
-    for cls in classes:
-    # for cls in ['VolleyballSpiking']:
+    #TrampolineJumping/v_TrampolineJumping_g10_c01
+    # for cls in classes:
+    for cls in ['TrampolineJumping']:
         videos = next(os.walk(os.path.join(dataset_path,cls), True))[1]
         for vid in videos:
-        # for vid in ['v_VolleyballSpiking_g11_c06']:
+        # for vid in ['v_TrampolineJumping_g21_c02','v_TrampolineJumping_g10_c01','v_TrampolineJumping_g20_c02','v_TrampolineJumping_g09_c05' , 'v_TrampolineJumping_g10_c06']:
         # for vid in [' v_VolleyballSpiking_g23_c01']:
             video_path = os.path.join(cls,vid)
             if video_path not in boxes_data or not(vid in file_names):
