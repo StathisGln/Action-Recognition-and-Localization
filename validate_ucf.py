@@ -285,9 +285,10 @@ if __name__ == '__main__':
     #          Model Initialization          #
     ##########################################
 
+    action_model_path = './action_net_model.pwf'
+    linear_path = './linear.pwf'
     model = Model(actions, sample_duration, sample_size)
-    model.create_architecture()
-
+    model.load_part_model(action_model_path, linear_path)
     model.to(device)
 
 

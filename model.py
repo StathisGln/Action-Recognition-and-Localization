@@ -268,6 +268,7 @@ class Model(nn.Module):
             ## to remove module
             new_state_dict = OrderedDict()
             for k, v in act_data.items():
+                # if k.find('module') != -1 :
                 name = k[7:] # remove `module.`
                 new_state_dict[name] = v
 
