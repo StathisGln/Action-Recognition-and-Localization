@@ -109,9 +109,7 @@ class Model(nn.Module):
             # print('boxes_.permute(0,2,1,3) :',boxes_.shape)
             # print('boxes_.permute(0,2,1,3) :',boxes_.permute(0,2,1,3).shape)
 
-            # print('boxes_ :',boxes_.cpu().numpy())
             gt_tubes = create_tube_with_frames(boxes_.permute(0,2,1,3), im_info, self.sample_duration)
-            # print('gt_tubes :',gt_tubes)
             # print('boxes_.shape :',boxes_)
             # print('gt_tubes :',gt_tubes)
             # print('boxes_.shape :',boxes_.shape)
@@ -175,7 +173,7 @@ class Model(nn.Module):
 
             # print('----------End Tubes----------')
 
-        ###############################################
+        ###########################################p####
         #          Choose Tubes for RCNN\TCN          #
         ###############################################
         # print('f_gt_tubes :',f_gt_tubes)

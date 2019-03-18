@@ -62,7 +62,7 @@ def create_tube_with_frames(boxes, im_info_3d, sample_duration):
     # print('boxes.shape :',boxes.shape)
     batch_size = boxes.size(0)
     n_actions = boxes.size(1)
-
+    print('boxes :',boxes.cpu().numpy())
     t1 = torch.zeros(batch_size, n_actions).type_as(boxes)
     t2 = torch.zeros(batch_size, n_actions).type_as(boxes)
     x1 = torch.zeros(batch_size, n_actions).type_as(boxes)
@@ -71,7 +71,7 @@ def create_tube_with_frames(boxes, im_info_3d, sample_duration):
     y2 = torch.zeros(batch_size, n_actions).type_as(boxes)
     labels = torch.zeros(batch_size, n_actions).type_as(boxes)
     for i in range(batch_size):
-        for j in range(boxes.size(1)):
+        for j in range(n_actions):
             k = boxes[i,j,:,:4].gt(0).nonzero()
             if k.nelement() == 0 :
                 continue
@@ -81,6 +81,7 @@ def create_tube_with_frames(boxes, im_info_3d, sample_duration):
                 # if labels[i,j] == -1:
                 #     print('boxes[i,j] :',boxes[i,j])
                 mins, _ = torch.min(boxes[i,j,k[0,0]:k[-1,0]+1], 0)
+
                 x1[i,j] = mins[0]
                 y1[i,j] = mins[1]
                 t1[i,j] = mins[-1]
@@ -91,7 +92,8 @@ def create_tube_with_frames(boxes, im_info_3d, sample_duration):
                 x2[i,j] = maxs[2]
                 y2[i,j] = maxs[3]
                 t2[i,j] = maxs[-1]
-                
+
+
     for i in range(batch_size):
         x1 = x1.clamp_(min=0, max=im_info_3d[i, 1]-1)
         y1 = y1.clamp_(min=0, max=im_info_3d[i, 0]-1)
