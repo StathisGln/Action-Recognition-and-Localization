@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 from action_net import ACT_net
-from tcn import TCN
+from act_rnn import Act_RNN
 
 from create_tubes_from_boxes import create_video_tube, create_tube_from_tubes, create_tube_with_frames
 from connect_tubes import connect_tubes, get_gt_tubes_feats_label, get_tubes_feats_label
@@ -235,7 +235,8 @@ class Model(nn.Module):
         ## TODO : to add TCN or RNN
 
         cls_loss = torch.Tensor([0]).cuda()
-        prob_out = self.linear(f_feat_mean)
+        self.act_rnn.hidden = torch.zeros(1,1,128).cuda()
+        prob_out = self.act_rnn(f_feat_mean)
 
         # # classification probability
         if self.training:
@@ -258,7 +259,7 @@ class Model(nn.Module):
         # for key, value in dict(self.named_parameters()).items():
         #     print(key, value.requires_grad)
 
-    def load_part_model(self, action_model_path=None, linear_path=None):
+    def load_part_model(self, action_model_path=None, rnn_path=None):
 
 
         if action_model_path != None:
@@ -282,13 +283,14 @@ class Model(nn.Module):
             self.act_net = ACT_net(self.classes,self.sample_duration)
             self.act_net.create_architecture()
             
-        if linear_path != None:
+        if rnn_path != None:
 
+            act_rnn = Act_RNN(512,128,self.n_classes)
             linear = nn.Linear(self.p_feat_size, self.n_classes).cuda()
 
-            linear_data = torch.load(linear_path)
-            linear.load_state_dict(linear_data)
-            self.linear = linear
+            act_rnn_data = torch.load(rnn_path)
+            act_rnn.load(act_rnn_data)
+            self.act_rnn = act_rnn
         else:
-            self.linear = nn.Linear(self.p_feat_size, self.n_classes).cuda()
+            self.act_rnn =Act_RNN(512,128,self.n_classes)
 
