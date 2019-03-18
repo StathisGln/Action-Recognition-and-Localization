@@ -129,11 +129,12 @@ class Model(nn.Module):
             tubes,  bbox_pred, pooled_feat, \
             rpn_loss_cls,  rpn_loss_bbox, \
             act_loss_bbox, rpn_loss_cls_16,\
-            rpn_loss_bbox_16, rois_label = self.act_net(clips_.permute(0,2,1,3,4),
-                                                     im_info,
-                                                     gt_tubes_,
-                                                     None,
-                                                     start_fr)
+            rpn_loss_bbox_16, rois_label, \
+            sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.act_net(clips_.permute(0,2,1,3,4),
+                                                        im_info,
+                                                        gt_tubes_,
+                                                        boxes_.permute(0,2,1,3).float(),
+                                                        start_fr)
 
             pooled_feat = pooled_feat.view(-1,rois_per_image,self.p_feat_size,self.sample_duration)
             indexes_ = (torch.arange(0, tubes.size(0))*int(self.sample_duration/2) + start_fr[0].cpu()).unsqueeze(1)
@@ -202,6 +203,7 @@ class Model(nn.Module):
                 gt_lbl[i] = f_gt_tubes[gt_tubes_list[i][0][0],i,6]
             bg_lbl = torch.zeros((len(bg_tubes))).type_as(f_gt_tubes)
             
+
             ## concate fb, bg tubes
             f_tubes = gt_tubes_list + bg_tubes
             target_lbl = torch.cat((gt_lbl,bg_lbl),0)
@@ -211,44 +213,33 @@ class Model(nn.Module):
         max_length = len(max_seq)
 
         ## calculate input rois
-        f_feat_mean = torch.zeros(len(f_tubes),self.p_feat_size).cuda() #.to(device)
-
+        ## f_feats.shape : [#f_tubes, max_length, 512]
         final_video_tubes = torch.zeros(len(f_tubes),6).cuda()
-        
+        prob_out = torch.zeros(len(f_tubes), self.n_classes).cuda()
+
         for i in range(len(f_tubes)):
 
             seq = f_tubes[i]
-
             tmp_tube = torch.Tensor(len(seq),6)
             feats = torch.Tensor(len(seq),self.p_feat_size)
             for j in range(len(seq)):
                 # print('features[seq[j]].mean(1).shape :',features[seq[j]].mean(1).shape)
                 feats[j] = features[seq[j]].mean(1)
                 tmp_tube[j] = p_tubes[seq[j]][1:7]
+            prob_out[i] = self.act_rnn(feats.cuda())
             final_video_tubes[i] = create_tube_from_tubes(tmp_tube).type_as(boxes)
-            f_feat_mean[i,:] = torch.mean(feats,0).unsqueeze(0)
         
-        # ######################################
-        # #           Time for Linear          #
-        # ######################################
-
-        ## TODO : to add TCN or RNN
+        # ##########################################
+        # #           Time for Linear Loss         #
+        # ##########################################
 
         cls_loss = torch.Tensor([0]).cuda()
-        self.act_rnn.hidden = torch.zeros(1,1,128).cuda()
-        prob_out = self.act_rnn(f_feat_mean)
 
         # # classification probability
         if self.training:
             cls_loss = F.cross_entropy(prob_out.cpu(), target_lbl.long()).cuda()
 
         if self.training:
-            # print('final_video_tubes.type() :',final_video_tubes.type())
-            # print('bbox_pred.type() :',bbox_pred.type() )
-            # print('prob_out.type() :',prob_out.type())
-            # print('f_rpn_loss_cls.type() :',f_rpn_loss_cls.type())
-            # print('f_rpn_loss_bbox.type() :',f_rpn_loss_bbox.type())
-            # print('cls_loss.type() :',cls_loss.type())
             return final_video_tubes, bbox_pred,  prob_out, f_rpn_loss_cls, f_rpn_loss_bbox, f_act_loss_bbox, cls_loss, 
         else:
             return final_video_tubes, bbox_pred, prob_out
@@ -285,12 +276,12 @@ class Model(nn.Module):
             
         if rnn_path != None:
 
-            act_rnn = Act_RNN(512,128,self.n_classes)
+            act_rnn = Act_RNN(256,128,self.n_classes)
             linear = nn.Linear(self.p_feat_size, self.n_classes).cuda()
 
             act_rnn_data = torch.load(rnn_path)
             act_rnn.load(act_rnn_data)
             self.act_rnn = act_rnn
         else:
-            self.act_rnn =Act_RNN(512,128,self.n_classes)
+            self.act_rnn =Act_RNN(256,128,self.n_classes)
 

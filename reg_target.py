@@ -30,7 +30,7 @@ class _Regression_TargetLayer(nn.Module):
         self.BBOX_NORMALIZE_STDS = torch.FloatTensor(cfg.TRAIN.BBOX_NORMALIZE_STDS)
         self.BBOX_INSIDE_WEIGHTS = torch.FloatTensor(cfg.TRAIN.BBOX_INSIDE_WEIGHTS)
 
-    def forward(self, all_tubes, gt_boxes, num_boxes):
+    def forward(self, all_tubes, gt_boxes):
 
         """
         all_tubes : [b, tubes, 7]
@@ -45,10 +45,9 @@ class _Regression_TargetLayer(nn.Module):
         num_actions = gt_boxes.size(1)
         offset = torch.arange(0,self.sample_duration)
         offset_batch = torch.arange(0,batch_size) * self.sample_duration
-
         ## modify tubes to rois
         all_tubes = all_tubes.unsqueeze(-2).expand(all_tubes.size(0),all_tubes.size(1),self.sample_duration,7).contiguous()
-
+        
         for i in range(batch_size):
             all_tubes[i, ..., 0] = offset + offset_batch[i].expand(offset.size())
 
@@ -62,7 +61,6 @@ class _Regression_TargetLayer(nn.Module):
         gt_boxes = gt_boxes.permute(0,2,1,3).contiguous()
         gt_boxes = gt_boxes.view((-1,)+gt_boxes.shape[2:])
 
-        num_boxes = num_boxes.long()
         gt_boxes_append = gt_boxes.new(gt_boxes.size()).zero_()
         gt_boxes_append[:,:,1:] = gt_boxes[:,:,:4] # in pos 0 is the score
         num_rois_pre = all_rois.size(1)
@@ -77,7 +75,7 @@ class _Regression_TargetLayer(nn.Module):
 
         labels, rois, bbox_targets, bbox_inside_weights = self._sample_rois_pytorch(
             all_rois, gt_boxes, fg_rois_per_image,
-            rois_per_image, num_boxes, num_rois_pre)
+            rois_per_image,  num_rois_pre)
 
         bbox_outside_weights = (bbox_inside_weights > 0).float()
         return rois, labels, bbox_targets, bbox_inside_weights, bbox_outside_weights
@@ -140,7 +138,7 @@ class _Regression_TargetLayer(nn.Module):
         return targets
 
 
-    def _sample_rois_pytorch(self, all_rois, gt_boxes, fg_rois_per_image, rois_per_image, num_boxes, num_rois_pre):
+    def _sample_rois_pytorch(self, all_rois, gt_boxes, fg_rois_per_image, rois_per_image,  num_rois_pre):
         """Generate a random sample of RoIs comprising foreground and background
         examples.
         """
@@ -222,7 +220,6 @@ class _Regression_TargetLayer(nn.Module):
                 print('i :',i)
                 print('gt_boxes_single :',gt_boxes_single)
                 print('max_overlaps_single :',max_overlaps_single.cpu().tolist())
-                print('num_boxes[i] :',num_boxes[i])
                 print('num_rois_pre :',num_rois_pre)
                 print('all_rois :',all_rois.cpu().tolist())
                 raise ValueError("bg_num_rois = 0 and fg_num_rois = 0, this should not happen!")

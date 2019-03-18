@@ -22,14 +22,10 @@ class Act_RNN(nn.Module):
         
     def forward(self, X):
         # transforms X to dimensions: n_steps X batch_size X n_inputs
-        X = X.permute(1, 0, 2) 
-        
-        batch_size = X.size(1)
-        rnn_out, self.hidden = self.basic_rnn(X, self.hidden)      
-        print('self.hidden :',self.hidden.shape)
-
-        # print('lstim_out.shape :',lstm_out.shape)
-        # print('self.hidden.shape :',self.hidden.shape)
+        self.hidden = torch.zeros(1,1,128).type_as(X)
+        X = X.unsqueeze(0).permute(1,0,2)
+        self.basic_rnn.flatten_parameters()
+        nn_out, self.hidden = self.basic_rnn(X, self.hidden)      
         out = self.FC(self.hidden)
         
         return out.view(-1, self.n_outputs) # batch_size X n_output

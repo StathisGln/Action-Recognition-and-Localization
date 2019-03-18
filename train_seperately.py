@@ -174,7 +174,7 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         rpn_loss_cls,  rpn_loss_bbox, \
         act_loss_bbox, rpn_loss_cls_16,\
         rpn_loss_bbox_16, rois_label, \
-        sgl_rois_bbox_pred, sgl_rois_bbox_loss= model(inputs,
+        sgl_rois_bbox_pred, sgl_rois_bbox_loss = model(inputs,
                                                       im_info_,
                                                       gt_tubes_r_, gt_rois_,
                                                       start_fr)
@@ -316,7 +316,7 @@ if __name__ == '__main__':
     # reset learning rate
 
     params = []
-    for key, value in dict(model.module.linear.named_parameters()).items():
+    for key, value in dict(model.module.act_rnn.named_parameters()).items():
         # print(key, value.requires_grad)
         if value.requires_grad:
             print('key :',key)
