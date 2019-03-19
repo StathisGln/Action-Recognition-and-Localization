@@ -381,8 +381,8 @@ if __name__ == '__main__':
 
         print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
         ep+1,loss_temp/step, lr))
-        if ( ep + 1 ) % 5 == 0:
-            torch.save(model.linear.state_dict(), "act_rnn.pwf")
+        # if ( ep + 1 ) % 5 == 0:
+        torch.save(model.linear.state_dict(), "act_rnn.pwf")
     torch.save(model.linear.state_dict(), "act_rnn.pwf")
 
     # ###########################################

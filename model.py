@@ -205,20 +205,19 @@ class Model(nn.Module):
             
 
             ## concate fb, bg tubes
-            f_tubes = gt_tubes_list + bg_tubes
-            target_lbl = torch.cat((gt_lbl,bg_lbl),0)
-
+            f_tubes = gt_tubes_list ## + bg_tubes
+            # target_lbl = torch.cat((gt_lbl,bg_lbl),0)
+            target_lbl = gt_lbl
         ##############################################
         max_seq = reduce(lambda x, y: y if len(y) > len(x) else x, f_tubes)
         max_length = len(max_seq)
-
+        # print('f_tubes :',f_tubes)
         ## calculate input rois
         ## f_feats.shape : [#f_tubes, max_length, 512]
         final_video_tubes = torch.zeros(len(f_tubes),6).cuda()
         prob_out = torch.zeros(len(f_tubes), self.n_classes).cuda()
-
+        act_rnn_hidden = torch.zeros(1,1,128).cuda()
         for i in range(len(f_tubes)):
-
             seq = f_tubes[i]
             tmp_tube = torch.Tensor(len(seq),6)
             feats = torch.Tensor(len(seq),self.p_feat_size)
@@ -226,7 +225,10 @@ class Model(nn.Module):
                 # print('features[seq[j]].mean(1).shape :',features[seq[j]].mean(1).shape)
                 feats[j] = features[seq[j]].mean(1)
                 tmp_tube[j] = p_tubes[seq[j]][1:7]
-            prob_out[i] = self.act_rnn(feats.cuda())
+            prob_out[i] = self.act_rnn(feats.cuda(),act_rnn_hidden)
+            if prob_out[i,0] != prob_out[i,0]:
+                print('tmp_tube :',tmp_tube, ' prob_out :', prob_out ,' feats :',feats.cpu().numpy(), ' numpy(), feats.shape  :,', feats.shape ,' target_lbl :',target_lbl)
+                exit(-1)
             final_video_tubes[i] = create_tube_from_tubes(tmp_tube).type_as(boxes)
         
         # ##########################################
@@ -235,10 +237,12 @@ class Model(nn.Module):
 
         cls_loss = torch.Tensor([0]).cuda()
 
+        
         # # classification probability
         if self.training:
             cls_loss = F.cross_entropy(prob_out.cpu(), target_lbl.long()).cuda()
-
+            # if cls_loss != cls_loss:
+            #     print('exw nan, prob_out.cpu() :',prob_out.cpu(), ' target_lbl :',target_lbl.long())
         if self.training:
             return final_video_tubes, bbox_pred,  prob_out, f_rpn_loss_cls, f_rpn_loss_bbox, f_act_loss_bbox, cls_loss, 
         else:
