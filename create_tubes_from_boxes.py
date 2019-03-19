@@ -62,7 +62,7 @@ def create_tube_with_frames(boxes, im_info_3d, sample_duration):
     # print('boxes.shape :',boxes.shape)
     batch_size = boxes.size(0)
     n_actions = boxes.size(1)
-    print('boxes :',boxes.cpu().numpy())
+    # print('boxes :',boxes.cpu().numpy())
     t1 = torch.zeros(batch_size, n_actions).type_as(boxes)
     t2 = torch.zeros(batch_size, n_actions).type_as(boxes)
     x1 = torch.zeros(batch_size, n_actions).type_as(boxes)

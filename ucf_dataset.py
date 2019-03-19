@@ -358,6 +358,12 @@ class video_names(data.Dataset):
         # print('f_clips.shape :',f_clips.shape)
         # print('n_frames :',n_frames )
         f_clips[:n_frames] = clip.permute(1,0,2,3)
+
+        ## add frame to final_boxes
+        
+        fr_tensor = np.expand_dims( np.expand_dims( np.arange(0,final_boxes.shape[-2]), axis=1), axis=0)
+        fr_tensor = np.repeat(fr_tensor, final_boxes.shape[0], axis=0)
+        final_boxes = np.concatenate((final_boxes, fr_tensor), axis=-1)
         return vid_id, f_clips, final_boxes, n_frames_np, n_actions_np, h, w
     
     def __len__(self):

@@ -58,7 +58,7 @@ class _Regression_TargetLayer(nn.Module):
         all_rois = all_tubes[:,:,[0,1,2,4,5]]
 
         ## modify rois
-        gt_boxes = gt_boxes.permute(0,2,1,3).contiguous()
+        gt_boxes = gt_boxes.permute(0,2,1,3).contiguous()[..., :5]
         gt_boxes = gt_boxes.view((-1,)+gt_boxes.shape[2:])
 
         gt_boxes_append = gt_boxes.new(gt_boxes.size()).zero_()

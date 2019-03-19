@@ -247,7 +247,7 @@ if __name__ == '__main__':
     # act_model.to(device)
 
     # lr = 0.1
-    # lr_decay_step = 5
+    # lr_decay_step = 8
     # lr_decay_gamma = 0.1
     
 
@@ -355,8 +355,6 @@ if __name__ == '__main__':
 
             # print('step :',step)
             vid_id, clips, boxes, n_frames, n_actions, h, w = data
-
-
             mode = 'train'
 
             vid_id = vid_id.to(device)

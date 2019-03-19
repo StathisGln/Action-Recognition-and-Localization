@@ -61,6 +61,7 @@ class Model(nn.Module):
         ## define a dataloader for the whole video
         boxes = boxes[:num_frames,:num_actions]
         clips = clips[:num_frames]
+
         # print('clips.shape :',clips.shape)
         # print('clips.shape :',clips.type())
         # print('boxes.shape :',boxes.shape)
@@ -101,6 +102,7 @@ class Model(nn.Module):
             #     break
             # print('step :',step)
             # print('Memory :',torch.cuda.memory_allocated(device=None))
+            # print('boxes :',boxes)
             frame_indices, im_info, start_fr = dt
             boxes_ = boxes[frame_indices].cuda()
             clips_ = clips[frame_indices].cuda()
