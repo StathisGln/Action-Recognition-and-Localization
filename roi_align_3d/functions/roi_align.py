@@ -44,6 +44,8 @@ class RoIAlignFunction(Function):
                                             self.time_dim,
                                             self.spatial_scale, self.temp_scale, features.cuda(),
                                             rois.cuda(), output.cuda())
+        if output != output:
+            print('exw nan :',output)
         return output
 
     def backward(self, grad_output):

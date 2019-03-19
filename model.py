@@ -137,6 +137,7 @@ class Model(nn.Module):
                                                         start_fr)
 
             pooled_feat = pooled_feat.view(-1,rois_per_image,self.p_feat_size,self.sample_duration)
+
             indexes_ = (torch.arange(0, tubes.size(0))*int(self.sample_duration/2) + start_fr[0].cpu()).unsqueeze(1)
             indexes_ = indexes_.expand(tubes.size(0),tubes.size(1)).type_as(tubes)
 
@@ -145,7 +146,8 @@ class Model(nn.Module):
 
             idx_s = step * batch_size 
             idx_e = step * batch_size + batch_size
-
+            # print('idx_s :', idx_s, ' idx_e :',idx_e )
+            # print('features.shape :',features.shape)
             features[idx_s:idx_e] = pooled_feat
             p_tubes[idx_s:idx_e] = tubes
 
@@ -205,8 +207,9 @@ class Model(nn.Module):
             
 
             ## concate fb, bg tubes
-            f_tubes = gt_tubes_list + bg_tubes
-            target_lbl = torch.cat((gt_lbl,bg_lbl),0)
+            f_tubes = gt_tubes_list ## + bg_tubes
+            # target_lbl = torch.cat((gt_lbl,bg_lbl),0)
+            target_lbl = gt_lbl
 
         ##############################################
         max_seq = reduce(lambda x, y: y if len(y) > len(x) else x, f_tubes)
@@ -223,10 +226,15 @@ class Model(nn.Module):
             tmp_tube = torch.Tensor(len(seq),6)
             feats = torch.Tensor(len(seq),self.p_feat_size)
             for j in range(len(seq)):
-                # print('features[seq[j]].mean(1).shape :',features[seq[j]].mean(1).shape)
-                feats[j] = features[seq[j]].mean(1)
+                feats[j] = features[seq[j][0],seq[j][1]].mean(1)
+
                 tmp_tube[j] = p_tubes[seq[j]][1:7]
             prob_out[i] = self.act_rnn(feats.cuda())
+            if prob_out[i,0] != prob_out[i,0]:
+                print('tmp_tube :',tmp_tube, ' prob_out :', prob_out ,' feats :',feats.cpu().numpy(), ' numpy(), feats.shape  :,', feats.shape ,' target_lbl :',target_lbl, \
+                      ' \ntmp_tube :',tmp_tube, )
+                exit(-1)
+
             final_video_tubes[i] = create_tube_from_tubes(tmp_tube).type_as(boxes)
         
         # ##########################################

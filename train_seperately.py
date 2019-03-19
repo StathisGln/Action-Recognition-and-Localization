@@ -277,8 +277,8 @@ if __name__ == '__main__':
 
     #     act_model, loss = training(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr)
 
-    #     if (epoch + 1) % (5) == 0:
-    #         validation(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
+    #     # if (epoch + 1) % (5) == 0:
+    #     #     validation(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
 
 
     #     if ( epoch + 1 ) % 5 == 0:

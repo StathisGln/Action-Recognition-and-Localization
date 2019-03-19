@@ -42,6 +42,7 @@ class _Regression_Layer(nn.Module):
         offset = torch.arange(0,self.sample_duration)
         ## modify tubes and rois_label
         if self.training:
+
             rois, labels, \
             bbox_targets, bbox_inside_ws,\
             bbox_outside_ws = self.reg_target(tubes, gt_rois)
