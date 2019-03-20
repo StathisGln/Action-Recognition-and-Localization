@@ -152,39 +152,17 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         im_info_ = im_info.to(device)
         start_fr = torch.zeros(clips_.size(0)).to(device)
 
-        print('gt_tubes_r :',gt_tubes_r)
-        print('gt_tubes_r.shape:',gt_tubes_r.shape)
-        print('gt_rois.shape:',gt_rois.shape)
-
         tubes, bbox_pred, _,_,_,_,_,_,_,sgl_rois_bbox_pred,_   = model(clips,
                                                                        im_info,
-                                                                       gt_tubes_r_, gt_rois_,
-                                                                       start_fr)
+                                                                       None, None,
+                                                                       None)
 
-        print('tubes.shape :',tubes.shape)
-        print('bbox_pred.shape :',bbox_pred.shape)
         n_tubes = len(tubes)
 
-        _, cls_int = torch.max(cls_prob,1)
-        # print('cls_int :',cls_int, ' target :', target)
-        for k in cls_int.cpu().tolist():
-            if k == target.data:
-                print('Found one')
-                correct_preds += 1
-            n_preds += 1
-        for i in range(gt_tubes_r.size(0)): # how many frames we have
-            tubes_t = torch.zeros(n_tubes, 7).type_as(gt_tubes_r)
-            for j in range(n_tubes):
-                # print('J :',j, 'i :',i)
-                # print(' len(tube[j]) :',len(tubes[j]))
-                # print('tubes[j] :',tubes[j])
-                # print('tubes[j][i] :',tubes[j][i])
-                
-                if (len(tubes[j]) - 1 < i):
-                    continue
-                tubes_t[j] = torch.Tensor(tubes[j][i][:7]).type_as(tubes_t)
-            
-            overlaps, overlaps_xy, overlaps_t = bbox_overlaps_batch_3d(tubes_t.squeeze(0), gt_tubes_r[i].unsqueeze(0)) # check one video each time
+        for i in range(tubes.size(0)): # how many frames we have
+            tubes_t = tubes[i,:,:7]
+
+            overlaps, overlaps_xy, overlaps_t = bbox_overlaps_batch_3d(tubes_t.squeeze(0), gt_tubes_r_[i].unsqueeze(0)) # check one video each time
 
             ## for the whole tube
             gt_max_overlaps, _ = torch.max(overlaps, 1)

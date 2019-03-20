@@ -65,7 +65,7 @@ class _Regression_Layer(nn.Module):
             tubes = tubes.view((-1,)+tubes.shape[2:])
 
             rois = tubes[:,:,[0,1,2,4,5]].view(-1,5)
-            print('rois.shape :',rois.shape)
+
         ## modify feat
         base_feat = base_feat.permute(0,2,1,3,4).contiguous().view(-1,base_feat.size(1),base_feat.size(3),base_feat.size(4))
         conv1_feats = self.Conv(base_feat)

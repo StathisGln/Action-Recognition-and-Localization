@@ -67,15 +67,13 @@ class ACT_net(nn.Module):
             gt_tubes = gt_tubes.data
             gt_rois =  gt_rois.data
 
-        #### modify gt_tubes:
+            for i in range(batch_size):
 
-        for i in range(batch_size):
-          
-          gt_tubes[i,:,2] = gt_tubes[i,:,2] - start_fr[i].type_as(gt_tubes)
-          gt_tubes[i,:,5] = gt_tubes[i,:,5] - start_fr[i].type_as(gt_tubes)
+              gt_tubes[i,:,2] = gt_tubes[i,:,2] - start_fr[i].type_as(gt_tubes)
+              gt_tubes[i,:,5] = gt_tubes[i,:,5] - start_fr[i].type_as(gt_tubes)
 
-        gt_tubes[:,:,:-1] = gt_tubes[:,:,:-1].clamp_(min=0)
-        # print('gt_tubes :',gt_tubes)
+            gt_tubes[:,:,:-1] = gt_tubes[:,:,:-1].clamp_(min=0)
+
 
         # feed image data to base model to obtain base feature map
 
