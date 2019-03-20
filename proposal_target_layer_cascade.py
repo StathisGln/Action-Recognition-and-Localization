@@ -159,13 +159,9 @@ class _ProposalTargetLayer(nn.Module):
             
             # print('gt_boxes_indexes :',gt_boxes_indexes)
             gt_boxes_single = gt_boxes_single[gt_boxes_indexes]
-            # print('cascade gt_boxes_single:',gt_boxes_single)            
-            # print('gt_boxes[:num_boxes[i]] :',gt_boxes_single)
+
             if gt_boxes_single.byte().any() == 0:
                 continue
-            
-            
-        
             max_overlaps_single =max_overlaps[i]
             fg_inds = torch.nonzero(max_overlaps_single >= cfg.TRAIN.FG_THRESH).view(-1)
             fg_num_rois = fg_inds.numel()

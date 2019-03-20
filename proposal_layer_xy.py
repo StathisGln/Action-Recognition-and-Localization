@@ -129,7 +129,7 @@ class _ProposalLayer_xy(nn.Module):
         proposals_xy = bbox_transform_inv(anchors_xy, bbox_frame, batch_size) # proposals have 441 * time_dim shape
 
         ## if any dimension exceeds the dims of the original image, clamp_ them
-        proposals_xy = clip_boxes(proposals_xy, im_info, 1)
+        proposals_xy = clip_boxes(proposals_xy, im_info, batch_size)
         proposals = torch.cat(( proposals_xy[:,:,[0,1]],anchors[:,:,2].unsqueeze(2), proposals_xy[:,:,[2,3]], anchors[:,:,5].unsqueeze(2)), dim=2)
 
         scores_keep = scores

@@ -350,8 +350,6 @@ class video_names(data.Dataset):
         path = os.path.join(self.dataset_folder, vid_name)
         clip = self.loader(path, frame_indices)
         clip = [self.spatial_transform(img) for img in clip]
-        # print('len(clip) :',len(clip))
-        # print('clip[0].shape :',clip[0].shape)
         clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
 
         f_clips = torch.zeros(self.max_frames,3,self.sample_size,self.sample_size)
@@ -460,25 +458,16 @@ class Video_UCF(data.Dataset):
         frame_indices = list(
             range(time_index, time_index + self.sample_duration))  # get the corresponding frames
 
-        clips = torch.load(os.path.join(path,'images.pt'))
-        clip = clips[:,frame_indices]
-
-        # clip = self.loader(path, frame_indices)
-
-        # ## get original height and width
-        # w, h = clip[0].size
-        # if self.spatial_transform is not None:
-        #     clip = [self.spatial_transform(img) for img in clip]
-        # clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
-        w = 320
-        h = 240
+        clip = self.loader(path, frame_indices)
+        ## get original height and width
+        w, h = clip[0].size
+        clip = [self.spatial_transform(img) for img in clip]
+        clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
 
         ## get bboxes and create gt tubes
-        rois_Tensor = torch.Tensor(rois)
-        rois_sample_tensor = rois_Tensor[:,np.array(frame_indices),:]
-        rois_sample_tensor[:,:,2] = rois_sample_tensor[:,:,0] + rois_sample_tensor[:,:,2]
-        rois_sample_tensor[:,:,3] = rois_sample_tensor[:,:,1] + rois_sample_tensor[:,:,3]
-        rois_sample = rois_sample_tensor.tolist()
+        boxes = preprocess_boxes(rois,h, w,self.sample_size)
+        boxes = boxes[:,np.array(frame_indices),:5]
+        rois_sample = boxes.tolist()
 
         rois_fr = [[z+[j] for j,z in enumerate(rois_sample[i])] for i in range(len(rois_sample))]
         rois_gp =[[[list(g),i] for i,g in groupby(w, key=lambda x: x[:][4])] for w in rois_fr] # [person, [action, class]

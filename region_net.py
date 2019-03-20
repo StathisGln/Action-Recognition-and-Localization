@@ -237,9 +237,7 @@ class _RPN(nn.Module):
             # print('rpn_bbox_targets_16.shape :',rpn_bbox_targets_16.shape)
             self.rpn_loss_box_16 =  _smooth_l1_loss(rpn_bbox_16, rpn_bbox_targets_16, rpn_bbox_inside_weights_16,
                                                                rpn_bbox_outside_weights_16, sigma=3, dim=[1,2,3])
-
-        f_rois = torch.cat((rois,rois_16),dim=1)
-        return f_rois, self.rpn_loss_cls, self.rpn_loss_box, self.rpn_loss_cls_16, self.rpn_loss_box_16
+        return rois, rois_16, self.rpn_loss_cls, self.rpn_loss_box, self.rpn_loss_cls_16, self.rpn_loss_box_16
 
 
 if __name__ == '__main__':

@@ -163,6 +163,9 @@ def validate_model(model,  val_data, val_data_loader, sample_duration, sample_si
                                              temporal_transform, boxes, \
                                              mode, cls2idx, n_actions_,n_frames_)
 
+        print('tubes.shape :',tubes.shape)
+        print('bboxes_pred.shape :',bboxes_pred.shape)
+        exit(-1)
         ## first get predicted classes
         _, preds = torch.max(prob_out,1)
 

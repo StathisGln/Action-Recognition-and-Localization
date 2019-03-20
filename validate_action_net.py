@@ -140,9 +140,9 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
-        # if step == 2:
-        #     break
-        # print('step :',step)
+        if step == 2:
+            break
+        print('step :',step)
 
         clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
         clips_ = clips.to(device)
@@ -157,6 +157,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                                                        None, None,
                                                                        None)
 
+
+        print('bbox_pred :', bbox_pred)
         n_tubes = len(tubes)
 
         for i in range(tubes.size(0)): # how many frames we have
@@ -228,7 +230,7 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_folder = '/gpu-data2/sgal/UCF-101-pickle'
+    dataset_folder = '/gpu-data2/sgal/UCF-101-frames'
     boxes_file = '/gpu-data2/sgal/pyannot.pkl'
     split_txt_path = '/gpu-data2/sgal/UCF101_Action_detection_splits/'
 
