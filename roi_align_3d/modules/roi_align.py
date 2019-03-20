@@ -28,7 +28,7 @@ class RoIAlignAvg(Module):
     def forward(self, features, rois):
         # print('RoiAlignAvg ==> rois.shape :', rois.shape)
         x =  RoIAlignFunction(self.aligned_height+1, self.aligned_width+1,self.time_dim+1,
-                                self.spatial_scale)(features, rois )
+                                self.spatial_scale)(features, rois[:,:7] )
         # print('x :',x)
         return adaptive_avg_pool3d(x,(self.time_dim,self.aligned_height,self.aligned_width))
 

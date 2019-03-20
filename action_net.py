@@ -103,11 +103,11 @@ class ACT_net(nn.Module):
           rpn_loss_cls = 0
           rpn_loss_bbox = 0
 
-        rois = Variable(rois)
+        # rois = Variable(rois)
 
         # do roi align based on predicted rois
-
-        pooled_feat_ = self.act_roi_align(base_feat, rois[:,:,:7].view(-1,7))
+        rois_s = rois[:,:,:7].contiguous()
+        pooled_feat_ = self.act_roi_align(base_feat, rois_s.view(-1,7))
 
         ## regression
         sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(pooled_feat_,rois[:,:,:7], gt_rois) 

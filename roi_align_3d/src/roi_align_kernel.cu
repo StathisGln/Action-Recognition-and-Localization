@@ -35,21 +35,62 @@ extern "C" {
 	    //   printf("pw %d ph %d pt %d c %d n %d index %d \n",pw,ph,pt,c,n,index);
 	    //   }
 
-	    // if (index==50) printf(" n : %d\n",n);
+	    // get the rois
+	    // if (index==278528) printf("278528 n : %d\n",n);
+	    // if (index==278529) printf("278529 n : %d\n",n);
             float roi_batch_ind = bottom_rois[n * 7 + 0];
             float roi_start_w = bottom_rois[n * 7 + 1] * spatial_scale;
-            float roi_start_h = bottom_rois[n * 7 + 2] * spatial_scale;
+            float roi_start_h = bottom_rois[n * 7 + 2]  * spatial_scale;
 	    float roi_start_t = bottom_rois[n * 7 + 3] * temp_scale;
             float roi_end_w = bottom_rois[n * 7 + 4] * spatial_scale;
             float roi_end_h = bottom_rois[n * 7 + 5] * spatial_scale;
 	    float roi_end_t = bottom_rois[n * 7 + 6] * temp_scale;
 
-	    // if (index == 50){
-	    //   printf(" exw %f %f %f %f %f %f %f \n", bottom_rois[0],bottom_rois[1],bottom_rois[2], bottom_rois[3],bottom_rois[4],bottom_rois[5],bottom_rois[6]);
-	    //   printf("temp_scale %f\n ",temp_scale);
-	    //   printf("roi_batch_ind %f roi_start_w %f roi_start_h %f roi_start_t %f roi_end_w %f roi_end_h %f roi_end_t %f\n",
-	    // 	   roi_batch_ind, roi_start_w, roi_start_h,roi_start_t,roi_end_w,roi_end_h, roi_end_t);
+	    // if (index==278528) printf("278528 n : %d\n",n);
+	    // if (index==278529) printf("278529 n : %d\n",n);
+
+	    // if (index == 0){
+	    //   printf("0 n :%d bottom_rois[n * 7 + 1] : %f %f %f %f %f %f\n",n, float( bottom_rois[n * 7 + 1]),
+	    // 	     float( bottom_rois[n * 7 + 2]), float( bottom_rois[n * 7 + 3]),
+	    // 	     float( bottom_rois[n * 7 + 4]), float( bottom_rois[n * 7 + 5]),
+	    // 	     float( bottom_rois[n * 7 + 6]));
+
 	    // }
+
+	    // if (index == 278529){
+	    //   printf("n : %d, aligned_width %d, aligned_height %d, time_dim %d, channels %d\n",n, aligned_width, aligned_height, time_dim, channels);
+	    //   printf("index mod aligned_width : %d %d %d\n", index%aligned_width, index,aligned_width);
+	    //   printf("index : %d n : %d,  c :%d, pt :%d, ph :%d, pw :%d\n", index, n, c, pt, ph, pw);
+	    //   printf("2785829 n :%d bottom_rois[n * 7 + 1] : %f %f %f %f %f %f\n",n, float( bottom_rois[n * 7 + 1]),
+	    // 	     float( bottom_rois[n * 7 + 2]), float( bottom_rois[n * 7 + 3]),
+	    // 	     float( bottom_rois[n * 7 + 4]), float( bottom_rois[n * 7 + 5]),
+	    // 	     float( bottom_rois[n * 7 + 6]));
+
+	    // }
+
+	    // if (index == 0){
+	    //   printf("n : %d, aligned_width %d, aligned_height %d, time_dim %d, channels %d\n",n, aligned_width, aligned_height, time_dim, channels);
+	    //   printf("index mod aligned_width : %d %d %d\n", index%aligned_width, index,aligned_width);
+	    //   printf("index : %d n : %d,  c :%d, pt :%d, ph :%d, pw :%d\n", index, n, c, pt, ph, pw);
+	    //   printf("2785829 n :%d bottom_rois[n * 7 + 1] : %f %f %f %f %f %f %f %f\n",n, float( bottom_rois[n * 7 + 1]),
+	    // 	     float( bottom_rois[n * 7 + 2]), float( bottom_rois[n * 7 + 3]),
+	    // 	     float( bottom_rois[n * 7 + 4]), float( bottom_rois[n * 7 + 5]),
+	    // 	     float( bottom_rois[n * 7 + 6]),float( bottom_rois[n * 7 + 7]),float( bottom_rois[n * 7 + 8]));
+
+	    // }
+
+	    // if (index == 0){
+	    //   printf("%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f \n", float( bottom_rois[n * 7 + 1]),
+	    // 	     float( bottom_rois[n * 7 + 2]), float( bottom_rois[n * 7 + 3]),
+	    // 	     float( bottom_rois[n * 7 + 4]), float( bottom_rois[n * 7 + 5]),
+	    // 	     float( bottom_rois[n * 7 + 6]),float( bottom_rois[n * 7 + 7]),float( bottom_rois[n * 7 + 8]),
+	    // 	     float( bottom_rois[n * 7 + 9]),float( bottom_rois[n * 7 + 10]),
+	    // 	     float( bottom_rois[n * 7 + 11]),float( bottom_rois[n * 7 +12]),
+	    // 	     float( bottom_rois[n * 7 + 13]),float( bottom_rois[n * 7 + 14]),
+	    // 	     float( bottom_rois[n * 7 + 15]),float( bottom_rois[n * 7 + 16]));
+
+	    // }
+
             // // Force malformed ROIs to be 1x1
             float roi_width = fmaxf(roi_end_w - roi_start_w + 1., 0.);
             float roi_height = fmaxf(roi_end_h - roi_start_h + 1., 0.);
@@ -90,6 +131,9 @@ extern "C" {
 	    //   printf("h %f w %f t %f\n", h,w,t);
             // // trilinear interpolation = 2 bilinear interpolation + 1 linear interpolation
 	    // if( index==50 ) printf("height : %d width %d time %d \n",height,width,time);
+	    // if (t>= time)
+	    //   printf("index : %d time : %d  t : %f",index, time, t );
+	    
             if (h < 0 || h >= height || w < 0 || w >= width || t < 0 || t >= time) {
 	      // if(index==50)
 	      // 	printf("epaeeeee\n");
@@ -148,8 +192,10 @@ extern "C" {
                     + bottom_data[downleftback] * h_ratio * (1. - w_ratio)
                     + bottom_data[downrightback] * h_ratio * w_ratio;
 
-		// if (front_data < 0) printf("front_data :%d\n", front_data);
-		// if (rear_data < 0) printf("rear_data :%d\n", rear_data);
+		// if (front_data < 0) printf("front_data :%f\n", front_data);
+		// if (rear_data < 0) printf("rear_data :%f\n", rear_data);
+		// if( !(isfinite(front_data) || isfinite(rear_data)))
+		//   printf("front_data :%f rear_data :%f\n", front_data,rear_data);
 		// if (index== 50) {
 		//   printf("front_data :%f\n", front_data);
 		//   printf("rear_data :%f\n", rear_data);
@@ -185,7 +231,6 @@ extern "C" {
             fprintf( stderr, "cudaCheckError() failed : %s\n", cudaGetErrorString( err ) );
             exit( -1 );
         }
-
         return 1;
     }
 

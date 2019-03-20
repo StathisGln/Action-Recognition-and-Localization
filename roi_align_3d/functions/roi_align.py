@@ -19,7 +19,7 @@ class RoIAlignFunction(Function):
         self.feature_size = features.size()
         batch_size, num_channels, data_time, data_height, data_width = features.size()
         num_rois = rois.size(0)
-
+        # print('rois :',rois.cpu().numpy())
         # print('num_rois :',num_rois)
         # print('num_channels :',num_channels)
         # print('data_time :',data_time)
@@ -33,19 +33,31 @@ class RoIAlignFunction(Function):
         # print('num_rois {}, num_channels {}, data_time {}, self.aligned_height {}, self.aligned_width {}'.format(
             # num_rois, num_channels, data_time, self.aligned_height, self.aligned_width))
         output = features.new( num_rois, num_channels, self.time_dim, self.aligned_height, self.aligned_width).zero_()
+        if torch.isnan(features).any():
+            print('before cuda, features have nan values :',features)
+            exit(-1)
+        if torch.isinf(features).any():
+            print('before cuda, features have inf values :',features)
+            exit(-1)
+        print('rois.shape :',rois.shape)
+        print('rois.type() :',rois.type())
+        print('rois[:2] :',rois[:2])
         # print('output.shape :', output.shape)
         # print('self.time_dim :',self.time_dim)
         # print('output.:', output)
         # with open('../feats.json', 'w') as fp:
         #     json.dump(dict({'aligned_height':self.aligned_height, 'aligned_width' : self.aligned_width, 'spatial_scale': self.spatial_scale, 'features' :features.cpu().tolist(), 'rois' : rois.cpu().tolist()}), fp)
         # print("Before C: self.spatial_scale :", self.spatial_scale, " self.temp_scale :", self.temp_scale)
+        # print('aligned_height :',self.aligned_height, ' aligned_width :',self.aligned_width, ' time_dim :', self.time_dim, ' channels :',num_channels, ' num_rois :',num_rois)
+        # print('output.shape :', output.shape)
         roi_align_3d.roi_align_forward_cuda(self.aligned_height,
                                             self.aligned_width,
                                             self.time_dim,
                                             self.spatial_scale, self.temp_scale, features.cuda(),
                                             rois.cuda(), output.cuda())
-        if output != output:
-            print('exw nan :',output)
+        if torch.isnan(output).any():
+            print('exw mono sto output nan :', output)
+            exit(-1)
         return output
 
     def backward(self, grad_output):
