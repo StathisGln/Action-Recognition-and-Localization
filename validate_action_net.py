@@ -7,13 +7,14 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from resnet_3D import resnet34
-from jhmdb_dataset import Video
+from ucf_dataset import Video_UCF, video_names
 
 from net_utils import adjust_learning_rate
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
-from model import Model
+from action_net import ACT_net
+
 from resize_rpn import resize_rpn, resize_tube
 import pdb
 
@@ -116,10 +117,10 @@ def bbox_overlaps_batch_3d(tubes, gt_tubes):
 def validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads):
 
     iou_thresh = 0.5 # Intersection Over Union thresh
-    data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
+    data = Video_UCF(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
-                 split_txt_path=splt_txt_path, mode='val', classes_idx=cls2idx)
-    data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
+                 split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
+    data_loader = torch.utils.data.DataLoader(data, batch_size=2,
                                               shuffle=True, num_workers=0, pin_memory=True)
     model.eval()
 
@@ -151,14 +152,17 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         im_info_ = im_info.to(device)
         start_fr = torch.zeros(clips_.size(0)).to(device)
 
-        tubes, bbox_pred, _,_,_,_,_,_,_,sgl_rois_bbox_pred,_   = model(inputs,
+        print('gt_tubes_r :',gt_tubes_r)
+        print('gt_tubes_r.shape:',gt_tubes_r.shape)
+        print('gt_rois.shape:',gt_rois.shape)
+
+        tubes, bbox_pred, _,_,_,_,_,_,_,sgl_rois_bbox_pred,_   = model(clips,
                                                                        im_info,
                                                                        gt_tubes_r_, gt_rois_,
                                                                        start_fr)
 
         print('tubes.shape :',tubes.shape)
         print('bbox_pred.shape :',bbox_pred.shape)
-        exit(-1)
         n_tubes = len(tubes)
 
         _, cls_int = torch.max(cls_prob,1)
@@ -246,9 +250,9 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_folder = '/gpu-data/sgal/JHMDB-act-detector-frames'
-    split_txt_path =  '/gpu-data/sgal/splits'
-    boxes_file = '../temporal_localization/poses.json'
+    dataset_folder = '/gpu-data2/sgal/UCF-101-pickle'
+    boxes_file = '/gpu-data2/sgal/pyannot.pkl'
+    split_txt_path = '/gpu-data2/sgal/UCF101_Action_detection_splits/'
 
     sample_size = 112
     sample_duration = 16  # len(images)
@@ -278,14 +282,14 @@ if __name__ == '__main__':
     temporal_transform = LoopPadding(sample_duration)
 
     # Init action_net
-    model = Model(classes)
+    model = ACT_net(actions, sample_duration)
     model.create_architecture()
+    model = nn.DataParallel(model)
+    model.to(device)
+
     model_data = torch.load('./action_net_model_25epoch.pwf')
 
     model.load_state_dict(model_data)
-
-    model = nn.DataParallel(model)
-    model.to(device)
 
     model.eval()
 

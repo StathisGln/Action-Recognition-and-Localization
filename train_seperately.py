@@ -307,11 +307,11 @@ if __name__ == '__main__':
     
     vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train')
 
-    # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
-    #                                           shuffle=True)    # reset learning rate
-
-    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=0, pin_memory=True,
+    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
                                               shuffle=True)    # reset learning rate
+
+    # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=0, pin_memory=True,
+    #                                           shuffle=True)    # reset learning rate
 
     lr = 0.1
     lr_decay_step = 5
@@ -320,8 +320,8 @@ if __name__ == '__main__':
     # reset learning rate
 
     params = []
-    for key, value in dict(model.act_rnn.named_parameters()).items():
-    # for key, value in dict(model.module.act_rnn.named_parameters()).items():
+    # for key, value in dict(model.act_rnn.named_parameters()).items():
+    for key, value in dict(model.module.act_rnn.named_parameters()).items():
 
         # print(key, value.requires_grad)
         if value.requires_grad:

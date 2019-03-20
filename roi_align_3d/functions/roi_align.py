@@ -33,15 +33,9 @@ class RoIAlignFunction(Function):
         # print('num_rois {}, num_channels {}, data_time {}, self.aligned_height {}, self.aligned_width {}'.format(
             # num_rois, num_channels, data_time, self.aligned_height, self.aligned_width))
         output = features.new( num_rois, num_channels, self.time_dim, self.aligned_height, self.aligned_width).zero_()
-        if torch.isnan(features).any():
-            print('before cuda, features have nan values :',features)
-            exit(-1)
-        if torch.isinf(features).any():
-            print('before cuda, features have inf values :',features)
-            exit(-1)
-        print('rois.shape :',rois.shape)
-        print('rois.type() :',rois.type())
-        print('rois[:2] :',rois[:2])
+        # print('rois.shape :',rois.shape)
+        # print('rois.type() :',rois.type())
+        # print('rois[:2] :',rois[:2])
         # print('output.shape :', output.shape)
         # print('self.time_dim :',self.time_dim)
         # print('output.:', output)
