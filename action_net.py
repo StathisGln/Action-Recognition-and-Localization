@@ -159,12 +159,14 @@ class ACT_net(nn.Module):
 
         if self.training:
 
-          rois_label = rois_label.view(batch_size, rois.size(1),-1)
+          rois_label = rois_label.view(batch_size, n_rois,-1)
+          rois_label_16 = rois_label_16.view(batch_size, n_rois, -1)
+          f_rois_label = torch.cat((rois_label, rois_label_16),dim=1)
 
           return f_rois,  f_bbox_pred, pooled_feat_, \
             rpn_loss_cls, rpn_loss_bbox, act_loss_bbox,\
             rpn_loss_cls_16, rpn_loss_bbox_16, act_loss_bbox_16,\
-            rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss
+            f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss
 
 
         return rois,  bbox_pred, pooled_feat_, None, None, None, None, None, None, sgl_rois_bbox_pred, None

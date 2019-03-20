@@ -68,7 +68,7 @@ class Model(nn.Module):
         # print('boxes :',boxes.cpu().numpy())
         batch_size = 16 # 
         num_images = 1
-        rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images) if self.training else 10
+        rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images) *2 if self.training else 10 *2
 
         data = single_video(dataset_folder,h_,w_, vid_names, vid_id, frames_dur= self.sample_duration, sample_size =self.sample_size,
                             classes_idx=cls2idx, n_frames=num_frames)
@@ -78,7 +78,6 @@ class Model(nn.Module):
                                                   shuffle=False)
 
         n_clips = data.__len__()
-
         features = torch.zeros(n_clips, rois_per_image, self.p_feat_size, self.sample_duration)
         p_tubes = torch.zeros(n_clips, rois_per_image,  8) # all the proposed rois
 
