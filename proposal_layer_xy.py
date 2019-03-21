@@ -86,7 +86,7 @@ class _ProposalLayer_xy(nn.Module):
             min_size      = 8
         else:
             pre_nms_topN  = 6000
-            post_nms_topN = 10
+            post_nms_topN = 50
             nms_thresh    = 0.7
             min_size      = 16
 

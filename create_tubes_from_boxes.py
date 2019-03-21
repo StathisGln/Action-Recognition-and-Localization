@@ -51,6 +51,7 @@ import cv2
 #     ret = torch.Tensor([x1, y1, t1, x2, y2, t2, labels]
 #                        ).permute(1, 2, 0).cuda()
 #     return ret
+
 def create_tube(boxes, im_info_3d, sample_duration):
 
     batch_size = boxes.size(0)

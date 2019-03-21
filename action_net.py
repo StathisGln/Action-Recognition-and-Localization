@@ -209,14 +209,21 @@ class ACT_net(nn.Module):
             # act_loss_cls = F.cross_entropy(cls_score, rois_label)
 
             # bounding box regression L1 loss
-            act_loss_bbox_16 = _smooth_l1_loss(bbox_pred_16, rois_target_16, rois_inside_ws_16, rois_outside_ws_16)
+          print('box_pred_16.shape:',box_pred_16.shape)
+          act_loss_bbox_16 = _smooth_l1_loss(bbox_pred_16, rois_target_16, rois_inside_ws_16, rois_outside_ws_16)
 
-
+        bbox_pred_16 = bbox_pred_16.view(batch_size, rois_16.size(1), -1)
+        # print('rois.shape :',rois.shape)
+        # print('rois_s.shape :',rois_16.shape)
+        # print('box_pred.shape :',bbox_pred.shape)
+        # print('box_pred_16.shape :',bbox_pred_16.shape)
         # # print('bbox_pred.shape :',bbox_pred.shape)
-        if self.training:
-            return rois, rois_16, bbox_pred, rpn_loss_cls, rpn_loss_bbox, rpn_loss_cls_16, rpn_loss_bbox_16, act_loss_cls, act_loss_bbox, act_loss_cls_16, act_loss_bbox_16
 
-        return rois,  bbox_pred, 
+        if self.training:
+            return rois, rois_16, bbox_pred, bbox_pred_16, rpn_loss_cls, rpn_loss_bbox, rpn_loss_cls_16, rpn_loss_bbox_16, act_loss_cls, act_loss_bbox, act_loss_cls_16, act_loss_bbox_16
+        
+        return torch.cat((rois,rois_16), dim=1),  torch.cat((bbox_pred,bbox_pred_16),dim=1),
+        # return rois, bbox_pred 
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):

@@ -111,7 +111,7 @@ if __name__ == '__main__':
     model.create_architecture()
     data = model.act_rpn.RPN_cls_score.weight.data.clone()
 
-    model_data = torch.load('../temporal_localization/jmdb_model_020.pwf')
+    model_data = torch.load('./jmdb_model_030.pwf')
     # model_data = torch.load('../temporal_localization/jmdb_model_020.pwf')
     # # model_data = torch.load('../temporal_localization/r')
 
@@ -123,9 +123,9 @@ if __name__ == '__main__':
     model.eval()
     print('im_info :',im_info)
     print('-----Starts-----')
-    tubes,  bbox_pred, rois, bbox_pred_s  = model(clips,
-                                                 im_info,
-                                                 None, None, None)
+    tubes,  bbox_pred,   = model(clips,
+                                 im_info,
+                                 None, None, None)
     # print('bbox_pred_s :',bbox_pred_s)
     # print('bbox_pred :',bbox_pred)
     # rpn_loss_bbox,  act_loss_bbox, rois_label = model(clips,
@@ -133,50 +133,47 @@ if __name__ == '__main__':
     #                                                   gt_tubes, gt_rois,
     #                                                   torch.Tensor(len(gt_tubes)).to(device))
     print('-----Eksww-----')
-    print('rois :',rois.shape)
-    print('rois :',rois)
-    print('tubes :',tubes)
-    print('bbox_pred.shape :',bbox_pred.shape)
-    print('bbox_pred_s.shape :',bbox_pred_s.shape)
-    bbox_pred_s = bbox_pred_s.view(1,10,16,4).permute(0,2,1,3).contiguous().view(-1,10,4)
-    print('bbox_pred_s.shape :',bbox_pred_s.shape)
+    print('tubes :',tubes.shape)
+    print('rois :',tubes)
+    # print('bbox_pred.shape :',bbox_pred.shape)
+    # print('bbox_pred_s.shape :',bbox_pred_s.shape)
 
-    thresh = 0.05
-    bbox_normalize_means = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-    bbox_normalize_stds = (0.1, 0.1, 0.1, 0.2, 0.2, 0.1)
-    bbox_normalize_means_s = (0.0, 0.0, 0.0, 0.0, )
-    bbox_normalize_stds_s = (0.1, 0.1, 0.1, 0.2, )
+    # thresh = 0.05
+    # bbox_normalize_means = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+    # bbox_normalize_stds = (0.1, 0.1, 0.1, 0.2, 0.2, 0.1)
+    # bbox_normalize_means_s = (0.0, 0.0, 0.0, 0.0, )
+    # bbox_normalize_stds_s = (0.1, 0.1, 0.1, 0.2, )
 
-    rois = rois[:,:,1:]
-    # # rois = rois.data
-    # scores = cls_prob.data
-    # print('scores :', scores)
-    box_deltas = bbox_pred.view(-1, 6) * torch.FloatTensor(bbox_normalize_stds).to(device) \
-                               + torch.FloatTensor(bbox_normalize_means).to(device)
+    # rois = rois[:,:,1:]
+    # # # rois = rois.data
+    # # scores = cls_prob.data
+    # # print('scores :', scores)
+    # box_deltas = bbox_pred.view(-1, 6) * torch.FloatTensor(bbox_normalize_stds).to(device) \
+    #                            + torch.FloatTensor(bbox_normalize_means).to(device)
 
-    box_deltas = box_deltas.view(1,-1,6)
-    pred_boxes = bbox_transform_inv_3d(tubes, box_deltas, 1)
-    pred_boxes = clip_boxes_3d(pred_boxes, im_info.data, 1)
-    pred_boxes = pred_boxes.view(1,rois.size(1),1,6)
+    # box_deltas = box_deltas.view(1,-1,6)
+    # pred_boxes = bbox_transform_inv_3d(tubes, box_deltas, 1)
+    # pred_boxes = clip_boxes_3d(pred_boxes, im_info.data, 1)
+    # pred_boxes = pred_boxes.view(1,rois.size(1),1,6)
 
-    box_deltas_s = bbox_pred_s.view(-1, 4) * torch.FloatTensor(bbox_normalize_stds_s).to(device) \
-                               + torch.FloatTensor(bbox_normalize_means_s).to(device)
-    box_deltas_s = box_deltas_s.view(16,-1,4)
-    pred_boxes_s = bbox_transform_inv(rois, bbox_pred_s, 1)
-    pred_boxes_s = clip_boxes(pred_boxes_s, im_info.data, 1)
-    pred_boxes_s = pred_boxes_s.view(16,rois.size(1),1,4)
+    # box_deltas_s = bbox_pred_s.view(-1, 4) * torch.FloatTensor(bbox_normalize_stds_s).to(device) \
+    #                            + torch.FloatTensor(bbox_normalize_means_s).to(device)
+    # box_deltas_s = box_deltas_s.view(16,-1,4)
+    # pred_boxes_s = bbox_transform_inv(rois, bbox_pred_s, 1)
+    # pred_boxes_s = clip_boxes(pred_boxes_s, im_info.data, 1)
+    # pred_boxes_s = pred_boxes_s.view(16,rois.size(1),1,4)
 
-    # print('pred_boxes_s :', pred_boxes_s)
-    print('pred_boxes_s.shape :', pred_boxes_s.shape)
-    # print('bbox_pred.shape :',pred_boxes.shape)
+    # # print('pred_boxes_s :', pred_boxes_s)
+    # print('pred_boxes_s.shape :', pred_boxes_s.shape)
+    # # print('bbox_pred.shape :',pred_boxes.shape)
     
-    # print(scores)
-    # pred_boxes = pred_boxes.data
-    # print(pred_boxes_s)
+    # # print(scores)
+    # # pred_boxes = pred_boxes.data
+    # # print(pred_boxes_s)
     colors = [ (255,0,0), (0,255,0), (0,0,255)]
     clips2 = clips2.squeeze().permute(1,2,3,0)
 
-    for i in range(16):
+    for i in range(1):
         # img = cv2.imread(os.path.join(path, 'image_{:0>5}.jpg'.format(frame_indices[i])))
         # img = cv2.imread(os.path.join(path, '{:0>5}.png'.format(frame_indices[i])))
         img = clips2[i].cpu().numpy()
@@ -187,12 +184,13 @@ if __name__ == '__main__':
 
         for j in range(10):
             # img_tmp = img.copy()
-            # cv2.rectangle(img_tmp,(int(rois[i,j,0]),int(rois[i,j,1])),(int(rois[i,j,2]),int(rois[i,j,3])), (255,0,0),3)
+
 
             # # print('out : ./out/{:0>3}.jpg'.format(i))
             # cv2.imwrite('./out_frames/action_tube_{}_{:0>3}.jpg'.format(j,i), img_tmp)
 
             img_tmp = img.copy()
-            cv2.rectangle(img_tmp,(int(pred_boxes_s[i,j,0,0]),int(pred_boxes_s[i,j,0,1])),(int(pred_boxes_s[i,j,0,2]),int(pred_boxes_s[i,j,0,3])), (255,0,0),3)
+            cv2.rectangle(img_tmp,(int(tubes[i,j,0]),int(tubes[i,j,1])),(int(tubes[i,j,2]),int(tubes[i,j,3])), (255,0,0),3)
+            # cv2.rectangle(img_tmp,(int(pred_boxes_s[i,j,0,0]),int(pred_boxes_s[i,j,0,1])),(int(pred_boxes_s[i,j,0,2]),int(pred_boxes_s[i,j,0,3])), (255,0,0),3)
             # print('out : ./out/{:0>3}.jpg'.format(i))
             cv2.imwrite('./out_frames/action_rois_{}_{:0>3}.jpg'.format(j,i), img_tmp)

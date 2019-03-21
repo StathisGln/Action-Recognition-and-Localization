@@ -87,7 +87,7 @@ class _ProposalLayer(nn.Module):
             min_size      = 8
         else:
             pre_nms_topN  = 6000
-            post_nms_topN = 10
+            post_nms_topN = 50
             nms_thresh    = 0.7
             min_size      = 16
 
@@ -186,24 +186,8 @@ class _ProposalLayer(nn.Module):
             # # 5. take top pre_nms_topN (e.g. 6000)
             order_single = order[i]
 
-            if pre_nms_topN > 0 and pre_nms_topN < scores_keep.numel():
-                order_single = order_single[:pre_nms_topN]
             proposals_single = proposals_single[order_single, :]
-            scores_single = scores_single[order_single].view(-1,1)
-
-            # 6. apply nms (e.g. threshold = 0.7)
-            # 7. take after_nms_topN (e.g. 300)
-            # 8. return the top proposals (-> RoIs top)
-
-            keep_idx_i = nms(torch.cat((proposals_single, scores_single), 1), nms_thresh, force_cpu=not cfg.USE_GPU_NMS)
-            # keep_idx_i = nms(torch.cat((proposals_single, scores_single), 1), nms_thresh, force_cpu=True)
-            # print('keep_idx_i :',keep_idx_i)
-            keep_idx_i = keep_idx_i.long().view(-1)
-
-            if post_nms_topN > 0:
-                keep_idx_i = keep_idx_i[:post_nms_topN]
-            proposals_single = proposals_single[keep_idx_i, :]
-            scores_single = scores_single[keep_idx_i, :]
+            proposals_single = proposals_single[:post_nms_topN, :]
             # print('scores_single.shape :',scores_single.shape)
             # padding 0 at the end.
             num_proposal = proposals_single.size(0)
