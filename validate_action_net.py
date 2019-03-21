@@ -14,11 +14,54 @@ from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
 from action_net import ACT_net
-
 from resize_rpn import resize_rpn, resize_tube
 import pdb
+from bbox_transform import clip_boxes_3d
 
 np.random.seed(42)
+
+def bbox_transform_inv_3d(boxes, deltas, batch_size):
+
+
+    if boxes.size(-1) == 7:
+        boxes = boxes[:,:, 1:]
+    widths = boxes[:, :, 3] - boxes[:, :, 0] + 1.0
+    heights = boxes[:, :, 4] - boxes[:, :, 1] + 1.0
+    dur = boxes[:, :, 5] - boxes[:, :, 2] + 1.0  # duration
+    ctr_x = boxes[:, :, 0] + 0.5 * widths
+    ctr_y = boxes[:, :, 1] + 0.5 * heights
+    ctr_t = boxes[:, :, 2] + 0.5 * dur  # center frame
+
+    dx = deltas[:, :, 0::6]
+    dy = deltas[:, :, 1::6]
+    dt = deltas[:, :, 2::6]
+    dw = deltas[:, :, 3::6]
+    dh = deltas[:, :, 4::6]
+    dd = deltas[:, :, 5::6]
+
+    pred_ctr_x = dx * widths.unsqueeze(2) + ctr_x.unsqueeze(2)
+    pred_ctr_y = dy * heights.unsqueeze(2) + ctr_y.unsqueeze(2)
+    pred_ctr_t = dt * dur.unsqueeze(2) + ctr_t.unsqueeze(2)
+    pred_w = torch.exp(dw) * widths.unsqueeze(2)
+    pred_h = torch.exp(dh) * heights.unsqueeze(2)
+    pred_t = torch.exp(dd) * dur.unsqueeze(2)
+
+    pred_boxes = deltas.clone()
+    # x1
+    pred_boxes[:, :, 0::6] = pred_ctr_x - 0.5 * pred_w
+    # y1
+    pred_boxes[:, :, 1::6] = pred_ctr_y - 0.5 * pred_h
+    # t1
+    pred_boxes[:, :, 2::6] = pred_ctr_t - 0.5 * pred_t
+    # x2
+    pred_boxes[:, :, 3::6] = pred_ctr_x + 0.5 * pred_w
+    # y2
+    pred_boxes[:, :, 4::6] = pred_ctr_y + 0.5 * pred_h
+    # t2
+    pred_boxes[:, :, 5::6] = pred_ctr_t + 0.5 * pred_t
+
+    return pred_boxes
+
 
 def bbox_overlaps_batch_3d(tubes, gt_tubes):
     """
@@ -33,8 +76,8 @@ def bbox_overlaps_batch_3d(tubes, gt_tubes):
 
         N = tubes.size(0)
         K = gt_tubes.size(1)
-
-        tubes = tubes[:,1:]
+        if tubes.size(-1) == 7:
+            tubes = tubes[:,1:]
         tubes = tubes.view(1, N, 6)
         tubes = tubes.expand(batch_size, N, 6).contiguous()
         gt_tubes = gt_tubes[:, :, :6].contiguous()
@@ -140,8 +183,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
-        if step == 2:
-            break
+        # if step == 2:
+        #     break
         print('step :',step)
 
         clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
@@ -158,14 +201,23 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                                                        None)
 
 
-        print('bbox_pred :', bbox_pred)
         n_tubes = len(tubes)
 
         for i in range(tubes.size(0)): # how many frames we have
             tubes_t = tubes[i,:,:7]
+            tubes_t = bbox_transform_inv_3d(tubes_t.unsqueeze(0), bbox_pred[i].unsqueeze(0),1)
+            proposals = clip_boxes_3d(tubes_t, im_info, 1)
 
-            overlaps, overlaps_xy, overlaps_t = bbox_overlaps_batch_3d(tubes_t.squeeze(0), gt_tubes_r_[i].unsqueeze(0)) # check one video each time
-
+            # keep only non-empty gt_tubes
+            gt_tube_indices = gt_tubes_r_[i,:,-1].gt(0).nonzero()
+            gt_tub = gt_tubes_r[i,gt_tube_indices]
+            if gt_tub.nelement() == 0:
+                continue
+            overlaps, overlaps_xy, overlaps_t = bbox_overlaps_batch_3d(tubes_t.squeeze(0), gt_tub.permute(1,0,2).type_as(tubes_t)) # check one video each time
+            # print('overlaps :',overlaps.shape)
+            # print('overlaps_xy.shape :',overlaps_xy.shape)
+            # print('overlaps_t :',overlaps_t.shape)
+            
             ## for the whole tube
             gt_max_overlaps, _ = torch.max(overlaps, 1)
             gt_max_overlaps = torch.where(gt_max_overlaps > iou_thresh, gt_max_overlaps, torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
@@ -267,7 +319,7 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    model_data = torch.load('./action_net_model_25epoch.pwf')
+    model_data = torch.load('./action_net_model.pwf')
 
     model.load_state_dict(model_data)
 

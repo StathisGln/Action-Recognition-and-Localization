@@ -169,7 +169,7 @@ class ACT_net(nn.Module):
             f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss
 
 
-        return rois,  bbox_pred, pooled_feat_, None, None, None, None, None, None, sgl_rois_bbox_pred, None
+        return f_rois,  f_bbox_pred, pooled_feat_, None, None, None, None, None, None, sgl_rois_bbox_pred, None
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):
