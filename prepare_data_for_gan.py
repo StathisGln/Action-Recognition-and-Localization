@@ -6,28 +6,21 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-from ucf_dataset import Video_UCF, video_names
+from ucf_dataset import video_names
 
-from spatial_transforms import (
-    Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
-from temporal_transforms import LoopPadding
+from model import Model
 
-from create_video_id import get_vid_dict
+np.random.seed(42)
 
-from feature_extractor import Model
-
-if __name__ == '__main__':
+if __main__ == '__name__':
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
-
-    # dataset_frames = '/gpu-data2/sgal/UCF-101-frames'
-    # boxes_file = '/gpu-data2/sgal/pyannot.pkl'
-    # split_txt_path = '/gpu-data2/sgal/UCF101_Action_detection_splits/'
-
-    dataset_frames = '.../UCF-101-frames'
-    boxes_file = '.../pyannot.pkl'
-    split_txt_path = '.../UCF101_Action_detection_splits/'
+    
+    dataset_folder = '/gpu-data2/sgal/UCF-101-pickle'
+    dataset_frames = '/gpu-data2/sgal/UCF-101-frames'
+    boxes_file = '/gpu-data2/sgal/pyannot.pkl'
+    split_txt_path = '/gpu-data2/sgal/UCF101_Action_detection_splits/'
 
     sample_size = 112
     sample_duration = 16  # len(images)
@@ -42,6 +35,7 @@ if __name__ == '__main__':
                'Skijet','SoccerJuggling','Surfing','TennisSwing','TrampolineJumping',
                'VolleyballSpiking','WalkingWithDog']
 
+
     cls2idx = {actions[i]: i for i in range(0, len(actions))}
 
     ### get videos id
@@ -54,16 +48,16 @@ if __name__ == '__main__':
 
     n_classes = len(actions)
 
-    ######################################
-    #          Code starts here          #
-    ######################################
-    
-    # first initialize model
+    ####################################################
+    #          Prepare for feature extraction          #
+    ####################################################
+
     n_devs = torch.cuda.device_count()
     model = Model(actions, sample_duration, sample_size)
     model.load_part_model()
-    model.deactivate_grad()
-    
+    model.deactivate_action_net_grad()
+
+
     if torch.cuda.device_count() > 1:
 
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
@@ -77,36 +71,22 @@ if __name__ == '__main__':
     vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train')
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
                                               shuffle=True)    # reset learning rate
-    model.train()
 
     for step, data  in enumerate(data_loader):
 
-        if step == 2:
-            break
-
-        # get data
-        vid_id, clips, boxes, n_frames, n_actions, h, w = data 
+        vid_id, clips, boxes, n_frames, n_actions, h, w = data
         mode = 'train'
 
-        # vid_id = vid_id.to(device)
-        # n_frames = n_frames.to(device)
-        # n_actions = n_actions.to(device)
-        # h = h.to(device)
-        # w = w.to(device)
+        vid_id = vid_id.to(device)
+        n_frames = n_frames.to(device)
+        n_actions = n_actions.to(device)
+        h = h.to(device)
+        w = w.to(device)
 
-        # tubes,  bbox_pred, \
-        # prob_out, rpn_loss_cls, \
-        # rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(n_devs, dataset_folder, \
-        #                                                  vid_names, clips, vid_id,  \
-        #                                                  boxes, \
-        #                                                  mode, cls2idx, n_actions,n_frames, h, w)
-
-        # loss = cls_loss.mean()
-
-        # # backw\ard
-        # optimizer.zero_grad()
-        # loss.backward()
-        # optimizer.step()
-
-        # loss_temp += loss.item()
+        tubes,  bbox_pred, \
+        prob_out, rpn_loss_cls, \
+        rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(n_devs, dataset_folder, \
+                                                         vid_names, clips, vid_id,  \
+                                                         boxes, \
+                                                         mode, cls2idx, n_actions,n_frames, h, w)
 
