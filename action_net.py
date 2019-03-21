@@ -83,6 +83,7 @@ class ACT_net(nn.Module):
         # print('pooled_feat :',pooled_feat)
         # # feed pooled features to top model
         pooled_feat = self._head_to_tail(pooled_feat)
+        pooled_feat = pooled_feat.mean(2)
         # print('pooled_feat.shape :',pooled_feat.shape)
 
         # n_rois = pooled_feat.size(0)
@@ -172,7 +173,7 @@ class ACT_net(nn.Module):
           model.module.maxpool,model.module.layer1,model.module.layer2, model.module.layer3)
 
         self.act_top = nn.Sequential(model.module.layer4)
-
+        self.avg_pool = nn.Sequential(model.module.avgpool)
         # self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg
         # self.act_bbox_pred = nn.Linear(8192, 6 * self.n_classes) # 2 classes bg/ fg
         # self.act_cls_score = nn.Linear(8192, self.n_classes)
@@ -204,10 +205,9 @@ class ACT_net(nn.Module):
         # print('pool5.shape :',pool5.shape)
         batch_size = pool5.size(0)
         fc7 = self.act_top(pool5)
-        fc7 = fc7.mean(4)
-        fc7 = fc7.mean(3)
-        fc7 = fc7.mean(2)
-        # print('fc7.shape :',fc7.shape)
+        fc7 = self.avg_pool(fc7)
+        fc7 = fc7.view(fc7.size(0),fc7.size(1),-1)
+        print('fc7.shape :',fc7.shape)
         return fc7
 
     

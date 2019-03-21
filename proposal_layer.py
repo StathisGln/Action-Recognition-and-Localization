@@ -185,8 +185,8 @@ class _ProposalLayer(nn.Module):
             # # 5. take top pre_nms_topN (e.g. 6000)
             order_single = order[i]
 
-            if pre_nms_topN > 0 and pre_nms_topN < scores_keep.numel():
-                order_single = order_single[:pre_nms_topN]
+            # if pre_nms_topN > 0 and pre_nms_topN < scores_keep.numel():
+            #     order_single = order_single[:pre_nms_topN]
             proposals_single = proposals_single[order_single, :]
             scores_single = scores_single[order_single].view(-1,1)
 

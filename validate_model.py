@@ -48,6 +48,7 @@ def bbox_overlaps_batch_3d(tubes, gt_tubes):
             gt_tubes_t = gt_tubes_t.unsqueeze(0)
 
         gt_tubes_area = (gt_tubes_x * gt_tubes_y * gt_tubes_t)
+        gt_tubes_area_xy = gt_tubes_x * gt_tubes_y
 
         tubes_boxes_x = (tubes[:, :, 3] - tubes[:, :, 0] + 1)
         tubes_boxes_y = (tubes[:, :, 4] - tubes[:, :, 1] + 1)
@@ -55,8 +56,16 @@ def bbox_overlaps_batch_3d(tubes, gt_tubes):
 
         tubes_area = (tubes_boxes_x * tubes_boxes_y *
                         tubes_boxes_t).view(batch_size, N, 1)  # for 1 frame
-        gt_area_zero = (gt_tubes_x == 1) & (gt_tubes_y == 1) 
-        tubes_area_zero = (tubes_boxes_x == 1) & (tubes_boxes_y == 1)
+        tubes_area_xy = (tubes_boxes_x * tubes_boxes_y).view(batch_size, N, 1)  # for 1 frame
+        
+        gt_area_zero = (gt_tubes_x == 1) & (gt_tubes_y == 1) & (gt_tubes_t == 1)
+        tubes_area_zero = (tubes_boxes_x == 1) & (tubes_boxes_y == 1) & (tubes_boxes_t == 1)
+
+        gt_area_zero_xy = (gt_tubes_x == 1) & (gt_tubes_y == 1) 
+        tubes_area_zero_xy = (tubes_boxes_x == 1) & (tubes_boxes_y == 1) 
+
+        gt_area_zero_t =  (gt_tubes_t == 1)
+        tubes_area_zero_t =  (tubes_boxes_t == 1)
 
         boxes = tubes.view(batch_size, N, 1, 6)
         boxes = boxes.expand(batch_size, N, K, 6)
@@ -77,15 +86,43 @@ def bbox_overlaps_batch_3d(tubes, gt_tubes):
         it[it < 0] = 0
 
         ua = tubes_area + gt_tubes_area - (iw * ih * it)
+        ua_xy = tubes_area_xy + gt_tubes_area_xy - (iw * ih )
+        ua_t = tubes_boxes_t.unsqueeze(2) + gt_tubes_t - it
+
+        # print('ua.shape :',ua.shape)
+        # print('ua_xy.shape :',ua_xy.shape)
+        # print('tubes_boxes_t.shape :',tubes_boxes_t.shape)
+        # print('gt_tubes_t.shape :',gt_tubes_t.shape)
+        # print('it :',it.shape)
+        # print('ua_t :',ua_t.shape)
+        # print('tubes_area.shape :',tubes_area.shape)
+        # print('tubes_boxes_t.shape :',tubes_boxes_t.unsqueeze(2)
+        #       .shape)
+        # print('gt_tubes_area.shape :',gt_tubes_area.shape)
+        # print('gt_tubes_t.shape :', gt_tubes_t.shape)
         overlaps = iw * ih * it / ua
+        overlaps_xy = iw * ih  / ua_xy
+        overlaps_t = it / ua_t
+
         overlaps.masked_fill_(gt_area_zero.view(
             batch_size, 1, K).expand(batch_size, N, K), 0)
         overlaps.masked_fill_(tubes_area_zero.view(
             batch_size, N, 1).expand(batch_size, N, K), -1)
+
+        overlaps_xy.masked_fill_(gt_area_zero.view(
+            batch_size, 1, K).expand(batch_size, N, K), 0)
+        overlaps_xy.masked_fill_(tubes_area_zero.view(
+            batch_size, N, 1).expand(batch_size, N, K), -1)
+
+        overlaps_t.masked_fill_(gt_area_zero.view(
+            batch_size, 1, K).expand(batch_size, N, K), 0)
+        overlaps_t.masked_fill_(tubes_area_zero.view(
+            batch_size, N, 1).expand(batch_size, N, K), -1)
+
     else:
         raise ValueError('tubes input dimension is not correct.')
 
-    return overlaps
+    return overlaps, overlaps_xy, overlaps_t
 
 def validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads):
 
@@ -94,15 +131,23 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                  temporal_transform=temporal_transform, json_file = boxes_file,
                  split_txt_path=splt_txt_path, mode='val', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
-                                              shuffle=True, num_workers=n_threads, pin_memory=True)
+                                              shuffle=False, num_workers=n_threads, pin_memory=True)
     model.eval()
     true_pos = torch.zeros(1).long().to(device)
     false_neg = torch.zeros(1).long().to(device)
+
+    true_pos_xy = torch.zeros(1).long().to(device)
+    false_neg_xy = torch.zeros(1).long().to(device)
+
+    true_pos_t = torch.zeros(1).long().to(device)
+    false_neg_t = torch.zeros(1).long().to(device)
+
     ## 2 rois : 1450
     for step, data  in enumerate(data_loader):
 
-        if step == 2:
-            break
+        # if step == 2:
+        #     break
+        # print('step :',step)
 
         clips,  (h, w), gt_tubes_r, n_actions = data
         clips = clips.to(device)
@@ -114,8 +159,11 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                              im_info,
                                              gt_tubes_r, None,
                                              n_actions)
+        # tubes[:,:,3] = 0
+        # tubes[:,:,6] = 15
+        overlaps, overlaps_xy, overlaps_t = bbox_overlaps_batch_3d(tubes.squeeze(0), gt_tubes_r) # check one video each time
 
-        overlaps = bbox_overlaps_batch_3d(tubes.squeeze(0), gt_tubes_r) # check one video each time
+        ## for the whole tube
         gt_max_overlaps, _ = torch.max(overlaps, 1)
         gt_max_overlaps = torch.where(gt_max_overlaps > iou_thresh, gt_max_overlaps, torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
         detected =  gt_max_overlaps.ne(0).sum()
@@ -123,7 +171,28 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         true_pos += detected
         false_neg += n_elements - detected
 
-    recall = true_pos.float() / (true_pos.float() + false_neg.float())
+        ## for xy - area
+        gt_max_overlaps_xy, _ = torch.max(overlaps_xy, 1)
+        gt_max_overlaps_xy = torch.where(gt_max_overlaps_xy > iou_thresh, gt_max_overlaps_xy, torch.zeros_like(gt_max_overlaps_xy).type_as(gt_max_overlaps_xy))
+
+        detected_xy =  gt_max_overlaps_xy.ne(0).sum()
+        n_elements_xy = gt_max_overlaps_xy.nelement()
+        true_pos_xy += detected_xy
+        false_neg_xy += n_elements_xy - detected_xy
+
+        ## for t - area
+        gt_max_overlaps_t, _ = torch.max(overlaps_t, 1)
+        gt_max_overlaps_t = torch.where(gt_max_overlaps_t > iou_thresh, gt_max_overlaps_t, torch.zeros_like(gt_max_overlaps_t).type_as(gt_max_overlaps_t))
+        detected_t =  gt_max_overlaps_t.ne(0).sum()
+        n_elements_t = gt_max_overlaps_t.nelement()
+        true_pos_t += detected_t
+        false_neg_t += n_elements_t - detected_t
+
+
+
+    recall    = true_pos.float()    / (true_pos.float()    + false_neg.float())
+    recall_xy = true_pos_xy.float() / (true_pos_xy.float() + false_neg_xy.float())
+    recall_t  = true_pos_t.float()  / (true_pos_t.float()  + false_neg_t.float())
     print('recall :',recall)
     print(' -----------------------')
     print('| Validation Epoch: {: >3} | '.format(epoch+1))
@@ -132,62 +201,19 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     print('|                       |')
     print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
         step, true_pos.cpu().tolist()[0], false_neg.cpu().tolist()[0], recall.cpu().tolist()[0]))
+    print('|                       |')
+    print('| In xy area            |')
+    print('|                       |')
+    print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        step, true_pos_xy.cpu().tolist()[0], false_neg_xy.cpu().tolist()[0], recall_xy.cpu().tolist()[0]))
+    print('|                       |')
+    print('| In time area          |')
+    print('|                       |')
+    print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        step, true_pos_t.cpu().tolist()[0], false_neg_t.cpu().tolist()[0], recall_t.cpu().tolist()[0]))
+
     print(' -----------------------')
         
-def training(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads, lr,):
-
-    data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
-                 temporal_transform=temporal_transform, json_file = boxes_file,
-                 split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
-    data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
-                                              shuffle=True, num_workers=n_threads, pin_memory=True)
-    n_classes = len(classes)
-    resnet_shortcut = 'A'
-
-    model.train()
-    loss_temp = 0
-    
-    ## 2 rois : 1450
-    for step, data  in enumerate(data_loader):
-
-        if step == 2:
-            break
-
-        clips,  (h, w), gt_tubes_r, n_actions = data
-        clips = clips.to(device)
-        gt_tubes_r = gt_tubes_r.to(device)
-        # print('gt_tubes_r :',gt_tubes_r)
-        # print('gt_tubes :',gt_tubes)
-        # h = h.to(device)
-        # w = w.to(device)
-        # gt_tubes = gt_tubes.to(device)
-        n_actions = n_actions.to(device)
-        im_info = torch.Tensor([[sample_size, sample_size, sample_duration]] * gt_tubes_r.size(1)).to(device)
-        # print('gt_tubes_r.shape :',gt_tubes_r.shape )
-        inputs = Variable(clips)
-        rois,  bbox_pred, cls_prob, \
-        rpn_loss_cls, rpn_loss_bbox, \
-        act_loss_cls, act_loss_bbox  = model(inputs,
-                                             im_info,
-                                             gt_tubes_r, None,
-                                             n_actions)
-        # print('rois :',rois)
-        # print('rpn_loss_bbox :',rpn_loss_bbox)
-        # print('rpn_loss_cls :',rpn_loss_cls)
-        loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + act_loss_cls.mean()
-        # loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() 
-        loss_temp += loss.item()
-
-        # backw\ard
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-    print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
-        epoch+1,loss_temp/step, lr))
-
-    return loss_temp
-
 if __name__ == '__main__':
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -223,52 +249,16 @@ if __name__ == '__main__':
                                  Normalize(mean, [1, 1, 1])])
     temporal_transform = LoopPadding(sample_duration)
 
-    lr = 0.01
-    lr_decay_step = 10
-    lr_decay_gamma = 0.1
-    
     # Init action_net
     model = ACT_net(classes)
     model.create_architecture()
-    if torch.cuda.device_count() > 1:
-        print('Using {} GPUs!'.format(torch.cuda.device_count()))
+    model_data = torch.load('./jmdb_model.pwf')
 
-        model = nn.DataParallel(model)
+    model.load_state_dict(model_data)
 
+    model = nn.DataParallel(model)
     model.to(device)
 
-    params = []
-    for key, value in dict(model.named_parameters()).items():
-        # print(key, value.requires_grad)
-        if value.requires_grad:
-            print('key :',key)
-            if 'bias' in key:
-                params += [{'params':[value],'lr':lr*(True + 1), \
-                            'weight_decay': False and 0.0005 or 0}]
-            else:
-                params += [{'params':[value],'lr':lr, 'weight_decay': 0.0005}]
+    model.eval()
 
-    lr = lr * 0.1
-    optimizer = torch.optim.Adam(params)
-
-    epochs = 20
-    # epochs = 1
-    for epoch in range(epochs):
-        print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
-
-        # start = time.time()
-        if epoch % (lr_decay_step + 1) == 0:
-            adjust_learning_rate(optimizer, lr_decay_gamma)
-            lr *= lr_decay_gamma
-
-
-        training(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, batch_size, n_threads, lr)
-
-        if (epoch + 1) % (5) == 0:
-            validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, batch_size, n_threads)
-
-
-        if ( epoch + 1 ) % 5 == 0:
-            torch.save(model.state_dict(), "jmdb_model.pwf".format(epoch+1))
-    torch.save(model.state_dict(), "jmdb_model.pwf".format(epoch))
-
+    validation(0, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, batch_size, n_threads)
