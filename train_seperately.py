@@ -145,7 +145,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         step+1, true_pos.cpu().tolist()[0], false_neg.cpu().tolist()[0], recall.cpu().tolist()[0]))
     print(' -----------------------')
         
-def training(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads, lr,):
+def training(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads, lr, mode = 1):
 
     data = Video_UCF(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
@@ -181,9 +181,11 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
                                                       im_info_,
                                                       gt_tubes_r_, gt_rois_,
                                                       start_fr)
-
-        loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + rpn_loss_cls_16.mean() \
-               + rpn_loss_bbox_16.mean() +  act_loss_bbox_16.mean() +  sgl_rois_bbox_loss.mean()
+        if mode == 1:
+            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + rpn_loss_cls_16.mean() \
+                   + rpn_loss_bbox_16.mean() +  act_loss_bbox_16.mean()
+        elif mode == 2:
+            loss = sgl_rois_bbox_loss.mean()
 
         loss_temp += loss.item()
 
@@ -234,9 +236,13 @@ if __name__ == '__main__':
     n_classes = len(actions)
 
 
-    ########################################
-    #          Part 1 - train TPN          #
-    ########################################
+    #######################################################
+    #          Part 1-1 - train TPN - without reg         #
+    #######################################################
+
+    print(' -----------------------------------------------------')
+    print('|          Part 1-1 - train TPN - without reg         |')
+    print(' -----------------------------------------------------')
 
     # Init action_net
     act_model = ACT_net(actions, sample_duration)
@@ -254,6 +260,8 @@ if __name__ == '__main__':
     
 
     params = []
+
+    for p in act_model.module.reg_layer.parameters() : p.requires_grad=False
     for key, value in dict(act_model.named_parameters()).items():
         # print(key, value.requires_grad)
         if value.requires_grad:
@@ -268,6 +276,7 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(params)
 
     epochs = 40
+
     n_devs = torch.cuda.device_count()
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
@@ -277,16 +286,78 @@ if __name__ == '__main__':
             lr *= lr_decay_gamma
 
 
-        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr)
+        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=1)
 
         # if (epoch + 1) % (5) == 0:
-        #     validation(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
+        #     validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
+
 
 
         if ( epoch + 1 ) % 5 == 0:
             torch.save(act_model.state_dict(), "action_net_model.pwf".format(epoch+1))
     torch.save(act_model.state_dict(), "action_net_model.pwf".format(epoch))
+    
+    #####################################################
+    #          Part 1-2 - train TPN - only reg          #
+    #####################################################
 
+    print(' --------------------------------------------------')
+    print('|          Part 1-2 - train TPN - only reg         |')
+    print(' --------------------------------------------------')
+
+
+    # Init action_net
+    act_model = ACT_net(actions, sample_duration)
+    act_model.create_architecture()
+    if torch.cuda.device_count() > 1:
+        print('Using {} GPUs!'.format(torch.cuda.device_count()))
+
+        act_model = nn.DataParallel(act_model)
+
+    act_model.to(device)
+
+    lr = 0.1
+    lr_decay_step = 8
+    lr_decay_gamma = 0.1
+    
+
+    params = []
+    for p in act_model.module.parameters() : p.requires_grad=False
+    for p in act_model.module.reg_layer.parameters() : p.requires_grad=True
+    for key, value in dict(act_model.named_parameters()).items():
+        # print(key, value.requires_grad)
+        if value.requires_grad:
+            print('key :',key)
+            if 'bias' in key:
+                params += [{'params':[value],'lr':lr*(True + 1), \
+                            'weight_decay': False and 0.0005 or 0}]
+            else:
+                params += [{'params':[value],'lr':lr, 'weight_decay': 0.0005}]
+
+    lr = lr * 0.1
+    optimizer = torch.optim.Adam(params)
+
+    epochs = 40
+
+    n_devs = torch.cuda.device_count()
+    for epoch in range(epochs):
+        print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
+
+        if epoch % (lr_decay_step + 1) == 0:
+            adjust_learning_rate(optimizer, lr_decay_gamma)
+            lr *= lr_decay_gamma
+
+
+        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=2)
+
+        # if (epoch + 1) % (5) == 0:
+        #     validation(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
+
+        if ( epoch + 1 ) % 5 == 0:
+            torch.save(act_model.module.reg_layer.state_dict(), "reg_layer.pwf".format(epoch+1))
+    torch.save(act_model.module.reg_layer.state_dict(), "reg_layer.pwf".format(epoch))
+
+    
     # ###########################################
     # #          Part 2 - train Linear          #
     # ###########################################
