@@ -339,8 +339,8 @@ if __name__ == '__main__':
 
     ##########################
     
-    # epochs = 40
-    epochs = 2
+    epochs = 40
+    # epochs = 2
 
     for ep in range(epochs):
 
@@ -358,8 +358,8 @@ if __name__ == '__main__':
 
         for step, data  in enumerate(data_loader):
 
-            if step == 2:
-                break
+            # if step == 2:
+            #     break
 
             # print('step :',step)
             vid_id, clips, boxes, n_frames, n_actions, h, w = data
