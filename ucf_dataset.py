@@ -204,10 +204,9 @@ def prepare_samples (vid_names, vid_id, sample_duration, step, n_frames):
         'segment': [begin_t, end_t],
         'n_frames': n_frames,
     }
-    for i in range(1, (n_frames - sample_duration + 1), step):
+    for i in range(1, (n_frames - step), step):
         sample_i = copy.deepcopy(sample)
-        sample_i['frame_indices'] = list(range(i, i + sample_duration))
-        sample_i['segment'] = torch.IntTensor([i, i + sample_duration - 1])
+        sample_i['frame_indices'] = list(range(i, min(n_frames,i + sample_duration)))
         sample_i['start_fr'] = i-1
         dataset.append(sample_i)
 
@@ -231,25 +230,12 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
     max_actions = -1
     #TrampolineJumping/v_TrampolineJumping_g10_c01
     for cls in classes:
-    # for cls in ['Biking']:
-    # for cls in ['GolfSwing']:
-    # for cls in ['TrampolineJumping']:
-    # for cls in ['Basketball']:
+
         videos = next(os.walk(os.path.join(dataset_path,cls), True))[1]
         for vid in videos:
-        # for vid in [ 'v_Biking_g22_c03','v_Biking_g03_c03','v_Biking_g13_c03','v_Biking_g23_c02','v_Biking_g12_c03']:
-        # for vid in ['v_TrampolineJumping_g21_c02','v_TrampolineJumping_g10_c01','v_TrampolineJumping_g20_c02','v_TrampolineJumping_g09_c05' , 'v_TrampolineJumping_g10_c06','v_TrampolineJumping_g11_c05']:
-        # for vid in ['v_TrampolineJumping_g11_c05','v_TrampolineJumping_g21_c02','v_TrampolineJumping_g10_c01','v_TrampolineJumping_g20_c02','v_TrampolineJumping_g09_c05' , 'v_TrampolineJumping_g10_c06']:
-        # for vid in ['v_VolleyballSpiking_g14_c03','v_TrampolineJumping_g20_c02']: # empty rois
-
-        # for vid in [' v_VolleyballSpiking_g23_c01']:
-        # for vid in ['v_TrampolineJumping_g10_c06']:
-        # for vid in ['v_VolleyballSpiking_g14_c03','v_VolleyballSpiking_g23_c01']:
-        # for vid in ['v_GolfSwing_g17_c05','v_GolfSwing_g15_c05','v_GolfSwing_g14_c05','v_GolfSwing_g18_c05','v_GolfSwing_g19_c05','v_GolfSwing_g12_c05','v_GolfSwing_g11_c05']:
 
             video_path = os.path.join(cls,vid)
             if video_path not in boxes_data or not(vid in file_names):
-                # print('OXI to ',video_path)
                 continue
 
             values= boxes_data[video_path]
@@ -262,7 +248,6 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
             if n_actions > max_actions:
                 max_actions = n_actions
             # # pos 0 --> starting frame, pos 1 --> ending frame
-            # s_e_fr = np.zeros((n_actions, 2)) 
             rois = np.zeros((n_actions,n_frames,5))
             rois[:,:,4] = -1 
 
@@ -280,7 +265,6 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
                 'n_actions' : n_actions,
                 'boxes' : rois,
                 'n_frames' : n_frames,
-                # 's_e_fr' : s_e_fr
             }
             dataset.append(sample_i)
 
@@ -340,7 +324,6 @@ class video_names(data.Dataset):
 
         vid_id = np.array([self.vid2idx[vid_name]],dtype=np.int64)
         n_frames_np = np.array([n_frames], dtype=np.int64)
-        # print('vid_name :', vid_name, ' n_frames :',n_frames_np)
         n_actions_np = np.array([n_actions], dtype=np.int64)
 
         # clips = torch.load(os.path.join(self.dataset_folder,vid_name,'images.pt'))

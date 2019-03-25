@@ -28,7 +28,6 @@ np.random.seed(42)
 
 def bbox_transform_inv_3d(boxes, deltas, batch_size):
 
-
     if boxes.size(-1) == 7:
         boxes = boxes[:,:, 1:]
     widths = boxes[:, :, 3] - boxes[:, :, 0] + 1.0
@@ -82,10 +81,10 @@ def bbox_overlaps_batch(tubes, gt_tubes, tubes_dur, gt_tubes_dur):
         N = tubes.size(1)
         K = gt_tubes.size(1)
 
-        print('----------Inside overlaps----------')
-        print('gt_tubes.shape :',gt_tubes.shape)
-        print('tubes.shape :',tubes.shape)
-        print('N {} K {}'.format(N,K))
+        # print('----------Inside overlaps----------')
+        # print('gt_tubes.shape :',gt_tubes.shape)
+        # print('tubes.shape :',tubes.shape)
+        # print('N {} K {}'.format(N,K))
 
         if tubes.size(2) == 4:
             tubes = tubes[:,:,:4].contiguous()
@@ -151,7 +150,7 @@ def bbox_overlaps_batch(tubes, gt_tubes, tubes_dur, gt_tubes_dur):
 
 def validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, vid2idx,  batch_size, n_threads):
 
-    iou_thresh = 0.03 # Intersection Over Union thresh
+    iou_thresh = 0.001 # Intersection Over Union thresh
 
     val_name_loader = video_names(dataset_folder, splt_txt_path, boxes_file, vid2idx, mode='test')
     val_loader = torch.utils.data.DataLoader(val_name_loader, batch_size=batch_size,
@@ -174,7 +173,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(val_loader):
 
-        if step == 2:
+        if step == 1:
             break
 
         # print('step :',step)
@@ -189,18 +188,25 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
         ## create video tube
                 ## create video tube
-        print('boxes.shape :',boxes.shape)
         boxes_ = boxes[0,:n_actions, :n_frames]
+        print('n_actions :', n_actions)
+        print('n_frames :', n_frames)
 
+        gt_tubes_dur = torch.zeros((boxes_.size(0),2)).float()
+        for i in range(boxes_.size(0)): # for every gt tube
+            k = boxes_[i].nonzero()
+            if k.nelement() != 0:
+                gt_tubes_dur[i,0] = k[0,0]
+                gt_tubes_dur[i,1] = k[-1,0]
+        print('gt_tubes_dur :',gt_tubes_dur)
+        
         tubes, prob_out =  model(1, dataset_folder, \
                                  vid_names, clips, vid_id,  \
                                  boxes, \
                                  mode, cls2idx, n_actions,n_frames, h, w)
         n_tubes = len(tubes)
-        print('n_tubes :',n_tubes)
-        print('boxes_ :',boxes_.shape)
         print('tubes.shape :',tubes.shape)
-
+        exit(-1)
         ### get duration
         tubes_dur = torch.zeros((tubes.size(0),2)).type_as(tubes)
 
@@ -224,16 +230,29 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         ## for the whole tube
         # gt_max_overlaps, gt_max_pos = torch.max(overlaps, 2) # gt_max_pos tells us which action is closer
         # gt_max_overlaps = torch.where(gt_max_overlaps > iou_thresh, gt_max_overlaps, torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
+        print('n_frames :',n_frames)
         overlaps = overlaps.permute(2,0,1)
         for i in range(n_actions):
 
             non_zero_frames = boxes_[i].nonzero()
             non_zero_frames = torch.unique(non_zero_frames[:,0]) # get non empty lines
+            print('overlaps[i].shape :',overlaps[i].shape)
+            overlaps_ = overlaps[i, non_zero_frames]
+            print('non_zero_frames.shape :',non_zero_frames.shape)
+            print('overlaps_.shape :',overlaps_.shape)
+            # overlaps_ = torch.where(overlaps_ > 0, overlaps_, torch.zeros_like(overlaps_).type_as(overlaps_))
+            overlaps_ = overlaps_.permute(1,0)
+            print('overlaps_.shape :',overlaps_.shape)
+            for j in range(overlaps_.size(0)): # for each tube
+                print('------------')
+                for k in range(overlaps_.size(1)):
+                    print('overlap[j,k] :',overlaps_[j,k], ' j :', j, ' k :',k )
+            # overlaps_ = overlaps_.prod(1)
+            # print('overlaps_.shape :',overlaps_.shape)
+            # print('overlaps_ :',overlaps_.detach().numpy())
 
-            overlaps_ = overlaps[i]
-            overlaps_ = torch.where(overlaps_ > iou_thresh, overlaps_, torch.zeros_like(overlaps_).type_as(overlaps_))
-            negative_tubes = torch.unique(overlaps_[non_zero_frames,:].eq(0).nonzero()[:])
-            print('negative_tubes :',negative_tubes)
+        exit(-1)
+
             
 
 
@@ -319,5 +338,5 @@ if __name__ == '__main__':
     model.to(device)
 
     model.eval()
-
+    torch.no_grad()
     validation(0, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, vid2idx, batch_size, n_threads)

@@ -87,15 +87,10 @@ def bbox_overlaps_batch_3d(tubes, tubes_curr):
     sb_t = tubes_boxes_t.view(batch_size,N,1) + tubes_curr_t.view(batch_size,1,K) - 2 * it
     overlaps_iou_t = it / ua_t
     overlaps_sub_t = sb_t / ua_t
-    # print('overlaps_iou_t.shape :',overlaps_iou_t.shape)
-    # print('overlaps_sub_t.shape :',overlaps_sub_t.shape)
-    # print('overlaps_sub_t :',overlaps_sub_t)
-    # print('overlaps_iou_t :',overlaps_iou_t)
-    overlaps_pre_t = torch.stack((3 * overlaps_iou_t,overlaps_sub_t))
-    overlaps_t = torch.mean(overlaps_pre_t,0)/4
-    # print('overlaps_pre_t.shape :',overlaps_pre_t.shape)
-    # print('overlaps_t :',overlaps_t.shape)
-    # print('overlaps_xy.shape :',overlaps_xy.shape)
+
+    overlaps_pre_t = torch.stack(( overlaps_iou_t,overlaps_sub_t))
+    overlaps_t = torch.mean(overlaps_pre_t,0)
+
     overlaps = overlaps_xy * (overlaps_t * 2) # 2.5 because time_dim reduces / 3
 
     overlaps.masked_fill_(gt_area_zero.view(

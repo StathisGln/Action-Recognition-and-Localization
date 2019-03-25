@@ -1,21 +1,37 @@
 import random
 import math
+import numpy as np
 
+# class LoopPadding(object):
+#     def __init__(self, size):
+#         self.size = size
+
+#     def __call__(self, frame_indices):
+#         out = frame_indices
+#         # print('len(out) : ', len(out))
+#         # print('self.size : ', self.size)
+#         for index in out:
+#             if len(out) >= self.size:
+#                 break
+#             # print(index)
+#             out.append(index)
+#         # print('out :', out)
+#         return out
 
 class LoopPadding(object):
     def __init__(self, size):
         self.size = size
 
     def __call__(self, frame_indices):
-        out = frame_indices
-        # print('len(out) : ', len(out))
-        # print('self.size : ', self.size)
-        for index in out:
-            if len(out) >= self.size:
-                break
-            # print(index)
-            out.append(index)
-        # print('out :', out)
+        out = np.zeros((self.size,), dtype=int)
+        print('frame_indices.shape :',frame_indices.shape)
+        out[:frame_indices.shape[0]] = frame_indices
+        for i in range(1,self.size-frame_indices.shape[0]+1):
+            out[-i] = frame_indices[-1]
+        print('out.shape :',out.shape)
+        print('out :',out)
+        print('type(out) :',type(out))
+
         return out
 
 

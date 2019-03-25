@@ -217,7 +217,6 @@ class Model(nn.Module):
         final_frames_bbox_pred = torch.zeros(len(f_tubes), max_length,self.sample_duration, 4).cuda()
         prob_out = torch.zeros(len(f_tubes), self.n_classes).cuda()
 
-
         for i in range(len(f_tubes)):
 
             seq = f_tubes[i]
@@ -238,6 +237,7 @@ class Model(nn.Module):
             final_video_tubes[i,:tmp_tube.size(0)] = tmp_tube
             final_frames_bbox_pred [i,:tmp_tube.size(0)] = tmp_bbox_pred
 
+        print('final_video_tubes :',final_video_tubes)
         # ##########################################
         # #           Time for Linear Loss         #
         # ##########################################
@@ -272,7 +272,6 @@ class Model(nn.Module):
                     str_fr = int(f_tubes[i][j][0] * self.sample_duration / 2)
                     final_frames[i,int(final_frames_tubes[i,j,0,2]):int(final_frames_tubes[i,j,0,5])+1] = final_frames_tubes[i,j,int(final_frames_tubes[i,j,0,2])-str_fr:int(final_frames_tubes[i,j,0,5])+1-str_fr,[0,1,3,4]]
 
-            print('final_frames.shape :',final_frames.shape)
             return final_frames, prob_out
 
     def deactivate_action_net_grad(self):
@@ -281,11 +280,11 @@ class Model(nn.Module):
         # for key, value in dict(self.named_parameters()).items():
         #     print(key, value.requires_grad)
 
-    def load_part_model(self, action_model_path=None, reg_path, rnn_path=None):
-
+    def load_part_model(self, action_model_path=None, reg_path=None, rnn_path=None):
 
         if action_model_path != None:
-            
+
+            print('Loading TPN model...')
             act_data = torch.load('./action_net_model.pwf')
 
             ## to remove module
@@ -308,9 +307,15 @@ class Model(nn.Module):
 
         if reg_path != None:
 
+            print('Loading regression layer...')
+
+            reg_layer_data = torch.load(reg_path)
+            self.act_net.reg_layer.load_state_dict(reg_layer_data)
             
         if rnn_path != None:
 
+            print('Loading RNN...')
+            
             act_rnn = Act_RNN(256,128,self.n_classes)
 
             act_rnn_data = torch.load(rnn_path)
