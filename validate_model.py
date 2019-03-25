@@ -7,120 +7,155 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from resnet_3D import resnet34
-from jhmdb_dataset import Video
+from ucf_dataset import Video_UCF, video_names
+
+from create_video_id import get_vid_dict
+from create_tubes_from_boxes import create_video_tube
 
 from net_utils import adjust_learning_rate
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
+
 from model import Model
+from action_net import ACT_net
+
 from resize_rpn import resize_rpn, resize_tube
 import pdb
+from bbox_transform import clip_boxes_3d
 
 np.random.seed(42)
 
-def bbox_overlaps_batch_3d(tubes, gt_tubes):
+def bbox_transform_inv_3d(boxes, deltas, batch_size):
+
+
+    if boxes.size(-1) == 7:
+        boxes = boxes[:,:, 1:]
+    widths = boxes[:, :, 3] - boxes[:, :, 0] + 1.0
+    heights = boxes[:, :, 4] - boxes[:, :, 1] + 1.0
+    dur = boxes[:, :, 5] - boxes[:, :, 2] + 1.0  # duration
+    ctr_x = boxes[:, :, 0] + 0.5 * widths
+    ctr_y = boxes[:, :, 1] + 0.5 * heights
+    ctr_t = boxes[:, :, 2] + 0.5 * dur  # center frame
+
+    dx = deltas[:, :, 0::6]
+    dy = deltas[:, :, 1::6]
+    dt = deltas[:, :, 2::6]
+    dw = deltas[:, :, 3::6]
+    dh = deltas[:, :, 4::6]
+    dd = deltas[:, :, 5::6]
+
+    pred_ctr_x = dx * widths.unsqueeze(2) + ctr_x.unsqueeze(2)
+    pred_ctr_y = dy * heights.unsqueeze(2) + ctr_y.unsqueeze(2)
+    pred_ctr_t = dt * dur.unsqueeze(2) + ctr_t.unsqueeze(2)
+    pred_w = torch.exp(dw) * widths.unsqueeze(2)
+    pred_h = torch.exp(dh) * heights.unsqueeze(2)
+    pred_t = torch.exp(dd) * dur.unsqueeze(2)
+
+    pred_boxes = deltas.clone()
+    # x1
+    pred_boxes[:, :, 0::6] = pred_ctr_x - 0.5 * pred_w
+    # y1
+    pred_boxes[:, :, 1::6] = pred_ctr_y - 0.5 * pred_h
+    # t1
+    pred_boxes[:, :, 2::6] = pred_ctr_t - 0.5 * pred_t
+    # x2
+    pred_boxes[:, :, 3::6] = pred_ctr_x + 0.5 * pred_w
+    # y2
+    pred_boxes[:, :, 4::6] = pred_ctr_y + 0.5 * pred_h
+    # t2
+    pred_boxes[:, :, 5::6] = pred_ctr_t + 0.5 * pred_t
+
+    return pred_boxes
+
+def bbox_overlaps_batch(tubes, gt_tubes, tubes_dur, gt_tubes_dur):
     """
-    tubes: (N, 6) ndarray of float
+    tubes: (N, 4) ndarray of float
     gt_tubes: (b, K, 5) ndarray of float
 
     overlaps: (N, K) ndarray of overlap between boxes and query_boxes
     """
     batch_size = gt_tubes.size(0)
 
-    if tubes.dim() == 2:
+    if tubes.dim() == 3:
 
-        N = tubes.size(0)
+        N = tubes.size(1)
         K = gt_tubes.size(1)
 
-        tubes = tubes[:,1:]
-        tubes = tubes.view(1, N, 6)
-        tubes = tubes.expand(batch_size, N, 6).contiguous()
-        gt_tubes = gt_tubes[:, :, :6].contiguous()
+        print('----------Inside overlaps----------')
+        print('gt_tubes.shape :',gt_tubes.shape)
+        print('tubes.shape :',tubes.shape)
+        print('N {} K {}'.format(N,K))
 
-        gt_tubes_x = (gt_tubes[:, :, 3] - gt_tubes[:, :, 0] + 1)
-        gt_tubes_y = (gt_tubes[:, :, 4] - gt_tubes[:, :, 1] + 1)
-        gt_tubes_t = (gt_tubes[:, :, 5] - gt_tubes[:, :, 2] + 1)
+        if tubes.size(2) == 4:
+            tubes = tubes[:,:,:4].contiguous()
+        else:
+            tubes = tubes[:,:,1:5].contiguous()
 
-        if batch_size == 1:  # only 1 video in batch:
-            gt_tubes_x = gt_tubes_x.unsqueeze(0)
-            gt_tubes_y = gt_tubes_y.unsqueeze(0)
-            gt_tubes_t = gt_tubes_t.unsqueeze(0)
+        gt_tubes = gt_tubes[:, :, :4].contiguous()
 
-        gt_tubes_area = (gt_tubes_x * gt_tubes_y * gt_tubes_t)
-        gt_tubes_area_xy = gt_tubes_x * gt_tubes_y
+        gt_tubes_x = (gt_tubes[:, :, 2] - gt_tubes[:, :, 0] + 1)
+        gt_tubes_y = (gt_tubes[:, :, 3] - gt_tubes[:, :, 1] + 1)
+        gt_tubes_t = (gt_tubes_dur[:,1] - gt_tubes_dur[:,0] + 1)
 
-        tubes_boxes_x = (tubes[:, :, 3] - tubes[:, :, 0] + 1)
-        tubes_boxes_y = (tubes[:, :, 4] - tubes[:, :, 1] + 1)
-        tubes_boxes_t = (tubes[:, :, 5] - tubes[:, :, 2] + 1)
+        gt_tubes_area_xy = (gt_tubes_x * gt_tubes_y).view(batch_size, 1, K)
 
-        tubes_area = (tubes_boxes_x * tubes_boxes_y *
-                        tubes_boxes_t).view(batch_size, N, 1)  # for 1 frame
-        tubes_area_xy = (tubes_boxes_x * tubes_boxes_y).view(batch_size, N, 1)  # for 1 frame
-        
-        gt_area_zero = (gt_tubes_x == 1) & (gt_tubes_y == 1) & (gt_tubes_t == 1)
-        tubes_area_zero = (tubes_boxes_x == 1) & (tubes_boxes_y == 1) & (tubes_boxes_t == 1)
+        tubes_boxes_x = (tubes[:, :, 2] - tubes[:, :, 0] + 1)
+        tubes_boxes_y = (tubes[:, :, 3] - tubes[:, :, 1] + 1)
+        tubes_boxes_t = (tubes_dur[:,1] - tubes_dur[:,0] + 1)
 
-        gt_area_zero_xy = (gt_tubes_x == 1) & (gt_tubes_y == 1) 
-        tubes_area_zero_xy = (tubes_boxes_x == 1) & (tubes_boxes_y == 1) 
+        tubes_area_xy = (tubes_boxes_x * tubes_boxes_y).view(batch_size,N,1)
 
-        gt_area_zero_t =  (gt_tubes_t == 1)
-        tubes_area_zero_t =  (tubes_boxes_t == 1)
+        gt_area_zero = (gt_tubes_x == 1) & (gt_tubes_y == 1)
+        tubes_area_zero = (tubes_boxes_x == 1) & (tubes_boxes_y == 1)
 
-        boxes = tubes.view(batch_size, N, 1, 6)
-        boxes = boxes.expand(batch_size, N, K, 6)
-        query_boxes = gt_tubes.view(batch_size, 1, K, 6)
-        query_boxes = query_boxes.expand(batch_size, N, K, 6)
+        boxes = tubes.view(batch_size, N, 1, 4).expand(batch_size, N, K, 4)
+        query_boxes = gt_tubes.view(
+            batch_size, 1, K, 4).expand(batch_size, N, K, 4)
 
-        iw = (torch.min(boxes[:, :, :, 3], query_boxes[:, :, :, 3]) -
+        iw = (torch.min(boxes[:, :, :, 2], query_boxes[:, :, :, 2]) -
               torch.max(boxes[:, :, :, 0], query_boxes[:, :, :, 0]) + 1)
-
         iw[iw < 0] = 0
 
-        ih = (torch.min(boxes[:, :, :, 4], query_boxes[:, :, :, 4]) -
+        ih = (torch.min(boxes[:, :, :, 3], query_boxes[:, :, :, 3]) -
               torch.max(boxes[:, :, :, 1], query_boxes[:, :, :, 1]) + 1)
         ih[ih < 0] = 0
 
-        it = (torch.min(boxes[:, :, :, 5], query_boxes[:, :, :, 5]) -
-              torch.max(boxes[:, :, :, 2], query_boxes[:, :, :, 2]) + 1)
+        ### todo time overlap
+        time = tubes_dur.view(N, 1,2).expand(N,K,2)
+        gt_time = gt_tubes_dur.view(1,K,2).expand(N,K,2)
+
+        it = (torch.min(gt_time[:,:,1], time[:,:,1]) -
+              torch.max(gt_time[:,:,0], gt_time[:,:,0]) + 1)
         it[it < 0] = 0
 
-        ua = tubes_area + gt_tubes_area - (iw * ih * it)
         ua_xy = tubes_area_xy + gt_tubes_area_xy - (iw * ih )
-        ua_t = tubes_boxes_t.unsqueeze(2) + gt_tubes_t - it
+        overlaps_xy = iw * ih / ua_xy
 
-        overlaps = iw * ih * it / ua
-        overlaps_xy = iw * ih  / ua_xy
+        ua_t = tubes_boxes_t.view(N,1) + gt_tubes_t.view(1,K) - it
         overlaps_t = it / ua_t
+        overlaps = overlaps_xy
 
+        print('overlaps_t.shape :',overlaps_t.shape)
+        # mask the overlap here.
         overlaps.masked_fill_(gt_area_zero.view(
             batch_size, 1, K).expand(batch_size, N, K), 0)
         overlaps.masked_fill_(tubes_area_zero.view(
             batch_size, N, 1).expand(batch_size, N, K), -1)
-
-        overlaps_xy.masked_fill_(gt_area_zero.view(
-            batch_size, 1, K).expand(batch_size, N, K), 0)
-        overlaps_xy.masked_fill_(tubes_area_zero.view(
-            batch_size, N, 1).expand(batch_size, N, K), -1)
-
-        overlaps_t.masked_fill_(gt_area_zero.view(
-            batch_size, 1, K).expand(batch_size, N, K), 0)
-        overlaps_t.masked_fill_(tubes_area_zero.view(
-            batch_size, N, 1).expand(batch_size, N, K), -1)
-
     else:
         raise ValueError('tubes input dimension is not correct.')
 
     return overlaps, overlaps_xy, overlaps_t
 
-def validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads):
 
-    iou_thresh = 0.5 # Intersection Over Union thresh
-    data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
-                 temporal_transform=temporal_transform, json_file = boxes_file,
-                 split_txt_path=splt_txt_path, mode='val', classes_idx=cls2idx)
-    data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
-                                              shuffle=True, num_workers=0, pin_memory=True)
+
+def validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, vid2idx,  batch_size, n_threads):
+
+    iou_thresh = 0.03 # Intersection Over Union thresh
+
+    val_name_loader = video_names(dataset_folder, splt_txt_path, boxes_file, vid2idx, mode='test')
+    val_loader = torch.utils.data.DataLoader(val_name_loader, batch_size=batch_size,
+                                             shuffle=True)
     model.eval()
 
     true_pos = torch.zeros(1).long().to(device)
@@ -137,77 +172,69 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     preds = torch.zeros(1).long().to(device)
     ## 2 rois : 1450
     tubes_sum = 0
-    for step, data  in enumerate(data_loader):
+    for step, data  in enumerate(val_loader):
 
-        # if step == 2:
-        #     break
+        if step == 2:
+            break
+
         # print('step :',step)
+        vid_id, clips, boxes, n_frames, n_actions, h, w = data
+        mode = 'test'
+        
+        vid_id = vid_id.to(device)
+        n_frames = n_frames.to(device)
+        n_actions = n_actions.to(device)
+        h = h.to(device)
+        w = w.to(device)
 
-        clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
-        clips_ = clips.to(device)
-        gt_tubes_r_ = gt_tubes_r.to(device)
-        gt_rois_ = gt_rois.to(device)
-        n_actions_ = n_actions.to(device)
-        im_info_ = im_info.to(device)
-        start_fr = torch.zeros(clips_.size(0)).to(device)
+        ## create video tube
+                ## create video tube
+        print('boxes.shape :',boxes.shape)
+        boxes_ = boxes[0,:n_actions, :n_frames]
 
-        tubes, bbox_pred, _,_,_,_,_,_,_,sgl_rois_bbox_pred,_   = model(inputs,
-                                                                       im_info,
-                                                                       gt_tubes_r_, gt_rois_,
-                                                                       start_fr)
-
-        print('tubes.shape :',tubes.shape)
-        print('bbox_pred.shape :',bbox_pred.shape)
-        exit(-1)
+        tubes, prob_out =  model(1, dataset_folder, \
+                                 vid_names, clips, vid_id,  \
+                                 boxes, \
+                                 mode, cls2idx, n_actions,n_frames, h, w)
         n_tubes = len(tubes)
+        print('n_tubes :',n_tubes)
+        print('boxes_ :',boxes_.shape)
+        print('tubes.shape :',tubes.shape)
 
-        _, cls_int = torch.max(cls_prob,1)
-        # print('cls_int :',cls_int, ' target :', target)
-        for k in cls_int.cpu().tolist():
-            if k == target.data:
-                print('Found one')
-                correct_preds += 1
-            n_preds += 1
-        for i in range(gt_tubes_r.size(0)): # how many frames we have
-            tubes_t = torch.zeros(n_tubes, 7).type_as(gt_tubes_r)
-            for j in range(n_tubes):
-                # print('J :',j, 'i :',i)
-                # print(' len(tube[j]) :',len(tubes[j]))
-                # print('tubes[j] :',tubes[j])
-                # print('tubes[j][i] :',tubes[j][i])
-                
-                if (len(tubes[j]) - 1 < i):
-                    continue
-                tubes_t[j] = torch.Tensor(tubes[j][i][:7]).type_as(tubes_t)
+        ### get duration
+        tubes_dur = torch.zeros((tubes.size(0),2)).type_as(tubes)
+
+        for i in range(tubes.size(0)): # for every prospect tube
+            k = tubes[i].nonzero()
+            if k.nelement() != 0:
+                tubes_dur[i,0] = k[0,0]
+                tubes_dur[i,1] = k[-1,0] 
+
+        gt_tubes_dur = torch.zeros((boxes_.size(0),2)).type_as(tubes)
+
+        for i in range(boxes_.size(0)): # for every gt tube
+            k = boxes_[i].nonzero()
+            if k.nelement() != 0:
+                gt_tubes_dur[i,0] = k[0,0]
+                gt_tubes_dur[i,1] = k[-1,0]
+
+
+        overlaps, overlaps_xy, overlaps_t = bbox_overlaps_batch(tubes.permute(1,0,2), boxes_.permute(1,0,2).type_as(tubes),tubes_dur, gt_tubes_dur) 
+
+        ## for the whole tube
+        # gt_max_overlaps, gt_max_pos = torch.max(overlaps, 2) # gt_max_pos tells us which action is closer
+        # gt_max_overlaps = torch.where(gt_max_overlaps > iou_thresh, gt_max_overlaps, torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
+        overlaps = overlaps.permute(2,0,1)
+        for i in range(n_actions):
+
+            non_zero_frames = boxes_[i].nonzero()
+            non_zero_frames = torch.unique(non_zero_frames[:,0]) # get non empty lines
+
+            overlaps_ = overlaps[i]
+            overlaps_ = torch.where(overlaps_ > iou_thresh, overlaps_, torch.zeros_like(overlaps_).type_as(overlaps_))
+            negative_tubes = torch.unique(overlaps_[non_zero_frames,:].eq(0).nonzero()[:])
+            print('negative_tubes :',negative_tubes)
             
-            overlaps, overlaps_xy, overlaps_t = bbox_overlaps_batch_3d(tubes_t.squeeze(0), gt_tubes_r[i].unsqueeze(0)) # check one video each time
-
-            ## for the whole tube
-            gt_max_overlaps, _ = torch.max(overlaps, 1)
-            gt_max_overlaps = torch.where(gt_max_overlaps > iou_thresh, gt_max_overlaps, torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
-            detected =  gt_max_overlaps.ne(0).sum()
-            n_elements = gt_max_overlaps.nelement()
-            true_pos += detected
-            false_neg += n_elements - detected
-
-            ## for xy - area
-            gt_max_overlaps_xy, _ = torch.max(overlaps_xy, 1)
-            gt_max_overlaps_xy = torch.where(gt_max_overlaps_xy > iou_thresh, gt_max_overlaps_xy, torch.zeros_like(gt_max_overlaps_xy).type_as(gt_max_overlaps_xy))
-
-            detected_xy =  gt_max_overlaps_xy.ne(0).sum()
-            n_elements_xy = gt_max_overlaps_xy.nelement()
-            true_pos_xy += detected_xy
-            false_neg_xy += n_elements_xy - detected_xy
-
-            ## for t - area
-            gt_max_overlaps_t, _ = torch.max(overlaps_t, 1)
-            gt_max_overlaps_t = torch.where(gt_max_overlaps_t > iou_thresh, gt_max_overlaps_t, torch.zeros_like(gt_max_overlaps_t).type_as(gt_max_overlaps_t))
-            detected_t =  gt_max_overlaps_t.ne(0).sum()
-            n_elements_t = gt_max_overlaps_t.nelement()
-            true_pos_t += detected_t
-            false_neg_t += n_elements_t - detected_t
-
-            tubes_sum += 1
 
 
     recall    = true_pos.float()    / (true_pos.float()    + false_neg.float())
@@ -246,9 +273,9 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_folder = '/gpu-data/sgal/JHMDB-act-detector-frames'
-    split_txt_path =  '/gpu-data/sgal/splits'
-    boxes_file = '../temporal_localization/poses.json'
+    dataset_folder = '/gpu-data2/sgal/UCF-101-frames'
+    boxes_file = '/gpu-data2/sgal/pyannot.pkl'
+    split_txt_path = '/gpu-data2/sgal/UCF101_Action_detection_splits/'
 
     sample_size = 112
     sample_duration = 16  # len(images)
@@ -272,21 +299,25 @@ if __name__ == '__main__':
 
     cls2idx = {actions[i]: i for i in range(0, len(actions))}
 
+    ### get videos id
+    vid2idx,vid_names = get_vid_dict(dataset_folder)
+
     spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
                                  ToTensor(),
                                  Normalize(mean, [1, 1, 1])])
     temporal_transform = LoopPadding(sample_duration)
 
-    # Init action_net
-    model = Model(classes)
-    model.create_architecture()
-    model_data = torch.load('./action_net_model_25epoch.pwf')
+    ##########################################
+    #          Model Initialization          #
+    ##########################################
 
-    model.load_state_dict(model_data)
-
-    model = nn.DataParallel(model)
+    action_model_path = './action_net_model.pwf'
+    reg_path = './reg_layer.pwf'
+    rnn_path = './act_rnn.pwf'
+    model = Model(actions, sample_duration, sample_size)
+    model.load_part_model(action_model_path, reg_path, rnn_path, )
     model.to(device)
 
     model.eval()
 
-    validation(0, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, batch_size, n_threads)
+    validation(0, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, vid2idx, batch_size, n_threads)

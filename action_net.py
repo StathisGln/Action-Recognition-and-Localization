@@ -127,6 +127,7 @@ class ACT_net(nn.Module):
 
         ## regression
         sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(pooled_feat_,f_rois[:,:,:7], gt_rois) 
+        sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(f_rois.size(0), self.sample_duration, n_rois*2, 4)
 
         pooled_feat = self._head_to_tail(pooled_feat_)
         pooled_feat = pooled_feat.view(f_rois.size(0),f_rois.size(1),pooled_feat.size(1),pooled_feat.size(2))
@@ -167,9 +168,9 @@ class ACT_net(nn.Module):
             rpn_loss_cls, rpn_loss_bbox, act_loss_bbox,\
             rpn_loss_cls_16, rpn_loss_bbox_16, act_loss_bbox_16,\
             f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss
+      
 
-
-        return f_rois,  f_bbox_pred, pooled_feat_, None, None, None, None, None, None, sgl_rois_bbox_pred, None
+        return f_rois,  f_bbox_pred, pooled_feat_, None, None, None, None, None, None, None, sgl_rois_bbox_pred, None
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):

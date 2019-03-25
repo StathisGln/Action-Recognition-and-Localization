@@ -89,8 +89,10 @@ def bbox_overlaps_batch_3d(tubes, tubes_curr):
     overlaps_sub_t = sb_t / ua_t
     # print('overlaps_iou_t.shape :',overlaps_iou_t.shape)
     # print('overlaps_sub_t.shape :',overlaps_sub_t.shape)
-    overlaps_pre_t = torch.stack((overlaps_iou_t,overlaps_sub_t))
-    overlaps_t = torch.mean(overlaps_pre_t,0)
+    # print('overlaps_sub_t :',overlaps_sub_t)
+    # print('overlaps_iou_t :',overlaps_iou_t)
+    overlaps_pre_t = torch.stack((3 * overlaps_iou_t,overlaps_sub_t))
+    overlaps_t = torch.mean(overlaps_pre_t,0)/4
     # print('overlaps_pre_t.shape :',overlaps_pre_t.shape)
     # print('overlaps_t :',overlaps_t.shape)
     # print('overlaps_xy.shape :',overlaps_xy.shape)

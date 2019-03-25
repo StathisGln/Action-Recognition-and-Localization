@@ -10,6 +10,8 @@ from torch.autograd import Variable
 from action_net import ACT_net
 from act_rnn import Act_RNN
 
+from bbox_transform import bbox_transform_inv_3d, clip_boxes_3d, bbox_transform_inv, clip_boxes
+
 from create_tubes_from_boxes import create_video_tube, create_tube_from_tubes, create_tube_with_frames
 from connect_tubes import connect_tubes, get_gt_tubes_feats_label, get_tubes_feats_label
 from resize_rpn import resize_boxes, resize_tube
@@ -79,6 +81,7 @@ class Model(nn.Module):
 
         n_clips = data.__len__()
         features = torch.zeros(n_clips, rois_per_image, self.p_feat_size, self.sample_duration)
+        sgl_frame_preds = torch.zeros(n_clips, self.sample_duration, rois_per_image, 4)
         p_tubes = torch.zeros(n_clips, rois_per_image,  8) # all the proposed rois
 
         f_tubes = []
@@ -107,15 +110,8 @@ class Model(nn.Module):
             boxes_ = boxes[frame_indices].cuda()
             clips_ = clips[frame_indices].cuda()
 
-            # print('clips_.shape :',clips_.shape)
-            # print('boxes_.permute(0,2,1,3) :',boxes_.shape)
-            # print('boxes_.permute(0,2,1,3) :',boxes_.permute(0,2,1,3).shape)
-
             gt_tubes = create_tube_with_frames(boxes_.permute(0,2,1,3), im_info, self.sample_duration)
-            # print('boxes_.shape :',boxes_)
-            # print('gt_tubes :',gt_tubes)
-            # print('boxes_.shape :',boxes_.shape)
-            # print('gt_tubes :',gt_tubes.shape)
+
             gt_tubes_ = gt_tubes.type_as(clips).cuda()
             im_info = im_info.cuda()
             start_fr = start_fr.cuda()
@@ -136,6 +132,9 @@ class Model(nn.Module):
                                                         gt_tubes_,
                                                         boxes_.permute(0,2,1,3).float(),
                                                         start_fr)
+            if not self.training:
+                tubes[:,:,1:7] = bbox_transform_inv_3d(tubes[:,:,1:7], bbox_pred,tubes.size(0))
+                tubes[:,:,1:7]= clip_boxes_3d(tubes[:,:,1:7], im_info, tubes.size(0))
 
             pooled_feat = pooled_feat.view(-1,rois_per_image,self.p_feat_size,self.sample_duration)
 
@@ -147,18 +146,13 @@ class Model(nn.Module):
 
             idx_s = step * batch_size 
             idx_e = step * batch_size + batch_size
-            # print('idx_s :', idx_s, ' idx_e :',idx_e )
-            # print('features.shape :',features.shape)
+
             features[idx_s:idx_e] = pooled_feat
             p_tubes[idx_s:idx_e] = tubes
 
+            sgl_frame_preds[idx_s: idx_e] = sgl_rois_bbox_pred
+
             if self.training:
-                # print('gt_tubes.shape :',gt_tubes.shape)
-                # print('f_gt_tubes.element_size() * f_gt_tubes.nelement() :',f_gt_tubes.element_size() * f_gt_tubes.nelement())
-                # print('idx_s :',idx_s)
-                # print('idx_e :',idx_e)
-                # print('f_gt_tubes.shape :',f_gt_tubes.shape)
-                # print('f_gt_tubes.device :',f_gt_tubes.device)
 
                 f_gt_tubes[idx_s:idx_e] = gt_tubes.type_as(f_gt_tubes)
                 tubes_labels[idx_s:idx_e] = rois_label.squeeze(-1).type_as(tubes_labels)
@@ -219,26 +213,31 @@ class Model(nn.Module):
 
         ## calculate input rois
         ## f_feats.shape : [#f_tubes, max_length, 512]
-        final_video_tubes = torch.zeros(len(f_tubes),6).cuda()
+        final_video_tubes = torch.zeros(len(f_tubes),max_length,6).cuda()
+        final_frames_bbox_pred = torch.zeros(len(f_tubes), max_length,self.sample_duration, 4).cuda()
         prob_out = torch.zeros(len(f_tubes), self.n_classes).cuda()
+
 
         for i in range(len(f_tubes)):
 
             seq = f_tubes[i]
-            tmp_tube = torch.Tensor(len(seq),6)
-            feats = torch.Tensor(len(seq),self.p_feat_size)
+            tmp_tube = torch.zeros((len(seq),6))
+            tmp_bbox_pred = torch.zeros((len(seq),self.sample_duration,4))
+            feats = torch.zeros((len(seq),self.p_feat_size))
+            
             for j in range(len(seq)):
                 feats[j] = features[seq[j][0],seq[j][1]].mean(1)
-
                 tmp_tube[j] = p_tubes[seq[j]][1:7]
-            prob_out[i] = self.act_rnn(feats.cuda())
-            if prob_out[i,0] != prob_out[i,0]:
-                print('tmp_tube :',tmp_tube, ' prob_out :', prob_out ,' feats :',feats.cpu().numpy(), ' numpy(), feats.shape  :,', feats.shape ,' target_lbl :',target_lbl, \
-                      ' \ntmp_tube :',tmp_tube, )
-                exit(-1)
+                tmp_bbox_pred[j] = sgl_frame_preds[seq[j][0],:,seq[j][1]]
 
-            final_video_tubes[i] = create_tube_from_tubes(tmp_tube).type_as(boxes)
-        
+            prob_out[i] = self.act_rnn(feats.cuda())
+
+            if prob_out[i,0] != prob_out[i,0]:
+                raise ValueError('Error, Nan value appear')
+
+            final_video_tubes[i,:tmp_tube.size(0)] = tmp_tube
+            final_frames_bbox_pred [i,:tmp_tube.size(0)] = tmp_bbox_pred
+
         # ##########################################
         # #           Time for Linear Loss         #
         # ##########################################
@@ -248,11 +247,33 @@ class Model(nn.Module):
         # # classification probability
         if self.training:
             cls_loss = F.cross_entropy(prob_out.cpu(), target_lbl.long()).cuda()
+            return None,  prob_out, f_rpn_loss_cls, f_rpn_loss_bbox, f_act_loss_bbox, cls_loss, 
 
-        if self.training:
-            return final_video_tubes, bbox_pred,  prob_out, f_rpn_loss_cls, f_rpn_loss_bbox, f_act_loss_bbox, cls_loss, 
         else:
-            return final_video_tubes, bbox_pred, prob_out
+
+            ## find for each frame :
+            final_frames = torch.zeros((final_video_tubes.size(0), num_frames, 4))
+            final_frames_tubes = final_video_tubes.unsqueeze(-2).expand(final_video_tubes.shape[:-1]+(self.sample_duration,6)).contiguous()
+
+            for i in range(final_frames_tubes.size(0)):
+            # for i in range(1):
+
+                final_frames_tubes[i,:,:,[0,1,3,4]] = bbox_transform_inv(final_frames_tubes[i,:,:,[0,1,3,4]], \
+                                                                         final_frames_bbox_pred[i],final_frames_bbox_pred.size(0))
+                final_frames_tubes[i,:,:,[0,1,3,4]] = clip_boxes(final_frames_tubes[i,:,:,[0,1,3,4]], \
+                                                                 im_info[0].unsqueeze(0).expand(final_frames_bbox_pred.size(0),3), \
+                                                                 final_frames_bbox_pred[i].size(0))
+                ###################################################
+                #          TODO : check about regression          #
+                ###################################################
+                
+                for j in range(len(f_tubes[i])):
+
+                    str_fr = int(f_tubes[i][j][0] * self.sample_duration / 2)
+                    final_frames[i,int(final_frames_tubes[i,j,0,2]):int(final_frames_tubes[i,j,0,5])+1] = final_frames_tubes[i,j,int(final_frames_tubes[i,j,0,2])-str_fr:int(final_frames_tubes[i,j,0,5])+1-str_fr,[0,1,3,4]]
+
+            print('final_frames.shape :',final_frames.shape)
+            return final_frames, prob_out
 
     def deactivate_action_net_grad(self):
 
@@ -260,7 +281,7 @@ class Model(nn.Module):
         # for key, value in dict(self.named_parameters()).items():
         #     print(key, value.requires_grad)
 
-    def load_part_model(self, action_model_path=None, rnn_path=None):
+    def load_part_model(self, action_model_path=None, reg_path, rnn_path=None):
 
 
         if action_model_path != None:
@@ -283,13 +304,17 @@ class Model(nn.Module):
         else:
             self.act_net = ACT_net(self.classes,self.sample_duration)
             self.act_net.create_architecture()
+
+
+        if reg_path != None:
+
             
         if rnn_path != None:
 
             act_rnn = Act_RNN(256,128,self.n_classes)
 
             act_rnn_data = torch.load(rnn_path)
-            act_rnn.load(act_rnn_data)
+            act_rnn.load_state_dict(act_rnn_data)
             self.act_rnn = act_rnn
         else:
             self.act_rnn =Act_RNN(256,128,self.n_classes)
