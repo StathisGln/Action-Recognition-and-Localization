@@ -44,8 +44,6 @@ class Model(nn.Module):
         self.p_feat_size = 256 # 512
         # For now a linear classifier only
 
-
-
     def forward(self,n_devs, dataset_folder, vid_names, clips, vid_id, boxes, mode, cls2idx, num_actions, num_frames, h_, w_):
         '''
         TODO describe procedure
@@ -76,7 +74,6 @@ class Model(nn.Module):
         data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size, pin_memory=False,# num_workers=num_workers, pin_memory=True,
                                                   # shuffle=False, num_workers=8)
                                                   shuffle=False)
-
         n_clips = data.__len__()
 
         features = torch.zeros(n_clips, rois_per_image, self.p_feat_size, self.sample_duration)
@@ -112,19 +109,9 @@ class Model(nn.Module):
             # print('boxes_.permute(0,2,1,3) :',boxes_.permute(0,2,1,3).shape)
 
             gt_tubes = create_tube_with_frames(boxes_.permute(0,2,1,3), im_info, self.sample_duration)
-            # print('boxes_.shape :',boxes_)
-            # print('gt_tubes :',gt_tubes)
-            # print('boxes_.shape :',boxes_.shape)
-            # print('gt_tubes :',gt_tubes.shape)
             gt_tubes_ = gt_tubes.type_as(clips).cuda()
             im_info = im_info.cuda()
             start_fr = start_fr.cuda()
-
-
-            # clips = Variable(clips, volatile=True)
-            # gt_tubes_ = Variable(gt_tubes_, volatile=True)
-            # im_info = Variable(im_info, volatile=True)
-            # start_fr = Variable(start_fr, volatile=True)
 
             tubes,  bbox_pred, pooled_feat, \
             rpn_loss_cls,  rpn_loss_bbox, \
@@ -150,12 +137,6 @@ class Model(nn.Module):
             p_tubes[idx_s:idx_e] = tubes
 
             if self.training:
-                # print('gt_tubes.shape :',gt_tubes.shape)
-                # print('f_gt_tubes.element_size() * f_gt_tubes.nelement() :',f_gt_tubes.element_size() * f_gt_tubes.nelement())
-                # print('idx_s :',idx_s)
-                # print('idx_e :',idx_e)
-                # print('f_gt_tubes.shape :',f_gt_tubes.shape)
-                # print('f_gt_tubes.device :',f_gt_tubes.device)
 
                 f_gt_tubes[idx_s:idx_e] = gt_tubes.type_as(f_gt_tubes)
                 tubes_labels[idx_s:idx_e] = rois_label.squeeze(-1).type_as(tubes_labels)
@@ -166,14 +147,7 @@ class Model(nn.Module):
                 rpn_loss_cls_16_[step] = rpn_loss_cls_16.mean().unsqueeze(0)
                 rpn_loss_bbox_16_[step] = rpn_loss_bbox_16.mean().unsqueeze(0)
 
-            # print('----------Out TPN----------')
-            # # print('p_tubes.type() :',p_tubes.type())
-            # # print('tubes.type() :',tubes.type())
-            # print('----------Connect TUBEs----------')
-
             f_tubes = connect_tubes(f_tubes,tubes.cpu(), p_tubes, pooled_feat, rois_label, step*batch_size)
-
-            # print('----------End Tubes----------')
 
         ###########################################p####
         #          Choose Tubes for RCNN\TCN          #
@@ -186,11 +160,7 @@ class Model(nn.Module):
             f_rpn_loss_bbox = rpn_loss_bbox_.mean().cuda()
             f_act_loss_bbox = act_loss_bbox_.mean().cuda()
 
-            ## first get video tube
-            # print('boxes.shape :',boxes.shape )
             video_tubes = create_video_tube(boxes.permute(1,0,2).unsqueeze(0).type_as(clips))
-            # print('video_tubes :',video_tubes)
-            # print('video_tubes.shape :',video_tubes.shape)
 
             # get gt tubes and feats
             gt_tubes_feats,gt_tubes_list = get_gt_tubes_feats_label(f_tubes, p_tubes, features, tubes_labels, f_gt_tubes)
@@ -203,11 +173,10 @@ class Model(nn.Module):
                 gt_lbl[i] = f_gt_tubes[gt_tubes_list[i][0][0],i,6]
             bg_lbl = torch.zeros((len(bg_tubes))).type_as(f_gt_tubes)
             
-
             ## concate fb, bg tubes
-            f_tubes = gt_tubes_list ## + bg_tubes
-            # target_lbl = torch.cat((gt_lbl,bg_lbl),0)
-            target_lbl = gt_lbl
+            f_tubes = gt_tubes_list + bg_tubes
+            target_lbl = torch.cat((gt_lbl,bg_lbl),0)
+            # target_lbl = gt_lbl
         ##############################################
         max_seq = reduce(lambda x, y: y if len(y) > len(x) else x, f_tubes)
         max_length = len(max_seq)
