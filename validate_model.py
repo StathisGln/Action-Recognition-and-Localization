@@ -185,7 +185,6 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         n_actions = n_actions.to(device)
         h = h.to(device)
         w = w.to(device)
-        print('n_actions :',n_actions)
         ## create video tube
         boxes_ = boxes[0,:n_actions, :n_frames]
 
@@ -279,7 +278,6 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     else:
         recall_t = 0
         
-    print('recall :',recall)
     print(' -----------------------')
     print('| Validation Epoch: {: >3} | '.format(epoch+1))
     print('|                       |')

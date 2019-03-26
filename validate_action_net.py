@@ -183,8 +183,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
-        # if step == 2:
-        #     break
+        if step == 2:
+            break
         print('step :',step)
 
         clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
@@ -195,11 +195,11 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         im_info_ = im_info.to(device)
         start_fr = torch.zeros(clips_.size(0)).to(device)
 
-        tubes, bbox_pred, _,_,_,_,_,_,_,sgl_rois_bbox_pred,_   = model(clips,
+        tubes, bbox_pred, _,_,_,_,_,_,_,_,sgl_rois_bbox_pred,_   = model(clips,
                                                                        im_info,
                                                                        None, None,
                                                                        None)
-
+        print('tubes :',tubes.cpu().numpy())
 
         n_tubes = len(tubes)
 
@@ -213,7 +213,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             gt_tub = gt_tubes_r[i,gt_tube_indices]
             if gt_tub.nelement() == 0:
                 continue
-            overlaps, overlaps_xy, overlaps_t = bbox_overlaps_batch_3d(tubes_t.squeeze(0), gt_tub.permute(1,0,2).type_as(tubes_t)) # check one video each time
+            overlaps, overlaps_xy, overlaps_t = bbox_overlaps_batch_3d(proposals.squeeze(0), gt_tub.permute(1,0,2).type_as(tubes_t)) # check one video each time
             # print('overlaps :',overlaps.shape)
             # print('overlaps_xy.shape :',overlaps_xy.shape)
             # print('overlaps_t :',overlaps_t.shape)
