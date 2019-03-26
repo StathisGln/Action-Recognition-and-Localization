@@ -248,8 +248,7 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
             #     continue
             if n_actions > max_actions:
                 max_actions = n_actions
-            if n_actions < 2:
-                continue
+
             # # pos 0 --> starting frame, pos 1 --> ending frame
             rois = np.zeros((n_actions,n_frames,5))
             rois[:,:,4] = -1 

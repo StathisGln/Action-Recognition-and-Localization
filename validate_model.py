@@ -155,19 +155,18 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                              shuffle=True)
     model.eval()
 
-    true_pos = torch.zeros(1).long().to(device)
-    false_neg = torch.zeros(1).long().to(device)
+    true_pos = 0    # there is a tube that is has > 0.5 overlap and correct label
+    false_pos = 0   # there is a tube that has > 0.5 overlap but there is no correct label
+    false_neg = 0   # there is no tube that has > 0.5 overlap
 
-    true_pos_xy = torch.zeros(1).long().to(device)
-    false_neg_xy = torch.zeros(1).long().to(device)
+    true_pos_t = 0
+    false_pos_t = 0
+    false_neg_t = 0
 
-    true_pos_t = torch.zeros(1).long().to(device)
-    false_neg_t = torch.zeros(1).long().to(device)
+    correct_preds = 0
+    n_preds = 0
+    preds = 0
 
-    correct_preds = torch.zeros(1).long().to(device)
-    n_preds = torch.zeros(1).long().to(device)
-    preds = torch.zeros(1).long().to(device)
-    ## 2 rois : 1450
     tubes_sum = 0
     for step, data  in enumerate(val_loader):
 
@@ -186,7 +185,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         n_actions = n_actions.to(device)
         h = h.to(device)
         w = w.to(device)
-
+        print('n_actions :',n_actions)
         ## create video tube
         boxes_ = boxes[0,:n_actions, :n_frames]
 
@@ -247,7 +246,10 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             positive_overlaps = overlaps_.nonzero()
             if positive_overlaps.nelement() != 0 : # found something
                 correct_preds += preds[positive_overlaps.view(-1)].eq(target.item()).nonzero().nelement()
-                true_pos += 1
+                if  preds[positive_overlaps.view(-1)].eq(target.item()).nonzero().nelement() != 0:
+                    true_pos += 1
+                else:
+                    false_pos += 1
                 n_preds += positive_overlaps.nelement()
             else:
                 false_neg += 1
@@ -264,28 +266,41 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             # true_pos_t += torch.unique(overlaps_t_.nonzero()).nelement()
             # false_neg_t += torch.unique(overlaps_t_.eq(0).nonzero()).nelement()
 
-
-    recall    = true_pos.float()    / (true_pos.float()    + false_neg.float())
-    recall_t  = true_pos_t.float()  / (true_pos_t.float()  + false_neg_t.float())
+    if true_pos != 0 and false_pos != 0:
+        precision = float(true_pos)    / (float(true_pos)    + float(false_pos))
+    else:
+        precision = 0.0
+    if true_pos != 0 and false_neg != 0:
+        recall = float(true_pos)    / (float(true_pos)    + float(false_neg))
+    else:
+        recall = 0.0
+    if true_pos_t != 0 and false_neg_t != 0:
+        recall_t = float(true_pos_t)  / (float(true_pos_t)  + float(false_neg_t))
+    else:
+        recall_t = 0
+        
     print('recall :',recall)
     print(' -----------------------')
     print('| Validation Epoch: {: >3} | '.format(epoch+1))
     print('|                       |')
     print('| Proposed Action Tubes |')
     print('|                       |')
-    print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
-        step, true_pos.cpu().tolist()[0], false_neg.cpu().tolist()[0], recall.cpu().tolist()[0]))
+    print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| False_pos  --> {: >6} |'.format(
+        step, true_pos, false_neg, false_pos))
+    print('|                       |')
+    print('| Recall     --> {: >6.4f} |'.format(recall), \
+        ' \n| Precision  --> {: >6.4f} |'.format(precision))
     print('|                       |')
     print('| In time area          |')
     print('|                       |')
     print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
-        step, true_pos_t.cpu().tolist()[0], false_neg_t.cpu().tolist()[0], recall_t.cpu().tolist()[0]))
+        step, true_pos_t, false_neg_t, recall_t))
     print('|                       |')
     print('| Classification        |')
     print('|                       |')
     print('| In {: >6} steps    :  |'.format(step))
     print('|                       |')
-    print('| Correct preds :       |\n| {: >6} / {: >6}       |'.format( correct_preds.cpu().tolist()[0], n_preds.cpu().tolist()[0]))
+    print('| Correct preds :       |\n| {: >6} / {: >6}       |'.format( correct_preds, n_preds))
 
 
     print(' -----------------------')
