@@ -24,13 +24,9 @@ class LoopPadding(object):
 
     def __call__(self, frame_indices):
         out = np.zeros((self.size,), dtype=int)
-        print('frame_indices.shape :',frame_indices.shape)
         out[:frame_indices.shape[0]] = frame_indices
         for i in range(1,self.size-frame_indices.shape[0]+1):
             out[-i] = frame_indices[-1]
-        print('out.shape :',out.shape)
-        print('out :',out)
-        print('type(out) :',type(out))
 
         return out
 

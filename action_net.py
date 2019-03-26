@@ -88,10 +88,10 @@ class ACT_net(nn.Module):
           rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = roi_data
           n_rois = rois.size(1)        
 
-          rois_label = Variable(rois_label.view(-1).long())
-          rois_target = Variable(rois_target.view(-1, rois_target.size(2)))
-          rois_inside_ws = Variable(rois_inside_ws.view(-1, rois_inside_ws.size(2)))
-          rois_outside_ws = Variable(rois_outside_ws.view(-1, rois_outside_ws.size(2)))
+          rois_label =rois_label.view(-1).long()
+          rois_target = rois_target.view(-1, rois_target.size(2))
+          rois_inside_ws = rois_inside_ws.view(-1, rois_inside_ws.size(2))
+          rois_outside_ws = rois_outside_ws.view(-1, rois_outside_ws.size(2))
 
           roi_data_16 = self.act_proposal_target_single(rois_16[..., [0,1,2,4,5,7]], gt_tubes[...,[0,1,3,4,6,7]])
           
@@ -99,10 +99,10 @@ class ACT_net(nn.Module):
           rois_16 = torch.cat((rois_16[:,:,[0,1,2]],torch.zeros((rois_16.size(0),rois_16.size(1),1)).type_as(rois_16),\
                                rois_16[:,:,[3,4]], (torch.ones((rois_16.size(0), rois_16.size(1),1))*(self.sample_duration-1)).type_as(rois_16), \
                                rois_16[:,:,[5]]), dim=-1)
-          rois_label_16 = Variable(rois_label_16.view(-1).long())
-          rois_target_16 = Variable(rois_target_16.view(-1, rois_target_16.size(2)))
-          rois_inside_ws_16 = Variable(rois_inside_ws_16.view(-1, rois_inside_ws_16.size(2)))
-          rois_outside_ws_16 = Variable(rois_outside_ws_16.view(-1, rois_outside_ws_16.size(2)))
+          rois_label_16 = rois_label_16.view(-1).long()
+          rois_target_16 = rois_target_16.view(-1, rois_target_16.size(2))
+          rois_inside_ws_16 = rois_inside_ws_16.view(-1, rois_inside_ws_16.size(2))
+          rois_outside_ws_16 = rois_outside_ws_16.view(-1, rois_outside_ws_16.size(2))
 
         else:
 
@@ -129,6 +129,8 @@ class ACT_net(nn.Module):
         sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(pooled_feat_,f_rois[:,:,:7], gt_rois) 
         sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(f_rois.size(0), self.sample_duration, n_rois*2, 4)
 
+        sgl_rois_bbox_pred = Variable(sgl_rois_bbox_pred, requires_grad=False)
+        
         pooled_feat = self._head_to_tail(pooled_feat_)
         pooled_feat = pooled_feat.view(f_rois.size(0),f_rois.size(1),pooled_feat.size(1),pooled_feat.size(2))
 
@@ -137,6 +139,9 @@ class ACT_net(nn.Module):
 
         bbox_pred = self.act_bbox_pred(pooled_feat[:, :n_rois]).view(-1,6)
         bbox_pred_16 = self.act_bbox_pred_16(pooled_feat[:, n_rois:]).view(-1,4)
+
+        bbox_pred = Variable(bbox_pred, requires_grad=False)
+        bbox_pred_16 = Variable(bbox_pred_16, requires_grad=False)
 
         # compute object classification probability
         act_loss_bbox = 0
@@ -169,7 +174,6 @@ class ACT_net(nn.Module):
             rpn_loss_cls_16, rpn_loss_bbox_16, act_loss_bbox_16,\
             f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss
       
-
         return f_rois,  f_bbox_pred, pooled_feat_, None, None, None, None, None, None, None, sgl_rois_bbox_pred, None
 
     def _init_weights(self):

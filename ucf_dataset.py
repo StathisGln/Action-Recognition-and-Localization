@@ -204,9 +204,9 @@ def prepare_samples (vid_names, vid_id, sample_duration, step, n_frames):
         'segment': [begin_t, end_t],
         'n_frames': n_frames,
     }
-    for i in range(1, (n_frames - step), step):
+    for i in range(1, n_frames , step):
         sample_i = copy.deepcopy(sample)
-        sample_i['frame_indices'] = list(range(i, min(n_frames,i + sample_duration)))
+        sample_i['frame_indices'] = list(range(i, min(n_frames+1,i + sample_duration)))
         sample_i['start_fr'] = i-1
         dataset.append(sample_i)
 
@@ -244,9 +244,12 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
             n_actions = len(annots)
             if n_frames > max_frames:
                 max_frames = n_frames
-
+            # if n_frames < 800 :
+            #     continue
             if n_actions > max_actions:
                 max_actions = n_actions
+            if n_actions < 2:
+                continue
             # # pos 0 --> starting frame, pos 1 --> ending frame
             rois = np.zeros((n_actions,n_frames,5))
             rois[:,:,4] = -1 
@@ -264,6 +267,7 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
                 'video': video_path,
                 'n_actions' : n_actions,
                 'boxes' : rois,
+                's_label' : s_label,
                 'n_frames' : n_frames,
             }
             dataset.append(sample_i)
@@ -295,7 +299,7 @@ class video_names(data.Dataset):
         n_persons = self.data[index]['n_actions']
         boxes = self.data[index]['boxes']
         n_frames = self.data[index]['n_frames']
-        
+        s_label = self.data[index]['s_label']
         # abs_path = os.path.join(self.dataset_folder, vid_name)
         w, h = 320, 240
 
@@ -345,7 +349,7 @@ class video_names(data.Dataset):
         fr_tensor = np.expand_dims( np.expand_dims( np.arange(0,final_boxes.shape[-2]), axis=1), axis=0)
         fr_tensor = np.repeat(fr_tensor, final_boxes.shape[0], axis=0)
         final_boxes = np.concatenate((final_boxes, fr_tensor), axis=-1)
-        return vid_id, f_clips, final_boxes, n_frames_np, n_actions_np, h, w
+        return vid_id, f_clips, final_boxes, n_frames_np, n_actions_np, h, w, s_label
     
     def __len__(self):
 
@@ -386,10 +390,6 @@ class single_video(data.Dataset):
 
         frame_indices = np.array(frame_indices) - 1
         frame_indices = self.temporal_transform(frame_indices)
-
-        # clip = self.clips.new(3,self.sample_duration,self.sample_size, self.sample_size)
-        # clip = self.clips[:,frame_indices]
-        # print('clip.shape :',clip.shape )
 
         ## get bboxes and create gt tubes
         im_info = np.array([self.sample_size,self.sample_size, self.sample_duration])

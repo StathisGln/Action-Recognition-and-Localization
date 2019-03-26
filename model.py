@@ -58,16 +58,10 @@ class Model(nn.Module):
         # print('----------Inside----------')
         # print('boxes.shape :',boxes.shape)
 
-        # print('boxes :',boxes.cpu().numpy())
-        # print('boxes.type() :',boxes.type())
         ## define a dataloader for the whole video
         boxes = boxes[:num_frames,:num_actions]
         clips = clips[:num_frames]
 
-        # print('clips.shape :',clips.shape)
-        # print('clips.shape :',clips.type())
-        # print('boxes.shape :',boxes.shape)
-        # print('boxes :',boxes.cpu().numpy())
         batch_size = 16 # 
         num_images = 1
         rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images) *2 if self.training else 10 *2
@@ -80,9 +74,15 @@ class Model(nn.Module):
                                                   shuffle=False)
 
         n_clips = data.__len__()
-        features = torch.zeros(n_clips, rois_per_image, self.p_feat_size, self.sample_duration)
-        sgl_frame_preds = torch.zeros(n_clips, self.sample_duration, rois_per_image, 4)
-        p_tubes = torch.zeros(n_clips, rois_per_image,  8) # all the proposed rois
+
+        # ## init tensors for saving features
+        # features = torch.zeros(n_clips, rois_per_image, self.p_feat_size, self.sample_duration).cpu()
+        # sgl_frame_preds = torch.zeros(n_clips, self.sample_duration, rois_per_image, 4).cpu()
+        # p_tubes = torch.zeros(n_clips, rois_per_image,  8).cpu() # all the proposed rois
+
+        features = torch.zeros((n_clips, rois_per_image, self.p_feat_size, self.sample_duration))
+        sgl_frame_preds = torch.zeros((n_clips, self.sample_duration, rois_per_image, 4))
+        p_tubes = torch.zeros((n_clips, rois_per_image,  8)) # all the proposed rois
 
         f_tubes = []
 
@@ -105,8 +105,9 @@ class Model(nn.Module):
             #     break
             # print('step :',step)
             # print('Memory :',torch.cuda.memory_allocated(device=None))
-            # print('boxes :',boxes)
+
             frame_indices, im_info, start_fr = dt
+
             boxes_ = boxes[frame_indices].cuda()
             clips_ = clips[frame_indices].cuda()
 
@@ -115,12 +116,6 @@ class Model(nn.Module):
             gt_tubes_ = gt_tubes.type_as(clips).cuda()
             im_info = im_info.cuda()
             start_fr = start_fr.cuda()
-
-
-            # clips = Variable(clips, volatile=True)
-            # gt_tubes_ = Variable(gt_tubes_, volatile=True)
-            # im_info = Variable(im_info, volatile=True)
-            # start_fr = Variable(start_fr, volatile=True)
 
             tubes,  bbox_pred, pooled_feat, \
             rpn_loss_cls,  rpn_loss_bbox, \
@@ -132,6 +127,7 @@ class Model(nn.Module):
                                                         gt_tubes_,
                                                         boxes_.permute(0,2,1,3).float(),
                                                         start_fr)
+
             if not self.training:
                 tubes[:,:,1:7] = bbox_transform_inv_3d(tubes[:,:,1:7], bbox_pred,tubes.size(0))
                 tubes[:,:,1:7]= clip_boxes_3d(tubes[:,:,1:7], im_info, tubes.size(0))
@@ -144,12 +140,14 @@ class Model(nn.Module):
             tubes[:,:,3] = tubes[:,:,3] + indexes_
             tubes[:,:,6] = tubes[:,:,6] + indexes_
 
+            tubes[:,:,3] = tubes[:,:,3].clamp_(min=0,max=num_frames.item()-1)
+            tubes[:,:,6] = tubes[:,:,6].clamp_(min=0,max=num_frames.item()-1)
+
             idx_s = step * batch_size 
             idx_e = step * batch_size + batch_size
 
             features[idx_s:idx_e] = pooled_feat
             p_tubes[idx_s:idx_e] = tubes
-
             sgl_frame_preds[idx_s: idx_e] = sgl_rois_bbox_pred
 
             if self.training:
@@ -171,7 +169,7 @@ class Model(nn.Module):
 
             f_tubes = connect_tubes(f_tubes,tubes.cpu(), p_tubes, pooled_feat, rois_label, step*batch_size)
 
-            # print('----------End Tubes----------')
+            # # print('----------End Tubes----------')
 
         ###########################################p####
         #          Choose Tubes for RCNN\TCN          #
@@ -185,10 +183,7 @@ class Model(nn.Module):
             f_act_loss_bbox = act_loss_bbox_.mean().cuda()
 
             ## first get video tube
-            # print('boxes.shape :',boxes.shape )
             video_tubes = create_video_tube(boxes.permute(1,0,2).unsqueeze(0).type_as(clips))
-            # print('video_tubes :',video_tubes)
-            # print('video_tubes.shape :',video_tubes.shape)
 
             # get gt tubes and feats
             gt_tubes_feats,gt_tubes_list = get_gt_tubes_feats_label(f_tubes, p_tubes, features, tubes_labels, f_gt_tubes)
@@ -237,10 +232,9 @@ class Model(nn.Module):
             final_video_tubes[i,:tmp_tube.size(0)] = tmp_tube
             final_frames_bbox_pred [i,:tmp_tube.size(0)] = tmp_bbox_pred
 
-        print('final_video_tubes :',final_video_tubes)
-        # ##########################################
-        # #           Time for Linear Loss         #
-        # ##########################################
+        ##########################################
+        #           Time for Linear Loss         #
+        ##########################################
 
         cls_loss = torch.Tensor([0]).cuda()
 
@@ -256,13 +250,13 @@ class Model(nn.Module):
             final_frames_tubes = final_video_tubes.unsqueeze(-2).expand(final_video_tubes.shape[:-1]+(self.sample_duration,6)).contiguous()
 
             for i in range(final_frames_tubes.size(0)):
-            # for i in range(1):
 
                 final_frames_tubes[i,:,:,[0,1,3,4]] = bbox_transform_inv(final_frames_tubes[i,:,:,[0,1,3,4]], \
                                                                          final_frames_bbox_pred[i],final_frames_bbox_pred.size(0))
                 final_frames_tubes[i,:,:,[0,1,3,4]] = clip_boxes(final_frames_tubes[i,:,:,[0,1,3,4]], \
                                                                  im_info[0].unsqueeze(0).expand(final_frames_bbox_pred.size(0),3), \
                                                                  final_frames_bbox_pred[i].size(0))
+                # print('final_frames_tubes :',final_frames_tubes)
                 ###################################################
                 #          TODO : check about regression          #
                 ###################################################
@@ -270,6 +264,8 @@ class Model(nn.Module):
                 for j in range(len(f_tubes[i])):
 
                     str_fr = int(f_tubes[i][j][0] * self.sample_duration / 2)
+                    # print('inal_frames_tubes[i,j,int(final_frames_tubes[i,j,0,2])-str_fr:int(final_frames_tubes[i,j,0,5])+1-str_fr,[0,1,3,4]].shape :',final_frames_tubes[i,j,int(final_frames_tubes[i,j,0,2])-str_fr:int(final_frames_tubes[i,j,0,5])+1-str_fr,[0,1,3,4]].shape)
+                    # print('final_frames[i,int(final_frames_tubes[i,j,0,2]):int(final_frames_tubes[i,j,0,5])+1].shape :',final_frames[i,int(final_frames_tubes[i,j,0,2]):int(final_frames_tubes[i,j,0,5])+1].shape)
                     final_frames[i,int(final_frames_tubes[i,j,0,2]):int(final_frames_tubes[i,j,0,5])+1] = final_frames_tubes[i,j,int(final_frames_tubes[i,j,0,2])-str_fr:int(final_frames_tubes[i,j,0,5])+1-str_fr,[0,1,3,4]]
 
             return final_frames, prob_out
@@ -282,6 +278,7 @@ class Model(nn.Module):
 
     def load_part_model(self, action_model_path=None, reg_path=None, rnn_path=None):
 
+        
         if action_model_path != None:
 
             print('Loading TPN model...')
