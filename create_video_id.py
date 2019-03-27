@@ -4,7 +4,7 @@ import json
 def get_vid_dict(dataset_path):
 
     vid_names = []
-    
+
     classes = next(os.walk(dataset_path, True))[1]
 
     for cls in classes:
