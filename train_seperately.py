@@ -19,7 +19,7 @@ from resize_rpn import resize_rpn, resize_tube
 from model import Model
 from action_net import ACT_net
 from resize_rpn import resize_boxes
-import pdb
+import argparse
 
 np.random.seed(42)
 
@@ -120,10 +120,10 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
         inputs = Variable(clips_)
         tubes,  bbox_pred, _, \
-        _,  _, _, _, _, _  = model(inputs,
-                                   im_info_,
-                                   gt_tubes_r_, gt_rois_,
-                                   start_fr)
+        _,  _, _, _, _, _, _,sgl_rois_bbox_pred, _  = model(inputs,
+                                                            im_info_,
+                                                            gt_tubes_r_, gt_rois_,
+                                                            start_fr)
 
         for i in range(tubes.size(0)):
             overlaps = bbox_overlaps_batch_3d(tubes[i].squeeze(0), gt_tubes_r_[i,:n_actions[i]].unsqueeze(0)) # check one video each time
@@ -201,6 +201,14 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
 
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser(description='Train action_net, regression layer and RNN')
+
+    parser.add_argument('--demo', '-d', help='Run just 2 steps for test if everything works fine', action='store_true')
+    # parser.add_argument('--n_1_1', help='Run only part 1.1, training action net only', action='store_true')
+    # parser.add_argument('--n_1_2', help='Run only part 1.2, training only regression layer', action='store_true')
+    # parser.add_argument('--n_2', help='Run only part 2, train only RNN', action='store_true')
+    args = parser.parse_args()
+
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
@@ -237,7 +245,7 @@ if __name__ == '__main__':
 
 
     #######################################################
-    #          Part 1-1 - train TPN - without reg         #
+    #          Part 1-1 - train nTPN - without reg         #
     #######################################################
 
     print(' -----------------------------------------------------')
@@ -250,7 +258,7 @@ if __name__ == '__main__':
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
 
-        act_model = nn.DataParallel(act_model)
+    act_model = nn.DataParallel(act_model)
 
     act_model.to(device)
 
@@ -288,15 +296,16 @@ if __name__ == '__main__':
 
         act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=1)
 
-        # if (epoch + 1) % (5) == 0:
-        #     validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
+        if (epoch + 1) % (5) == 0:
+            validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
 
 
 
         if ( epoch + 1 ) % 5 == 0:
             torch.save(act_model.state_dict(), "action_net_model.pwf".format(epoch+1))
     torch.save(act_model.state_dict(), "action_net_model.pwf".format(epoch))
-    
+
+    exit(-1)
     #####################################################
     #          Part 1-2 - train TPN - only reg          #
     #####################################################
@@ -305,13 +314,11 @@ if __name__ == '__main__':
     print('|          Part 1-2 - train TPN - only reg         |')
     print(' --------------------------------------------------')
 
-
     # Init action_net
     act_model = ACT_net(actions, sample_duration)
     act_model.create_architecture()
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
-
         act_model = nn.DataParallel(act_model)
 
     act_model.to(device)
@@ -337,7 +344,8 @@ if __name__ == '__main__':
     lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
 
-    epochs = 40
+    # epochs = 40
+    epochs = 5
 
     n_devs = torch.cuda.device_count()
     for epoch in range(epochs):
@@ -353,10 +361,10 @@ if __name__ == '__main__':
         # if (epoch + 1) % (5) == 0:
         #     validation(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
 
-        if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.module.reg_layer.state_dict(), "reg_layer.pwf".format(epoch+1))
-    torch.save(act_model.module.reg_layer.state_dict(), "reg_layer.pwf".format(epoch))
-
+    #     if ( epoch + 1 ) % 5 == 0:
+    #         torch.save(act_model.module.reg_layer.state_dict(), "reg_layer.pwf".format(epoch+1))
+    # torch.save(act_model.module.reg_layer.state_dict(), "reg_layer.pwf".format(epoch))
+    exit(-1)
     
     # ###########################################
     # #          Part 2 - train Linear          #

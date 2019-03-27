@@ -28,7 +28,7 @@ class _RPN(nn.Module):
         self.anchor_ratios = [0.5, 1, 2]
         self.feat_stride = [16, ]
         # self.anchor_duration = [16,8,4,3] # add
-        self.anchor_duration = [16,8] # add 
+        self.anchor_duration = [16,8,4] # add 
         
         # # define the convrelu layers processing input feature map
 

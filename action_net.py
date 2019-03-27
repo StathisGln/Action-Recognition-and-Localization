@@ -61,6 +61,7 @@ class ACT_net(nn.Module):
         batch_size = im_data.size(0)
         im_info = im_info.data
         if self.training:
+
             gt_tubes = gt_tubes.data
             gt_rois =  gt_rois.data
 
@@ -79,46 +80,49 @@ class ACT_net(nn.Module):
 
         # if it is training phrase, then use ground trubut bboxes for refining
         # firstly find xy- reggression boxes
-        n_rois = rois.size(1)        
+        n_rois = rois.size(1)
+        n_rois_16 = rois_16.size(1)
         if self.training:
-          gt_tubes = torch.cat((gt_tubes,torch.ones(gt_tubes.size(0),gt_tubes.size(1),1).type_as(gt_tubes)),dim=2).type_as(gt_tubes)
+            gt_tubes = torch.cat((gt_tubes,torch.ones(gt_tubes.size(0),gt_tubes.size(1),1).type_as(gt_tubes)),dim=2).type_as(gt_tubes)
 
-          roi_data = self.act_proposal_target(rois, gt_tubes)
+            roi_data = self.act_proposal_target(rois, gt_tubes)
 
-          rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = roi_data
-          n_rois = rois.size(1)        
+            rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = roi_data
+            f_n_rois = rois.size(1)        
+            n_rois = rois.size(1)
 
-          rois_label = Variable(rois_label.view(-1).long())
-          rois_target = Variable(rois_target.view(-1, rois_target.size(2)))
-          rois_inside_ws = Variable(rois_inside_ws.view(-1, rois_inside_ws.size(2)))
-          rois_outside_ws = Variable(rois_outside_ws.view(-1, rois_outside_ws.size(2)))
+            rois_label =rois_label.view(-1).long()
+            rois_target = rois_target.view(-1, rois_target.size(2))
+            rois_inside_ws = rois_inside_ws.view(-1, rois_inside_ws.size(2))
+            rois_outside_ws = rois_outside_ws.view(-1, rois_outside_ws.size(2))
 
-          roi_data_16 = self.act_proposal_target_single(rois_16[..., [0,1,2,4,5,7]], gt_tubes[...,[0,1,3,4,6,7]])
+            roi_data_16 = self.act_proposal_target_single(rois_16[..., [0,1,2,4,5,7]], gt_tubes[...,[0,1,3,4,6,7]])
           
-          rois_16, rois_label_16, rois_target_16, rois_inside_ws_16, rois_outside_ws_16 = roi_data_16
-          rois_16 = torch.cat((rois_16[:,:,[0,1,2]],torch.zeros((rois_16.size(0),rois_16.size(1),1)).type_as(rois_16),\
-                               rois_16[:,:,[3,4]], (torch.ones((rois_16.size(0), rois_16.size(1),1))*(self.sample_duration-1)).type_as(rois_16), \
-                               rois_16[:,:,[5]]), dim=-1)
-          rois_label_16 = Variable(rois_label_16.view(-1).long())
-          rois_target_16 = Variable(rois_target_16.view(-1, rois_target_16.size(2)))
-          rois_inside_ws_16 = Variable(rois_inside_ws_16.view(-1, rois_inside_ws_16.size(2)))
-          rois_outside_ws_16 = Variable(rois_outside_ws_16.view(-1, rois_outside_ws_16.size(2)))
+            rois_16, rois_label_16, rois_target_16, rois_inside_ws_16, rois_outside_ws_16 = roi_data_16
+            rois_16 = torch.cat((rois_16[:,:,[0,1,2]],torch.zeros((rois_16.size(0),rois_16.size(1),1)).type_as(rois_16),\
+                                 rois_16[:,:,[3,4]], (torch.ones((rois_16.size(0), rois_16.size(1),1))*(self.sample_duration-1)).type_as(rois_16), \
+                                 rois_16[:,:,[5]]), dim=-1)
+            rois_label_16 = rois_label_16.view(-1).long()
+            rois_target_16 = rois_target_16.view(-1, rois_target_16.size(2))
+            rois_inside_ws_16 = rois_inside_ws_16.view(-1, rois_inside_ws_16.size(2))
+            rois_outside_ws_16 = rois_outside_ws_16.view(-1, rois_outside_ws_16.size(2))
 
         else:
 
-          rois_label = None
-          rois_target = None
-          rois_inside_ws = None
-          rois_outside_ws = None
-          rpn_loss_cls = 0
-          rpn_loss_bbox = 0
+            f_n_rois = n_rois + n_rois_16        
+            rois_label = None
+            rois_target = None
+            rois_inside_ws = None
+            rois_outside_ws = None
+            rpn_loss_cls = 0
+            rpn_loss_bbox = 0
 
-          rois_label_16 = None
-          rois_target_16 = None
-          rois_inside_ws_16 = None
-          rois_outside_ws_16 = None
-          rpn_loss_cls_16 = 0
-          rpn_loss_bbox_16 = 0
+            rois_label_16 = None
+            rois_target_16 = None
+            rois_inside_ws_16 = None
+            rois_outside_ws_16 = None
+            rpn_loss_cls_16 = 0
+            rpn_loss_bbox_16 = 0
 
         # do roi align based on predicted rois
         f_rois = torch.cat((rois,rois_16),dim=1)
@@ -126,8 +130,10 @@ class ACT_net(nn.Module):
         pooled_feat_ = self.act_roi_align(base_feat, rois_s.view(-1,7))
 
         ## regression
-        sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(pooled_feat_,f_rois[:,:,:7], gt_rois) 
-
+        sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(pooled_feat_,f_rois[:,:,:7], gt_rois)
+        sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(f_rois.size(0), self.sample_duration, f_n_rois, 4)
+        sgl_rois_bbox_pred = Variable(sgl_rois_bbox_pred, requires_grad=False)
+        
         pooled_feat = self._head_to_tail(pooled_feat_)
         pooled_feat = pooled_feat.view(f_rois.size(0),f_rois.size(1),pooled_feat.size(1),pooled_feat.size(2))
 
@@ -137,14 +143,27 @@ class ACT_net(nn.Module):
         bbox_pred = self.act_bbox_pred(pooled_feat[:, :n_rois]).view(-1,6)
         bbox_pred_16 = self.act_bbox_pred_16(pooled_feat[:, n_rois:]).view(-1,4)
 
+        # prob_out = self.act_cls_score(pooled_feat)
+        
+        if not self.training:
+            bbox_pred = Variable(bbox_pred, requires_grad=False)
+            bbox_pred_16 = Variable(bbox_pred_16, requires_grad=False)
+            # prob_out = Variable(prob_out, requires_grad=False)
+
         # compute object classification probability
         act_loss_bbox = 0
         act_loss_bbox_16 = 0
+        # act_loss_cls = 0
+        
+        rois_label = rois_label.view(batch_size, n_rois,-1)
+        rois_label_16 = rois_label_16.view(batch_size, n_rois, -1)
+        f_rois_label = torch.cat((rois_label, rois_label_16),dim=1)
 
         if self.training:
             # bounding box regression L1 loss
             act_loss_bbox = _smooth_l1_loss(bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
             act_loss_bbox_16 = _smooth_l1_loss(bbox_pred_16, rois_target_16, rois_inside_ws_16, rois_outside_ws_16)
+            # act_loss_cls = F.cross_entropy(prob_out, f_rois_label.long())
 
         ## prepare bbox_pred for all
         bbox_pred_16 = torch.cat((bbox_pred_16[:,[0,1]],torch.zeros((bbox_pred_16.size(0),1)).type_as(bbox_pred_16), \
@@ -159,17 +178,13 @@ class ACT_net(nn.Module):
 
         if self.training:
 
-          rois_label = rois_label.view(batch_size, n_rois,-1)
-          rois_label_16 = rois_label_16.view(batch_size, n_rois, -1)
-          f_rois_label = torch.cat((rois_label, rois_label_16),dim=1)
-
           return f_rois,  f_bbox_pred, pooled_feat_, \
             rpn_loss_cls, rpn_loss_bbox, act_loss_bbox,\
             rpn_loss_cls_16, rpn_loss_bbox_16, act_loss_bbox_16,\
-            f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss
-
-
-        return f_rois,  f_bbox_pred, pooled_feat_, None, None, None, None, None, None, sgl_rois_bbox_pred, None
+            f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss, # prob_out, act_cls_score
+      
+        return f_rois,  f_bbox_pred, pooled_feat_, None, None, None, \
+            None, None, None, None, sgl_rois_bbox_pred, None, # prob_out, None
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):
@@ -227,7 +242,7 @@ class ACT_net(nn.Module):
 
         self.act_bbox_pred_16 = nn.Linear(512, 4 )
         self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg
-
+        # self.act_cls_score = nn.Linear(512,self.n_classes) # classification layer
         # Fix blocks
         for p in self.act_base[0].parameters(): p.requires_grad=False
         for p in self.act_base[1].parameters(): p.requires_grad=False
@@ -239,6 +254,8 @@ class ACT_net(nn.Module):
           for p in self.act_base[5].parameters(): p.requires_grad=False
         if fixed_blocks >= 1:
           for p in self.act_base[4].parameters(): p.requires_grad=False
+
+        for p in self.act_top.parameters(): p.requires_grad=False
 
         def set_bn_fix(m):
           classname = m.__class__.__name__
