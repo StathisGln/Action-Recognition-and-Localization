@@ -14,7 +14,8 @@ import torch.nn as nn
 import numpy as np
 import math
 import yaml
-from config import cfg
+# from config import cfg
+from conf import conf
 from generate_3d_anchors import generate_anchors
 from bbox_transform import bbox_transform_inv, clip_boxes_3d, clip_boxes_batch, bbox_transform_inv_3d
 
@@ -73,23 +74,11 @@ class _ProposalLayer(nn.Module):
         # print('bbox_frame.shape :',bbox_frame.shape)
 
         batch_size = bbox_frame.size(0)
-        # print('batch_size : ', batch_size)
-        # pre_nms_topN  = cfg[cfg_key].RPN_PRE_NMS_TOP_N
-        # post_nms_topN = cfg[cfg_key].RPN_POST_NMS_TOP_N
-        # nms_thresh    = cfg[cfg_key].RPN_NMS_THRESH
-        # min_size      = cfg[cfg_key].RPN_MIN_SIZE
-        if cfg_key == 'TRAIN':
-            pre_nms_topN  = 20000
-            # post_nms_topN = 50
-            post_nms_topN = 100
-            nms_thresh    = 0.7
-            min_size      = 8
-        else:
-            pre_nms_topN  = 6000
-            post_nms_topN = 25
-            # post_nms_topN = 10
-            nms_thresh    = 0.7
-            min_size      = 16
+
+        pre_nms_topN  = conf[cfg_key].RPN_PRE_NMS_TOP_N
+        post_nms_topN = conf[cfg_key].RPN_POST_NMS_TOP_N
+        nms_thresh    = conf[cfg_key].RPN_NMS_THRESH
+        min_size      = conf[cfg_key].RPN_MIN_SIZE
 
         ##################
         # Create anchors #

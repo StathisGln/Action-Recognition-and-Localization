@@ -13,7 +13,56 @@ __C = edict()
 #   from fast_rcnn_config import cfg
 conf = __C
 
+__C.TRAIN = edict()
+
+
+__C.TRAIN.BBOX_NORMALIZE_MEANS_3d = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+__C.TRAIN.BBOX_NORMALIZE_STDS_3d  = (0.1, 0.1, 0.1, 0.2, 0.2, 0.1)
+__C.TRAIN.BBOX_INSIDE_WEIGHTS_3d  = (1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
+
+__C.TRAIN.BBOX_NORMALIZE_MEANS = (0.0, 0.0, 0.0, 0.0)
+__C.TRAIN.BBOX_NORMALIZE_STDS = (0.1, 0.1, 0.2, 0.2)
+__C.TRAIN.BBOX_INSIDE_WEIGHTS = (1.0, 1.0, 1.0, 1.0)
+
+######
+__C.TRAIN.BATCH_SIZE = 16
+__C.TRAIN.FG_FRACTION = 0.25
+
+# Overlap threshold for a ROI to be considered foreground (if >= FG_THRESH)
+__C.TRAIN.FG_THRESH = 0.5
+
+# Overlap threshold for a ROI to be considered background (class = 0 if
+# overlap in [LO, HI))
+__C.TRAIN.BG_THRESH_HI = 0.5
+__C.TRAIN.BG_THRESH_LO = 0.1
+
+# Use horizontally-flipped images during training?
+__C.TRAIN.USE_FLIPPED = True
+__C.TRAIN.BBOX_NORMALIZE_TARGETS_PRECOMPUTED = True
+
+
+
+
+###############
+#     RPN     #
+###############
 # Number of top scoring boxes to keep before apply NMS to RPN proposals
-__C.TRAIN.RPN_PRE_NMS_TOP_N = 12000
+__C.TRAIN.RPN_PRE_NMS_TOP_N = 20000
 # Number of top scoring boxes to keep after applying NMS to RPN proposals
-__C.TRAIN.RPN_POST_NMS_TOP_N = 2000
+__C.TRAIN.RPN_POST_NMS_TOP_N = 150
+
+__C.TRAIN.RPN_NMS_THRESH = 0.7
+__C.TRAIN.RPN_MIN_SIZE = 8
+
+## TEST MODE
+
+__C.TEST = edict()
+
+__C.TEST.RPN_NMS_THRESH = 0.7
+__C.TEST.RPN_MIN_SIZE = 16
+
+## Number of top scoring boxes to keep before apply NMS to RPN proposals
+__C.TEST.RPN_PRE_NMS_TOP_N = 20000
+
+## Number of top scoring boxes to keep after applying NMS to RPN proposals
+__C.TEST.RPN_POST_NMS_TOP_N = 25

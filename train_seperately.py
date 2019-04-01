@@ -296,14 +296,14 @@ if __name__ == '__main__':
 
         act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=1)
 
-        if (epoch + 1) % (5) == 0:
-            validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
+        # if (epoch + 1) % (5) == 0:
+        #     validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
 
 
 
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model.pwf".format(epoch+1))
-    torch.save(act_model.state_dict(), "action_net_model.pwf".format(epoch))
+            torch.save(act_model.state_dict(), "action_net_model_Resnext.pwf".format(epoch+1))
+    torch.save(act_model.state_dict(), "action_net_model_Resnext.pwf".format(epoch))
 
     exit(-1)
     #####################################################

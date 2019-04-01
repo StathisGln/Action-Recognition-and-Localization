@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import numpy.random as npr
-from config import cfg
+from conf import conf
 from bbox_transform import bbox_overlaps_batch_3d, bbox_transform_batch_3d
 import pdb
 
@@ -26,9 +26,9 @@ class _ProposalTargetLayer(nn.Module):
     def __init__(self, nclasses):
         super(_ProposalTargetLayer, self).__init__()
         self._num_classes = nclasses
-        self.BBOX_NORMALIZE_MEANS = torch.FloatTensor(cfg.TRAIN.BBOX_NORMALIZE_MEANS_3d)
-        self.BBOX_NORMALIZE_STDS = torch.FloatTensor(cfg.TRAIN.BBOX_NORMALIZE_STDS_3d)
-        self.BBOX_INSIDE_WEIGHTS = torch.FloatTensor(cfg.TRAIN.BBOX_INSIDE_WEIGHTS_3d)
+        self.BBOX_NORMALIZE_MEANS = torch.FloatTensor(conf.TRAIN.BBOX_NORMALIZE_MEANS_3d)
+        self.BBOX_NORMALIZE_STDS = torch.FloatTensor(conf.TRAIN.BBOX_NORMALIZE_STDS_3d)
+        self.BBOX_INSIDE_WEIGHTS = torch.FloatTensor(conf.TRAIN.BBOX_INSIDE_WEIGHTS_3d)
 
     def forward(self, all_rois, gt_boxes):
 
@@ -53,8 +53,8 @@ class _ProposalTargetLayer(nn.Module):
         all_rois = torch.cat([all_rois, gt_boxes_append], 1)
 
         num_images = 1
-        rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images)
-        fg_rois_per_image = int(np.round(cfg.TRAIN.FG_FRACTION * rois_per_image))
+        rois_per_image = int(conf.TRAIN.BATCH_SIZE / num_images)
+        fg_rois_per_image = int(np.round(conf.TRAIN.FG_FRACTION * rois_per_image))
         fg_rois_per_image = 1 if fg_rois_per_image == 0 else fg_rois_per_image
         labels, rois, bbox_targets, bbox_inside_weights = self._sample_rois_pytorch(
             all_rois, gt_boxes, fg_rois_per_image,
@@ -115,7 +115,7 @@ class _ProposalTargetLayer(nn.Module):
 
         targets = bbox_transform_batch_3d(ex_rois, gt_rois)
         # print('targets.shape :',targets.shape)
-        if cfg.TRAIN.BBOX_NORMALIZE_TARGETS_PRECOMPUTED:
+        if conf.TRAIN.BBOX_NORMALIZE_TARGETS_PRECOMPUTED:
             # Optionally normalize targets by a precomputed mean and stdev
             targets = ((targets - self.BBOX_NORMALIZE_MEANS.expand_as(targets))
                         / self.BBOX_NORMALIZE_STDS.expand_as(targets))
@@ -163,12 +163,12 @@ class _ProposalTargetLayer(nn.Module):
             if gt_boxes_single.byte().any() == 0:
                 continue
             max_overlaps_single =max_overlaps[i]
-            fg_inds = torch.nonzero(max_overlaps_single >= cfg.TRAIN.FG_THRESH).view(-1)
+            fg_inds = torch.nonzero(max_overlaps_single >= conf.TRAIN.FG_THRESH).view(-1)
             fg_num_rois = fg_inds.numel()
 
             # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
-            bg_inds = torch.nonzero((max_overlaps_single < cfg.TRAIN.BG_THRESH_HI) &
-                                    (max_overlaps_single >= cfg.TRAIN.BG_THRESH_LO)).view(-1)
+            bg_inds = torch.nonzero((max_overlaps_single < conf.TRAIN.BG_THRESH_HI) &
+                                    (max_overlaps_single >= conf.TRAIN.BG_THRESH_LO)).view(-1)
             bg_num_rois = bg_inds.numel()
 
             if fg_num_rois > 0 and bg_num_rois > 0:

@@ -12,6 +12,7 @@ from torch.nn.functional import avg_pool3d
 from torch.autograd import Variable
 
 from resnet_3D import resnet34
+from resnext import resnet101
 from region_net import _RPN 
 from human_reg import _Regression_Layer
 
@@ -40,8 +41,10 @@ class ACT_net(nn.Module):
         self.spatial_scale = 1.0/16
 
         # define rpn
+        
+        self.act_rpn = _RPN(1024, sample_duration).cuda()
+        # self.act_rpn = _RPN(256, sample_duration).cuda()
 
-        self.act_rpn = _RPN(256, sample_duration).cuda()
         self.act_proposal_target = _ProposalTargetLayer(2).cuda() ## background/ foreground
         self.act_proposal_target_single = _ProposalTargetLayer_single(2) ## background/ foreground for only xy
 
@@ -50,7 +53,8 @@ class ACT_net(nn.Module):
         self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale).cuda()
 
         self.avgpool = nn.AvgPool3d((1, 7, 7), stride=1)
-        self.reg_layer = _Regression_Layer(256, self.sample_duration).cuda()
+        self.reg_layer = _Regression_Layer(1024, self.sample_duration).cuda()
+        # self.reg_layer = _Regression_Layer(256, self.sample_duration).cuda()
 
     def create_architecture(self):
         self._init_modules()
@@ -75,6 +79,7 @@ class ACT_net(nn.Module):
 
         # feed image data to base model to obtain base feature map
         base_feat = self.act_base(im_data)
+
         rois, rois_16, rpn_loss_cls, rpn_loss_bbox, \
             rpn_loss_cls_16, rpn_loss_bbox_16 = self.act_rpn(base_feat, im_info, gt_tubes, None)
 
@@ -211,15 +216,21 @@ class ACT_net(nn.Module):
 
     def _init_modules(self):
 
-        resnet_shortcut = 'A'
+        # resnet_shortcut = 'A'
+        resnet_shortcut = 'B'
+        
         sample_size = 112
 
-        model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
+        # model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
+        #                  sample_size=sample_size, sample_duration=self.sample_duration,
+        #                  last_fc=False)
+        model = resnet101(num_classes=400, shortcut_type=resnet_shortcut,
                          sample_size=sample_size, sample_duration=self.sample_duration,
-                         last_fc=False)
+                         )
+
         model = model
         model = nn.DataParallel(model, device_ids=None)
-        self.model_path = '/gpu-data2/sgal/resnet-34-kinetics.pth'
+        self.model_path = '../resnext-101-kinetics.pth'
         print("Loading pretrained weights from %s" %(self.model_path))
         model_data = torch.load(self.model_path)
 
@@ -240,8 +251,8 @@ class ACT_net(nn.Module):
 
         self.act_top = nn.Sequential(model.module.layer4)
 
-        self.act_bbox_pred_16 = nn.Linear(512, 4 )
-        self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg
+        self.act_bbox_pred_16 = nn.Linear(2048, 4 )
+        self.act_bbox_pred = nn.Linear(2048, 6 ) # 2 classes bg/ fg
         # self.act_cls_score = nn.Linear(512,self.n_classes) # classification layer
         # Fix blocks
         for p in self.act_base[0].parameters(): p.requires_grad=False
