@@ -137,6 +137,9 @@ def bbox_transform_batch(ex_rois, gt_rois):
         #     ex_heights, ex_ctr_y, gt_heights, gt_ctr_y, targets_dy, targets_dh))
 
     elif ex_rois.dim() == 3:
+        print('ex_rois[0] :',ex_rois[0].cpu().numpy())
+        print('gt_rois[0] :',gt_rois[0].cpu().numpy())
+
         ex_widths = ex_rois[:, :, 2] - ex_rois[:, :, 0] + 1.0
         ex_heights = ex_rois[:, :, 3] - ex_rois[:, :, 1] + 1.0
         ex_ctr_x = ex_rois[:, :, 0] + 0.5 * ex_widths
@@ -152,13 +155,14 @@ def bbox_transform_batch(ex_rois, gt_rois):
         targets_dw = torch.log(gt_widths / ex_widths)
         targets_dh = torch.log(gt_heights / ex_heights)
 
+
     else:
         raise ValueError('ex_roi input dimension is not correct.')
 
     targets = torch.stack(
         (targets_dx, targets_dy, targets_dw, targets_dh), 2)
 
-    # print('targets :',targets)
+    print('targets :',targets[0].cpu().numpy())
     # print('targets.shape :',targets.shape)
 
     return targets

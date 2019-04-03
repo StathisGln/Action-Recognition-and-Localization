@@ -161,8 +161,8 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
     ## 2 rois : 1450
     for step, data  in enumerate(data_loader):
 
-        # if step == 2:
-        #     break
+        if step == 2:
+            break
 
         clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
         clips_ = clips.to(device)
@@ -204,9 +204,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train action_net, regression layer and RNN')
 
     parser.add_argument('--demo', '-d', help='Run just 2 steps for test if everything works fine', action='store_true')
-    # parser.add_argument('--n_1_1', help='Run only part 1.1, training action net only', action='store_true')
-    # parser.add_argument('--n_1_2', help='Run only part 1.2, training only regression layer', action='store_true')
-    # parser.add_argument('--n_2', help='Run only part 2, train only RNN', action='store_true')
+    parser.add_argument('--n_1_1', help='Dont run part 1.1, training action net only', action='store_true')
+    parser.add_argument('--n_1_2', help='Dont run part 1.2, training only regression layer', action='store_true')
+    parser.add_argument('--n_2', help='Dont run part 2, train only RNN', action='store_true')
     args = parser.parse_args()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -244,68 +244,73 @@ if __name__ == '__main__':
     n_classes = len(actions)
 
 
-    #######################################################
-    #          Part 1-1 - train nTPN - without reg         #
-    #######################################################
+    # #######################################################
+    # #          Part 1-1 - train nTPN - without reg         #
+    # #######################################################
 
-    print(' -----------------------------------------------------')
-    print('|          Part 1-1 - train TPN - without reg         |')
-    print(' -----------------------------------------------------')
+    # print(' -----------------------------------------------------')
+    # print('|          Part 1-1 - train TPN - without reg         |')
+    # print(' -----------------------------------------------------')
 
-    # Init action_net
-    act_model = ACT_net(actions, sample_duration)
-    act_model.create_architecture()
-    if torch.cuda.device_count() > 1:
-        print('Using {} GPUs!'.format(torch.cuda.device_count()))
+    # # Init action_net
+    # act_model = ACT_net(actions, sample_duration)
+    # act_model.create_architecture()
+    # if torch.cuda.device_count() > 1:
+    #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
 
-    act_model = nn.DataParallel(act_model)
+    # act_model = nn.DataParallel(act_model)
 
-    act_model.to(device)
+    # act_model.to(device)
 
-    lr = 0.1
-    lr_decay_step = 8
-    lr_decay_gamma = 0.1
+    # lr = 0.1
+    # lr_decay_step = 5
+    # lr_decay_gamma = 0.1
     
 
-    params = []
+    # params = []
 
-    for p in act_model.module.reg_layer.parameters() : p.requires_grad=False
-    for key, value in dict(act_model.named_parameters()).items():
-        # print(key, value.requires_grad)
-        if value.requires_grad:
-            print('key :',key)
-            if 'bias' in key:
-                params += [{'params':[value],'lr':lr*(True + 1), \
-                            'weight_decay': False and 0.0005 or 0}]
-            else:
-                params += [{'params':[value],'lr':lr, 'weight_decay': 0.0005}]
+    # for p in act_model.module.reg_layer.parameters() : p.requires_grad=False
+    # for key, value in dict(act_model.named_parameters()).items():
+    #     # print(key, value.requires_grad)
+    #     if value.requires_grad:
+    #         print('key :',key)
+    #         if 'bias' in key:
+    #             params += [{'params':[value],'lr':lr*(True + 1), \
+    #                         'weight_decay': False and 0.0005 or 0}]
+    #         else:
+    #             params += [{'params':[value],'lr':lr, 'weight_decay': 0.0005}]
 
-    lr = lr * 0.1
-    optimizer = torch.optim.Adam(params)
+    # lr = lr * 0.1
+    # optimizer = torch.optim.Adam(params)
 
-    epochs = 40
+    # # epochs = 2
+    # epochs = 40
+    # if args.demo :
+    #     epochs = 1
+    # if args.n_1_1:
+    #     epochs = 0
 
-    n_devs = torch.cuda.device_count()
-    for epoch in range(epochs):
-        print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
+    # n_devs = torch.cuda.device_count()
+    # for epoch in range(epochs):
+    #     print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
 
-        if epoch % (lr_decay_step + 1) == 0:
-            adjust_learning_rate(optimizer, lr_decay_gamma)
-            lr *= lr_decay_gamma
-
-
-        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=1)
-
-        # if (epoch + 1) % (5) == 0:
-        #     validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
-
+    #     if epoch % (lr_decay_step + 1) == 0:
+    #         adjust_learning_rate(optimizer, lr_decay_gamma)
+    #         lr *= lr_decay_gamma
 
 
-        if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_Resnext.pwf".format(epoch+1))
-    torch.save(act_model.state_dict(), "action_net_model_Resnext.pwf".format(epoch))
+    #     act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=1)
 
-    exit(-1)
+    #     # if (epoch + 1) % (5) == 0:
+    #     #     validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
+
+
+
+    #     if ( epoch + 1 ) % 5 == 0:
+    #         torch.save(act_model.state_dict(), "action_net_model.pwf".format(epoch+1))
+    # if not args.n_1_1:
+    #     torch.save(act_model.state_dict(), "action_net_model.pwf".format(epoch))
+
     #####################################################
     #          Part 1-2 - train TPN - only reg          #
     #####################################################
@@ -322,12 +327,13 @@ if __name__ == '__main__':
         act_model = nn.DataParallel(act_model)
 
     act_model.to(device)
-
+    # act_model_data = torch.load('./action_net_model.pwf')
+    # act_model.load_state_dict(act_model_data)
+    act_model.module.init_reg_weights()
     lr = 0.1
-    lr_decay_step = 8
+    lr_decay_step = 5
     lr_decay_gamma = 0.1
     
-
     params = []
     for p in act_model.module.parameters() : p.requires_grad=False
     for p in act_model.module.reg_layer.parameters() : p.requires_grad=True
@@ -344,8 +350,12 @@ if __name__ == '__main__':
     lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
 
-    # epochs = 40
-    epochs = 5
+    epochs = 40
+    # epochs = 5
+    if args.demo :
+        epochs = 1
+    if args.n_1_2:
+        epochs = 0
 
     n_devs = torch.cuda.device_count()
     for epoch in range(epochs):
@@ -355,17 +365,17 @@ if __name__ == '__main__':
             adjust_learning_rate(optimizer, lr_decay_gamma)
             lr *= lr_decay_gamma
 
-
         act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=2)
 
         # if (epoch + 1) % (5) == 0:
         #     validation(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
 
-    #     if ( epoch + 1 ) % 5 == 0:
-    #         torch.save(act_model.module.reg_layer.state_dict(), "reg_layer.pwf".format(epoch+1))
-    # torch.save(act_model.module.reg_layer.state_dict(), "reg_layer.pwf".format(epoch))
+        if ( epoch + 1 ) % 5 == 0:
+            torch.save(act_model.module.reg_layer.state_dict(), "reg_layer.pwf".format(epoch+1))
+    if not args.n_1_2:
+        torch.save(act_model.module.reg_layer.state_dict(), "reg_layer.pwf".format(epoch))
+
     exit(-1)
-    
     # ###########################################
     # #          Part 2 - train Linear          #
     # ###########################################

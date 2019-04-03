@@ -42,8 +42,8 @@ class ACT_net(nn.Module):
 
         # define rpn
         
-        self.act_rpn = _RPN(1024, sample_duration).cuda()
-        # self.act_rpn = _RPN(256, sample_duration).cuda()
+        # self.act_rpn = _RPN(1024, sample_duration).cuda()
+        self.act_rpn = _RPN(256, sample_duration).cuda()
 
         self.act_proposal_target = _ProposalTargetLayer(2).cuda() ## background/ foreground
         self.act_proposal_target_single = _ProposalTargetLayer_single(2) ## background/ foreground for only xy
@@ -53,8 +53,8 @@ class ACT_net(nn.Module):
         self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale).cuda()
 
         self.avgpool = nn.AvgPool3d((1, 7, 7), stride=1)
-        self.reg_layer = _Regression_Layer(1024, self.sample_duration).cuda()
-        # self.reg_layer = _Regression_Layer(256, self.sample_duration).cuda()
+        # self.reg_layer = _Regression_Layer(1024, self.sample_duration).cuda()
+        self.reg_layer = _Regression_Layer(256, self.sample_duration).cuda()
 
     def create_architecture(self):
         self._init_modules()
@@ -213,24 +213,44 @@ class ACT_net(nn.Module):
         normal_init(self.act_bbox_pred_16, 0, 0.001, truncated)
         # normal_init(self.act_cls_score, 0, 0.001, truncated)
 
+    def init_reg_weights(self):
+
+        def normal_init(m, mean, stddev, truncated=False):
+            """
+            weight initalizer: truncated normal and random normal.
+            """
+            # x is a parameter
+            if truncated:
+                m.weight.data.normal_().fmod_(2).mul_(stddev).add_(mean) # not a perfect approximation
+            else:
+                m.weight.data.normal_(mean, stddev)
+                m.bias.data.zero_()
+
+        truncated = False
+
+        normal_init(self.reg_layer.Conv, 0, 0.01, truncated)
+        normal_init(self.reg_layer.bbox_pred, 0, 0.01, truncated)
+
 
     def _init_modules(self):
 
-        # resnet_shortcut = 'A'
-        resnet_shortcut = 'B'
+        resnet_shortcut = 'A'
+        # resnet_shortcut = 'B'
         
         sample_size = 112
 
-        # model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
-        #                  sample_size=sample_size, sample_duration=self.sample_duration,
-        #                  last_fc=False)
-        model = resnet101(num_classes=400, shortcut_type=resnet_shortcut,
+        model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
                          sample_size=sample_size, sample_duration=self.sample_duration,
-                         )
+                         last_fc=False)
+
+        # model = resnet101(num_classes=400, shortcut_type=resnet_shortcut,
+        #                  sample_size=sample_size, sample_duration=self.sample_duration,
+        #                  )
 
         model = model
         model = nn.DataParallel(model, device_ids=None)
-        self.model_path = '../resnext-101-kinetics.pth'
+        # self.model_path = '../resnext-101-kinetics.pth'
+        self.model_path = '../resnet-34-kinetics.pth'
         print("Loading pretrained weights from %s" %(self.model_path))
         model_data = torch.load(self.model_path)
 
@@ -251,8 +271,12 @@ class ACT_net(nn.Module):
 
         self.act_top = nn.Sequential(model.module.layer4)
 
-        self.act_bbox_pred_16 = nn.Linear(2048, 4 )
-        self.act_bbox_pred = nn.Linear(2048, 6 ) # 2 classes bg/ fg
+        # self.act_bbox_pred_16 = nn.Linear(2048, 4 )
+        # self.act_bbox_pred = nn.Linear(2048, 6 ) # 2 classes bg/ fg
+
+        self.act_bbox_pred_16 = nn.Linear(512, 4 )
+        self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg
+
         # self.act_cls_score = nn.Linear(512,self.n_classes) # classification layer
         # Fix blocks
         for p in self.act_base[0].parameters(): p.requires_grad=False

@@ -38,11 +38,12 @@ class _Regression_Layer(nn.Module):
     def forward(self, base_feat, tubes, gt_rois):
 
         batch_size = tubes.size(0)
-        
         offset = torch.arange(0,self.sample_duration)
+        print('Before base_feat.shape:',base_feat.shape)
         ## modify tubes and rois_label
         if self.training:
 
+            # get rois for each tube
             rois, labels, \
             bbox_targets, bbox_inside_ws,\
             bbox_outside_ws = self.reg_target(tubes, gt_rois)
@@ -68,6 +69,8 @@ class _Regression_Layer(nn.Module):
 
         ## modify feat
         base_feat = base_feat.permute(0,2,1,3,4).contiguous().view(-1,base_feat.size(1),base_feat.size(3),base_feat.size(4))
+        print('base_feat.shape :',base_feat.shape)
+        exit(-1)
         conv1_feats = self.Conv(base_feat)
 
         feats = self.roi_align(conv1_feats, rois.view(-1,5))
