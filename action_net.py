@@ -42,8 +42,8 @@ class ACT_net(nn.Module):
 
         # define rpn
         
-        self.act_rpn = _RPN(1024, sample_duration).cuda()
-        # self.act_rpn = _RPN(256, sample_duration).cuda()
+        # self.act_rpn = _RPN(1024, sample_duration).cuda()
+        self.act_rpn = _RPN(256, sample_duration).cuda()
 
         self.act_proposal_target = _ProposalTargetLayer(2).cuda() ## background/ foreground
         self.act_proposal_target_single = _ProposalTargetLayer_single(2) ## background/ foreground for only xy
@@ -53,8 +53,11 @@ class ACT_net(nn.Module):
         self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale).cuda()
 
         self.avgpool = nn.AvgPool3d((1, 7, 7), stride=1)
-        self.reg_layer = _Regression_Layer(1024, self.sample_duration).cuda()
-        # self.reg_layer = _Regression_Layer(256, self.sample_duration).cuda()
+        # self.reg_layer = _Regression_Layer(1024, self.sample_duration).cuda()
+        self.reg_layer = _Regression_Layer(256, self.sample_duration).cuda()
+
+        ## actioness layer
+        self.actioness_score = nn.Linear(512,2)
 
     def create_architecture(self):
         self._init_modules()
@@ -145,31 +148,49 @@ class ACT_net(nn.Module):
         # # compute bbox offset
         pooled_feat = pooled_feat.mean(3)
 
+        if not self.training:
+            pooled_feat = Variable(pooled_feat, requires_grad=False)
+            pooled_feat_ = Variable(pooled_feat_, requires_grad=False)
+        
         bbox_pred = self.act_bbox_pred(pooled_feat[:, :n_rois]).view(-1,6)
         bbox_pred_16 = self.act_bbox_pred_16(pooled_feat[:, n_rois:]).view(-1,4)
 
+        actioness_scr = F.softmax(self.actioness_score(pooled_feat),2)
         # prob_out = self.act_cls_score(pooled_feat)
-        
+
         if not self.training:
+            print('edwww')
             bbox_pred = Variable(bbox_pred, requires_grad=False)
             bbox_pred_16 = Variable(bbox_pred_16, requires_grad=False)
-            # prob_out = Variable(prob_out, requires_grad=False)
+            actioness_scr = Variable(actioness_scr, requires_grad=False)
 
+            # prob_out = Variable(prob_out, requires_grad=False)
+            
         # compute object classification probability
         act_loss_bbox = 0
         act_loss_bbox_16 = 0
+        act_score_loss = 0
         # act_loss_cls = 0
-        
-        rois_label = rois_label.view(batch_size, n_rois,-1)
-        rois_label_16 = rois_label_16.view(batch_size, n_rois, -1)
-        f_rois_label = torch.cat((rois_label, rois_label_16),dim=1)
 
         if self.training:
+        
+            rois_label = rois_label.view(batch_size, n_rois,-1)
+            rois_label_16 = rois_label_16.view(batch_size, n_rois, -1)
+            f_rois_label = torch.cat((rois_label, rois_label_16),dim=1)
+
             # bounding box regression L1 loss
+            target_score = f_rois_label.gt(0).long()
+
+            actioness_scr = actioness_scr.view(-1,2)
+            target_score  = target_score.view(-1)
+
+            act_score_loss = F.cross_entropy(actioness_scr,target_score)
+            print('act_score_loss :',act_score_loss)
             act_loss_bbox = _smooth_l1_loss(bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
             act_loss_bbox_16 = _smooth_l1_loss(bbox_pred_16, rois_target_16, rois_inside_ws_16, rois_outside_ws_16)
-            # act_loss_cls = F.cross_entropy(prob_out, f_rois_label.long())
 
+            # act_loss_cls = F.cross_entropy(prob_out, f_rois_label.long())
+                                             
         ## prepare bbox_pred for all
         bbox_pred_16 = torch.cat((bbox_pred_16[:,[0,1]],torch.zeros((bbox_pred_16.size(0),1)).type_as(bbox_pred_16), \
                                   bbox_pred_16[:,[2,3]],torch.zeros((bbox_pred_16.size(0),1)).type_as(bbox_pred_16)),dim=1)
@@ -186,10 +207,10 @@ class ACT_net(nn.Module):
           return f_rois,  f_bbox_pred, pooled_feat_, \
             rpn_loss_cls, rpn_loss_bbox, act_loss_bbox,\
             rpn_loss_cls_16, rpn_loss_bbox_16, act_loss_bbox_16,\
-            f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss, # prob_out, act_cls_score
+            f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss, actioness_scr, act_score_loss, # prob_out, act_cls_score
       
         return f_rois,  f_bbox_pred, pooled_feat_, None, None, None, \
-            None, None, None, None, sgl_rois_bbox_pred, None, # prob_out, None
+            None, None, None, None, sgl_rois_bbox_pred, None, actioness_scr, None, # prob_out, None
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):
@@ -216,21 +237,22 @@ class ACT_net(nn.Module):
 
     def _init_modules(self):
 
-        # resnet_shortcut = 'A'
-        resnet_shortcut = 'B'
+        resnet_shortcut = 'A'
+        # resnet_shortcut = 'B'
         
         sample_size = 112
 
-        # model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
-        #                  sample_size=sample_size, sample_duration=self.sample_duration,
-        #                  last_fc=False)
-        model = resnet101(num_classes=400, shortcut_type=resnet_shortcut,
+        model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
                          sample_size=sample_size, sample_duration=self.sample_duration,
-                         )
+                         last_fc=False)
+        # model = resnet101(num_classes=400, shortcut_type=resnet_shortcut,
+        #                  sample_size=sample_size, sample_duration=self.sample_duration,
+        #                  )
 
         model = model
         model = nn.DataParallel(model, device_ids=None)
-        self.model_path = '../resnext-101-kinetics.pth'
+        self.model_path = '../resnet-34-kinetics.pth'
+        # self.model_path = '../resnext-101-kinetics.pth'
         print("Loading pretrained weights from %s" %(self.model_path))
         model_data = torch.load(self.model_path)
 
@@ -251,8 +273,11 @@ class ACT_net(nn.Module):
 
         self.act_top = nn.Sequential(model.module.layer4)
 
-        self.act_bbox_pred_16 = nn.Linear(2048, 4 )
-        self.act_bbox_pred = nn.Linear(2048, 6 ) # 2 classes bg/ fg
+        # self.act_bbox_pred_16 = nn.Linear(2048, 4 )
+        # self.act_bbox_pred = nn.Linear(2048, 6 ) # 2 classes bg/ fg
+        self.act_bbox_pred_16 = nn.Linear(512, 4 )
+        self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg
+
         # self.act_cls_score = nn.Linear(512,self.n_classes) # classification layer
         # Fix blocks
         for p in self.act_base[0].parameters(): p.requires_grad=False
@@ -266,7 +291,7 @@ class ACT_net(nn.Module):
         if fixed_blocks >= 1:
           for p in self.act_base[4].parameters(): p.requires_grad=False
 
-        for p in self.act_top.parameters(): p.requires_grad=False
+        # for p in self.act_top.parameters(): p.requires_grad=False
 
         def set_bn_fix(m):
           classname = m.__class__.__name__
