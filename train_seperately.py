@@ -177,13 +177,14 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         rpn_loss_cls,  rpn_loss_bbox, \
         act_loss_bbox, rpn_loss_cls_16,\
         rpn_loss_bbox_16, act_loss_bbox_16, rois_label, \
-        sgl_rois_bbox_pred, sgl_rois_bbox_loss = model(inputs,
-                                                      im_info_,
-                                                      gt_tubes_r_, gt_rois_,
-                                                      start_fr)
+        sgl_rois_bbox_pred, sgl_rois_bbox_loss, \
+        actioness_score, actioness_loss = model(inputs,
+                                                im_info_,
+                                                gt_tubes_r_, gt_rois_,
+                                                start_fr)
         if mode == 1:
             loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + rpn_loss_cls_16.mean() \
-                   + rpn_loss_bbox_16.mean() +  act_loss_bbox_16.mean()
+                   + rpn_loss_bbox_16.mean() +  act_loss_bbox_16.mean() + actioness_loss.mean()
         elif mode == 2:
             loss = sgl_rois_bbox_loss.mean()
 
@@ -284,6 +285,8 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(params)
 
     epochs = 40
+    # epochs = 2
+
 
     n_devs = torch.cuda.device_count()
     for epoch in range(epochs):
@@ -302,8 +305,8 @@ if __name__ == '__main__':
 
 
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_Resnext.pwf".format(epoch+1))
-    torch.save(act_model.state_dict(), "action_net_model_Resnext.pwf".format(epoch))
+            torch.save(act_model.state_dict(), "action_net_model.pwf".format(epoch+1))
+    torch.save(act_model.state_dict(), "action_net_model.pwf".format(epoch))
 
     exit(-1)
     #####################################################
