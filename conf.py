@@ -41,8 +41,6 @@ __C.TRAIN.USE_FLIPPED = True
 __C.TRAIN.BBOX_NORMALIZE_TARGETS_PRECOMPUTED = True
 
 
-
-
 ###############
 #     RPN     #
 ###############
@@ -66,3 +64,9 @@ __C.TEST.RPN_PRE_NMS_TOP_N = 20000
 
 ## Number of top scoring boxes to keep after applying NMS to RPN proposals
 __C.TEST.RPN_POST_NMS_TOP_N = 25
+
+# number of tubes after connection
+
+__C.MAX_NUMBER_TUBES=100
+__C.CONNECTION_THRESH=0.9
+__C.UPDATE_THRESH=1000

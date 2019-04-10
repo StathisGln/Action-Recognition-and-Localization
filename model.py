@@ -7,8 +7,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
+
+from conf import conf
 from action_net import ACT_net
 from act_rnn import Act_RNN
+from calc_score.calc import Calculator
 
 from create_tubes_from_boxes import create_video_tube, create_tube_from_tubes, create_tube_with_frames
 from connect_tubes import connect_tubes, get_gt_tubes_feats_label, get_tubes_feats_label
@@ -17,7 +20,7 @@ from resize_rpn import resize_boxes, resize_tube
 from ucf_dataset import single_video
 
 from config import cfg
-
+from bbox_transform import bbox_overlaps_batch_3d
 from collections import OrderedDict
 
 # import gc
@@ -42,31 +45,31 @@ class Model(nn.Module):
         self.sample_size = sample_size
         self.step = int(self.sample_duration/2)
         self.p_feat_size = 256 # 512
-        # For now a linear classifier only
-
+        
+        # For connection 
+        self.max_num_tubes = conf.MAX_NUMBER_TUBES
+        self.connection_thresh = conf.CONNECTION_THRESH
+        self.update_thresh_step = conf.UPDATE_THRESH
+        self.calc = Calculator(self.max_num_tubes, self.update_thresh_step, self.connection_thresh)
+        
 
 
     def forward(self,n_devs, dataset_folder, vid_names, clips, vid_id, boxes, mode, cls2idx, num_actions, num_frames, h_, w_):
         '''
         TODO describe procedure
         '''
-        # print('boxes.shape :',boxes.shape)
         boxes = boxes.squeeze(0).permute(1,0,2).cpu()
         clips = clips.squeeze(0)
         # print('----------Inside----------')
         # print('boxes.shape :',boxes.shape)
 
-        # print('boxes :',boxes.cpu().numpy())
-        # print('boxes.type() :',boxes.type())
         ## define a dataloader for the whole video
         boxes = boxes[:num_frames,:num_actions]
         clips = clips[:num_frames]
 
-        # print('clips.shape :',clips.shape)
-        # print('clips.shape :',clips.type())
-        # print('boxes.shape :',boxes.shape)
-        # print('boxes :',boxes.cpu().numpy())
-        batch_size = 16 # 
+        batch_size = 2 # 
+        # batch_size = 16 # 
+
         num_images = 1
         rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images) *2 if self.training else 10 *2
 
@@ -78,8 +81,11 @@ class Model(nn.Module):
                                                   shuffle=False)
 
         n_clips = data.__len__()
+        print('n_clips: ', n_clips)
         features = torch.zeros(n_clips, rois_per_image, self.p_feat_size, self.sample_duration)
-        p_tubes = torch.zeros(n_clips, rois_per_image,  8) # all the proposed rois
+        p_tubes = torch.zeros(n_clips, rois_per_image,  6) # all the proposed rois
+        actioness_score = torch.zeros(n_clips, rois_per_image)
+        overlaps_scores = torch.zeros(n_clips-1, rois_per_image, rois_per_image)
 
         f_tubes = []
 
@@ -100,31 +106,15 @@ class Model(nn.Module):
 
             # if step == 1:
             #     break
-            # print('step :',step)
-            # print('Memory :',torch.cuda.memory_allocated(device=None))
-            # print('boxes :',boxes)
             frame_indices, im_info, start_fr = dt
             boxes_ = boxes[frame_indices].cuda()
             clips_ = clips[frame_indices].cuda()
 
-            # print('clips_.shape :',clips_.shape)
-            # print('boxes_.permute(0,2,1,3) :',boxes_.shape)
-            # print('boxes_.permute(0,2,1,3) :',boxes_.permute(0,2,1,3).shape)
-
             gt_tubes = create_tube_with_frames(boxes_.permute(0,2,1,3), im_info, self.sample_duration)
-            # print('boxes_.shape :',boxes_)
-            # print('gt_tubes :',gt_tubes)
-            # print('boxes_.shape :',boxes_.shape)
-            # print('gt_tubes :',gt_tubes.shape)
+            # print('step :',step, ' boxes :',boxes_)
             gt_tubes_ = gt_tubes.type_as(clips).cuda()
             im_info = im_info.cuda()
             start_fr = start_fr.cuda()
-
-
-            # clips = Variable(clips, volatile=True)
-            # gt_tubes_ = Variable(gt_tubes_, volatile=True)
-            # im_info = Variable(im_info, volatile=True)
-            # start_fr = Variable(start_fr, volatile=True)
 
             tubes,  bbox_pred, pooled_feat, \
             rpn_loss_cls,  rpn_loss_bbox, \
@@ -136,7 +126,6 @@ class Model(nn.Module):
                                                         gt_tubes_,
                                                         boxes_.permute(0,2,1,3).float(),
                                                         start_fr)
-
             pooled_feat = pooled_feat.view(-1,rois_per_image,self.p_feat_size,self.sample_duration)
 
             indexes_ = (torch.arange(0, tubes.size(0))*int(self.sample_duration/2) + start_fr[0].cpu()).unsqueeze(1)
@@ -147,18 +136,12 @@ class Model(nn.Module):
 
             idx_s = step * batch_size 
             idx_e = step * batch_size + batch_size
-            # print('idx_s :', idx_s, ' idx_e :',idx_e )
-            # print('features.shape :',features.shape)
+
             features[idx_s:idx_e] = pooled_feat
-            p_tubes[idx_s:idx_e] = tubes
+            p_tubes[idx_s:idx_e,] = tubes[:,:,1:7]
+            actioness_score[idx_s:idx_e] = tubes[:,:,7]
 
             if self.training:
-                # print('gt_tubes.shape :',gt_tubes.shape)
-                # print('f_gt_tubes.element_size() * f_gt_tubes.nelement() :',f_gt_tubes.element_size() * f_gt_tubes.nelement())
-                # print('idx_s :',idx_s)
-                # print('idx_e :',idx_e)
-                # print('f_gt_tubes.shape :',f_gt_tubes.shape)
-                # print('f_gt_tubes.device :',f_gt_tubes.device)
 
                 f_gt_tubes[idx_s:idx_e] = gt_tubes.type_as(f_gt_tubes)
                 tubes_labels[idx_s:idx_e] = rois_label.squeeze(-1).type_as(tubes_labels)
@@ -175,10 +158,37 @@ class Model(nn.Module):
             # # print('tubes.type() :',tubes.type())
             # print('----------Connect TUBEs----------')
 
-            f_tubes = connect_tubes(f_tubes,tubes.cpu(), p_tubes, pooled_feat, rois_label, step*batch_size)
+            # f_tubes = connect_tubes(f_tubes,tubes.cpu(), p_tubes, pooled_feat, rois_label, step*batch_size)
 
             # print('----------End Tubes----------')
-
+        ########################################################
+        #          Calculate overlaps and connections          #
+        ########################################################
+        # print('n_clips :',n_clips)
+        # print('p_tubes.shape :',p_tubes.shape)
+        # print('p_tubes[0] :',p_tubes[0].cpu().numpy())
+        # print('p_tubes[1] :',p_tubes[1].cpu().numpy())
+        # print('p_tubes[2] :',p_tubes[2].cpu().numpy())
+        for i in range(n_clips-1):
+            overlaps_scores[i] = bbox_overlaps_batch_3d(p_tubes[i],p_tubes[i+1].unsqueeze(0))
+        print('n_clips :',n_clips)
+        print('rois_per_image:',rois_per_image)
+        print('actioness.shape:',actioness_score.shape)
+        print('overlaps_scores.shape :',overlaps_scores.shape)
+        print('actioness_score :',actioness_score.cpu().numpy())
+        # exit(-1)
+        final_scores, final_poss = self.calc(overlaps_scores.cuda(), actioness_score.cuda(), torch.Tensor([n_clips]),torch.Tensor([rois_per_image]))
+        # print('overlaps_scores :',overlaps_scores.cpu().numpy())
+        # print('final_scores.shape :',final_scores.shape)
+        # print('final_poss.shape:',final_poss.shape)
+        for i in range(final_poss.size(0)):
+            print('i -> ',i)
+            for j in range(n_clips):
+                if final_poss[i][j][0] == -1:
+                    break
+                print(' ', final_poss[i][j][0].item(),' ',final_poss[i][j][1].item(),' |', end='')
+            print('')
+        exit(-1)
         ###########################################p####
         #          Choose Tubes for RCNN\TCN          #
         ###############################################

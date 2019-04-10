@@ -36,12 +36,12 @@ class _ProposalTargetLayer(nn.Module):
         self.BBOX_NORMALIZE_STDS  = self.BBOX_NORMALIZE_STDS.type_as(gt_boxes)
         self.BBOX_INSIDE_WEIGHTS  = self.BBOX_INSIDE_WEIGHTS.type_as(gt_boxes)
 
-        # print('all_rois.device :',all_rois.device)
-        # print('gt_boxes :', gt_boxes)
         gt_boxes_append = gt_boxes.new(gt_boxes.size()).zero_()
-        gt_boxes_append[:,:,1:] = gt_boxes[:,:,:7] # in pos 0 is the score
-        # gt_boxes_append[:,:,1:] = gt_boxes[:,:,:6] # in pos 0 is the score
+        gt_boxes_append[:,:,1:7] = gt_boxes[:,:,:6] # in pos 0 is the score
+        gt_boxes_append[:,:,7]   = gt_boxes[:,:,7] # in pos 0 is the score
         num_rois_pre = all_rois.size(1)
+
+        # print('gt_boxes :',gt_boxes)
         # print('all_rois.shape :',all_rois.shape )
         # print('all_rois :',all_rois)
         # print('nu_rois_pre :', num_rois_pre )

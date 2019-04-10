@@ -56,8 +56,8 @@ class ACT_net(nn.Module):
         # self.reg_layer = _Regression_Layer(1024, self.sample_duration).cuda()
         self.reg_layer = _Regression_Layer(256, self.sample_duration).cuda()
 
-        ## actioness layer
-        self.actioness_score = nn.Linear(512,2)
+        # ## actioness layer
+        # self.actioness_score = nn.Linear(512,2)
 
     def create_architecture(self):
         self._init_modules()
@@ -85,7 +85,6 @@ class ACT_net(nn.Module):
 
         rois, rois_16, rpn_loss_cls, rpn_loss_bbox, \
             rpn_loss_cls_16, rpn_loss_bbox_16 = self.act_rpn(base_feat, im_info, gt_tubes, None)
-
         # if it is training phrase, then use ground trubut bboxes for refining
         # firstly find xy- reggression boxes
         n_rois = rois.size(1)
@@ -133,8 +132,11 @@ class ACT_net(nn.Module):
             rpn_loss_bbox_16 = 0
 
         # do roi align based on predicted rois
+
         f_rois = torch.cat((rois,rois_16),dim=1)
         rois_s = f_rois[:,:,:7].contiguous()
+        # print('base_feat.shape :',base_feat.shape)
+
         pooled_feat_ = self.act_roi_align(base_feat, rois_s.view(-1,7))
 
         ## regression
@@ -155,14 +157,14 @@ class ACT_net(nn.Module):
         bbox_pred = self.act_bbox_pred(pooled_feat[:, :n_rois]).view(-1,6)
         bbox_pred_16 = self.act_bbox_pred_16(pooled_feat[:, n_rois:]).view(-1,4)
 
-        actioness_scr = F.softmax(self.actioness_score(pooled_feat),2)
-        # prob_out = self.act_cls_score(pooled_feat)
+        # actioness_scr = F.softmax(self.actioness_score(pooled_feat),2)
+        # # prob_out = self.act_cls_score(pooled_feat)
 
         if not self.training:
-            print('edwww')
+
             bbox_pred = Variable(bbox_pred, requires_grad=False)
             bbox_pred_16 = Variable(bbox_pred_16, requires_grad=False)
-            actioness_scr = Variable(actioness_scr, requires_grad=False)
+            # actioness_scr = Variable(actioness_scr, requires_grad=False)
 
             # prob_out = Variable(prob_out, requires_grad=False)
             
@@ -178,14 +180,14 @@ class ACT_net(nn.Module):
             rois_label_16 = rois_label_16.view(batch_size, n_rois, -1)
             f_rois_label = torch.cat((rois_label, rois_label_16),dim=1)
 
-            # bounding box regression L1 loss
-            target_score = f_rois_label.gt(0).long()
+            # # bounding box regression L1 loss
+            # target_score = f_rois_label.gt(0).long()
 
-            actioness_scr = actioness_scr.view(-1,2)
-            target_score  = target_score.view(-1)
+            # actioness_scr = actioness_scr.view(-1,2)
+            # target_score  = target_score.view(-1)
 
-            act_score_loss = F.cross_entropy(actioness_scr,target_score)
-            print('act_score_loss :',act_score_loss)
+            # act_score_loss = F.cross_entropy(actioness_scr,target_score)
+            # print('act_score_loss :',act_score_loss)
             act_loss_bbox = _smooth_l1_loss(bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
             act_loss_bbox_16 = _smooth_l1_loss(bbox_pred_16, rois_target_16, rois_inside_ws_16, rois_outside_ws_16)
 
@@ -203,11 +205,10 @@ class ACT_net(nn.Module):
         pooled_feat_ = self.avgpool(pooled_feat_)
 
         if self.training:
-
           return f_rois,  f_bbox_pred, pooled_feat_, \
             rpn_loss_cls, rpn_loss_bbox, act_loss_bbox,\
             rpn_loss_cls_16, rpn_loss_bbox_16, act_loss_bbox_16,\
-            f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss, actioness_scr, act_score_loss, # prob_out, act_cls_score
+            f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss # prob_out, act_cls_score
       
         return f_rois,  f_bbox_pred, pooled_feat_, None, None, None, \
             None, None, None, None, sgl_rois_bbox_pred, None, actioness_scr, None, # prob_out, None
