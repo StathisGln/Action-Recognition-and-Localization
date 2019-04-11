@@ -303,9 +303,10 @@ class ACT_net(nn.Module):
           if classname.find('BatchNorm') != -1:
             for p in m.parameters(): p.requires_grad=False
 
+    
         self.act_base_1.apply(set_bn_fix)
         self.act_base_2.apply(set_bn_fix)
-        self.act_top.apply(set_bn_fix)
+        # self.act_top.apply(set_bn_fix)
 
 
     def _head_to_tail(self, pool5):
