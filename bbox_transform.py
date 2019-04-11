@@ -137,6 +137,7 @@ def bbox_transform_batch(ex_rois, gt_rois):
         #     ex_heights, ex_ctr_y, gt_heights, gt_ctr_y, targets_dy, targets_dh))
 
     elif ex_rois.dim() == 3:
+        
         ex_widths = ex_rois[:, :, 2] - ex_rois[:, :, 0] + 1.0
         ex_heights = ex_rois[:, :, 3] - ex_rois[:, :, 1] + 1.0
         ex_ctr_x = ex_rois[:, :, 0] + 0.5 * ex_widths
@@ -420,7 +421,7 @@ def bbox_overlaps(anchors, gt_boxes):
 
     return overlaps
 
-def bbox_overlaps_connect(anchors, gt_boxes, time_limit):
+def bbox_overlaps_connect(anchors, gt_boxes):
     """
     anchors: (N, 6) ndarray of float
     gt_boxes: (b, K, 7) ndarray of float
@@ -485,12 +486,13 @@ def bbox_overlaps_connect(anchors, gt_boxes, time_limit):
         
         ua_t = anchors_boxes_t.view(batch_size,N,1) + gt_boxes_t.view(batch_size,1,K) - it
         
-        overlap_iou_t_ = it / ua_t
-        overlap_t =  (2 / 3.0) * overlap_iou_t_ - overlap_iou_t_ ** 2  # f(x) 
+        overlaps_iou_t_ = it / ua_t
+        overlaps_t =  (2 / 3.0) * overlaps_iou_t_ - overlaps_iou_t_ ** 2  # f(x) 
 
 
-        overlaps = overlaps_xy * overlaps_t
-
+        # overlaps = overlaps_xy * 8 * overlaps_t
+        overlaps = 9 * overlaps_t * overlaps_xy
+        # overlaps =  overlaps_xy
         overlaps.masked_fill_(gt_area_zero.view(
             batch_size, 1, K).expand(batch_size, N, K), 0)
         overlaps.masked_fill_(anchors_area_zero.view(
@@ -901,7 +903,7 @@ def bbox_overlaps_batch_3d(anchors, gt_boxes):
         ua_t = anchors_boxes_t.view(batch_size,N,1) + gt_boxes_t.view(batch_size,1,K) - it
         overlaps_t = it / ua_t
 
-        overlaps = overlaps_xy 
+        overlaps = overlaps_xy * overlaps_t
         # print('ua_xy :',ua_xy)
         # print('anchors_area_xy:',anchors_area_xy)
         # print('gt_boxes_area_xy :',gt_boxes_area_xy)

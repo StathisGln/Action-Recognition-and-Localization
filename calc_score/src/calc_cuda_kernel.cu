@@ -34,7 +34,7 @@ extern "C" {
 
 	  m = pos_indices[j] + 1;
 
-	  tmp_sum = new_score / (m+1) ;// + 0.8 * new_overlap / m;
+	  tmp_sum = new_score / (m+1) +  new_overlap / m; // 0.8
 	  tmp_pos = j * K + z;
 	  
 	  if (tmp_sum > thresh){

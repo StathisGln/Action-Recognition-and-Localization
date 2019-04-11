@@ -20,7 +20,7 @@ from resize_rpn import resize_boxes, resize_tube
 from ucf_dataset import single_video
 
 from config import cfg
-from bbox_transform import bbox_overlaps_batch_3d
+from bbox_transform import bbox_overlaps_connect
 from collections import OrderedDict
 
 # import gc
@@ -112,7 +112,9 @@ class Model(nn.Module):
 
             gt_tubes = create_tube_with_frames(boxes_.permute(0,2,1,3), im_info, self.sample_duration)
             # print('step :',step, ' boxes :',boxes_)
+            print('step :',step)
             gt_tubes_ = gt_tubes.type_as(clips).cuda()
+            # print('gt_tubes_ :',gt_tubes_)
             im_info = im_info.cuda()
             start_fr = start_fr.cuda()
 
@@ -164,20 +166,28 @@ class Model(nn.Module):
         ########################################################
         #          Calculate overlaps and connections          #
         ########################################################
-        # print('n_clips :',n_clips)
-        # print('p_tubes.shape :',p_tubes.shape)
-        # print('p_tubes[0] :',p_tubes[0].cpu().numpy())
-        # print('p_tubes[1] :',p_tubes[1].cpu().numpy())
-        # print('p_tubes[2] :',p_tubes[2].cpu().numpy())
+        print('p_tubes :',p_tubes.cpu().numpy())
+        exit(-1)
+        print('p_tubes.shape :',p_tubes.shape)
+        print('p_tubes[0].shape :',p_tubes[0].shape)
+        print('p_tubes[0,:rois_per_image/2] :',p_tubes[0,:int(rois_per_image/2)].shape)
+        overlaps_scores = torch.zeros(n_clips-1, int(rois_per_image/2), int(rois_per_image/2)).type_as(overlaps_scores)
         for i in range(n_clips-1):
-            overlaps_scores[i] = bbox_overlaps_batch_3d(p_tubes[i],p_tubes[i+1].unsqueeze(0))
+            print('p_tubes[i,:int(rois_per_image/2)].shape :',p_tubes[i,:int(rois_per_image/2)].shape)
+            print('p_tubes[i+1,:int(rois_per_image/2)].shape :',p_tubes[i+1,:int(rois_per_image/2)].shape)
+            print('p_tubes[i+1,:int(rois_per_image/2)].unsqueeze(0).shape :',p_tubes[i+1,:int(rois_per_image/2)].unsqueeze(0).shape)
+            overlaps_scores[i] = bbox_overlaps_connect(p_tubes[i,:int(rois_per_image/2)],p_tubes[i+1,:int(rois_per_image/2)].unsqueeze(0))
         print('n_clips :',n_clips)
         print('rois_per_image:',rois_per_image)
         print('actioness.shape:',actioness_score.shape)
         print('overlaps_scores.shape :',overlaps_scores.shape)
-        print('actioness_score :',actioness_score.cpu().numpy())
-        # exit(-1)
-        final_scores, final_poss = self.calc(overlaps_scores.cuda(), actioness_score.cuda(), torch.Tensor([n_clips]),torch.Tensor([rois_per_image]))
+        for i in range(actioness_score.size(0)):
+            print('i :',i, actioness_score[i].cpu().numpy())
+
+        if self.training:
+            actioness_ = actioness_score[:,:int(rois_per_image/2)].contiguous()
+            final_scores, final_poss = self.calc(overlaps_scores.cuda(), actioness_score.cuda(),
+                                                 torch.Tensor([n_clips]),torch.Tensor([rois_per_image/2]))
         # print('overlaps_scores :',overlaps_scores.cpu().numpy())
         # print('final_scores.shape :',final_scores.shape)
         # print('final_poss.shape:',final_poss.shape)

@@ -10,7 +10,8 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from resnet_3D import resnet34
-from video_dataset import Video_UCF
+from ucf_dataset import Video_UCF, video_names
+
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
@@ -26,12 +27,15 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_folder = '/gpu-data/sgal/UCF-101-frames'
-    boxes_file = '/gpu-data/sgal/pyannot.pkl'
-    # boxes_file = '/gpu-data/sgal/UCF-bboxes.json'
-    # dataset_folder = '../UCF-101-frames'
-    # boxes_file = '../UCF-101-frames/UCF-bboxes.json'
+    dataset_frames = '/gpu-data2/sgal/UCF-101-frames'
+    boxes_file = '/gpu-data2/sgal/pyannot.pkl'
+    split_txt_path = '/gpu-data2/sgal/UCF101_Action_detection_splits/'
 
+    # dataset_frames = '../UCF-101-frames'
+    # boxes_file = '../pyannot.pkl'
+    # split_txt_path = '../UCF101_Action_detection_splits/'
+
+    n_devs = torch.cuda.device_count()
     sample_size = 112
     sample_duration = 16  # len(images)
 
@@ -42,10 +46,11 @@ if __name__ == '__main__':
     # mean =  [103.75581543 104.79421473  91.16894564] # jhmdb
     # mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
     mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
+
     # generate model
     last_fc = False
 
-    actions = ['Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
+    actions = ['__background__', 'Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
                'Diving','Fencing','FloorGymnastics','GolfSwing','HorseRiding','IceDancing',
                'LongJump','PoleVault','RopeClimbing','SalsaSpin','SkateBoarding','Skiing',
                'Skijet','SoccerJuggling','Surfing','TennisSwing','TrampolineJumping',
@@ -53,70 +58,45 @@ if __name__ == '__main__':
 
     cls2idx = {actions[i]: i for i in range(0, len(actions))}
 
+    ### get videos id
+
     spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
                                  ToTensor(),
                                  Normalize(mean, [1, 1, 1])])
     temporal_transform = LoopPadding(sample_duration)
 
-    data = Video_UCF(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
-                 temporal_transform=temporal_transform, json_file=boxes_file,
-                 mode='train', classes_idx=cls2idx)
-    # clips, h, w, gt_tubes, gt_rois, n_actions = data[14]
-    clips, h, w, gt_tubes, gt_rois, n_actions = data[144]
-    clips2, h2, w2, gt_tubes2, gt_rois2, n_actions2 = data[1450]
-    # # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
-    # #                                           shuffle=True, num_workers=n_threads, pin_memory=True)
-
     n_classes = len(actions)
 
     # Init action_net
-    model = ACT_net(actions)
-    model.create_architecture()
-    if torch.cuda.device_count() > 1:
-        print('Using {} GPUs!'.format(torch.cuda.device_count()))
 
-        model = nn.DataParallel(model)
+    model = ACT_net(actions, sample_duration)
+    model.create_architecture()
 
     model.to(device)
 
-    # clips, h, w, gt_tubes, n_actions = data[1451]
-    clips, h, w, gt_tubes, gt_rois, n_actions = data[144]
-    # clips2, h2, w2, gt_tubes2, gt_rois2, n_actions2 = data[1450]
+    data = Video_UCF(dataset_frames, frames_dur=sample_duration, spatial_transform=spatial_transform,
+                 temporal_transform=temporal_transform, json_file = boxes_file,
+                 split_txt_path=split_txt_path, mode='train', classes_idx=cls2idx)
 
-
-    clips = clips.unsqueeze(0).to(device)
-    gt_tubes = gt_tubes.unsqueeze(0).to(device)
-    gt_rois = gt_rois.unsqueeze(0).to(device)
-    n_actions = torch.Tensor(n_actions).unsqueeze(0).to(device)
-    im_info = torch.Tensor([112,112,sample_duration]).unsqueeze(0).to(device)
-
-    print('gt_tubes.shape :',gt_tubes.shape )
-    print('gt_tubes :',gt_tubes )
-
-    print('gt_rois.shape :',gt_rois.shape )
-    # print('gt_rois :',gt_rois )
-
-    print('im_info :',im_info)
-    print('im_info.shape :',im_info.shape)
-
-    print('n_actions :',n_actions)
-    print('n_actions.shape :',n_actions.shape)
+    clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data[14]
+    clips_ = clips.unsqueeze(0).to(device)
+    gt_tubes_r_ = gt_tubes_r.unsqueeze(0).to(device)
+    gt_rois_ = gt_rois.unsqueeze(0).to(device)
+    n_actions_ = torch.from_numpy(n_actions).to(device)
+    im_info_ = im_info.unsqueeze(0).to(device)
+    start_fr = torch.zeros((1)).to(device)
 
     print('**********Starts**********')
 
-    tubes,  tube_bbox_pred, rois, rois_bbox_pred, \
+    inputs = Variable(clips_)
+    tubes,  bbox_pred, _, \
     rpn_loss_cls,  rpn_loss_bbox, \
-    act_loss_cls,  act_loss_bbox, \
-    act_loss_cls_s, act_loss_bbox_s = model(clips,
-                                            im_info,
-                                            gt_tubes, gt_rois,
-                                            n_actions)
-    # rois,  bbox_pred, cls_prob, \
-    # rpn_loss_cls,  rpn_loss_bbox, \
-    # act_loss_cls,  act_loss_bbox, rois_label = model(clips,
-    #                                                  im_info,
-    #                                                  gt_tubes, None,
-    #                                                  n_actions)
+    act_loss_bbox, rpn_loss_cls_16,\
+    rpn_loss_bbox_16, act_loss_bbox_16, rois_label, \
+    sgl_rois_bbox_pred, sgl_rois_bbox_loss,  = model(inputs, \
+                                                im_info_,
+                                                gt_tubes_r_, gt_rois_,
+                                                start_fr)
 
     print('**********VGIKE**********')
     # print('rois.shape :',rois.shape)

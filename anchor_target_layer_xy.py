@@ -17,7 +17,7 @@ import numpy.random as npr
 from config import cfg
 from generate_3d_anchors import generate_anchors
 # from bbox_transform import clip_boxes, bbox_overlaps_batch, bbox_overlaps_time, bbox_transform_batch
-from bbox_transform import clip_boxes, bbox_overlaps_time, bbox_transform_batch_3d, bbox_overlaps_batch_3d
+from bbox_transform import clip_boxes, bbox_transform_batch_3d, bbox_overlaps_batch_3d
 import pdb
 
 DEBUG = False

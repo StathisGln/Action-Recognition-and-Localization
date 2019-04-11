@@ -41,12 +41,16 @@ class _Regression_TargetLayer(nn.Module):
         self.BBOX_NORMALIZE_STDS  = self.BBOX_NORMALIZE_STDS.type_as(gt_boxes)
         self.BBOX_INSIDE_WEIGHTS  = self.BBOX_INSIDE_WEIGHTS.type_as(gt_boxes)
 
+        # print('gt_boxes.shape :',gt_boxes.shape)
+
         batch_size  = gt_boxes.size(0)
         num_actions = gt_boxes.size(1)
         offset = torch.arange(0,self.sample_duration)
         offset_batch = torch.arange(0,batch_size) * self.sample_duration
         ## modify tubes to rois
         all_tubes = all_tubes.unsqueeze(-2).expand(all_tubes.size(0),all_tubes.size(1),self.sample_duration,7).contiguous()
+
+
         
         for i in range(batch_size):
             all_tubes[i, ..., 0] = offset + offset_batch[i].expand(offset.size())
@@ -78,6 +82,7 @@ class _Regression_TargetLayer(nn.Module):
             rois_per_image,  num_rois_pre)
 
         bbox_outside_weights = (bbox_inside_weights > 0).float()
+
         return rois, labels, bbox_targets, bbox_inside_weights, bbox_outside_weights
 
     def backward(self, top, propagate_down, bottom):
@@ -104,8 +109,8 @@ class _Regression_TargetLayer(nn.Module):
         clss = labels_batch
         bbox_targets = bbox_target_data.new(batch_size, rois_per_image, 4).zero_()
         bbox_inside_weights = bbox_target_data.new(bbox_targets.size()).zero_()
-
         for b in range(batch_size):
+
             # assert clss[b].sum() > 0
             if clss[b].sum() == 0:
                 continue
@@ -125,11 +130,16 @@ class _Regression_TargetLayer(nn.Module):
         assert ex_rois.size(2) == 4
         assert gt_rois.size(2) == 4
 
+        # print('ex_rois :',ex_rois.cpu().numpy())
+        # print('gt_rois :',gt_rois.cpu().numpy())
         batch_size = ex_rois.size(0)
         rois_per_image = ex_rois.size(1)
-
+        # print('ex_rois.shape :',ex_rois.shape)
+        # print('gt_rois.shape :',gt_rois.shape)
         targets = bbox_transform_batch(ex_rois, gt_rois)
-
+        # print('targets :',targets.shape)
+        # print('targets :',targets.cpu().numpy())
+        # exit(-1)
         if cfg.TRAIN.BBOX_NORMALIZE_TARGETS_PRECOMPUTED:
             # Optionally normalize targets by a precomputed mean and stdev
             targets = ((targets - self.BBOX_NORMALIZE_MEANS.expand_as(targets))
@@ -143,7 +153,10 @@ class _Regression_TargetLayer(nn.Module):
         examples.
         """
         # overlaps: (rois x gt_boxes)
+
         overlaps = bbox_overlaps_batch(all_rois, gt_boxes)
+
+
         max_overlaps, gt_assignment = torch.max(overlaps, 2)
 
         batch_size = overlaps.size(0)
@@ -176,6 +189,7 @@ class _Regression_TargetLayer(nn.Module):
                 continue
 
             max_overlaps_single =max_overlaps[i]
+
             fg_inds = torch.nonzero(max_overlaps_single >= cfg.TRAIN.FG_THRESH).view(-1)
             fg_num_rois = fg_inds.numel()
 
@@ -189,7 +203,6 @@ class _Regression_TargetLayer(nn.Module):
                 fg_rois_per_this_image = min(fg_rois_per_image, fg_num_rois)
                 rand_num = torch.from_numpy(np.random.permutation(fg_num_rois)).type_as(gt_boxes).long()
                 fg_inds = fg_inds[rand_num[:fg_rois_per_this_image]]
-
                 # sampling bg
                 bg_rois_per_this_image = rois_per_image - fg_rois_per_this_image
 
@@ -236,10 +249,7 @@ class _Regression_TargetLayer(nn.Module):
             rois_batch[i,:,0] = i
 
             gt_rois_batch[i] = gt_boxes[i][gt_assignment[i][keep_inds]]
-        # print('gt_rois_batch :',gt_rois_batch)
-        # print('gt_rois_batch :',gt_rois_batch.shape)
 
-        # print('rois_batch :',rois_batch.shape)
         bbox_target_data = self._compute_targets_pytorch(
                 rois_batch[:,:,1:5], gt_rois_batch[:,:,:4])
 

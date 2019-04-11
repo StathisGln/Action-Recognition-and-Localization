@@ -368,7 +368,7 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    model_data = torch.load('./action_net_model_Resnext.pwf')
+    model_data = torch.load('./action_net_model_part1_1.pwf')
     reg_layer_data = torch.load('./reg_layer.pwf')
     model.load_state_dict(model_data)
     model.module.reg_layer.load_state_dict(reg_layer_data)

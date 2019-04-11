@@ -80,7 +80,20 @@ if __name__ == '__main__':
 
     # clips, h, w, gt_tubes, gt_rois, n_actions = data[14]
     # clips, h, w, gt_tubes, n_actions = data[1451]
-    vid_id, clips, boxes, n_frames, n_actions, h, w =vid_name_loader[15]
+    # for i in range(200):
+
+    # for i in range(200,500):
+    #     vid_id, clips, boxes, n_frames, n_actions, h, w =vid_name_loader[i]
+    #     print(i, n_actions)
+
+    #     if n_actions > 1:
+    #         print(i)
+    #         exit(-1)
+
+    # exit(-1)
+    vid_id, clips, boxes, n_frames, n_actions, h, w =vid_name_loader[14]
+    # vid_id, clips, boxes, n_frames, n_actions, h, w =vid_name_loader[209]
+
 
     vid_id = torch.Tensor(vid_id).int()
     clips = clips.unsqueeze(0).to(device)

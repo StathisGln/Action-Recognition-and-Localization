@@ -34,7 +34,7 @@ class Calculator(Function):
         final_poss   = torch.Tensor().int().cuda()
 
         for indx in range(1,N):
-
+            print(indx)
             # first find number of combinations
             next_pos_max_size = array_size * K + K
             next_pos = pos.new(next_pos_max_size, N, 2).zero_().view(-1) -1
@@ -66,6 +66,17 @@ class Calculator(Function):
             # print('vgike...')
             next_pos = next_pos.view(next_pos_max_size, N, 2)
 
+            # print('overlaps[indx] :',overlaps[indx-1].cpu().numpy())
+            # if indx== 3:
+            #     for i in range(final_poss.size(0)):
+            #         print('i :',i,' score ',final_scores[i].item(),' $$ ', end='')
+            #         for j in range(N):
+            #             if final_poss[i,j,0] == -1:
+            #                 break
+            #             print(' ',final_poss[i,j,0].item(),' ',final_poss[i,j,1].item(),'({0:.2f}) | '.format(scores[final_poss[i,j,0],final_poss[i,j,1]]),end='')
+            #         print('')
+            #     exit(-1)
+
             for i in range(next_pos_indices.size(0)):
                 if next_pos_indices[i] > -1:
                     z = i // K
@@ -75,14 +86,13 @@ class Calculator(Function):
                     next_pos[i,next_pos_indices[i],0] = indx
                     next_pos[i,next_pos_indices[i],1] = i % K
 
-
             over_thresh_idx = next_pos_indices.gt(-1).nonzero().squeeze()
 
             f_poss = next_pos[over_thresh_idx]
             f_scores = f_scores[over_thresh_idx]
-
-            final_scores = torch.cat((final_scores, f_scores), dim=0)
-            final_poss = torch.cat((final_poss, f_poss), dim=0)
+            if f_scores.nelement() != 0:
+                final_scores = torch.cat((final_scores, f_scores), dim=0)
+                final_poss = torch.cat((final_poss, f_poss), dim=0)
 
             pos = torch.tensor(f_poss).contiguous()
             pos_indices = torch.tensor(next_pos_indices[over_thresh_idx]).contiguous()
@@ -91,7 +101,7 @@ class Calculator(Function):
             overlaps_scr = torch.tensor(next_overlaps_scr[over_thresh_idx]).contiguous()
             array_size = pos.size(0)
 
-            while final_scores.size(0) > self.update_thresh:
+            while pos.size(0) > self.update_thresh:
                 final_scores, final_poss, pos, pos_indices, \
                     actioness, overlaps_scr, array_size, f_scores= self.update_scores(final_scores, final_poss, f_scores, pos, \
                                                                                       pos_indices, actioness, overlaps_scr)
@@ -121,7 +131,17 @@ class Calculator(Function):
             #         print(' ',next_pos[i,j,0].item(),' ',next_pos[i,j,1].item(),' | ',end='')
             #     print('')
         print('New loopa...\n')
-        for i in range(final_poss.size(0)):
+        # lens = torch.zeros(final_scores.size(0))
+        # for i in range(final_scores.size(0)):
+        #     for j in range(N):
+        #         if final_poss[i,j,0] == -1:
+        #             lens[i]=j
+        #             break
+        
+        # _, indices = torch.sort(lens)
+        # for i in indices:
+        for i in range(final_scores.size(0)):
+            # print('i :',i.item(),' score ',final_scores[i].item(),' $$ ', end='')
             print('i :',i,' score ',final_scores[i].item(),' $$ ', end='')
             for j in range(N):
                 if final_poss[i,j,0] == -1:

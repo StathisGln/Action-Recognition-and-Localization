@@ -28,8 +28,8 @@ class _RPN(nn.Module):
         self.anchor_ratios = [0.5, 1, 2]
         self.feat_stride = [16, ]
         # self.anchor_duration = [16,8,4,3] # add
-        self.anchor_duration = [16,8,4] # add 
-        
+        self.anchor_duration = [sample_duration,int(sample_duration/2),int(sample_duration/4)] # add 
+
         # # define the convrelu layers processing input feature map
 
         self.RPN_Conv = nn.Conv3d(self.din, 512, 3, stride=1, padding=1, bias=True)
@@ -52,10 +52,10 @@ class _RPN(nn.Module):
         ## temporal regression
         # define proposal layer
         self.RPN_proposal = _ProposalLayer(self.feat_stride, self.anchor_scales, self.anchor_ratios, self.anchor_duration)
-        self.RPN_proposal_16 = _ProposalLayer_xy(self.feat_stride,  self.anchor_scales, self.anchor_ratios, [16])
+        self.RPN_proposal_16 = _ProposalLayer_xy(self.feat_stride,  self.anchor_scales, self.anchor_ratios, [sample_duration])
         # define anchor target layer
         self.RPN_anchor_target = _AnchorTargetLayer(self.feat_stride,  self.anchor_scales, self.anchor_ratios, self.anchor_duration)
-        self.RPN_anchor_16 = _AnchorTargetLayer_xy(self.feat_stride, self.anchor_scales, self.anchor_ratios, [16])
+        self.RPN_anchor_16 = _AnchorTargetLayer_xy(self.feat_stride, self.anchor_scales, self.anchor_ratios, [sample_duration])
 
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0
