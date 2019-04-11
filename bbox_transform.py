@@ -297,10 +297,9 @@ def bbox_frames_transform_inv(boxes, deltas, batch_size):
 
     return pred_boxes
 
-
-
-
 def bbox_transform_inv_3d(boxes, deltas, batch_size):
+    # print('boxes.shape :',boxes.shape)
+    # print('delats.shape :',deltas.shape)
     widths = boxes[:, :, 3] - boxes[:, :, 0] + 1.0
     heights = boxes[:, :, 4] - boxes[:, :, 1] + 1.0
     dur = boxes[:, :, 5] - boxes[:, :, 2] + 1.0  # duration
@@ -361,8 +360,9 @@ def clip_boxes_batch(boxes, im_shape, batch_size):
 
 
 def clip_boxes(boxes, im_shape, batch_size):
-
+    
     for i in range(batch_size):
+
         boxes[i, :, 0::4].clamp_(0, im_shape[i, 1]-1)
         boxes[i, :, 1::4].clamp_(0, im_shape[i, 0]-1)
         boxes[i, :, 2::4].clamp_(0, im_shape[i, 1]-1)
@@ -372,6 +372,7 @@ def clip_boxes(boxes, im_shape, batch_size):
 
 
 def clip_boxes_3d(boxes, im_shape, batch_size):
+
     for i in range(batch_size):
         boxes[i, :, 0::6]=boxes[i, :, 0::6].clamp_(min=0, max=im_shape[i, 1].item()-1)
         boxes[i, :, 1::6]=boxes[i, :, 1::6].clamp_(min=0, max=im_shape[i, 0].item()-1)
@@ -681,6 +682,7 @@ def bbox_overlaps_batch(anchors, gt_boxes):
             anchors = anchors[:, :, :4].contiguous()
         else:
             anchors = anchors[:, :, 1:5].contiguous()
+
         gt_boxes = gt_boxes[:, :, :4].contiguous()
 
         gt_boxes_x = (gt_boxes[:, :, 2] - gt_boxes[:, :, 0] + 1)

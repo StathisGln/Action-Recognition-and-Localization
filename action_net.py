@@ -12,6 +12,8 @@ from torch.nn.functional import avg_pool3d
 from torch.autograd import Variable
 
 from resnet_3D import resnet34
+from resnext import resnet101
+
 from region_net import _RPN 
 from human_reg import _Regression_Layer
 
@@ -79,57 +81,62 @@ class ACT_net(nn.Module):
 
         # if it is training phrase, then use ground trubut bboxes for refining
         # firstly find xy- reggression boxes
-        n_rois = rois.size(1)        
+        n_rois = rois.size(1)
+        n_rois_16 = rois_16.size(1)
         if self.training:
-          gt_tubes = torch.cat((gt_tubes,torch.ones(gt_tubes.size(0),gt_tubes.size(1),1).type_as(gt_tubes)),dim=2).type_as(gt_tubes)
+            gt_tubes = torch.cat((gt_tubes,torch.ones(gt_tubes.size(0),gt_tubes.size(1),1).type_as(gt_tubes)),dim=2).type_as(gt_tubes)
 
-          roi_data = self.act_proposal_target(rois, gt_tubes)
+            roi_data = self.act_proposal_target(rois, gt_tubes)
 
-          rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = roi_data
-          n_rois = rois.size(1)        
+            rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = roi_data
+            n_rois = rois.size(1)        
+            f_n_rois = n_rois
+            rois_label =rois_label.view(-1).long()
+            rois_target = rois_target.view(-1, rois_target.size(2))
+            rois_inside_ws = rois_inside_ws.view(-1, rois_inside_ws.size(2))
+            rois_outside_ws = rois_outside_ws.view(-1, rois_outside_ws.size(2))
 
-          rois_label =rois_label.view(-1).long()
-          rois_target = rois_target.view(-1, rois_target.size(2))
-          rois_inside_ws = rois_inside_ws.view(-1, rois_inside_ws.size(2))
-          rois_outside_ws = rois_outside_ws.view(-1, rois_outside_ws.size(2))
-
-          roi_data_16 = self.act_proposal_target_single(rois_16[..., [0,1,2,4,5,7]], gt_tubes[...,[0,1,3,4,6,7]])
+            roi_data_16 = self.act_proposal_target_single(rois_16[..., [0,1,2,4,5,7]], gt_tubes[...,[0,1,3,4,6,7]])
           
-          rois_16, rois_label_16, rois_target_16, rois_inside_ws_16, rois_outside_ws_16 = roi_data_16
-          rois_16 = torch.cat((rois_16[:,:,[0,1,2]],torch.zeros((rois_16.size(0),rois_16.size(1),1)).type_as(rois_16),\
-                               rois_16[:,:,[3,4]], (torch.ones((rois_16.size(0), rois_16.size(1),1))*(self.sample_duration-1)).type_as(rois_16), \
-                               rois_16[:,:,[5]]), dim=-1)
-          rois_label_16 = rois_label_16.view(-1).long()
-          rois_target_16 = rois_target_16.view(-1, rois_target_16.size(2))
-          rois_inside_ws_16 = rois_inside_ws_16.view(-1, rois_inside_ws_16.size(2))
-          rois_outside_ws_16 = rois_outside_ws_16.view(-1, rois_outside_ws_16.size(2))
+            rois_16, rois_label_16, rois_target_16, rois_inside_ws_16, rois_outside_ws_16 = roi_data_16
+            rois_16 = torch.cat((rois_16[:,:,[0,1,2]],torch.zeros((rois_16.size(0),rois_16.size(1),1)).type_as(rois_16),\
+                                 rois_16[:,:,[3,4]], (torch.ones((rois_16.size(0), rois_16.size(1),1))*(self.sample_duration-1)).type_as(rois_16), \
+                                 rois_16[:,:,[5]]), dim=-1)
+            rois_label_16 = rois_label_16.view(-1).long()
+            rois_target_16 = rois_target_16.view(-1, rois_target_16.size(2))
+            rois_inside_ws_16 = rois_inside_ws_16.view(-1, rois_inside_ws_16.size(2))
+            rois_outside_ws_16 = rois_outside_ws_16.view(-1, rois_outside_ws_16.size(2))
 
         else:
+            f_n_rois = n_rois + n_rois_16
+        
+            rois_label = None
+            rois_target = None
+            rois_inside_ws = None
+            rois_outside_ws = None
+            rpn_loss_cls = 0
+            rpn_loss_bbox = 0
 
-          rois_label = None
-          rois_target = None
-          rois_inside_ws = None
-          rois_outside_ws = None
-          rpn_loss_cls = 0
-          rpn_loss_bbox = 0
-
-          rois_label_16 = None
-          rois_target_16 = None
-          rois_inside_ws_16 = None
-          rois_outside_ws_16 = None
-          rpn_loss_cls_16 = 0
-          rpn_loss_bbox_16 = 0
+            rois_label_16 = None
+            rois_target_16 = None
+            rois_inside_ws_16 = None
+            rois_outside_ws_16 = None
+            rpn_loss_cls_16 = 0
+            rpn_loss_bbox_16 = 0
 
         # do roi align based on predicted rois
         f_rois = torch.cat((rois,rois_16),dim=1)
+        # print('f_rois.shape :',f_rois.shape)
+        # print('f_rois :',f_rois.cpu().numpy())
+        # exit(-1)
         rois_s = f_rois[:,:,:7].contiguous()
         pooled_feat_ = self.act_roi_align(base_feat, rois_s.view(-1,7))
 
         ## regression
-        sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(pooled_feat_,f_rois[:,:,:7], gt_rois) 
-        sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(f_rois.size(0), self.sample_duration, n_rois*2, 4)
-
-        sgl_rois_bbox_pred = Variable(sgl_rois_bbox_pred, requires_grad=False)
+        sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(pooled_feat_,f_rois[:,:,:7], gt_rois)
+        sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(f_rois.size(0), self.sample_duration, f_n_rois, 4)
+        if not self.training:
+            sgl_rois_bbox_pred = Variable(sgl_rois_bbox_pred, requires_grad=False)
         
         pooled_feat = self._head_to_tail(pooled_feat_)
         pooled_feat = pooled_feat.view(f_rois.size(0),f_rois.size(1),pooled_feat.size(1),pooled_feat.size(2))
@@ -202,14 +209,21 @@ class ACT_net(nn.Module):
     def _init_modules(self):
 
         resnet_shortcut = 'A'
+        # resnet_shortcut = 'B'
         sample_size = 112
 
         model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
                          sample_size=sample_size, sample_duration=self.sample_duration,
                          last_fc=False)
+        # model = resnet101(num_classes=400, shortcut_type=resnet_shortcut,
+        #                    sample_size=sample_size, sample_duration=self.sample_duration,
+        #                    )
+
         model = model
         model = nn.DataParallel(model, device_ids=None)
-        self.model_path = '/gpu-data2/sgal/resnet-34-kinetics.pth'
+        self.model_path = '../resnet-34-kinetics.pth'
+        # self.model_path = '../resnext-101-kinetics.pth'
+
         print("Loading pretrained weights from %s" %(self.model_path))
         model_data = torch.load(self.model_path)
 

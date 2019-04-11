@@ -1,6 +1,6 @@
 #include <THC/THC.h>
 #include <math.h>
-#include "roi_align_kernel.h"
+#include "calc_cuda_kernel.h"
 
 extern THCState *state;
 

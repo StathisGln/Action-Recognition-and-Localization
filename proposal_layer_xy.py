@@ -77,15 +77,16 @@ class _ProposalLayer_xy(nn.Module):
         # post_nms_topN = cfg[cfg_key].RPN_POST_NMS_TOP_N
         # nms_thresh    = cfg[cfg_key].RPN_NMS_THRESH
         # min_size      = cfg[cfg_key].RPN_MIN_SIZE
+
         if cfg_key == 'TRAIN':
+        
             pre_nms_topN  = 20000
-            post_nms_topN = 10
-            # post_nms_topN = 50
+            post_nms_topN = 150
             nms_thresh    = 0.7
             min_size      = 8
         else:
-            pre_nms_topN  = 6000
-            post_nms_topN = 10
+            pre_nms_topN  = 20000
+            post_nms_topN = 25
             nms_thresh    = 0.7
             min_size      = 16
 
@@ -162,9 +163,6 @@ class _ProposalLayer_xy(nn.Module):
             output[i,:num_proposal,1:7] = proposals_single
             output[i,:num_proposal,7] = scores_single.squeeze()
 
-
-        # print('output.shape :',output.shape)
-        # print('output :',output)
         return output
 
     def backward(self, top, propagate_down, bottom):

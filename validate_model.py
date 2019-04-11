@@ -170,13 +170,12 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(val_loader):
 
-        if step == 100:
-            break
+        # if step == 10:
+        #     break
         # if step == 1:
         #     break
         print('step :',step)
 
-        # print('step :',step)
         vid_id, clips, boxes, n_frames, n_actions, h, w, target = data
         mode = 'test'
 
@@ -195,10 +194,13 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                 gt_tubes_dur[i,0] = k[0,0]
                 gt_tubes_dur[i,1] = k[-1,0]
         
-        tubes, prob_out =  model(1, dataset_folder, \
-                                 vid_names, clips, vid_id,  \
-                                 boxes, \
-                                 mode, cls2idx, n_actions,n_frames, h, w)
+        pre_tubes, tubes, prob_out =  model(1, dataset_folder, \
+                                            vid_names, clips, vid_id,  \
+                                            boxes, \
+                                            mode, cls2idx, n_actions,n_frames, h, w)
+        print('pre_tubes.shape :',pre_tubes.shape)
+        print('tubes :', tubes.shape)
+        print('prob_out :',prob_out.shape)
         n_tubes = len(tubes)
 
         ## get predicted labels
@@ -219,7 +221,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         _, tube_class = torch.max(overlaps,2)
         tube_class = torch.mode(tube_class.permute(1,0))[0]
 
-        overlaps =overlaps.permute(1,2,0)
+        overlaps = overlaps.permute(1,2,0)
 
         for i in range(n_actions):
 

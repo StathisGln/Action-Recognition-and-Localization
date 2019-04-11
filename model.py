@@ -64,7 +64,7 @@ class Model(nn.Module):
 
         batch_size = 16 # 
         num_images = 1
-        rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images) *2 if self.training else 10 *2
+        rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images) *2 if self.training else 25 * 2 #10 *2
 
         data = single_video(dataset_folder,h_,w_, vid_names, vid_id, frames_dur= self.sample_duration, sample_size =self.sample_size,
                             classes_idx=cls2idx, n_frames=num_frames)
@@ -252,11 +252,10 @@ class Model(nn.Module):
             for i in range(final_frames_tubes.size(0)):
 
                 final_frames_tubes[i,:,:,[0,1,3,4]] = bbox_transform_inv(final_frames_tubes[i,:,:,[0,1,3,4]], \
-                                                                         final_frames_bbox_pred[i],final_frames_bbox_pred.size(0))
+                                                                         final_frames_bbox_pred[i],final_frames_bbox_pred.size(1))
                 final_frames_tubes[i,:,:,[0,1,3,4]] = clip_boxes(final_frames_tubes[i,:,:,[0,1,3,4]], \
                                                                  im_info[0].unsqueeze(0).expand(final_frames_bbox_pred.size(0),3), \
-                                                                 final_frames_bbox_pred[i].size(0))
-                # print('final_frames_tubes :',final_frames_tubes)
+                                                                 final_frames_bbox_pred.size(1))
                 ###################################################
                 #          TODO : check about regression          #
                 ###################################################
@@ -264,11 +263,9 @@ class Model(nn.Module):
                 for j in range(len(f_tubes[i])):
 
                     str_fr = int(f_tubes[i][j][0] * self.sample_duration / 2)
-                    # print('inal_frames_tubes[i,j,int(final_frames_tubes[i,j,0,2])-str_fr:int(final_frames_tubes[i,j,0,5])+1-str_fr,[0,1,3,4]].shape :',final_frames_tubes[i,j,int(final_frames_tubes[i,j,0,2])-str_fr:int(final_frames_tubes[i,j,0,5])+1-str_fr,[0,1,3,4]].shape)
-                    # print('final_frames[i,int(final_frames_tubes[i,j,0,2]):int(final_frames_tubes[i,j,0,5])+1].shape :',final_frames[i,int(final_frames_tubes[i,j,0,2]):int(final_frames_tubes[i,j,0,5])+1].shape)
                     final_frames[i,int(final_frames_tubes[i,j,0,2]):int(final_frames_tubes[i,j,0,5])+1] = final_frames_tubes[i,j,int(final_frames_tubes[i,j,0,2])-str_fr:int(final_frames_tubes[i,j,0,5])+1-str_fr,[0,1,3,4]]
 
-            return final_frames, prob_out
+            return final_video_tubes, final_frames, prob_out
 
     def deactivate_action_net_grad(self):
 

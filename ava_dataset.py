@@ -244,6 +244,8 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
             n_actions = len(annots)
             if n_frames > max_frames:
                 max_frames = n_frames
+            # if n_frames < 800 :
+            #     continue
             if n_actions > max_actions:
                 max_actions = n_actions
 
@@ -461,10 +463,10 @@ class Video_UCF(data.Dataset):
         num_actions = len(final_rois_list)
 
         if num_actions == 0:
-            final_rois = torch.zeros(1,self.sample_duration,5)
+            final_rois = torch.zeros(1,16,5)
             gt_tubes = torch.zeros(1,7)
         else:
-            final_rois = torch.zeros((num_actions,self.sample_duration,5)) # num_actions x [x1,y1,x2,y2,label]
+            final_rois = torch.zeros((num_actions,16,5)) # num_actions x [x1,y1,x2,y2,label]
             for i in range(num_actions):
                 # for every action:
                 for j in range(len(final_rois_list[i])):

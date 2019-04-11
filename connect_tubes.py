@@ -37,7 +37,9 @@ def bbox_overlaps_batch_3d(tubes, tubes_curr):
     # print('tubes_curr_y.shape :',tubes_curr_y)
     # print('tubes_curr_t.shape :',tubes_curr_t)
 
-    tubes_curr_area_xy = (tubes_curr_x * tubes_curr_y ).view(batch_size, 1, K)
+    # tubes_curr_area = (tubes_curr_x * tubes_curr_y * tubes_curr_t).view(batch_size, 1, K)
+    tubes_curr_xy = (tubes_curr_x * tubes_curr_y ).view(batch_size, 1, K)
+
     # print('tubes_curr_area_xy :',tubes_curr_area_xy)
 
     tubes_boxes_x = (tubes[:, :, 3] - tubes[:, :, 0] + 1)
@@ -48,16 +50,14 @@ def bbox_overlaps_batch_3d(tubes, tubes_curr):
     # print('tubes_boxes_y.shape :',tubes_boxes_y)
     # print('tubes_boxes_t.shape :',tubes_boxes_t)
 
-    tubes_area_xy = (tubes_boxes_x * tubes_boxes_y ).view(batch_size, N, 1)  # for 1 frame
-    # print('tubes_area_xy :',tubes_area_xy)
+    # tubes_area = (tubes_boxes_x * tubes_boxes_y * tubes_boxes_t ).view(batch_size, N, 1)  # for 1 frame
+    tubes_area_xy = (tubes_boxes_x * tubes_boxes_y  ).view(batch_size, N, 1)  # for 1 frame
 
     gt_area_zero = (tubes_curr_x == 1) & (tubes_curr_y == 1) & (tubes_curr_t == 1)
     tubes_area_zero = (tubes_boxes_x == 1) & (tubes_boxes_y == 1) & (tubes_boxes_t == 1)
 
     boxes = tubes.view(batch_size, N, 1, 6)
     boxes = boxes.expand(batch_size, N, K, 6)
-
-    # print('boxes :',boxes)
 
     query_boxes = tubes_curr.view(batch_size, 1, K, 6)
     query_boxes = query_boxes.expand(batch_size, N, K, 6)
@@ -76,22 +76,27 @@ def bbox_overlaps_batch_3d(tubes, tubes_curr):
           torch.max(boxes[:, :, :, 2], query_boxes[:, :, :, 2]) + 1)
     it[it < 0] = 0
 
-    # print('iw :',iw)
-    # print('ih :',ih)
-    # print('it.shape :',it.shape)
+    ua = tubes_area + tubes_curr_area - (iw * ih * it )
+    overlaps = iw * ih * it / ua
+
     ua_xy = tubes_area_xy + tubes_curr_area_xy - (iw * ih )
-    overlaps_xy = iw * ih / ua_xy
+    overlaps_xy = iw * ih / ua
 
     # print('overlaps_xy :',overlaps_xy)
+    # i will use as a criterion for time the f(x) = -x2 + 2/3 x
+    # because i want a convex function with maximum in 1/3 iou/ua
+    # where x = a intersection with b / a U b
+
     ua_t = tubes_boxes_t.view(batch_size,N,1) + tubes_curr_t.view(batch_size,1,K) - it
-    sb_t = tubes_boxes_t.view(batch_size,N,1) + tubes_curr_t.view(batch_size,1,K) - 2 * it
-    overlaps_iou_t = it / ua_t
-    overlaps_sub_t = sb_t / ua_t
+    overlap_iou_t_ = it / ua_t
+    overlap_t =  (2 / 3.0) * overlap_iou_t_ - overlap_iou_t_ ** 2  # f(x) 
+    # overlaps_sub_t = sb_t / ua_t
 
-    overlaps_pre_t = torch.stack(( overlaps_iou_t,overlaps_sub_t))
-    overlaps_t = torch.mean(overlaps_pre_t,0)
-
-    overlaps = overlaps_xy * (overlaps_t * 2) # 2.5 because time_dim reduces / 3
+    # overlaps_pre_t = torch.stack(( overlaps_iou_t,overlaps_sub_t))
+    ## overlaps_t = torch.mean(overlaps_pre_t,0)
+    # overlaps_t max value is 0.11111 so we have to multiply with 8 in order to reduce time's influence
+    # overlaps = overlaps_xy + overlaps_t
+    overlaps = overlaps_xy * (overlaps_t * 8)
 
     overlaps.masked_fill_(gt_area_zero.view(
         batch_size, 1, K).expand(batch_size, N, K), 0)
@@ -251,7 +256,7 @@ def connect_tubes(tubes, tubes_curr, p_tubes, pooled_feats, rois_label, index): 
     index :
     '''
     # iou_thresh = 0.3
-    iou_thresh = 0.35
+    iou_thresh = 0.1
     start = 0
     # print('tubes_curr.shape :',tubes_curr.shape)
     

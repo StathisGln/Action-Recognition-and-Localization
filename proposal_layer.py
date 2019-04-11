@@ -85,8 +85,9 @@ class _ProposalLayer(nn.Module):
             nms_thresh    = 0.7
             min_size      = 8
         else:
-            pre_nms_topN  = 6000
-            post_nms_topN = 10
+            pre_nms_topN  = 20000
+            post_nms_topN = 25
+            # post_nms_topN = 10
             nms_thresh    = 0.7
             min_size      = 16
 
@@ -149,27 +150,6 @@ class _ProposalLayer(nn.Module):
         # print('proposals.shape :',proposals.shape)
         # print('im_info.shape :',im_info.shape)
         proposals = clip_boxes_3d(proposals, im_info, batch_size)
-        # print('proposals.shape :',proposals.shape)
-        # print('proposals :',proposals[0][14000:14100])
-        # print('proposals :',proposals.cpu().tolist()[:100])
-
-        # print('proposals :',proposals)
-
-        # assign the score to 0 if it's non keep.
-        # keep = self._filter_boxes(proposals, min_size * im_info[:, 2])
-
-        # trim keep index to make it euqal over batch
-        # keep_idx = torch.cat(tuple(keep_idx), 0)
-
-        # scores_keep = scores.view(-1)[keep_idx].view(batch_size, trim_size)
-        # proposals_keep = proposals.view(-1, 4)[keep_idx, :].contiguous().view(batch_size, trim_size, 4)
-        
-        # _, order = torch.sort(scores_keep, 1, True)
-
-        # proposals_reshaped = proposals_reshaped.permute(0,2,1,3).contiguous()
-        # proposals_reshaped = proposals_reshaped.view(batch_size,K*A,time_dim*4)
-        # proposals_reshaped = proposals_reshaped.view(-1,time_dim*4)
-
         scores_keep = scores
         proposals_keep = proposals
 
@@ -189,17 +169,14 @@ class _ProposalLayer(nn.Module):
 
             proposals_single = proposals_single[order_single, :]
             scores_single = scores_single[order_single].view(-1,1)
-
-            
             proposals_single = proposals_single[:post_nms_topN, :]
             scores_single = scores_single[:post_nms_topN]
-            # print('scores_single.shape :',scores_single.shape)
-            # padding 0 at the end.
+            
+            # adding score at the end.
             num_proposal = proposals_single.size(0)
             output[i,:num_proposal,0] = i
             output[i,:num_proposal,1:7] = proposals_single
             output[i,:num_proposal,7] = scores_single.squeeze()
-            
 
         # print('output.shape :',output.shape)
         # print('output :',output)
