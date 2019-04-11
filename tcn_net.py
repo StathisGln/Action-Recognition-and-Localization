@@ -28,8 +28,8 @@ class tcn_net(nn.Module):
         # self.roi_align = RoIAlignAvg(7, 7, 16, 1.0/16.0, 1.0)
         self.roi_align = RoIAlign(7, 7, 16, 1.0/16.0, 1.0)
         # self.linear = nn.Linear(512,self.n_classes)
-        self.conv1 = nn.Conv1d(256,256,kernel_size=3, stride=1, groups=256)
-        self.prob = nn.Linear(256,self.n_classes)
+        # self.conv1 = nn.Conv1d(256,256, kernel_size=3, stride=1, groups=256)
+        self.prob = nn.Linear(256*8,self.n_classes)
     def forward(self, clips, target, gt_tubes, n_frames, max_dim=1):
         """Inputs have to have dimension (N, C_in, L_in)"""
 
@@ -70,10 +70,15 @@ class tcn_net(nn.Module):
             fc7 = fc7.view(-1)
 
             features[0,int(i*2/self.sample_duration)] = fc7
-        # print('features :',features.shape)
-        conv1_ret = self.conv1(features.permute(0,2,1))
-        conv1_ret = torch.mean(conv1_ret, 2)
-        feats = conv1_ret.view(conv1_ret.size(0),-1)
+        # print('features :',features.permute(0,2,1))
+        # print('features :',features.permute(0,2,1).shape)
+        # conv1_ret = self.conv1(features.permute(0,2,1))
+        # print('conv1_ret :',conv1_ret)
+        # conv1_ret = torch.mean(conv1_ret, 2)
+        # # print('conv1_ret :',conv1_ret)
+        # feats = conv1_ret.view(conv1_ret.size(0),-1)
+        feats = features.view(features.size(0),-1)
+        # print('feats.shape :',feats.shape)
         output = self.prob(feats)
         output = F.softmax(output, 1)
         tcn_loss = F.cross_entropy(output, target.long())
@@ -86,8 +91,8 @@ class tcn_net(nn.Module):
     def create_architecture(self):
 
         self._init_modules()
-        self.conv1.weight.data.normal_(0, 0.01)
-        self.conv1.bias.data.zero_()
+        # self.conv1.weight.data.normal_(0, 0.01)
+        # self.conv1.bias.data.zero_()
         self.prob.weight.data.normal_(0, 0.01)
         self.prob.bias.data.zero_()
 
