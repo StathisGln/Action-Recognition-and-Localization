@@ -7,10 +7,11 @@ from torch.autograd import Variable
 from config import cfg
 from proposal_layer import _ProposalLayer
 from anchor_target_layer_mine import _AnchorTargetLayer
-from reg_target import _Regression_TargetLayer
+# from reg_target import _Regression_TargetLayer
 from roi_align.modules.roi_align  import RoIAlignAvg, RoIAlign
+from proposal_target_layer_cascade_original import _ProposalTargetLayer as _Regression_TargetLayer
+from net_utils import _smooth_l1_loss, from_tubes_to_rois
 
-from net_utils import _smooth_l1_loss
 
 import numpy as np
 
@@ -40,13 +41,15 @@ class _Regression_Layer(nn.Module):
 
         self.roi_align = RoIAlign(self.pooling_size, self.pooling_size, self.spatial_scale)
 
-        self.reg_target = _Regression_TargetLayer( self.sample_duration)
+        self.reg_target = _Regression_TargetLayer()
 
     def forward(self, base_feat, tubes, gt_rois):
 
         batch_size = tubes.size(0)
         base_feat = F.normalize(base_feat, p=2, dim=1)
         offset = torch.arange(0,self.sample_duration)
+        rois = from_tubes_to_rois(tubes, self.sample_duration)
+
         ## modify tubes and rois_label
         if self.training:
 
@@ -57,38 +60,22 @@ class _Regression_Layer(nn.Module):
 
             rois, labels, \
             bbox_targets, bbox_inside_ws,\
-            bbox_outside_ws = self.reg_target(tubes, gt_rois)
+            bbox_outside_ws = self.reg_target(rois, gt_rois.permute(0,2,1,3))
 
             labels = Variable(labels.view(-1).long())
             bbox_targets = Variable(bbox_targets.view(-1, bbox_targets.size(2)))
             bbox_inside_ws = Variable(bbox_inside_ws.view(-1, bbox_inside_ws.size(2)))
             bbox_outside_ws = Variable(bbox_outside_ws.view(-1, bbox_outside_ws.size(2)))
 
-        else:
-
-            offset = torch.arange(0,self.sample_duration)
-            offset_batch = torch.arange(0,batch_size) * self.sample_duration
-            ## modify tubes to rois
-            tubes = tubes.unsqueeze(-2).expand(tubes.size(0),tubes.size(1),self.sample_duration,7).contiguous()
-
-            for i in range(batch_size):
-                tubes[i, ..., 0] = offset + offset_batch[i].expand(offset.size())
-            tubes = tubes.permute(0,2,1,3).contiguous()
-            tubes = tubes.view((-1,)+tubes.shape[2:])
-
-            rois = tubes[:,:,[0,1,2,4,5]].view(-1,5)
-
         ## modify feat
-        # print('base_feat.shape :',base_feat.shape)
-        # print('labes :',labels)
         base_feat = base_feat.permute(0,2,1,3,4).contiguous().view(-1,base_feat.size(1),base_feat.size(3),base_feat.size(4))
-        # print('base_feat.shape :',base_feat.shape)
         base_feat = self.roi_align(base_feat, rois.view(-1,5))
-        # print('base_feat.shape :',base_feat.shape)
-        conv1_feats = self.Conv(base_feat)
-        # print('conv1_feats.shape :',conv1_feats.shape)
-        conv1_feats = self.head_to_tail_(conv1_feats.view(conv1_feats.size(0),-1))
 
+        conv1_feats = self.Conv(base_feat)
+        print('conv1_feats.shape :',conv1_feats.shape)
+        conv1_feats = self.head_to_tail_(conv1_feats.view(conv1_feats.size(0),-1))
+        print('conv1_feats.shape :',conv1_feats.shape)
+        exit(-1)
         bbox_pred = self.bbox_pred(conv1_feats) # regression layer
 
         if self.training:

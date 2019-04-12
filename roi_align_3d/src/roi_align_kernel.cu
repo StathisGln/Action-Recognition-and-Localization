@@ -46,50 +46,6 @@ extern "C" {
             float roi_end_h = bottom_rois[n * 7 + 5] * spatial_scale;
 	    float roi_end_t = bottom_rois[n * 7 + 6] * temp_scale;
 
-	    // if (index==278528) printf("278528 n : %d\n",n);
-	    // if (index==278529) printf("278529 n : %d\n",n);
-
-	    // if (index == 0){
-	    //   printf("0 n :%d bottom_rois[n * 7 + 1] : %f %f %f %f %f %f\n",n, float( bottom_rois[n * 7 + 1]),
-	    // 	     float( bottom_rois[n * 7 + 2]), float( bottom_rois[n * 7 + 3]),
-	    // 	     float( bottom_rois[n * 7 + 4]), float( bottom_rois[n * 7 + 5]),
-	    // 	     float( bottom_rois[n * 7 + 6]));
-
-	    // }
-
-	    // if (index == 278529){
-	    //   printf("n : %d, aligned_width %d, aligned_height %d, time_dim %d, channels %d\n",n, aligned_width, aligned_height, time_dim, channels);
-	    //   printf("index mod aligned_width : %d %d %d\n", index%aligned_width, index,aligned_width);
-	    //   printf("index : %d n : %d,  c :%d, pt :%d, ph :%d, pw :%d\n", index, n, c, pt, ph, pw);
-	    //   printf("2785829 n :%d bottom_rois[n * 7 + 1] : %f %f %f %f %f %f\n",n, float( bottom_rois[n * 7 + 1]),
-	    // 	     float( bottom_rois[n * 7 + 2]), float( bottom_rois[n * 7 + 3]),
-	    // 	     float( bottom_rois[n * 7 + 4]), float( bottom_rois[n * 7 + 5]),
-	    // 	     float( bottom_rois[n * 7 + 6]));
-
-	    // }
-
-	    // if (index == 0){
-	    //   printf("n : %d, aligned_width %d, aligned_height %d, time_dim %d, channels %d\n",n, aligned_width, aligned_height, time_dim, channels);
-	    //   printf("index mod aligned_width : %d %d %d\n", index%aligned_width, index,aligned_width);
-	    //   printf("index : %d n : %d,  c :%d, pt :%d, ph :%d, pw :%d\n", index, n, c, pt, ph, pw);
-	    //   printf("2785829 n :%d bottom_rois[n * 7 + 1] : %f %f %f %f %f %f %f %f\n",n, float( bottom_rois[n * 7 + 1]),
-	    // 	     float( bottom_rois[n * 7 + 2]), float( bottom_rois[n * 7 + 3]),
-	    // 	     float( bottom_rois[n * 7 + 4]), float( bottom_rois[n * 7 + 5]),
-	    // 	     float( bottom_rois[n * 7 + 6]),float( bottom_rois[n * 7 + 7]),float( bottom_rois[n * 7 + 8]));
-
-	    // }
-
-	    // if (index == 0){
-	    //   printf("%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f \n", float( bottom_rois[n * 7 + 1]),
-	    // 	     float( bottom_rois[n * 7 + 2]), float( bottom_rois[n * 7 + 3]),
-	    // 	     float( bottom_rois[n * 7 + 4]), float( bottom_rois[n * 7 + 5]),
-	    // 	     float( bottom_rois[n * 7 + 6]),float( bottom_rois[n * 7 + 7]),float( bottom_rois[n * 7 + 8]),
-	    // 	     float( bottom_rois[n * 7 + 9]),float( bottom_rois[n * 7 + 10]),
-	    // 	     float( bottom_rois[n * 7 + 11]),float( bottom_rois[n * 7 +12]),
-	    // 	     float( bottom_rois[n * 7 + 13]),float( bottom_rois[n * 7 + 14]),
-	    // 	     float( bottom_rois[n * 7 + 15]),float( bottom_rois[n * 7 + 16]));
-
-	    // }
 
             // // Force malformed ROIs to be 1x1
             float roi_width = fmaxf(roi_end_w - roi_start_w + 1., 0.);
@@ -277,16 +233,10 @@ extern "C" {
 
             int img_start = roi_batch_ind * channels * time * height * width;
 
-            // bilinear interpolation
             if (!(h < 0 || h >= height || w < 0 || w >= width || t < 0 || t >= time)) {
                 float h_ratio = h - (float)(hstart);
                 float w_ratio = w - (float)(wstart);
-		float t_ratio = t - (float)(tstart);
-
-                // int upleft = img_start + (c * height + hstart) * width + wstart;
-                // int upright = upleft + 1;
-                // int downleft = upleft + width;
-                // int downright = downleft + 1;
+		// float t_ratio = t - (float)(tstart);
 
 		// for the front bilinear interpolation
 
@@ -296,24 +246,24 @@ extern "C" {
                 int downleftfront = upleftfront + width;
                 int downrightfront = downleftfront + 1;
 
-		// for the back bilinear interpolation
-                int upleftback = upleftfront + width * height;
-                int uprightback = upleftback + 1;
+		// // for the back bilinear interpolation
+                // int upleftback = upleftfront + width * height;
+                // int uprightback = upleftback + 1;
 
-                int downleftback = upleftback + width;
-                int downrightback = downleftback + 1;
+                // int downleftback = upleftback + width;
+                // int downrightback = downleftback + 1;
 
 
 		// TODO understand what it does
-                atomicAdd(bottom_diff + upleftfront, top_diff[index] * (1. - h_ratio) * (1 - w_ratio) * (1- t_ratio));
-                atomicAdd(bottom_diff + uprightfront, top_diff[index] * (1. - h_ratio) * w_ratio * (1- t_ratio));
-                atomicAdd(bottom_diff + downleftfront, top_diff[index] * h_ratio * (1 - w_ratio) * (1- t_ratio));
-                atomicAdd(bottom_diff + downrightfront, top_diff[index] * h_ratio * w_ratio *(1- t_ratio));
+                atomicAdd(bottom_diff + upleftfront, top_diff[index] * (1. - h_ratio) * (1 - w_ratio) );
+                atomicAdd(bottom_diff + uprightfront, top_diff[index] * (1. - h_ratio) * w_ratio );
+                atomicAdd(bottom_diff + downleftfront, top_diff[index] * h_ratio * (1 - w_ratio) );
+                atomicAdd(bottom_diff + downrightfront, top_diff[index] * h_ratio * w_ratio );
 
-                atomicAdd(bottom_diff + upleftback, top_diff[index] * (1. - h_ratio) * (1 - w_ratio) * t_ratio);
-                atomicAdd(bottom_diff + uprightback, top_diff[index] * (1. - h_ratio) * w_ratio * t_ratio);
-                atomicAdd(bottom_diff + downleftback, top_diff[index] * h_ratio * (1 - w_ratio) * t_ratio);
-                atomicAdd(bottom_diff + downrightback, top_diff[index] * h_ratio * w_ratio * t_ratio);
+                // atomicAdd(bottom_diff + upleftback, top_diff[index] * (1. - h_ratio) * (1 - w_ratio) * t_ratio);
+                // atomicAdd(bottom_diff + uprightback, top_diff[index] * (1. - h_ratio) * w_ratio * t_ratio);
+                // atomicAdd(bottom_diff + downleftback, top_diff[index] * h_ratio * (1 - w_ratio) * t_ratio);
+                // atomicAdd(bottom_diff + downrightback, top_diff[index] * h_ratio * w_ratio * t_ratio);
             }
         }
     }

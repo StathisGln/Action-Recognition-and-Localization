@@ -241,10 +241,18 @@ def from_tubes_to_rois(tubes, sample_duration):
     rois_per_image = tubes.size(1)
 
     rois_f = torch.zeros(batch_size, rois_per_image, sample_duration, 5).type_as(tubes)
+    offset_batch = torch.arange(0,batch_size).type_as(tubes) * sample_duration
+    offset = torch.arange(0,sample_duration).type_as(tubes)
+    f_offset= offset.unsqueeze(0).expand(batch_size,sample_duration) + \
+              offset_batch.unsqueeze(1).expand(batch_size,sample_duration)
+
+    rois_f[:,:,:,0] = f_offset.unsqueeze(1).expand(batch_size, rois_per_image, sample_duration)
+
+    # offset
     for b in range(batch_size):
         for i in range(rois_per_image):
-            r = rois[b,i]
+            r = tubes[b,i]
             inds = torch.arange(r[3], r[6]+1).long()
             rois_f[b,i,inds,1:]= r[[1,2,4,5]]
-
-    return rois_f.permute(0,2,1,3,4)
+    
+    return rois_f.permute(0,2,1,3)

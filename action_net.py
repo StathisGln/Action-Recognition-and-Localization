@@ -139,10 +139,8 @@ class ACT_net(nn.Module):
         rois_s = f_rois[:,:,:7].contiguous()
         # print('base_feat.shape :',base_feat.shape)
 
-
-        conv1_feats = self.act_roi_align(base_feat_1,rois_s.view(-1,7))
         ## regression
-        sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(conv1_feats,f_rois[:,:,:7], gt_rois)
+        sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(base_feat_1,f_rois[:,:,:7], gt_rois)
         sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(f_rois.size(0), self.sample_duration, f_n_rois, 4)
 
         if not self.training:
