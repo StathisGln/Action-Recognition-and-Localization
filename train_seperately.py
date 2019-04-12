@@ -189,6 +189,10 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         #     loss = actioness_loss.mean()
         elif mode == 3:
             loss = sgl_rois_bbox_loss.mean()
+        elif mode == 4:
+            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + rpn_loss_cls_16.mean() \
+                   + rpn_loss_bbox_16.mean() +  act_loss_bbox_16.mean() + sgl_rois_bbox_loss.mean()
+
 
         loss_temp += loss.item()
 
@@ -271,8 +275,7 @@ if __name__ == '__main__':
     
     params = []
 
-    for p in act_model.module.reg_layer.parameters() : p.requires_grad=False
-    # for p in act_model.module.actioness_score.parameters() : p.requires_grad=False
+    # for p in act_model.module.reg_layer.parameters() : p.requires_grad=False
 
     for key, value in dict(act_model.named_parameters()).items():
         # print(key, value.requires_grad)
@@ -299,7 +302,7 @@ if __name__ == '__main__':
             lr *= lr_decay_gamma
 
 
-        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=1)
+        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=4)
 
         # if (epoch + 1) % (5) == 0:
         #     validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
@@ -307,9 +310,9 @@ if __name__ == '__main__':
 
 
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_part1_1.pwf".format(epoch+1))
-    torch.save(act_model.state_dict(), "action_net_model_part1_1.pwf")
-
+            torch.save(act_model.state_dict(), "action_net_model_both.pwf".format(epoch+1))
+    torch.save(act_model.state_dict(), "action_net_model_both.pwf")
+    exit(-1)
     # #######################################################
     # #          Part 1-2 - train nTPN - without reg         #
     # #######################################################

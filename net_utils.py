@@ -234,3 +234,17 @@ def compare_grid_sample():
     pdb.set_trace()
 
     delta = (grad_input_off.data - grad_input_stn).sum()
+
+def from_tubes_to_rois(tubes, sample_duration):
+
+    batch_size = tubes.size(0)
+    rois_per_image = tubes.size(1)
+
+    rois_f = torch.zeros(batch_size, rois_per_image, sample_duration, 5).type_as(tubes)
+    for b in range(batch_size):
+        for i in range(rois_per_image):
+            r = rois[b,i]
+            inds = torch.arange(r[3], r[6]+1).long()
+            rois_f[b,i,inds,1:]= r[[1,2,4,5]]
+
+    return rois_f.permute(0,2,1,3,4)

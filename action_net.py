@@ -144,7 +144,9 @@ class ACT_net(nn.Module):
         ## regression
         sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(conv1_feats,f_rois[:,:,:7], gt_rois)
         sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(f_rois.size(0), self.sample_duration, f_n_rois, 4)
-        sgl_rois_bbox_pred = Variable(sgl_rois_bbox_pred, requires_grad=False)
+
+        if not self.training:
+            sgl_rois_bbox_pred = Variable(sgl_rois_bbox_pred, requires_grad=False)
 
         pooled_feat_ = self.act_roi_align(base_feat, rois_s.view(-1,7))        
         pooled_feat = self._head_to_tail(pooled_feat_)
@@ -163,12 +165,10 @@ class ACT_net(nn.Module):
         # actioness_scr = F.softmax(self.actioness_score(pooled_feat),2)
         # # prob_out = self.act_cls_score(pooled_feat)
 
-        # if not self.training:
-        bbox_pred = Variable(bbox_pred, requires_grad=False)
-        bbox_pred_16 = Variable(bbox_pred_16, requires_grad=False)
-            # actioness_scr = Variable(actioness_scr, requires_grad=False)
+        if not self.training:
+            bbox_pred = Variable(bbox_pred, requires_grad=False)
+            bbox_pred_16 = Variable(bbox_pred_16, requires_grad=False)
 
-            # prob_out = Variable(prob_out, requires_grad=False)
             
         # compute object classification probability
         act_loss_bbox = 0

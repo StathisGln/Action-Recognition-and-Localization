@@ -344,8 +344,8 @@ if __name__ == '__main__':
 
     # # get mean
     # mean =  [103.75581543 104.79421473  91.16894564] # jhmdb
-    mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
-    # mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
+    # mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
+    mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
     # generate model
 
     actions = ['__background__', 'Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
@@ -368,10 +368,11 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    model_data = torch.load('./action_net_model_part1_1.pwf')
-    reg_layer_data = torch.load('./reg_layer.pwf')
+    model_data = torch.load('./action_net_model_both.pwf')
+    # reg_layer_data = torch.load('./reg_layer.pwf')
+
     model.load_state_dict(model_data)
-    model.module.reg_layer.load_state_dict(reg_layer_data)
+    # model.module.reg_layer.load_state_dict(reg_layer_data)
     model.eval()
 
     validation(0, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, batch_size, n_threads)
