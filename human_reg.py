@@ -72,10 +72,8 @@ class _Regression_Layer(nn.Module):
         base_feat = self.roi_align(base_feat, rois.view(-1,5))
 
         conv1_feats = self.Conv(base_feat)
-        print('conv1_feats.shape :',conv1_feats.shape)
         conv1_feats = self.head_to_tail_(conv1_feats.view(conv1_feats.size(0),-1))
-        print('conv1_feats.shape :',conv1_feats.shape)
-        exit(-1)
+
         bbox_pred = self.bbox_pred(conv1_feats) # regression layer
 
         if self.training:
