@@ -205,8 +205,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
         
         # use bbox_pred for tubes
-        tubes[:,:,1:7] = bbox_transform_inv_3d(tubes[:,:,1:7], bbox_pred,tubes.size(0))
-        tubes[:,:,1:7] = clip_boxes_3d(tubes[:,:,1:7], im_info, tubes.size(0))
+        # tubes[:,:,1:7] = bbox_transform_inv_3d(tubes[:,:,1:7], bbox_pred,tubes.size(0))
+        # tubes[:,:,1:7] = clip_boxes_3d(tubes[:,:,1:7], im_info, tubes.size(0))
 
         tubes_exp = tubes.unsqueeze(-2).expand(tubes.shape[:-1]+(sample_duration,8)).permute(0,2,1,3).contiguous()
 
@@ -368,7 +368,8 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    model_data = torch.load('./action_net_model_both.pwf')
+    # model_data = torch.load('./action_net_model_both.pwf')
+    model_data = torch.load('./action_net_model_dropout_08_non_normalize.pwf')
     # reg_layer_data = torch.load('./reg_layer.pwf')
 
     model.load_state_dict(model_data)

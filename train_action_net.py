@@ -193,7 +193,6 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
             loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean()  + rpn_loss_cls_16.mean() \
                    + rpn_loss_bbox_16.mean()  + sgl_rois_bbox_loss.mean()
 
-
         loss_temp += loss.item()
 
         # backw\ard
@@ -310,8 +309,8 @@ if __name__ == '__main__':
 
 
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_both.pwf".format(epoch+1))
-    torch.save(act_model.state_dict(), "action_net_model_both.pwf")
+            torch.save(act_model.state_dict(), "action_net_model_dropout_08_non_normalize.pwf".format(epoch+1))
+    torch.save(act_model.state_dict(), "action_net_model_dropout_08_non_normalize.pwf")
     exit(-1)
     # #####################################################
     # #          Part 1-2 - train TPN - only reg          #

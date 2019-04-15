@@ -217,7 +217,7 @@ class ACT_net(nn.Module):
             f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss # prob_out, act_cls_score
 
       
-        return f_rois,  f_bbox_pred, pooled_feat_, None, None, None, \
+        return f_rois,  None, None, None, None, None, \
             None, None, None, None, sgl_rois_bbox_pred, None, # actioness_scr, None, # prob_out, None
 
     def _init_weights(self):
@@ -238,8 +238,8 @@ class ACT_net(nn.Module):
         normal_init(self.act_rpn.RPN_bbox_pred, 0, 0.01, truncated)
         normal_init(self.reg_layer.Conv, 0, 0.01, truncated)
         normal_init(self.reg_layer.bbox_pred, 0, 0.01, truncated)
-        normal_init(self.act_bbox_pred, 0, 0.001, truncated)
-        normal_init(self.act_bbox_pred_16, 0, 0.001, truncated)
+        # normal_init(self.act_bbox_pred, 0, 0.001, truncated)
+        # normal_init(self.act_bbox_pred_16, 0, 0.001, truncated)
         # normal_init(self.act_cls_score, 0, 0.001, truncated)
 
 
@@ -279,12 +279,12 @@ class ACT_net(nn.Module):
           model.module.maxpool,model.module.layer1)
         self.act_base_2 = nn.Sequential(model.module.layer2, model.module.layer3)
 
-        self.act_top = nn.Sequential(model.module.layer4)
+        # self.act_top = nn.Sequential(model.module.layer4)
 
         # self.act_bbox_pred_16 = nn.Linear(2048, 4 )
         # self.act_bbox_pred = nn.Linear(2048, 6 ) # 2 classes bg/ fg
-        self.act_bbox_pred_16 = nn.Linear(512, 4 )
-        self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg
+        # self.act_bbox_pred_16 = nn.Linear(512, 4 )
+        # self.act_bbox_pred = nn.Linear(512, 6 ) # 2 classes bg/ fg
 
         # self.act_cls_score = nn.Linear(512,self.n_classes) # classification layer
         # Fix blocks
@@ -314,11 +314,11 @@ class ACT_net(nn.Module):
         # self.act_top.apply(set_bn_fix)
 
 
-    def _head_to_tail(self, pool5):
-        # print('pool5.shape :',pool5.shape)
-        batch_size = pool5.size(0)
-        fc7 = self.act_top(pool5)
-        fc7 = fc7.mean(4)
-        fc7 = fc7.mean(3) # exw (bs,512,16)
-        return fc7
+    # def _head_to_tail(self, pool5):
+    #     # print('pool5.shape :',pool5.shape)
+    #     batch_size = pool5.size(0)
+    #     fc7 = self.act_top(pool5)
+    #     fc7 = fc7.mean(4)
+    #     fc7 = fc7.mean(3) # exw (bs,512,16)
+    #     return fc7
     
