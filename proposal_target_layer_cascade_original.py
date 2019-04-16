@@ -36,6 +36,9 @@ class _ProposalTargetLayer(nn.Module):
         self.BBOX_NORMALIZE_STDS = self.BBOX_NORMALIZE_STDS.type_as(gt_boxes)
         self.BBOX_INSIDE_WEIGHTS = self.BBOX_INSIDE_WEIGHTS.type_as(gt_boxes)
 
+        if gt_boxes.size(3) == 6:
+            gt_boxes = gt_boxes[:,:,:,:5]
+
         all_rois = all_rois.contiguous().view(-1,all_rois.size(2),5)
         gt_boxes = gt_boxes.contiguous().view(-1,gt_boxes.size(2),5)
 

@@ -20,7 +20,7 @@ from resize_rpn import resize_boxes, resize_tube
 from ucf_dataset import single_video
 
 from config import cfg
-from bbox_transform import bbox_overlaps_connect
+from bbox_transform import bbox_overlaps_connect, bbox_transform_inv, bbox_overlaps_batch_3d
 from collections import OrderedDict
 
 # import gc
@@ -64,6 +64,8 @@ class Model(nn.Module):
         # print('boxes.shape :',boxes.shape)
 
         ## define a dataloader for the whole video
+
+        self.act_net.module.reg_layer.eval()
         boxes = boxes[:num_frames,:num_actions]
         clips = clips[:num_frames]
 
@@ -81,12 +83,17 @@ class Model(nn.Module):
                                                   shuffle=False)
 
         n_clips = data.__len__()
-        print('n_clips: ', n_clips)
-        features = torch.zeros(n_clips, rois_per_image, self.p_feat_size, self.sample_duration)
-        p_tubes = torch.zeros(n_clips, rois_per_image,  6) # all the proposed rois
-        actioness_score = torch.zeros(n_clips, rois_per_image)
-        overlaps_scores = torch.zeros(n_clips-1, rois_per_image, rois_per_image)
 
+        # features = torch.zeros(n_clips, rois_per_image, self.p_feat_size, self.sample_duration)
+        features = torch.zeros(n_clips, rois_per_image, self.p_feat_size, self.sample_duration)
+
+        p_tubes = torch.zeros(n_clips, rois_per_image,  6) # all the proposed rois
+        sgl_rois_preds = torch.zeros(n_clips, self.sample_duration, rois_per_image, 4)
+        actioness_score = torch.zeros(n_clips, rois_per_image)
+        if self.training:
+            overlaps_scores = torch.zeros(n_clips-1, int(rois_per_image/2) , int(rois_per_image/2) )
+        else:
+            overlaps_scores = torch.zeros(n_clips-1, rois_per_image , rois_per_image )
         f_tubes = []
 
         if self.training:
@@ -106,21 +113,19 @@ class Model(nn.Module):
 
             # if step == 1:
             #     break
+
             frame_indices, im_info, start_fr = dt
             boxes_ = boxes[frame_indices].cuda()
             clips_ = clips[frame_indices].cuda()
 
             gt_tubes = create_tube_with_frames(boxes_.permute(0,2,1,3), im_info, self.sample_duration)
-            # print('step :',step, ' boxes :',boxes_)
-            print('step :',step)
             gt_tubes_ = gt_tubes.type_as(clips).cuda()
-            # print('gt_tubes_ :',gt_tubes_)
+
             im_info = im_info.cuda()
             start_fr = start_fr.cuda()
 
-            tubes,  bbox_pred, pooled_feat, \
+            tubes,  pooled_feat, \
             rpn_loss_cls,  rpn_loss_bbox, \
-            act_loss_bbox, act_loss_bbox_16, \
             rpn_loss_cls_16, \
             rpn_loss_bbox_16, rois_label, \
             sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.act_net(clips_.permute(0,2,1,3,4),
@@ -128,6 +133,7 @@ class Model(nn.Module):
                                                         gt_tubes_,
                                                         boxes_.permute(0,2,1,3).float(),
                                                         start_fr)
+
             pooled_feat = pooled_feat.view(-1,rois_per_image,self.p_feat_size,self.sample_duration)
 
             indexes_ = (torch.arange(0, tubes.size(0))*int(self.sample_duration/2) + start_fr[0].cpu()).unsqueeze(1)
@@ -140,7 +146,8 @@ class Model(nn.Module):
             idx_e = step * batch_size + batch_size
 
             features[idx_s:idx_e] = pooled_feat
-            p_tubes[idx_s:idx_e,] = tubes[:,:,1:7]
+            p_tubes[idx_s:idx_e ] = tubes[:,:,1:7]
+            sgl_rois_preds[idx_s:idx_e] = sgl_rois_bbox_pred
             actioness_score[idx_s:idx_e] = tubes[:,:,7]
 
             if self.training:
@@ -150,47 +157,89 @@ class Model(nn.Module):
 
                 rpn_loss_cls_[step] = rpn_loss_cls.mean().unsqueeze(0)
                 rpn_loss_bbox_[step] = rpn_loss_bbox.mean().unsqueeze(0)
-                act_loss_bbox_[step] = act_loss_bbox.mean().unsqueeze(0)
                 rpn_loss_cls_16_[step] = rpn_loss_cls_16.mean().unsqueeze(0)
                 rpn_loss_bbox_16_[step] = rpn_loss_bbox_16.mean().unsqueeze(0)
-                act_loss_bbox_16_[step] = act_loss_bbox_16.mean().unsqueeze(0)
 
-            # print('----------Out TPN----------')
-            # # print('p_tubes.type() :',p_tubes.type())
-            # # print('tubes.type() :',tubes.type())
-            # print('----------Connect TUBEs----------')
-
-            # f_tubes = connect_tubes(f_tubes,tubes.cpu(), p_tubes, pooled_feat, rois_label, step*batch_size)
-
-            # print('----------End Tubes----------')
         ########################################################
         #          Calculate overlaps and connections          #
         ########################################################
-        print('p_tubes :',p_tubes.cpu().numpy())
-        exit(-1)
-        print('p_tubes.shape :',p_tubes.shape)
-        print('p_tubes[0].shape :',p_tubes[0].shape)
-        print('p_tubes[0,:rois_per_image/2] :',p_tubes[0,:int(rois_per_image/2)].shape)
-        overlaps_scores = torch.zeros(n_clips-1, int(rois_per_image/2), int(rois_per_image/2)).type_as(overlaps_scores)
+
+        # for i in range(n_clips-1):
+        if self.training :
+            limit = int(rois_per_image/2)
+            # overlaps_scores = torch.zeros(n_clips-1, 12 , 12 )
+        else:
+            limit = rois_per_image
+
         for i in range(n_clips-1):
-            print('p_tubes[i,:int(rois_per_image/2)].shape :',p_tubes[i,:int(rois_per_image/2)].shape)
-            print('p_tubes[i+1,:int(rois_per_image/2)].shape :',p_tubes[i+1,:int(rois_per_image/2)].shape)
-            print('p_tubes[i+1,:int(rois_per_image/2)].unsqueeze(0).shape :',p_tubes[i+1,:int(rois_per_image/2)].unsqueeze(0).shape)
-            overlaps_scores[i] = bbox_overlaps_connect(p_tubes[i,:int(rois_per_image/2)],p_tubes[i+1,:int(rois_per_image/2)].unsqueeze(0))
-        print('n_clips :',n_clips)
-        print('rois_per_image:',rois_per_image)
-        print('actioness.shape:',actioness_score.shape)
-        print('overlaps_scores.shape :',overlaps_scores.shape)
-        for i in range(actioness_score.size(0)):
-            print('i :',i, actioness_score[i].cpu().numpy())
+
+            # 1 from tubes to rois
+            rois_curr = torch.zeros(limit, self.sample_duration, 4).type_as(p_tubes)
+            rois_next = torch.zeros(limit, self.sample_duration, 4).type_as(p_tubes)
+
+            for j in range(limit):
+
+                r = p_tubes[i,j]
+                inds = torch.arange(r[2].long(), (r[5]+1).long()) - (i * int( self.sample_duration/2))
+                rois_curr[j,inds]= r[[0,1,3,4]]
+
+                # for gt_boxes
+                r = p_tubes[i,j]
+                inds = torch.arange(r[2].long(), (r[5]+1).long()) - ((i+1)* int(self.sample_duration/2))
+                rois_next[j,inds]= r[[0,1,3,4]]
+
+            # 2 transform inv
+            rois_curr = rois_curr.permute(1,0,2)
+            rois_next = rois_next.permute(1,0,2)
+            rois_curr = bbox_transform_inv(rois_curr, sgl_rois_preds[i,:,:limit], rois_curr.size(0))
+            rois_next = bbox_transform_inv(rois_curr, sgl_rois_preds[i+1,:,:limit], rois_curr.size(0))
+
+            rois_curr  = rois_curr.permute(1,0,2)
+            rois_next  = rois_next.permute(1,0,2)
+            ## TODO add clip
+
+            # 3 if self.training remove predicted sgr and replace with gt_rois
+
+            if self.training:
+
+                boxes_ = boxes[ i * int(self.sample_duration/2): i * int(self.sample_duration/2)+self.sample_duration].permute(1,0,2)
+                boxes_n = boxes[ (i+1) * int(self.sample_duration/2): (i+1) * int(self.sample_duration/2)+self.sample_duration].permute(1,0,2)
+
+                for t in range(f_gt_tubes.size(1)):
+                    # for curr tensor
+                    overlap = bbox_overlaps_batch_3d(p_tubes[i,:limit], f_gt_tubes[i,t].unsqueeze(0).unsqueeze(0))
+                    overlap_ind = overlap.eq(1.).nonzero()
+                    if overlap_ind.nelement() != 0:
+                        overlap_ind = overlap_ind[:,1].view(-1)
+                    rois_curr[overlap_ind] = boxes_[t,:,:4].float()
+
+                    # for next tensor
+                    overlap = bbox_overlaps_batch_3d(p_tubes[(i+1),:limit], f_gt_tubes[(i+1),t].unsqueeze(0).unsqueeze(0))
+                    overlap_ind = overlap.eq(1.).nonzero()
+                    if overlap_ind.nelement() != 0:
+                        overlap_ind = overlap_ind[:,1].view(-1)
+                    rois_next[overlap_ind] = boxes_n[t,:,:4].float()
+
+            # 4 calculate overlaps
+            overlaps_scores[i]  = bbox_overlaps_connect(rois_curr, rois_next,
+                                                       self.sample_duration,  int(self.sample_duration/2))
 
         if self.training:
             actioness_ = actioness_score[:,:int(rois_per_image/2)].contiguous()
             final_scores, final_poss = self.calc(overlaps_scores.cuda(), actioness_score.cuda(),
                                                  torch.Tensor([n_clips]),torch.Tensor([rois_per_image/2]))
+        exit(-1)
         # print('overlaps_scores :',overlaps_scores.cpu().numpy())
         # print('final_scores.shape :',final_scores.shape)
         # print('final_poss.shape:',final_poss.shape)
+        lens = torch.zeros(final_poss.size(0))
+        for i in range(final_poss.size(0)):
+            for j in range(n_clips):
+                lens[i] += 1
+                if final_poss[i][j][0] == -1:
+                    break
+        print('lens :',lens)
+        exit(-1)
         for i in range(final_poss.size(0)):
             print('i -> ',i)
             for j in range(n_clips):

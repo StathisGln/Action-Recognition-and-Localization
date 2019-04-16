@@ -38,12 +38,14 @@ int roi_align_forward_cuda(int aligned_height, int aligned_width, int time_dim, 
     /* printf("num_channels %d\n",num_channels); */
     /* printf("data_time %d data_height %d data width %d num_channels %d\n",data_time,data_height,data_width,num_channels); */
     cudaStream_t stream = THCState_getCurrentStream(state);
-    /* printf("temp_scale %f, spatial_scale %f\n",temp_scale,spatial_scale); */
+
+   /* printf("temp_scale %f, spatial_scale %f\n",temp_scale,spatial_scale); */
     ROIAlignForwardLaucher(
-			   data_flat, spatial_scale, temp_scale, num_rois, data_height,
-			   data_width, data_time, num_channels, aligned_height,
-			   aligned_width, time_dim, rois_flat,
-			   output_flat, stream);
+    			   data_flat, spatial_scale, temp_scale, num_rois, data_height,
+    			   data_width, data_time, num_channels, aligned_height,
+    			   aligned_width, time_dim, rois_flat,
+    			   output_flat, stream);
+
 
     return 1;
 }
@@ -75,7 +77,7 @@ int roi_align_backward_cuda(int aligned_height, int aligned_width,  int time_dim
     int data_width = THCudaTensor_size(state, bottom_grad, 4);
     // Number of channels
     int num_channels = THCudaTensor_size(state, bottom_grad, 1);
-
+ 
     cudaStream_t stream = THCState_getCurrentStream(state);
     ROIAlignBackwardLaucher(
 			    top_grad_flat, spatial_scale, temp_scale, batch_size, num_rois, data_height,

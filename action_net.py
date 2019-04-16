@@ -32,6 +32,7 @@ class ACT_net(nn.Module):
         self.classes = actions
         self.n_classes = len(actions)
         self.sample_duration = sample_duration
+
         # loss
         self.act_loss_cls = 0
         self.act_loss_bbox = 0
@@ -41,23 +42,18 @@ class ACT_net(nn.Module):
         self.spatial_scale = 1.0/16
     
         # define rpn
-        
-        # self.act_rpn = _RPN(1024, sample_duration).cuda()
         self.act_rpn = _RPN(256, sample_duration).cuda()
-        # self.act_rpn = _RPN(256, 4).cuda()
+
         self.act_proposal_target = _ProposalTargetLayer(2).cuda() ## background/ foreground
         self.act_proposal_target_single = _ProposalTargetLayer_single(2) ## background/ foreground for only xy
 
         self.time_dim =sample_duration
         self.temp_scale = 1.0
-        self.act_roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale).cuda()
+        self.act_roi_align = RoIAlign(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale).cuda()
 
         self.avgpool = nn.AvgPool3d((1, 7, 7), stride=1)
-        # self.reg_layer = _Regression_Layer(1024, self.sample_duration).cuda()
-        self.reg_layer = _Regression_Layer(64, self.sample_duration).cuda()
 
-        # ## actioness layer
-        # self.actioness_score = nn.Linear(512,2)
+        self.reg_layer = _Regression_Layer(64, self.sample_duration).cuda()
 
     def create_architecture(self):
         self._init_modules()
@@ -137,88 +133,40 @@ class ACT_net(nn.Module):
 
         f_rois = torch.cat((rois,rois_16),dim=1)
         rois_s = f_rois[:,:,:7].contiguous()
-        # print('base_feat.shape :',base_feat.shape)
 
-        ## regression
+
+        pooled_feat_ = self.act_roi_align(base_feat, rois_s.view(-1,7))        
+        pooled_feat_ = self._head_to_tail(pooled_feat_)
+
+        # ## regression
+
         sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(base_feat_1,f_rois[:,:,:7], gt_rois)
-        sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(f_rois.size(0), self.sample_duration, f_n_rois, 4)
+        # sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(pooled_feat_,f_rois[:,:,:7], gt_rois)
+
+        if self.reg_layer.training:
+            sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(f_rois.size(0), self.sample_duration, f_n_rois, 4)
+        else:
+            sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(f_rois.size(0), self.sample_duration, f_rois.size(1), 4)
 
         if not self.training:
             sgl_rois_bbox_pred = Variable(sgl_rois_bbox_pred, requires_grad=False)
 
-        # pooled_feat_ = self.act_roi_align(base_feat, rois_s.view(-1,7))        
-        # pooled_feat = self._head_to_tail(pooled_feat_)
-        # pooled_feat = pooled_feat.view(f_rois.size(0),f_rois.size(1),pooled_feat.size(1),pooled_feat.size(2))
-
-        # # # compute bbox offset
-        # pooled_feat = pooled_feat.mean(3)
-
-        # if not self.training:
-        #     pooled_feat = Variable(pooled_feat, requires_grad=False)
-        #     pooled_feat_ = Variable(pooled_feat_, requires_grad=False)
-        
-        # bbox_pred = self.act_bbox_pred(pooled_feat[:, :n_rois]).view(-1,6)
-        # bbox_pred_16 = self.act_bbox_pred_16(pooled_feat[:, n_rois:]).view(-1,4)
-
-        # # actioness_scr = F.softmax(self.actioness_score(pooled_feat),2)
-        # # # prob_out = self.act_cls_score(pooled_feat)
-
-        # if not self.training:
-        #     bbox_pred = Variable(bbox_pred, requires_grad=False)
-        #     bbox_pred_16 = Variable(bbox_pred_16, requires_grad=False)
-
-            
-        # # compute object classification probability
-        # act_loss_bbox = 0
-        # act_loss_bbox_16 = 0
-        # act_score_loss = 0
-        # # act_loss_cls = 0
-
+        # get features for proposed tubes
         if self.training:
         
             rois_label = rois_label.view(batch_size, n_rois,-1)
             rois_label_16 = rois_label_16.view(batch_size, n_rois, -1)
             f_rois_label = torch.cat((rois_label, rois_label_16),dim=1)
 
-        #     # # bounding box regression L1 loss
-        #     # target_score = f_rois_label.gt(0).long()
-
-        #     # actioness_scr = actioness_scr.view(-1,2)
-        #     # target_score  = target_score.view(-1)
-
-        #     # act_score_loss = F.cross_entropy(actioness_scr,target_score)
-        #     # print('act_score_loss :',act_score_loss)
-        #     act_loss_bbox = _smooth_l1_loss(bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
-        #     act_loss_bbox_16 = _smooth_l1_loss(bbox_pred_16, rois_target_16, rois_inside_ws_16, rois_outside_ws_16)
-
-        #     # act_loss_cls = F.cross_entropy(prob_out, f_rois_label.long())
-                                             
-        # ## prepare bbox_pred for all
-        # bbox_pred_16 = torch.cat((bbox_pred_16[:,[0,1]],torch.zeros((bbox_pred_16.size(0),1)).type_as(bbox_pred_16), \
-        #                           bbox_pred_16[:,[2,3]],torch.zeros((bbox_pred_16.size(0),1)).type_as(bbox_pred_16)),dim=1)
-
-        # bbox_pred_16 = bbox_pred_16.view(batch_size, rois.size(1), -1)
-        # bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
-
-        # f_bbox_pred = torch.cat((bbox_pred,bbox_pred_16),dim=1)
-
-        # pooled_feat_ = self.avgpool(pooled_feat_)
-
-        # if self.training:
-        #   return f_rois,  f_bbox_pred, pooled_feat_, \
-        #     rpn_loss_cls, rpn_loss_bbox, act_loss_bbox,\
-        #     rpn_loss_cls_16, rpn_loss_bbox_16, act_loss_bbox_16,\
-        #     f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss # prob_out, act_cls_score
-
         if self.training:
-          return f_rois,  None, None, \
-            rpn_loss_cls, rpn_loss_bbox, None,\
-            rpn_loss_cls_16, rpn_loss_bbox_16, None,\
-            f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss # prob_out, act_cls_score
+          return f_rois,  pooled_feat_, \
+            rpn_loss_cls, rpn_loss_bbox, \
+            rpn_loss_cls_16, rpn_loss_bbox_16, \
+            f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss 
 
       
-        return f_rois,  None, None, None, None, None, \
-            None, None, None, None, sgl_rois_bbox_pred, None, # actioness_scr, None, # prob_out, None
+        return f_rois,  pooled_feat_, None, None, None, None, \
+            None, sgl_rois_bbox_pred, None,
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):
@@ -238,10 +186,6 @@ class ACT_net(nn.Module):
         normal_init(self.act_rpn.RPN_bbox_pred, 0, 0.01, truncated)
         normal_init(self.reg_layer.Conv, 0, 0.01, truncated)
         normal_init(self.reg_layer.bbox_pred, 0, 0.01, truncated)
-        # normal_init(self.act_bbox_pred, 0, 0.001, truncated)
-        # normal_init(self.act_bbox_pred_16, 0, 0.001, truncated)
-        # normal_init(self.act_cls_score, 0, 0.001, truncated)
-
 
     def _init_modules(self):
 
@@ -314,11 +258,9 @@ class ACT_net(nn.Module):
         # self.act_top.apply(set_bn_fix)
 
 
-    # def _head_to_tail(self, pool5):
-    #     # print('pool5.shape :',pool5.shape)
-    #     batch_size = pool5.size(0)
-    #     fc7 = self.act_top(pool5)
-    #     fc7 = fc7.mean(4)
-    #     fc7 = fc7.mean(3) # exw (bs,512,16)
-    #     return fc7
+    def _head_to_tail(self, pool5):
+        # print('pool5.shape :',pool5.shape)
+        # batch_size = pool5.size(0)
+        fc7 = self.avgpool(pool5).squeeze()
+        return fc7
     

@@ -131,6 +131,7 @@ class Calculator(Function):
             #         print(' ',next_pos[i,j,0].item(),' ',next_pos[i,j,1].item(),' | ',end='')
             #     print('')
         print('New loopa...\n')
+
         # lens = torch.zeros(final_scores.size(0))
         # for i in range(final_scores.size(0)):
         #     for j in range(N):
@@ -140,14 +141,15 @@ class Calculator(Function):
         
         # _, indices = torch.sort(lens)
         # for i in indices:
-        for i in range(final_scores.size(0)):
-            # print('i :',i.item(),' score ',final_scores[i].item(),' $$ ', end='')
-            print('i :',i,' score ',final_scores[i].item(),' $$ ', end='')
-            for j in range(N):
-                if final_poss[i,j,0] == -1:
-                    break
-                print(' ',final_poss[i,j,0].item(),' ',final_poss[i,j,1].item(),'({0:.2f}) | '.format(scores[final_poss[i,j,0],final_poss[i,j,1]]),end='')
-            print('')
+        # # for i in range(final_scores.size(0)):
+        #     # print('i :',i.item(),' score ',final_scores[i].item(),' $$ ', end='')
+        #     print('i :',i,' score ',final_scores[i].item(),' $$ ', end='')
+        #     for j in range(N):
+        #         if final_poss[i,j,0] == -1:
+        #             break
+        #         # if (final_poss[i,0,0] == 0 and final_poss[i,0,0] == 0) and final_scores[i] == 2.0:
+        #         print(' ',final_poss[i,j,0].item(),' ',final_poss[i,j,1].item(),'({0:.2f}) | '.format(scores[final_poss[i,j,0],final_poss[i,j,1]]),end='')
+        #     print('')
 
         exit(-1)
 

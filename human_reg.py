@@ -95,7 +95,7 @@ class _Regression_Layer(nn.Module):
         conv1_feats = self.Conv(base_feat)
         conv1_feats = self.head_to_tail_(conv1_feats.view(conv1_feats.size(0),-1))
 
-        bbox_pred = self.bbox_pred(conv1_feats) # regression layer
+        bbox_pred = self.bbox_pred(conv1_feats) 
 
         if self.training:
 

@@ -67,17 +67,16 @@ if __name__ == '__main__':
     # Init action_net
     model = Model(actions, sample_duration, sample_size)
     model.load_part_model()
-    if torch.cuda.device_count() > 1:
-        print('Using {} GPUs!'.format(torch.cuda.device_count()))
-        model = nn.DataParallel(model)
 
-    model.to(device)
+    model.act_net = nn.DataParallel(model.act_net)
+    model.act_net = model.act_net.to(device)
+    model = model.to(device)
+
+
     vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train')
 
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
                                               shuffle=True)    # reset learning rate
-
-
     # clips, h, w, gt_tubes, gt_rois, n_actions = data[14]
     # clips, h, w, gt_tubes, n_actions = data[1451]
     # for i in range(200):
