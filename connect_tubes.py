@@ -116,7 +116,7 @@ def tubes_overlaps(tubes, gt_tube):
     K = gt_tube.size(1)
 
     gt_tube = gt_tube[:,:,:6]
-    tubes = tubes[:,1:7]
+
     tubes = tubes.view(1,N,6).expand(batch_size, N, 6).contiguous()
 
     gt_tube_x = (gt_tube[:, :, 3] - gt_tube[:, :, 0] + 1)

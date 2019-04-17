@@ -34,7 +34,7 @@ class Calculator(Function):
         final_poss   = torch.Tensor().int().cuda()
 
         for indx in range(1,N):
-            print(indx)
+            # print(indx)
             # first find number of combinations
             next_pos_max_size = array_size * K + K
             next_pos = pos.new(next_pos_max_size, N, 2).zero_().view(-1) -1
@@ -42,7 +42,13 @@ class Calculator(Function):
             next_actioness = actioness.new(next_pos_max_size).zero_()
             next_overlaps_scr = overlaps_scr.new(next_pos_max_size).zero_()
             f_scores = actioness.new(next_pos_max_size).zero_()
+
             # print('----',indx,'----')
+            # if indx == 22:
+            #     print('pos :',pos.cpu().numpy())
+            #     print('overlaps[22] :',overlaps[21].detach().cpu().numpy())
+            #     print('scores :', scores.detach().cpu().numpy())
+
             # print(array_size)
             # print('pos.shpae :',pos.shape, ' pos.type()',pos.type() )
             # print('pos_indices.shape :',pos_indices.shape, ' pos_indices.type() :',pos_indices.type())
@@ -65,7 +71,6 @@ class Calculator(Function):
                              next_overlaps_scr, f_scores)
             # print('vgike...')
             next_pos = next_pos.view(next_pos_max_size, N, 2)
-
             # print('overlaps[indx] :',overlaps[indx-1].cpu().numpy())
             # if indx== 3:
             #     for i in range(final_poss.size(0)):
@@ -85,6 +90,8 @@ class Calculator(Function):
                         next_pos[i,j,1] = pos[z,j,1]
                     next_pos[i,next_pos_indices[i],0] = indx
                     next_pos[i,next_pos_indices[i],1] = i % K
+
+
 
             over_thresh_idx = next_pos_indices.gt(-1).nonzero().squeeze()
 
@@ -125,33 +132,33 @@ class Calculator(Function):
             overlaps_scr =  torch.cat((overlaps_scr, torch.zeros((K)).type_as(overlaps_scr)),dim=0)
             array_size = array_size + K
 
-            # for i in range(next_pos_indices.size(0)):
             #     print('i :',i,' next_pos_indices[i] :',next_pos_indices[i].item(), end='')
             #     for j in range(next_pos_indices[i]+1):
             #         print(' ',next_pos[i,j,0].item(),' ',next_pos[i,j,1].item(),' | ',end='')
             #     print('')
-        print('New loopa...\n')
+
+
+        # print('next_pos_indices :',next_pos[:10].detach().cpu().numpy())
+        # print('pos[:10].detach().cpu().numpy() :',pos[:10].detach().cpu().numpy())
 
         # lens = torch.zeros(final_scores.size(0))
         # for i in range(final_scores.size(0)):
         #     for j in range(N):
+        #         lens[i]+=1
         #         if final_poss[i,j,0] == -1:
-        #             lens[i]=j
         #             break
         
         # _, indices = torch.sort(lens)
-        # for i in indices:
+        
+        # for i in range(final_poss.size(0)):
         # # for i in range(final_scores.size(0)):
         #     # print('i :',i.item(),' score ',final_scores[i].item(),' $$ ', end='')
         #     print('i :',i,' score ',final_scores[i].item(),' $$ ', end='')
         #     for j in range(N):
-        #         if final_poss[i,j,0] == -1:
-        #             break
         #         # if (final_poss[i,0,0] == 0 and final_poss[i,0,0] == 0) and final_scores[i] == 2.0:
         #         print(' ',final_poss[i,j,0].item(),' ',final_poss[i,j,1].item(),'({0:.2f}) | '.format(scores[final_poss[i,j,0],final_poss[i,j,1]]),end='')
         #     print('')
-
-        exit(-1)
+        # print('lens.shape :',lens.shape, ' indices.shape :',indices.shape, ' final_poss.shape :',final_poss.shape)
 
 
         return final_scores, final_poss
@@ -159,13 +166,13 @@ class Calculator(Function):
     def update_scores(self, final_scores, final_poss, f_scores, pos, pos_indices, actioness, \
                       overlaps_scr):
 
-        print('Updating thresh')
+        # print('Updating thresh')
         # self.thresh = self.thresh + 
         ## first update next loop
         _, indices = torch.sort(f_scores,descending=True)
         # print('f_scores :',f_scores.cpu().numpy())
         if self.thresh == f_scores[indices[self.k]].item():
-            print('f_scores[:self.k] :',f_scores[:self.k].cpu().numpy())
+            # print('f_scores[:self.k] :',f_scores[:self.k].cpu().numpy())
             self.thresh = self.thresh + 0.001
         else:
             self.thresh = f_scores[indices[self.k]].item()

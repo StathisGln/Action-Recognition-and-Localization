@@ -160,14 +160,12 @@ class Model(nn.Module):
                 rpn_loss_cls_16_[step] = rpn_loss_cls_16.mean().unsqueeze(0)
                 rpn_loss_bbox_16_[step] = rpn_loss_bbox_16.mean().unsqueeze(0)
 
-        ########################################################
-        #          Calculate overlaps and connections          #
-        ########################################################
+        #######################################################################
+        #          Calculate overlaps and candidate tube-connections          #
+        #######################################################################
 
-        # for i in range(n_clips-1):
         if self.training :
             limit = int(rois_per_image/2)
-            # overlaps_scores = torch.zeros(n_clips-1, 12 , 12 )
         else:
             limit = rois_per_image
 
@@ -198,8 +196,6 @@ class Model(nn.Module):
             rois_next  = rois_next.permute(1,0,2)
             ## TODO add clip
 
-            # 3 if self.training remove predicted sgr and replace with gt_rois
-
             if self.training:
 
                 boxes_ = boxes[ i * int(self.sample_duration/2): i * int(self.sample_duration/2)+self.sample_duration].permute(1,0,2)
@@ -226,61 +222,61 @@ class Model(nn.Module):
 
         if self.training:
             actioness_ = actioness_score[:,:int(rois_per_image/2)].contiguous()
-            final_scores, final_poss = self.calc(overlaps_scores.cuda(), actioness_score.cuda(),
-                                                 torch.Tensor([n_clips]),torch.Tensor([rois_per_image/2]))
-        exit(-1)
-        # print('overlaps_scores :',overlaps_scores.cpu().numpy())
-        # print('final_scores.shape :',final_scores.shape)
-        # print('final_poss.shape:',final_poss.shape)
-        lens = torch.zeros(final_poss.size(0))
-        for i in range(final_poss.size(0)):
-            for j in range(n_clips):
-                lens[i] += 1
-                if final_poss[i][j][0] == -1:
-                    break
-        print('lens :',lens)
-        exit(-1)
-        for i in range(final_poss.size(0)):
-            print('i -> ',i)
-            for j in range(n_clips):
-                if final_poss[i][j][0] == -1:
-                    break
-                print(' ', final_poss[i][j][0].item(),' ',final_poss[i][j][1].item(),' |', end='')
-            print('')
-        exit(-1)
-        ###########################################p####
+
+        final_scores, final_tubes = self.calc(overlaps_scores.cuda(), actioness_score.cuda(),
+                                             torch.Tensor([n_clips]),torch.Tensor([rois_per_image/2]))
+
+
+        if self.training:
+            _indx = final_scores.ne(2).nonzero()
+            if _indx.nelement() != 0:
+                _indx = _indx.view(-1)
+                
+                final_tubes = final_tubes[_indx]
+                final_scores = final_scores[_indx]
+                _,_indx  = torch.sort(final_scores)
+                bg_tubes_t = final_tubes[_indx[:10]]       ## TODO find best number
+                # bg_tubes = final_tubes[_indx[:10]].cpu().tolist()       ## TODO find best number
+                bg_tubes =  [[] for i in range( bg_tubes_t.size(1))]
+
+                for i in range(bg_tubes_t.size(0)):
+                    for j in range(n_clips):
+                        if bg_tubes_t[i,j,0] == -1:
+                            break
+                        bg_tubes[i] += [(bg_tubes_t[i,j,0].tolist(), bg_tubes_t[i,j,1].tolist())]
+                bg_tubes = [x for x in bg_tubes if x != []] # remove empty lists
+                bg_lbl = torch.zeros((len(bg_tubes))).type_as(f_gt_tubes)
+
+                # for i in range(bg_tubes_t.size(0)):
+                #     print(bg_tubes[i])
+                # print('bg_tubes_t :',bg_tubes_t)
+                # exit(-1)
+            else:
+                print('only gt')
+                bg_lbl = torch.Tensor([])
+                bg_tubes =  []
+        ###############################################
         #          Choose Tubes for RCNN\TCN          #
         ###############################################
-        # print('f_gt_tubes :',f_gt_tubes)
-        # print('f_gt_tubes.shape :',f_gt_tubes.shape)
+ 
         if self.training:
 
             f_rpn_loss_cls = rpn_loss_cls_.mean().cuda()
             f_rpn_loss_bbox = rpn_loss_bbox_.mean().cuda()
             f_act_loss_bbox = act_loss_bbox_.mean().cuda()
 
-            ## first get video tube
-            # print('boxes.shape :',boxes.shape )
-            video_tubes = create_video_tube(boxes.permute(1,0,2).unsqueeze(0).type_as(clips))
-            # print('video_tubes :',video_tubes)
-            # print('video_tubes.shape :',video_tubes.shape)
-
             # get gt tubes and feats
-            gt_tubes_feats,gt_tubes_list = get_gt_tubes_feats_label(f_tubes, p_tubes, features, tubes_labels, f_gt_tubes)
-            bg_tubes = get_tubes_feats_label(f_tubes, p_tubes, features, tubes_labels, video_tubes.cpu())
+            gt_tubes_feats,gt_tubes_list = get_gt_tubes_feats_label(None, p_tubes, features, tubes_labels, f_gt_tubes)
 
             gt_tubes_list = [x for x in gt_tubes_list if x != []]
             gt_lbl = torch.zeros(len(gt_tubes_list)).type_as(f_gt_tubes)
         
             for i in torch.arange(len(gt_tubes_list)).long():
                 gt_lbl[i] = f_gt_tubes[gt_tubes_list[i][0][0],i,6]
-            bg_lbl = torch.zeros((len(bg_tubes))).type_as(f_gt_tubes)
-            
 
             ## concate fb, bg tubes
-            f_tubes = gt_tubes_list ## + bg_tubes
-            # target_lbl = torch.cat((gt_lbl,bg_lbl),0)
-            target_lbl = gt_lbl
+            f_tubes = gt_tubes_list +  bg_tubes
+            target_lbl = torch.cat( (gt_lbl, bg_lbl))
 
         ##############################################
         max_seq = reduce(lambda x, y: y if len(y) > len(x) else x, f_tubes)
@@ -298,8 +294,7 @@ class Model(nn.Module):
             feats = torch.Tensor(len(seq),self.p_feat_size)
             for j in range(len(seq)):
                 feats[j] = features[seq[j][0],seq[j][1]].mean(1)
-
-                tmp_tube[j] = p_tubes[seq[j]][1:7]
+                tmp_tube[j] = p_tubes[seq[j]]
             prob_out[i] = self.act_rnn(feats.cuda())
             if prob_out[i,0] != prob_out[i,0]:
                 print('tmp_tube :',tmp_tube, ' prob_out :', prob_out ,' feats :',feats.cpu().numpy(), ' numpy(), feats.shape  :,', feats.shape ,' target_lbl :',target_lbl, \
@@ -319,9 +314,9 @@ class Model(nn.Module):
             cls_loss = F.cross_entropy(prob_out.cpu(), target_lbl.long()).cuda()
 
         if self.training:
-            return final_video_tubes, bbox_pred,  prob_out, f_rpn_loss_cls, f_rpn_loss_bbox, f_act_loss_bbox, cls_loss, 
+            return final_video_tubes, None,  prob_out, f_rpn_loss_cls, f_rpn_loss_bbox, f_act_loss_bbox, cls_loss, 
         else:
-            return final_video_tubes, bbox_pred, prob_out
+            return final_video_tubes, None, prob_out
 
     def deactivate_action_net_grad(self):
 
