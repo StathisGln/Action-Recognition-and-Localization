@@ -65,12 +65,14 @@ class Model(nn.Module):
 
         ## define a dataloader for the whole video
 
+        if self.training :
+            self.calc.training = True
         self.act_net.module.reg_layer.eval()
         boxes = boxes[:num_frames,:num_actions]
         clips = clips[:num_frames]
 
-        batch_size = 2 # 
-        # batch_size = 16 # 
+        # batch_size = 2 # 
+        batch_size = 16 # 
 
         num_images = 1
         rois_per_image = int(cfg.TRAIN.BATCH_SIZE / num_images) *2 if self.training else 10 *2
@@ -202,19 +204,21 @@ class Model(nn.Module):
                 boxes_n = boxes[ (i+1) * int(self.sample_duration/2): (i+1) * int(self.sample_duration/2)+self.sample_duration].permute(1,0,2)
 
                 for t in range(f_gt_tubes.size(1)):
+
                     # for curr tensor
                     overlap = bbox_overlaps_batch_3d(p_tubes[i,:limit], f_gt_tubes[i,t].unsqueeze(0).unsqueeze(0))
                     overlap_ind = overlap.eq(1.).nonzero()
+
                     if overlap_ind.nelement() != 0:
                         overlap_ind = overlap_ind[:,1].view(-1)
-                    rois_curr[overlap_ind] = boxes_[t,:,:4].float()
+                        rois_curr[overlap_ind] = boxes_[t,:,:4].float().unsqueeze(0)
 
                     # for next tensor
                     overlap = bbox_overlaps_batch_3d(p_tubes[(i+1),:limit], f_gt_tubes[(i+1),t].unsqueeze(0).unsqueeze(0))
                     overlap_ind = overlap.eq(1.).nonzero()
                     if overlap_ind.nelement() != 0:
                         overlap_ind = overlap_ind[:,1].view(-1)
-                    rois_next[overlap_ind] = boxes_n[t,:,:4].float()
+                        rois_next[overlap_ind] = boxes_n[t,:,:4].float()
 
             # 4 calculate overlaps
             overlaps_scores[i]  = bbox_overlaps_connect(rois_curr, rois_next,
@@ -235,9 +239,10 @@ class Model(nn.Module):
                 final_tubes = final_tubes[_indx]
                 final_scores = final_scores[_indx]
                 _,_indx  = torch.sort(final_scores)
-                bg_tubes_t = final_tubes[_indx[:10]]       ## TODO find best number
+                bg_tubes_t = final_tubes[_indx[:10]].contiguous() ## TODO find best number
+                print('bg_tubes_t.shape :',bg_tubes_t.shape)
                 # bg_tubes = final_tubes[_indx[:10]].cpu().tolist()       ## TODO find best number
-                bg_tubes =  [[] for i in range( bg_tubes_t.size(1))]
+                bg_tubes =  [[] for i in range( bg_tubes_t.size(0))]
 
                 for i in range(bg_tubes_t.size(0)):
                     for j in range(n_clips):
@@ -287,22 +292,27 @@ class Model(nn.Module):
         final_video_tubes = torch.zeros(len(f_tubes),6).cuda()
         prob_out = torch.zeros(len(f_tubes), self.n_classes).cuda()
 
+        f_features = torch.zeros(len(f_tubes), max_length, self.p_feat_size, self.sample_duration)
+        final_tubes = torch.zeros(len(f_tubes), max_length, 6) - 1
+
         for i in range(len(f_tubes)):
 
             seq = f_tubes[i]
             tmp_tube = torch.Tensor(len(seq),6)
             feats = torch.Tensor(len(seq),self.p_feat_size)
             for j in range(len(seq)):
-                feats[j] = features[seq[j][0],seq[j][1]].mean(1)
-                tmp_tube[j] = p_tubes[seq[j]]
-            prob_out[i] = self.act_rnn(feats.cuda())
-            if prob_out[i,0] != prob_out[i,0]:
-                print('tmp_tube :',tmp_tube, ' prob_out :', prob_out ,' feats :',feats.cpu().numpy(), ' numpy(), feats.shape  :,', feats.shape ,' target_lbl :',target_lbl, \
-                      ' \ntmp_tube :',tmp_tube, )
-                exit(-1)
+                # feats[j] = features[seq[j][0],seq[j][1]].mean(1)
+                f_features[i,j] = features[seq[j][0],seq[j][1]]
+                final_tubes[i,j] = p_tubes[seq[j]]
+                # tmp_tube[j] = p_tubes[seq[j]]
+            # prob_out[i] = self.act_rnn(feats.cuda())
+            # if prob_out[i,0] != prob_out[i,0]:
+                # print('tmp_tube :',tmp_tube, ' prob_out :', prob_out ,' feats :',feats.cpu().numpy(), ' numpy(), feats.shape  :,', feats.shape ,' target_lbl :',target_lbl, \
+                #       ' \ntmp_tube :',tmp_tube, )
+                # exit(-1)
 
             final_video_tubes[i] = create_tube_from_tubes(tmp_tube).type_as(boxes)
-        
+
         # ##########################################
         # #           Time for Linear Loss         #
         # ##########################################
@@ -313,10 +323,8 @@ class Model(nn.Module):
         if self.training:
             cls_loss = F.cross_entropy(prob_out.cpu(), target_lbl.long()).cuda()
 
-        if self.training:
-            return final_video_tubes, None,  prob_out, f_rpn_loss_cls, f_rpn_loss_bbox, f_act_loss_bbox, cls_loss, 
-        else:
-            return final_video_tubes, None, prob_out
+        # return final_video_tubes, None,  prob_out, f_rpn_loss_cls, f_rpn_loss_bbox, f_act_loss_bbox, cls_loss, 
+        return final_video_tubes, f_features,  final_tubes, target_lbl
 
     def deactivate_action_net_grad(self):
 
