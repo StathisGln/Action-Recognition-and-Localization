@@ -139,29 +139,6 @@ class Calculator(Function):
             overlaps_scr =  torch.cat((overlaps_scr, torch.zeros((K)).type_as(overlaps_scr)),dim=0)
             array_size = array_size + K
 
-        # print('next_pos_indices :',next_pos[:10].detach().cpu().numpy())
-        # print('pos[:10].detach().cpu().numpy() :',pos[:10].detach().cpu().numpy())
-
-        # lens = torch.zeros(final_scores.size(0))
-        # for i in range(final_scores.size(0)):
-        #     for j in range(N):
-        #         lens[i]+=1
-        #         if final_poss[i,j,0] == -1:
-        #             break
-        
-        # _, indices = torch.sort(lens)
-        
-        # for i in range(final_poss.size(0)):
-        # # for i in range(final_scores.size(0)):
-        #     # print('i :',i.item(),' score ',final_scores[i].item(),' $$ ', end='')
-        #     print('i :',i,' score ',final_scores[i].item(),' $$ ', end='')
-        #     for j in range(N):
-        #         # if (final_poss[i,0,0] == 0 and final_poss[i,0,0] == 0) and final_scores[i] == 2.0:
-        #         print(' ',final_poss[i,j,0].item(),' ',final_poss[i,j,1].item(),'({0:.2f}) | '.format(scores[final_poss[i,j,0],final_poss[i,j,1]]),end='')
-        #     print('')
-        # print('lens.shape :',lens.shape, ' indices.shape :',indices.shape, ' final_poss.shape :',final_poss.shape)
-
-
         return final_scores, final_poss
 
     def update_scores(self, final_scores, final_poss, f_scores, pos, pos_indices, actioness, \
@@ -178,7 +155,7 @@ class Calculator(Function):
             print('f_scores.shape :',f_scores.shape)
             print('indices.shape :',indices.shape)
             print('q :', q,  ' thresh :',self.thresh, ' f_scores[indices[q]] :', f_scores[indices[q]])
-            while f_scores[indices[q]] != self.thresh and q < f_scores.size(0):
+            while f_scores[indices[q]] == self.thresh and q + 1 < f_scores.size(0):
                 print('q :', q,  ' thresh :',self.thresh, ' f_scores[indices[q]] :', f_scores[indices[q]])
                 q += 1
             print('f_scores[indices[q]] :',f_scores[indices[q]], ' self.thresh :',self.thresh)

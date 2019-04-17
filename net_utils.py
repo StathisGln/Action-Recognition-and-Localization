@@ -253,15 +253,16 @@ def from_tubes_to_rois(tubes, sample_duration):
     for b in range(batch_size):
         for i in range(rois_per_image):
             r = tubes[b,i]
-            inds = torch.arange(r[3].long(), (r[6]+1).long())
+            print('r :',r)
+            inds = torch.arange(r[2].long(), (r[5]+1).long())
             print('inds :',inds ,' for r :',r)
             try:
-                rois_f[b,i,inds,1:]= r[[1,2,4,5]]
+                rois_f[b,i,inds,1:]= r[[0,1,3,4]]
             except:
                 print('b :',b)
                 print('i :',i)
-                print('r[3] :',r[3])
-                print('r[6] :',r[6])
+                print('r[3] :',r[2])
+                print('r[6] :',r[5])
                 print('inds :',inds)
                 print('r[[1,2,4,5] :',r)
                 print('rois_f.shape :',rois_f.shape)

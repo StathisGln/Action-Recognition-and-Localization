@@ -81,7 +81,7 @@ if __name__ == '__main__':
     output_folder = '../UCF-101-features'
     for step, data  in enumerate(data_loader):
         
-        if step < 34:
+        if step < 262:
             continue
         # if step > 18:
         #     break
@@ -89,6 +89,8 @@ if __name__ == '__main__':
         vid_id, clips, boxes, n_frames, n_actions, h, w = data
         print('step :', step, 'vid_names[vid_id] :',vid_names[vid_id])
         class_folder = vid_names[vid_id].split('/')[0]
+        if class_folder == 'LongJump' or  class_folder == 'WalkingWithDog':
+            continue
         vid_name =  vid_names[vid_id].split('/')[1]
 
         output_path_class_folder = os.path.join(output_folder, class_folder)
