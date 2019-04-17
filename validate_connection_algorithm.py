@@ -189,8 +189,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(val_loader):
 
-        if step == 2:
-            break
+        # if step == 2:
+        #     break
         print('step :',step)
 
         vid_id, clips, boxes, n_frames, n_actions, h, w  = data
@@ -265,7 +265,6 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
 
         tubes_sum += n_actions.item()
-        print('true_pos :',true_pos)
 
     recall     = float(true_pos)      / (float(true_pos)      + float(false_neg))
     # recall_xy  = float(true_pos_xy)   / (float(true_pos_xy)   + float(false_neg_xy))

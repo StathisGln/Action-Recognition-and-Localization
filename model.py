@@ -314,7 +314,7 @@ class Model(nn.Module):
         final_tubes = torch.zeros(len(f_tubes), max_length, 6) - 1
         final_sgl_fr_pred = torch.zeros(len(f_tubes), max_length, self.sample_duration, 4)
         final_poss = torch.zeros(len(f_tubes), max_length, 2) - 1
-        print('n_clips :',n_clips)
+
         for i in range(len(f_tubes)):
 
             seq = f_tubes[i]
