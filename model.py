@@ -20,7 +20,7 @@ from resize_rpn import resize_boxes, resize_tube
 from ucf_dataset import single_video
 
 from config import cfg
-from bbox_transform import bbox_overlaps_connect, bbox_transform_inv, bbox_overlaps_batch_3d
+from bbox_transform import bbox_overlaps_connect, bbox_transform_inv, bbox_overlaps_batch_3d, clip_boxes
 from collections import OrderedDict
 
 # import gc
@@ -95,10 +95,6 @@ class Model(nn.Module):
         p_tubes = torch.zeros(n_clips, rois_per_image,  6) # all the proposed rois
         sgl_rois_preds = torch.zeros(n_clips, self.sample_duration, rois_per_image, 4) 
         actioness_score = torch.zeros(n_clips, rois_per_image)
-        if self.training:
-            overlaps_scores = torch.zeros(n_clips-1, int(rois_per_image/2) , int(rois_per_image/2) )
-        else:
-            overlaps_scores = torch.zeros(n_clips-1, rois_per_image , rois_per_image )
         f_tubes = []
 
         if self.training:
@@ -176,12 +172,18 @@ class Model(nn.Module):
         #          Calculate overlaps and candidate tube-connections          #
         #######################################################################
         if self.training :
-            limit = int(rois_per_image/2)
+            # limit = int(rois_per_image/2)
+            limit = 10
+                    
         else:
             limit = rois_per_image
 
-        for i in range(n_clips-1):
+        overlaps_scores = torch.zeros(n_clips-1, int(rois_per_image/2) , int(rois_per_image/2) )
+        
+        # for i in range(n_clips-1):
+        im_shape = torch.Tensor([self.sample_size,self.sample_size]).unsqueeze(0).expand(self.sample_duration,2)
 
+        for i in range(1):
             # 1 from tubes to rois
             rois_curr = torch.zeros(limit, self.sample_duration, 4).type_as(p_tubes)
             rois_next = torch.zeros(limit, self.sample_duration, 4).type_as(p_tubes)
@@ -192,21 +194,50 @@ class Model(nn.Module):
                 inds = torch.arange(r[2].long(), (r[5]+1).long()) - (i * int( self.sample_duration/2))
                 rois_curr[j,inds]= r[[0,1,3,4]]
 
-                # for gt_boxes
-                r = p_tubes[i,j]
+                # for next_boxes
+                r = p_tubes[i+1,j]
                 inds = torch.arange(r[2].long(), (r[5]+1).long()) - ((i+1)* int(self.sample_duration/2))
                 rois_next[j,inds]= r[[0,1,3,4]]
 
             # 2 transform inv
+            empty_lines_rois_curr  = rois_curr.sum(2).eq(0) # 1 is where there is empty line
+            empty_lines_rois_next  = rois_next.sum(2).eq(0) # 1 is where there is empty line
+
             rois_curr = rois_curr.permute(1,0,2)
             rois_next = rois_next.permute(1,0,2)
+
+            empty_lines_rois_curr = empty_lines_rois_curr.permute(1,0)
+            empty_lines_rois_next = empty_lines_rois_next.permute(1,0)
+
+            ## TODO change only sgl_rois_preds
+            # get  padding boxes lines
             rois_curr = bbox_transform_inv(rois_curr, sgl_rois_preds[i,:,:limit], rois_curr.size(0))
+            rois_curr = clip_boxes(rois_curr, im_shape, rois_curr.size(0))
+
             rois_next = bbox_transform_inv(rois_curr, sgl_rois_preds[i+1,:,:limit], rois_curr.size(0))
+            rois_next = clip_boxes(rois_next, im_shape, rois_next.size(0))
+
+            # rois_curr is frames 
+            for j in range(rois_curr.size(0)):
+
+                poss_ = empty_lines_rois_curr[j].nonzero()
+                if poss_.nelement() == 0:
+                    continue
+                poss_ = poss_.view(-1)
+                rois_curr[j,poss_] = 0 #torch.zeros(4)
+
+            for j in range(rois_next.size(0)):                
+                poss_ = empty_lines_rois_next[j].nonzero()
+                if poss_.nelement() == 0:
+                    continue
+                poss_ = poss_.view(-1)
+                rois_next[j,poss_] = 0 #torch.zeros(4)
 
             rois_curr  = rois_curr.permute(1,0,2)
             rois_next  = rois_next.permute(1,0,2)
             ## TODO add clip
-
+            print('rois_curr.shape :',rois_curr.shape)
+            print('rois_next.shape :',rois_next.shape)
             if self.training:
 
                 boxes_ = boxes[ i * int(self.sample_duration/2): i * int(self.sample_duration/2)+self.sample_duration].permute(1,0,2)
@@ -230,11 +261,12 @@ class Model(nn.Module):
                         rois_next[overlap_ind] = boxes_n[t,:,:4].float()
 
             # 4 calculate overlaps
-            overlaps_scores[i]  = bbox_overlaps_connect(rois_curr, rois_next,
-                                                       self.sample_duration,  int(self.sample_duration/2))
+            ret  = bbox_overlaps_connect(rois_curr, rois_next, \
+                                         self.sample_duration, middle_fr = int(self.sample_duration/2))
+            print('ret.shape :',ret.shape)
 
         if self.training:
-            actioness_ = actioness_score[:,:int(rois_per_image/2)].contiguous()
+            actioness_ = actioness_score[:,:limit].contiguous()
 
         final_scores, final_tubes = self.calc(overlaps_scores.cuda(), actioness_score.cuda(),
                                              torch.Tensor([n_clips]),torch.Tensor([rois_per_image/2]))
@@ -276,7 +308,7 @@ class Model(nn.Module):
                     if final_tubes[i,j,0] == -1:
                         break
                     f_tubes[i] +=[(final_tubes[i,j,0].tolist(), final_tubes[i,j,1].tolist())]
-                       
+        exit(-1)
         ###############################################
         #          Choose Tubes for RCNN\TCN          #
         ###############################################

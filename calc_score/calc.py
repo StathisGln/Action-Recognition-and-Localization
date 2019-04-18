@@ -149,26 +149,21 @@ class Calculator(Function):
         ## first update next loop
         _, indices = torch.sort(f_scores,descending=True)
         # print('f_scores :',f_scores.cpu().numpy())
+        # if we have the same thresh
         if self.thresh == f_scores[indices[self.k]].item():
-            # print('f_scores[:self.k] :',f_scores[:self.k].cpu().numpy())
+
             q = self.k +1
-            print('f_scores.shape :',f_scores.shape)
-            print('indices.shape :',indices.shape)
-            print('q :', q,  ' thresh :',self.thresh, ' f_scores[indices[q]] :', f_scores[indices[q]])
             while f_scores[indices[q]] == self.thresh and q + 1 < f_scores.size(0):
                 print('q :', q,  ' thresh :',self.thresh, ' f_scores[indices[q]] :', f_scores[indices[q]])
                 q += 1
-            print('f_scores[indices[q]] :',f_scores[indices[q]], ' self.thresh :',self.thresh)
-            self.thresh = f_scores[indices[q]]
+            if q + 1 > f_scores.size(0):
+                # extreme case, random pick
+                indices = torch.rand(self.k) * f_scores.size(0)
+                self.thresh = f_scores[indices[q]]
         else:
             self.thresh = f_scores[indices[self.k]].item()
+            indices = indices[:self.k].long()
 
-        indices = indices[:self.k].long()
-        # print('self.thresh :',self.thresh)
-        # print('indices :',indices.shape)
-        # print('indices :',indices[:self.k])
-        # exit(-1)
-        indices = f_scores.ge(self.thresh).nonzero()
         indices = indices.squeeze()
         
         pos = pos[indices].contiguous()
