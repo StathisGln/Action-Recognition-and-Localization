@@ -45,7 +45,6 @@ class _AnchorTargetLayer(nn.Module):
         self._num_anchors = self._anchors.size(0)
 
 
-        # allow boxes to sit over the edge by a small amount
         self._allowed_border = 0  # default is 0
 
     def forward(self, input):
@@ -65,7 +64,6 @@ class _AnchorTargetLayer(nn.Module):
 
         ### Not sure about that
         batch_size = gt_tubes.size(0)
-        # print('rpn_cls_score.shape :',rpn_cls_score.shape)
         time, height, width  = rpn_cls_score.size(2), rpn_cls_score.size(3), rpn_cls_score.size(4)
         feat_time, feat_height, feat_width,  = rpn_cls_score.size(2), rpn_cls_score.size(3), rpn_cls_score.size(4)
 
@@ -80,18 +78,12 @@ class _AnchorTargetLayer(nn.Module):
         self._anchors = self._anchors.type_as(gt_tubes)#.to(dev)
         A = self._num_anchors
         K = shifts.size(0)
-        # print("A {}, K {}".format(A,K))
 
-        # self._anchors = self._anchors.type_as(gt_tubes) # move to specific gpu.
-        # print('self._anchors :',self._anchors)
-        # print('self._anchors.shape :',self._anchors.shape)
         all_anchors = self._anchors.view(1, A, 6) + shifts.view(K, 1, 6)
         all_anchors = all_anchors.view(K * A, 6)
 
-        # print('all_anchors :', all_anchors.shape)
-        # print('all_anchors :',all_anchors)
         total_anchors = int(K * A)
-        # print('total_anchor :',total_anchors)
+
         keep = ((all_anchors[:, 0] >= -self._allowed_border) &
                 (all_anchors[:, 1] >= -self._allowed_border) &
                 (all_anchors[:, 2] >= -self._allowed_border) &
@@ -104,52 +96,26 @@ class _AnchorTargetLayer(nn.Module):
         # keep only inside anchors
         anchors = all_anchors[inds_inside, :].type_as(gt_tubes)
 
-        # for i in anchors.cpu().tolist():
-        #     if i[2] ==0 and i[5] ==15:
-        #         print('epaeee i:',i)
-
         # label: 1 is positive, 0 is negative, -1 is dont care
         labels = gt_tubes.new(batch_size, inds_inside.size(0)).fill_(-1)
 
         bbox_inside_weights = gt_tubes.new(batch_size, inds_inside.size(0)).zero_()
         bbox_outside_weights = gt_tubes.new(batch_size, inds_inside.size(0)).zero_()
-        # print('anchors.shape :',anchors.shape)
+
         overlaps = bbox_overlaps_batch_3d(anchors, gt_tubes)#.to(dev))
-        # print('overlaps.shape :',overlaps.shape)
-        indx = np.where(overlaps.cpu().numpy() > 0.3)
-        # print(indx)
-
-        # print('rois_overlaps.shape :',rois_overlaps.shape)
-
-        ##################################################################
-        # Until now, we have calculate overlaps for gt_tubes and anchors #
-        ##################################################################
-        # print('max(overlaps) :',np.max(overlaps.cpu().numpy(),axis=2))
-        # print('max(overlaps) :',np.max(overlaps.cpu().numpy(),axis=2).shape)
-        # print('max(overlaps) :',np.max(np.max(overlaps.cpu().numpy(),axis=2),axis=1))
-        # print('max(overlaps) :',np.max(np.max(overlaps.cpu().numpy(),axis=2),axis=1))
-
 
         max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
         gt_max_overlaps, _ = torch.max(overlaps, 1)
-
-        # print('max_overlaps.shape :', max_overlaps.shape)
-        # print('max_overlaps :', max_overlaps.cpu().tolist())
-        # print('labels.shape :',labels.shape)
-        # print('labels :',labels)
 
         if not cfg.TRAIN.RPN_CLOBBER_POSITIVES:
             labels[max_overlaps < cfg.TRAIN.RPN_NEGATIVE_OVERLAP] = 0
 
         gt_max_overlaps[gt_max_overlaps==0] = 1e-5
-        # print(gt_max_overlaps.view(batch_size,1,-1))
-        # print('gt_max_overlaps.view(batch_size,1,-1) :',gt_max_overlaps.view(batch_size,1,-1).shape)
-        # print('gt_max_overlaps.view(batch_size,1,-1).expand_as(overlaps).shape :',gt_max_overlaps.view(batch_size,1,-1).expand_as(overlaps).shape)
         keep = torch.sum(overlaps.eq(gt_max_overlaps.view(batch_size,1,-1).expand_as(overlaps)), 2)
 
         if torch.sum(keep) > 0:
             labels[keep>0] = 1
-        # print('cfg.TRAIN.RPN_POSITIVE_OVERLAP :',cfg.TRAIN.RPN_POSITIVE_OVERLAP)
+
         # fg label: above threshold IOU
         labels[max_overlaps >= cfg.TRAIN.RPN_POSITIVE_OVERLAP] = 1
 

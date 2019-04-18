@@ -137,7 +137,6 @@ class ACT_net(nn.Module):
 
         f_rois = torch.cat((rois,rois_16),dim=1)
         rois_s = f_rois[:,:,:7].contiguous()
-        # print('base_feat.shape :',base_feat.shape)
 
         ## regression
         sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(base_feat_1,f_rois[:,:,:7], gt_rois)
@@ -180,14 +179,6 @@ class ACT_net(nn.Module):
             rois_label_16 = rois_label_16.view(batch_size, n_rois, -1)
             f_rois_label = torch.cat((rois_label, rois_label_16),dim=1)
 
-            # # bounding box regression L1 loss
-            # target_score = f_rois_label.gt(0).long()
-
-            # actioness_scr = actioness_scr.view(-1,2)
-            # target_score  = target_score.view(-1)
-
-            # act_score_loss = F.cross_entropy(actioness_scr,target_score)
-            # print('act_score_loss :',act_score_loss)
             act_loss_bbox = _smooth_l1_loss(bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
             act_loss_bbox_16 = _smooth_l1_loss(bbox_pred_16, rois_target_16, rois_inside_ws_16, rois_outside_ws_16)
 

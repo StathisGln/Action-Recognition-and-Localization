@@ -29,15 +29,15 @@ class _Regression_Layer(nn.Module):
 
         self.Conv = nn.Conv2d(self.din, din, 1, stride=1, padding=0, bias=True)
         self.head_to_tail_ = nn.Sequential(
-            nn.Linear(64 *7*  7, 1024),
+            nn.Linear(64 *7*  7, 2048),
             nn.ReLU(True),
-            nn.Dropout(),
-            nn.Linear(1024,4096),
+            nn.Dropout(0.8),
+            nn.Linear(2048,512),
             nn.ReLU(True)
             )
             
         # self.avg_pool = nn.AvgPool2d((7, 7), stride=1)
-        self.bbox_pred = nn.Linear(4096,4)
+        self.bbox_pred = nn.Linear(512,4)
 
         self.roi_align = RoIAlign(self.pooling_size, self.pooling_size, self.spatial_scale)
 
@@ -46,17 +46,38 @@ class _Regression_Layer(nn.Module):
     def forward(self, base_feat, tubes, gt_rois):
 
         batch_size = tubes.size(0)
+        rois_per_image = tubes.size(1)
+
         base_feat = F.normalize(base_feat, p=2, dim=1)
-        offset = torch.arange(0,self.sample_duration)
-        rois = from_tubes_to_rois(tubes, self.sample_duration)
+        
+        rois = torch.zeros(batch_size, rois_per_image, self.sample_duration, 5).type_as(tubes)
+        offset_batch = torch.arange(0,batch_size).type_as(tubes) * self.sample_duration
+        offset = torch.arange(0,self.sample_duration).type_as(tubes)
+        f_offset= offset.unsqueeze(0).expand(batch_size,self.sample_duration) + \
+                  offset_batch.unsqueeze(1).expand(batch_size,self.sample_duration)
+
+        rois[:,:,:,0] = f_offset.unsqueeze(1).expand(batch_size, rois_per_image, self.sample_duration)
+
+        for b in range(batch_size):
+            for i in range(rois_per_image):
+                r = tubes[b,i]
+                inds = torch.arange(r[3].long(), (r[6]+1).long())
+                try:
+                    rois[b,i,inds,1:]= r[[1,2,4,5]]
+                except:
+                    print('b :',b)
+                    print('i :',i)
+                    print('r[3] :',r[3])
+                    print('r[6] :',r[6])
+                    print('inds :',inds)
+                    print('r[[1,2,4,5] :',r)
+                    print('rois_f.shape :',rois.shape)
+                    raise ValueError('A very specific bad thing happened.')
+
+        rois = rois.permute(0,2,1,3).contiguous()
 
         ## modify tubes and rois_label
         if self.training:
-
-            # print('tubes :',tubes.cpu().numpy())
-            # print('tubes.shape :',tubes.shape)
-            # print('gt_rois :',gt_rois.cpu().numpy())
-            # print('gt_rois.shaep :',gt_rois.shape)
 
             rois, labels, \
             bbox_targets, bbox_inside_ws,\
@@ -72,16 +93,12 @@ class _Regression_Layer(nn.Module):
         base_feat = self.roi_align(base_feat, rois.view(-1,5))
 
         conv1_feats = self.Conv(base_feat)
-        print('conv1_feats.shape :',conv1_feats.shape)
         conv1_feats = self.head_to_tail_(conv1_feats.view(conv1_feats.size(0),-1))
-        print('conv1_feats.shape :',conv1_feats.shape)
-        exit(-1)
+
         bbox_pred = self.bbox_pred(conv1_feats) # regression layer
 
         if self.training:
-            # bounding box regression L1 loss
-            # print('bbox_inside_ws :',bbox_inside_ws)
-            # print('bbox_targets :',bbox_targets.cpu().numpy())
+
             rois_loss_bbox = _smooth_l1_loss(bbox_pred, bbox_targets, bbox_inside_ws, bbox_outside_ws)
             return bbox_pred, rois_loss_bbox
 
