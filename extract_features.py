@@ -71,7 +71,7 @@ if __name__ == '__main__':
     model.act_net = model.act_net.to(device)
     model = model.to(device)
 
-    vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train')
+    vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='test')
 
     # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1, num_workers=1, pin_memory=True,
