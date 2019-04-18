@@ -38,6 +38,7 @@ class Calculator(Function):
 
         for indx in range(1,N):
 
+            # print('indx  :',indx )
             # first find number of combinations
             next_pos_max_size = array_size * K + K
             next_pos = pos.new(next_pos_max_size, N, 2).zero_().view(-1) -1
@@ -61,7 +62,7 @@ class Calculator(Function):
                         next_pos[i,j,1] = pos[z,j,1]
                     next_pos[i,next_pos_indices[i],0] = indx
                     next_pos[i,next_pos_indices[i],1] = i % K
-
+            
             # # if training mode, then remove gt tubes in order to find only background tubes
             # if self.training:
             #     over_thresh_idx = f_scores.ne(2).nonzero().squeeze()
@@ -95,7 +96,6 @@ class Calculator(Function):
 
             # regular proc
             over_thresh_idx = next_pos_indices.gt(-1).nonzero().squeeze()
-
             f_poss = next_pos[over_thresh_idx]
             f_scores = f_scores[over_thresh_idx]
             if f_scores.nelement() != 0:
@@ -118,11 +118,13 @@ class Calculator(Function):
                 pos_indices = pos_indices.unsqueeze(0)
                 actioness = actioness.unsqueeze(0)
                 overlaps_scr = overlaps_scr.unsqueeze(0)
+            
             while pos.size(0) > self.update_thresh:
                 final_scores, final_poss, pos, pos_indices, \
                     actioness, overlaps_scr, array_size, f_scores= self.update_scores(final_scores, final_poss, f_scores, pos, \
                                                                                       pos_indices, actioness, overlaps_scr)
                 if self.training and self.thresh >= 2: # means no background
+                    print('epaeeeeeee')
                     return torch.Tensor(), torch.Tensor()
 
 
@@ -146,7 +148,6 @@ class Calculator(Function):
 
         print('Updating thresh ', self.thresh)
         # self.thresh = self.thresh + 
-        ## first update next loop
         _, indices = torch.sort(f_scores,descending=True)
         # print('f_scores :',f_scores.cpu().numpy())
         # if we have the same thresh

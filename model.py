@@ -236,8 +236,7 @@ class Model(nn.Module):
             rois_curr  = rois_curr.permute(1,0,2)
             rois_next  = rois_next.permute(1,0,2)
             ## TODO add clip
-            print('rois_curr.shape :',rois_curr.shape)
-            print('rois_next.shape :',rois_next.shape)
+
             if self.training:
 
                 boxes_ = boxes[ i * int(self.sample_duration/2): i * int(self.sample_duration/2)+self.sample_duration].permute(1,0,2)
@@ -263,14 +262,14 @@ class Model(nn.Module):
             # 4 calculate overlaps
             ret  = bbox_overlaps_connect(rois_curr, rois_next, \
                                          self.sample_duration, middle_fr = int(self.sample_duration/2))
-            print('ret.shape :',ret.shape)
+            # print('ret.shape :',ret.shape)
 
         if self.training:
             actioness_ = actioness_score[:,:limit].contiguous()
 
         final_scores, final_tubes = self.calc(overlaps_scores.cuda(), actioness_score.cuda(),
                                              torch.Tensor([n_clips]),torch.Tensor([rois_per_image/2]))
-
+        print('final_scores.shape :',final_scores.shape)
 
         if self.training:
             _indx = final_scores.ne(2).nonzero()
@@ -281,7 +280,7 @@ class Model(nn.Module):
                 final_scores = final_scores[_indx]
                 _,_indx  = torch.sort(final_scores)
                 bg_tubes_t = final_tubes[_indx[:10]].contiguous() ## TODO find best number
-                print('bg_tubes_t.shape :',bg_tubes_t.shape)
+                # print('bg_tubes_t.shape :',bg_tubes_t.shape)
                 # bg_tubes = final_tubes[_indx[:10]].cpu().tolist()       ## TODO find best number
                 bg_tubes =  [[] for i in range( bg_tubes_t.size(0))]
 
@@ -308,7 +307,7 @@ class Model(nn.Module):
                     if final_tubes[i,j,0] == -1:
                         break
                     f_tubes[i] +=[(final_tubes[i,j,0].tolist(), final_tubes[i,j,1].tolist())]
-        exit(-1)
+
         ###############################################
         #          Choose Tubes for RCNN\TCN          #
         ###############################################
