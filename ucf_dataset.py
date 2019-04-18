@@ -419,6 +419,98 @@ class single_video(data.Dataset):
 
 
 
+class RNN_UCF(data.Dataset):
+
+    def __init__(self, video_path, frames_dur=16, split_txt_path=None, sample_size=112,
+                 spatial_transform=None, temporal_transform=None, json_file=None,
+                 get_loader=get_default_video_loader, mode='train', classes_idx=None):
+
+        self.mode = mode
+        self.data, self.max_sim_actions, max_frames = make_correct_ucf_dataset(
+                    video_path, json_file, split_txt_path, self.mode)
+        self.spatial_transform = spatial_transform
+        self.temporal_transform = temporal_transform
+        self.loader = get_loader()
+        self.sample_duration = frames_dur
+        self.sample_size = sample_size
+        self.json_file = json_file
+        self.classes_idx = classes_idx
+
+    def __getitem__(self, index):
+        """
+        Args:
+            index (int): Index
+        Returns:
+            tuple: (image, target) where target is class_index of the target class.
+        """
+        name = self.data[index]['video_name']   # video path
+        cls  = self.data[index]['class']
+        path = self.data[index]['abs_path']
+        rois = self.data[index]['rois']
+        n_frames = self.data[index]['n_frames']
+
+
+        ## get  random frames from the video 
+        time_index = np.random.randint(
+            0, n_frames - self.sample_duration - 1) + 1
+        # print('times_index :',time_index)
+        # print('n_frames :',n_frames)
+        frame_indices = list(
+            range(time_index, time_index + self.sample_duration))  # get the corresponding frames
+
+        clip = self.loader(path, frame_indices)
+        ## get original height and width
+        w, h = clip[0].size
+        clip = [self.spatial_transform(img) for img in clip]
+        clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
+
+        ## get bboxes and create gt tubes
+        boxes = preprocess_boxes(rois,h, w,self.sample_size)
+        boxes = boxes[:,np.array(frame_indices),:5]
+        rois_sample = boxes.tolist()
+
+        rois_fr = [[z+[j] for j,z in enumerate(rois_sample[i])] for i in range(len(rois_sample))]
+        rois_gp =[[[list(g),i] for i,g in groupby(w, key=lambda x: x[:][4])] for w in rois_fr] # [person, [action, class]
+
+        final_rois_list = []
+        for p in rois_gp: # for each person
+            for r in p:
+                if r[1] > -1 :
+                    final_rois_list.append(r[0])
+
+        num_actions = len(final_rois_list)
+
+        if num_actions == 0:
+            final_rois = torch.zeros(1,self.sample_duration,5)
+            gt_tubes = torch.zeros(1,7)
+        else:
+            final_rois = torch.zeros((num_actions,self.sample_duration,5)) # num_actions x [x1,y1,x2,y2,label]
+            for i in range(num_actions):
+                # for every action:
+                for j in range(len(final_rois_list[i])):
+                    # for every rois
+                    # print('final_rois_list[i][j][:5] :',final_rois_list[i][j][:5])
+                    pos = final_rois_list[i][j][5]
+                    final_rois[i,pos,:]= torch.Tensor(final_rois_list[i][j][:5])
+
+            # # print('final_rois :',final_rois)
+            gt_tubes = create_tube_list(rois_gp,[w,h], self.sample_duration) ## problem when having 2 actions simultaneously
+
+        ret_tubes = torch.zeros(self.max_sim_actions,7)
+        n_acts = gt_tubes.size(0)
+        ret_tubes[:n_acts,:] = gt_tubes
+
+        f_rois = torch.zeros(self.max_sim_actions,self.sample_duration,5)
+        f_rois[:n_acts,:,:] = final_rois[:n_acts]
+
+        im_info = torch.Tensor([self.sample_size, self.sample_size, self.sample_duration])
+
+        return clip,  np.array([h], dtype=np.int64), np.array([w],dtype=np.int64),  ret_tubes, f_rois, np.array([n_acts],dtype=np.int64), np.array([n_frames],dtype=np.int64), im_info
+
+    def __len__(self):
+        return len(self.data)
+
+
 class Video_UCF(data.Dataset):
 
     def __init__(self, video_path, frames_dur=16, split_txt_path=None, sample_size=112,

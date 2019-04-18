@@ -81,16 +81,10 @@ if __name__ == '__main__':
     output_folder = '../UCF-101-features'
     for step, data  in enumerate(data_loader):
         
-        if step < 262:
-            continue
-        # if step > 18:
-        #     break
-
         vid_id, clips, boxes, n_frames, n_actions, h, w = data
         print('step :', step, 'vid_names[vid_id] :',vid_names[vid_id])
         class_folder = vid_names[vid_id].split('/')[0]
-        if class_folder == 'LongJump' or  class_folder == 'WalkingWithDog':
-            continue
+
         vid_name =  vid_names[vid_id].split('/')[1]
 
         output_path_class_folder = os.path.join(output_folder, class_folder)
@@ -109,10 +103,10 @@ if __name__ == '__main__':
 
         video_tubes,  f_features, \
         final_tubes, \
-        target_lbl,  =  model(n_devs, dataset_frames, \
-                              vid_names, clips, vid_id,  \
-                              boxes, \
-                              mode, cls2idx, n_actions,n_frames, h, w)
+        target_lbl, _, _ =  model(n_devs, dataset_frames, \
+                                  vid_names, clips, vid_id,  \
+                                  boxes, \
+                                  mode, cls2idx, n_actions,n_frames, h, w)
         
         torch.save(video_tubes, os.path.join(output_path,'video_tubes.pt'))
         torch.save(f_features,  os.path.join(output_path,'f_features.pt'))
