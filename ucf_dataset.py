@@ -404,13 +404,36 @@ class single_video(data.Dataset):
     def __len__(self):
         return len(self.data)
 
+def find_max_dur_frames(dataset_folder):
 
+    max_n_tubes = -1
+    max_len_tubes = -1
+    classes = next(os.walk(dataset_folder, True))[1]
+    for cl in classes:
+        cl_path = os.path.join(dataset_folder, cl)
+        videos = next(os.walk(cl_path, True))[1]
+
+        for vid in videos:
+            print('vid :',vid)
+            features  = torch.load(os.path.join(cl_path, vid, 'f_features.pt')).cpu()
+            n_tubes = features.size(0)
+            len_tubes = features.size(1)
+            if n_tubes > max_n_tubes:
+                max_n_tubes = n_tubes
+            if len_tubes > max_len_tubes :
+                max_len_tubes = len_tubes
+    print('max_n_tubes :',max_n_tubes)
+    print('max_len_tubes :',max_len_tubes)
+    
 
 class RNN_UCF(data.Dataset):
 
-    def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader):
+    def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader, \
+                 max_n_tubes = 19, max_len_tubes = 73):
 
         self.dataset_folder = dataset_folder
+        self.max_n_tubes = max_n_tubes
+        self.max_len_tubes = max_len_tubes
         self.boxes_file = boxes_file
         self.vid2idx = vid2idx
         self.mode = mode
@@ -425,12 +448,27 @@ class RNN_UCF(data.Dataset):
             tuple: (image, target) where target is class_index of the target class.
         """
         path = self.data[index]['video']   # video path
+        f_features = torch.zeros(self.max_n_tubes,self.max_len_tubes, 256, 16) - 1 
+        len_tubes = torch.zeros(self.max_n_tubes) 
+        f_target_lbl = torch.zeros(self.max_n_tubes) - 1
 
-        f_features  = torch.load(os.path.join(self.dataset_folder,path, 'f_features.pt')).cpu()
+        features     = torch.load(os.path.join(self.dataset_folder,path, 'f_features.pt')).cpu()
+        final_tubes  = torch.load(os.path.join(self.dataset_folder,path, 'final_tubes.pt'))
         target_lbl  = torch.load(os.path.join(self.dataset_folder,path, 'target_lbl.pt')).cpu()
+        feat_len = features.size(1)
 
-        return f_features,  target_lbl,
-        # return clip,  np.array([h], dtype=np.int64), np.array([w],dtype=np.int64),  ret_tubes, f_rois, np.array([n_acts],dtype=np.int64), np.array([n_frames],dtype=np.int64), im_info
+        
+        for b in range(features.size(0)):
+            f_features[b,:feat_len] = features[b]
+            f_target_lbl[b] = target_lbl[b]
+            for j in range(features.size(1)):
+                len_tubes[b] += 1
+                if final_tubes[b,j,0] == -1:
+                    len_tubes[b] -= 1
+                    break
+
+
+        return f_features, len_tubes,  f_target_lbl,
 
     def __len__(self):
         return len(self.data)
@@ -530,60 +568,6 @@ class Video_UCF(data.Dataset):
 
 if __name__ == '__main__':
 
-    dataset_folder = '/gpu-data2/sgal/UCF-101-frames'
-    boxes_file = '/gpu-data/sgal/pyannot.pkl'
+    dataset_folder = '../UCF-101-features'
+    # find_max_dur_frames(dataset_folder)
 
-    data = video_names(dataset_folder=dataset_folder, boxes_file=boxes_file)
-    # ret = data[40]
-    ret = data[500]
-    # # dataset_folder = '/gpu-data/sgal/UCF-101-frames'
-    # boxes_file = '/gpu-data/sgal/pyannot.pkl'
-
-    # sample_size = 112
-    # sample_duration = 16  # len(images)
-
-    # batch_size = 10
-    # n_threads = 0
-
-    # # # get mean
-    # mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
-
-
-    # actions = ['Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
-    #            'Diving','Fencing','FloorGymnastics','GolfSwing','HorseRiding','IceDancing',
-    #            'LongJump','PoleVault','RopeClimbing','SalsaSpin','SkateBoarding','Skiing',
-    #            'Skijet','SoccerJuggling','Surfing','TennisSwing','TrampolineJumping',
-    #            'VolleyballSpiking','WalkingWithDog']
-
-    # cls2idx = {actions[i]: i for i in range(0, len(actions))}
-
-    # spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
-    #                              ToTensor(),
-    #                              Normalize(mean, [1, 1, 1])])
-    # temporal_transform = LoopPadding(sample_duration)
-
-    # # data = Video_UCF(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
-    # #              temporal_transform=temporal_transform, json_file=boxes_file,
-    # #              mode='train', classes_idx=cls2idx)
-    # dataset_folder = '/gpu-data2/sgal/UCF-101-frames'
-    # vid_path = 'PoleVault/v_PoleVault_g06_c02'
-    # prepare_samples(vid_path, boxes_file,16,8)
-    # data = single_video(dataset_folder, vid_path, 16, sample_size, spatial_transform=spatial_transform,
-    #                     temporal_transform=temporal_transform, json_file=boxes_file,
-    #                     mode='train', classes_idx=cls2idx)
-
-    # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
-    #                                           shuffle=False, num_workers=n_threads, pin_memory=True)
-
-    # for step, dt in enumerate(data_loader):
-
-    #      clip,  (h, w),  ret_tubes, f_rois, im_info, n_acts = dt
-    #      print('clip.shape :',clip.shape)
-    #      print('h :',h)
-    #      print('w :',w)
-    #      print('ret_tubes :',ret_tubes)
-    #      print('ret_tubes.shape :',ret_tubes.shape)
-    #      print('f_rois.shape :',f_rois.shape)
-    #      print('n_acts :',n_acts)
-    #      print('im_info.shape :',im_info.shape)
-    #      print('im_info :',im_info)

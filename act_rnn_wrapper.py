@@ -12,7 +12,7 @@ class _RNN_wrapper(nn.Module):
 
         self.act_rnn =  Act_RNN(n_inputs, n_neurons, n_outputs)
         self.n_classes = n_outputs
-    def forward(self, features, target_lbl):
+    def forward(self, features, len_tubes, target_lbl):
 
         batch_size = features.size(0)
         n_tubes = features.size(1)
@@ -20,9 +20,12 @@ class _RNN_wrapper(nn.Module):
 
         for b in range(batch_size):
             for i in range(n_tubes):
-                feat = features[b,i].mean(-1)
+                if len_tubes[b,i] == 0:
+                    continue
+                feat = features[b,i,:len_tubes[b,i]].mean(-1)
                 prob_out[b,i]  = self.act_rnn(feat)
 
         if self.training:
-            cls_loss = F.cross_entropy(prob_out.view(-1,self.n_classes), target_lbl.view(-1).long().cpu())
+            cls_loss = F.cross_entropy(prob_out.view(-1,self.n_classes), target_lbl.view(-1).long().cpu(), ignore_index=-1).cuda()
+
         return cls_loss

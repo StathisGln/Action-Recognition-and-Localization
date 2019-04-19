@@ -50,12 +50,11 @@ if __name__ == '__main__':
     # init data_loaders
     vid_name_loader = RNN_UCF(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='train')
 
-    # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
-    #                                           shuffle=True)    # reset learning rate
+    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
+                                              shuffle=True)    # reset learning rate
 
-    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=0, pin_memory=True,
-                                              # shuffle=True)    # reset learning rate
-                                              shuffle=False)    # reset learning rate
+    # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=0, pin_memory=True,
+    #                                           shuffle=False)    # reset learning rate
     
     lr = 0.1
     lr_decay_step = 5
@@ -81,7 +80,7 @@ if __name__ == '__main__':
 
     ##########################
     
-    epochs = 40
+    epochs = 2
 
     for ep in range(epochs):
 
@@ -96,15 +95,15 @@ if __name__ == '__main__':
 
         for step, data  in enumerate(data_loader):
 
-            if step == 2:
-                exit(-1)
+            # if step == 2:
+            #     break
 
             # print('step :',step)
-            f_features, target_lbl  = data
+            f_features, len_tubes, target_lbl  = data
 
             f_features  = f_features.to(device)
-
-            cls_loss = act_rnn_wrapper(f_features, target_lbl)
+            len_tubes = len_tubes.to(device).long()
+            cls_loss = act_rnn_wrapper(f_features, len_tubes, target_lbl)
 
             loss = cls_loss.mean()
 

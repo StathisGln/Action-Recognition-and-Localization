@@ -411,10 +411,9 @@ class Model(nn.Module):
         if rnn_path != None:
 
             act_rnn = Act_RNN(256,128,self.n_classes)
-            linear = nn.Linear(self.p_feat_size, self.n_classes).cuda()
 
             act_rnn_data = torch.load(rnn_path)
-            act_rnn.load(act_rnn_data)
+            act_rnn.load_state_dict(act_rnn_data)
             self.act_rnn = act_rnn
         else:
             self.act_rnn =Act_RNN(256,128,self.n_classes)
