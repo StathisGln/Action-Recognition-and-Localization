@@ -65,10 +65,9 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         if mode == 1:
             loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + rpn_loss_cls_16.mean() \
                    + rpn_loss_bbox_16.mean() +  act_loss_bbox_16.mean() 
-        # elif mode == 2:
-        #     loss = actioness_loss.mean()
         elif mode == 3:
             loss = sgl_rois_bbox_loss.mean()
+
         elif mode == 4:
             loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean()  + rpn_loss_cls_16.mean() \
                    + rpn_loss_bbox_16.mean()  + sgl_rois_bbox_loss.mean()
