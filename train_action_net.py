@@ -29,7 +29,7 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
     data = Video_UCF(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
                  split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
-    data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*16,
+    data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*8,
                                               shuffle=True, num_workers=32, pin_memory=True)
     # data_loader = torch.utils.data.DataLoader(data, batch_size=2,
     #                                           shuffle=True, num_workers=0, pin_memory=True)
@@ -41,7 +41,7 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
     for step, data  in enumerate(data_loader):
 
         # if step == 2:
-        #     # exit(-1)
+        #     exit(-1)
         #     break
 
         clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
@@ -148,7 +148,7 @@ if __name__ == '__main__':
     act_model.to(device)
 
     lr = 0.1
-    lr_decay_step = 15
+    lr_decay_step = 12
     lr_decay_gamma = 0.1
     
     params = []
@@ -168,8 +168,9 @@ if __name__ == '__main__':
     lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
 
+    epochs = 60
     # epochs = 1
-    epochs = 100
+    
 
     n_devs = torch.cuda.device_count()
     for epoch in range(epochs):
