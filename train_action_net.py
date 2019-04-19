@@ -41,7 +41,7 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
     for step, data  in enumerate(data_loader):
 
         # if step == 2:
-        #     exit(-1)
+        #     # exit(-1)
         #     break
 
         clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
@@ -53,15 +53,14 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         start_fr = torch.zeros(clips_.size(0)).to(device)
         
         inputs = Variable(clips_)
-        tubes,  bbox_pred, _, \
+        tubes, _, \
         rpn_loss_cls,  rpn_loss_bbox, \
-        act_loss_bbox, rpn_loss_cls_16,\
-        rpn_loss_bbox_16, act_loss_bbox_16, rois_label, \
+        rpn_loss_cls_16,\
+        rpn_loss_bbox_16,  rois_label, \
         sgl_rois_bbox_pred, sgl_rois_bbox_loss,  = model(inputs, \
-        # actioness_score, actioness_loss
-                                                im_info_,
-                                                gt_tubes_r_, gt_rois_,
-                                                start_fr)
+                                                         im_info_,
+                                                         gt_tubes_r_, gt_rois_,
+                                                         start_fr)
         if mode == 1:
             loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + rpn_loss_cls_16.mean() \
                    + rpn_loss_bbox_16.mean() +  act_loss_bbox_16.mean() 
@@ -139,6 +138,7 @@ if __name__ == '__main__':
 
     # Init action_net
     act_model = ACT_net(actions, sample_duration)
+
     act_model.create_architecture()
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
@@ -148,7 +148,7 @@ if __name__ == '__main__':
     act_model.to(device)
 
     lr = 0.1
-    lr_decay_step = 5
+    lr_decay_step = 15
     lr_decay_gamma = 0.1
     
     params = []
@@ -168,8 +168,8 @@ if __name__ == '__main__':
     lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
 
-    epochs = 40
-    # epochs = 2
+    # epochs = 1
+    epochs = 100
 
     n_devs = torch.cuda.device_count()
     for epoch in range(epochs):
@@ -183,5 +183,5 @@ if __name__ == '__main__':
         act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=4)
 
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_dropout_08_non_normalize.pwf".format(epoch+1))
-    torch.save(act_model.state_dict(), "action_net_model_dropout_08_non_normalize.pwf")
+            torch.save(act_model.state_dict(), "action_net_model_all_layers_r2plus1d.pwf".format(epoch+1))
+    torch.save(act_model.state_dict(), "action_net_model_all_layers_r2plus1d.pwf")
