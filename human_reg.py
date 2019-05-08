@@ -29,15 +29,15 @@ class _Regression_Layer(nn.Module):
 
         self.Conv = nn.Conv2d(self.din, din, 1, stride=1, padding=0, bias=True)
         self.head_to_tail_ = nn.Sequential(
-            nn.Linear(64 *7*  7, 1024),
+            nn.Linear(64 *7*  7, 2048),
             nn.ReLU(True),
-            nn.Dropout(),
-            nn.Linear(1024,4096),
+            nn.Dropout(0.8),
+            nn.Linear(2048,512),
             nn.ReLU(True)
             )
             
         # self.avg_pool = nn.AvgPool2d((7, 7), stride=1)
-        self.bbox_pred = nn.Linear(4096,4)
+        self.bbox_pred = nn.Linear(512,4)
 
         self.roi_align = RoIAlign(self.pooling_size, self.pooling_size, self.spatial_scale)
 
@@ -49,6 +49,7 @@ class _Regression_Layer(nn.Module):
 
         batch_size = tubes.size(0)
         rois_per_image = tubes.size(1)
+
         base_feat = F.normalize(base_feat, p=2, dim=1)
 
         offset = torch.arange(0,self.sample_duration)
@@ -76,7 +77,7 @@ class _Regression_Layer(nn.Module):
                     print('rois_f.shape :',rois.shape)
                     raise ValueError('A very specific bad thing happened.')
 
-        rois = rois.permute(0,2,1,3)
+        rois = rois.permute(0,2,1,3).contiguous()
 
         ## modify tubes and rois_label
         if self.training:

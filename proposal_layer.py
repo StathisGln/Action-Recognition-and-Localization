@@ -38,14 +38,6 @@ class _ProposalLayer(nn.Module):
                                                           ratios=np.array(ratios),
                                                           time_dim=np.array(time_dim))).float()
         self._num_anchors = self._anchors.size(0)
-        # rois blob: holds R regions of interest, each is a 5-tuple
-        # (n, x1, y1, x2, y2) specifying an image batch index n and a
-        # rectangle (x1, y1, x2, y2)
-        # top[0].reshape(1, 5)
-        #
-        # # scores blob: holds scores for R regions of interest
-        # if len(top) > 1:
-        #     top[1].reshape(1, 1, 1, 1)
 
     def forward(self, input):
 
@@ -93,8 +85,7 @@ class _ProposalLayer(nn.Module):
         shifts = torch.from_numpy(np.vstack((shift_x.ravel(), shift_y.ravel(), shift_z.ravel(),
                                              shift_x.ravel(), shift_y.ravel(), shift_z.ravel())).transpose())
         shifts = shifts.contiguous().type_as(scores).float()
-        # print('shifts.shape :',shifts.shape)
-        # print('shift_x {} shift_y {} shift_z {}'.format(shift_x , shift_y ,shift_z ))
+
         A = self._num_anchors
         K = shifts.size(0)
 
@@ -102,26 +93,20 @@ class _ProposalLayer(nn.Module):
 
         anchors = self._anchors.view(1, A, 6) + shifts.view(K, 1, 6)
         anchors = anchors.view(1, K * A, 6)
-        # print('anchors.shape :', anchors.shape)
         anchors = anchors.expand(batch_size, K * A, 6)
 
-        # print('anchors.shape :', anchors.shape)
 
         # Transpose and reshape predicted bbox transformations to get them
         # into the same order as the anchors:
         # print('bbox_frame.shape :', bbox_frame.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
 
         bbox_frame = bbox_frame.permute(0, 2, 3, 4, 1).contiguous()
-        # print('bbox_frame.shape :', bbox_frame.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
         bbox_frame = bbox_frame.view(batch_size, -1, 6)
-        # print('bbox_frame.shape :', bbox_frame.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
 
         # Same story for the scores:
-        # print('scores.shape :', scores.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
         scores = scores.permute(0, 2, 3, 4, 1).contiguous()
-        # print('scores.shape :', scores.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
         scores = scores.view(batch_size, -1)
-        # print('scores.shape :', scores.shape) # 216 * 7 * 7 * 16/8 frames, 216 = 36 (anchors) * 6 (x1,y1,t1,x2,y2,t2)
+
         ###############################
         # Until now, everything is ok #
         ###############################
@@ -129,15 +114,11 @@ class _ProposalLayer(nn.Module):
         we have 16 frames, and 28224 3d anchors for each 16 frames
         """
         # Convert anchors into proposals via bbox transformations
-        # proposals = bbox_frames_transform_inv(anchors, bbox_deltas, batch_size)
         proposals = bbox_transform_inv_3d(anchors, bbox_frame, batch_size) # proposals have 441 * time_dim shape
-        # print('proposals.shape :',proposals.shape)
-        # print('proposals :',proposals)
 
         # 2. clip predicted boxes to image
         ## if any dimension exceeds the dims of the original image, clamp_ them
-        # print('proposals.shape :',proposals.shape)
-        # print('im_info.shape :',im_info.shape)
+
         proposals = clip_boxes_3d(proposals, im_info, batch_size)
         scores_keep = scores
         proposals_keep = proposals
@@ -151,9 +132,6 @@ class _ProposalLayer(nn.Module):
             # # (NOTE: convert min_size to input image scale stored in im_info[2])
             proposals_single = proposals_keep[i]
             scores_single = scores_keep[i]
-            # print('scores_single.shape :',scores_single.shape)
-            # # 4. sort all (proposal, score) pairs by score from highest to lowest
-            # # 5. take top pre_nms_topN (e.g. 6000)
             order_single = order[i]
 
             proposals_single = proposals_single[order_single, :]
@@ -167,8 +145,6 @@ class _ProposalLayer(nn.Module):
             output[i,:num_proposal,1:7] = proposals_single
             output[i,:num_proposal,7] = scores_single.squeeze()
 
-        # print('output.shape :',output.shape)
-        # print('output :',output)
         return output
 
     def backward(self, top, propagate_down, bottom):

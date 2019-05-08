@@ -38,6 +38,8 @@ if __name__ == '__main__':
     n_devs = torch.cuda.device_count()
     sample_size = 112
     sample_duration = 16  # len(images)
+    # sample_duration = 8  # len(images)
+
 
     batch_size = 1
     n_threads = 0

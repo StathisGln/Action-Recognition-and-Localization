@@ -40,9 +40,9 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
     ## 2 rois : 1450
     for step, data  in enumerate(data_loader):
 
-        if step == 2:
-            # exit(-1)
-            break
+        # if step == 2:
+        #     exit(-1)
+        #     break
 
         clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
         clips_ = clips.to(device)
@@ -53,6 +53,7 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         start_fr = torch.zeros(clips_.size(0)).to(device)
         
         inputs = Variable(clips_)
+
         tubes, _, \
         rpn_loss_cls,  rpn_loss_bbox, \
         rpn_loss_cls_16,\
@@ -88,6 +89,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train action_net, regression layer and RNN')
 
     parser.add_argument('--demo', '-d', help='Run just 2 steps for test if everything works fine', action='store_true')
+    # parser.add_argument('--n_1_1', help='Run only part 1.1, training action net only', action='store_true')
+    # parser.add_argument('--n_1_2', help='Run only part 1.2, training only regression layer', action='store_true')
+    # parser.add_argument('--n_2', help='Run only part 2, train only RNN', action='store_true')
+
     args = parser.parse_args()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -161,8 +166,6 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(params)
 
     epochs = 40
-    # epochs = 1
-    
     n_devs = torch.cuda.device_count()
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
