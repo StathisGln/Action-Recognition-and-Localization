@@ -79,13 +79,31 @@ if __name__ == '__main__':
                  split_txt_path=split_txt_path, mode='train', classes_idx=cls2idx)
 
     clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data[14]
+    clips2, h2, w2, gt_tubes_r2, gt_rois2, n_actions2, n_frames2, im_info2 = data[15]
     clips_ = clips.unsqueeze(0).to(device)
     gt_tubes_r_ = gt_tubes_r.unsqueeze(0).to(device)
     gt_rois_ = gt_rois.unsqueeze(0).to(device)
     n_actions_ = torch.from_numpy(n_actions).to(device)
     im_info_ = im_info.unsqueeze(0).to(device)
-    start_fr = torch.zeros((1)).to(device)
+    start_fr = torch.zeros((1,1)).to(device)
 
+    clips_2 = clips2.unsqueeze(0).to(device)
+    gt_tubes_r_2 = gt_tubes_r2.unsqueeze(0).to(device)
+    gt_rois_2 = gt_rois2.unsqueeze(0).to(device)
+    n_actions_2 = torch.from_numpy(n_actions2).to(device)
+    im_info_2 = im_info2.unsqueeze(0).to(device)
+    start_fr_2 = torch.zeros((1,1)).to(device)
+
+    # clips = torch.cat((clips_,clips_2))
+    # gt_tubes_r_ = torch.cat((gt_tubes_r_, gt_tubes_r_2))
+    # gt_rois_ = torch.cat((gt_rois_, gt_rois_2))
+    # n_actions_ = torch.cat((n_actions_, n_actions_2))
+    # start_fr = torch.cat((start_fr,start_fr_2))
+
+    print('gt_tubes_r_.shape :',gt_tubes_r_.shape)
+    print('gt_rois_.shape :',gt_rois_.shape)
+    print('n_actions_.shape :',n_actions_.shape)
+    print('start_fr.shape :',start_fr.shape)
     print('**********Starts**********')
 
     inputs = Variable(clips_)

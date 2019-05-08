@@ -36,8 +36,8 @@ class _ProposalTargetLayer(nn.Module):
         self.BBOX_NORMALIZE_STDS = self.BBOX_NORMALIZE_STDS.type_as(gt_boxes)
         self.BBOX_INSIDE_WEIGHTS = self.BBOX_INSIDE_WEIGHTS.type_as(gt_boxes)
 
-        all_rois = all_rois.view(-1,all_rois.size(2),5)
-        gt_boxes = gt_boxes.view(-1,gt_boxes.size(2),5)
+        all_rois = all_rois.contiguous().view(-1,all_rois.size(2),5)
+        gt_boxes = gt_boxes.contiguous().view(-1,gt_boxes.size(2),5)
 
         gt_boxes_append = gt_boxes.new(gt_boxes.size()).zero_()
         gt_boxes_append[:,:,1:5] = gt_boxes[:,:,:4]
@@ -142,6 +142,15 @@ class _ProposalTargetLayer(nn.Module):
         # Guard against the case when an image has fewer than max_fg_rois_per_image
         # foreground RoIs
         for i in range(batch_size):
+
+            gt_boxes_single = gt_boxes[i]
+            gt_boxes_indexes = gt_boxes_single[..., -2].gt(0).nonzero().view(-1)
+
+            gt_boxes_single = gt_boxes_single[gt_boxes_indexes]
+
+            if gt_boxes_single.byte().any() == 0:
+                continue
+            max_overlaps_single =max_overlaps[i]
 
             fg_inds = torch.nonzero(max_overlaps[i] >= conf.TRAIN.FG_THRESH).view(-1)
             fg_num_rois = fg_inds.numel()
