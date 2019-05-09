@@ -15,7 +15,8 @@ import numpy as np
 import math
 import yaml
 from conf import conf
-from generate_3d_anchors import generate_anchors
+# from generate_3d_anchors import generate_anchors
+from generate_anchors import generate_anchors_all_pyramids
 from bbox_transform import bbox_transform_inv, clip_boxes, clip_boxes_batch
 
 import pdb
@@ -32,19 +33,12 @@ class _ProposalLayer_xy(nn.Module):
         super(_ProposalLayer_xy, self).__init__()
 
         self._feat_stride = feat_stride
-        self._anchors = torch.from_numpy(generate_anchors(scales=np.array(scales), 
-                                                          ratios=np.array(ratios),
-                                                          time_dim=np.array(time_dim))).float()
-        self._num_anchors = self._anchors.size(0)
-
-        # rois blob: holds R regions of interest, each is a 5-tuple
-        # (n, x1, y1, x2, y2) specifying an image batch index n and a
-        # rectangle (x1, y1, x2, y2)
-        # top[0].reshape(1, 5)
-        #
-        # # scores blob: holds scores for R regions of interest
-        # if len(top) > 1:
-        #     top[1].reshape(1, 1, 1, 1)
+        self._anchor_ratios = ratios
+        self._feat_stride = feat_stride
+        self._fpn_scales = np.array(scales)
+        self._fpn_feature_strides = np.array([4, 8, 16, 32, 64])
+        self._fpn_anchor_stride  = 1
+        self._time_dim = time_dim
 
     def forward(self, input):
 
@@ -64,56 +58,32 @@ class _ProposalLayer_xy(nn.Module):
 
         # the first set of _num_anchors channels are bg probs
         # the second set are the fg probs
-
-        scores = input[0][:, self._num_anchors:, :, :]
+        print('self._time_dim :',self._time_dim)
+        scores = input[0][:, :, 1]
         bbox_frame = input[1]
         im_info = input[2]
         cfg_key = input[3]
-        time_dim = input[4]
-
-        batch_size = bbox_frame.size(0)
+        feat_shapes = input[4]        
 
         pre_nms_topN  = conf[cfg_key].RPN_PRE_NMS_TOP_N
         post_nms_topN = conf[cfg_key].RPN_POST_NMS_TOP_N
         nms_thresh    = conf[cfg_key].RPN_NMS_THRESH
         min_size      = conf[cfg_key].RPN_MIN_SIZE
 
+        batch_size = bbox_frame.size(0)
+
         ##################
         # Create anchors #
         ##################
+        anchors = torch.from_numpy(generate_anchors_all_pyramids(self._fpn_scales, self._anchor_ratios, self._time_dim,
+                feat_shapes, self._fpn_feature_strides, self._fpn_anchor_stride)).type_as(scores)
 
-        feat_height,  feat_width= scores.size(2), scores.size(3) # (batch_size, 512/256, 7, 7)
-        shift_x = np.arange(0, feat_width) * self._feat_stride
-        shift_y = np.arange(0, feat_height) * self._feat_stride
-        shift_z = np.arange(0, 1 )
-        shift_x, shift_y, shift_z = np.meshgrid(shift_x, shift_y, shift_z)
-        shifts = torch.from_numpy(np.vstack((shift_x.ravel(), shift_y.ravel(), shift_z.ravel(),
-                                             shift_x.ravel(), shift_y.ravel(), shift_z.ravel())).transpose())
-        shifts = shifts.contiguous().type_as(scores).float()
+        num_anchors = anchors.size(0)
+        anchors = anchors.view(1, num_anchors, 6).expand(batch_size, num_anchors, 6)
 
-        A = self._num_anchors
-        K = shifts.size(0)
-
-        self._anchors = self._anchors.type_as(scores)
-
-        anchors = self._anchors.view(1, A, 6) + shifts.view(K, 1, 6)
-        anchors = anchors.view(1, K * A, 6)
-        anchors = anchors.expand(batch_size, K * A, 6)
-
-        # Transpose and reshape predicted bbox transformations to get them
-        # into the same order as the anchors:
-        bbox_frame = bbox_frame.permute(0, 2, 3, 1).contiguous()
-        bbox_frame = bbox_frame.view(batch_size, -1, 4)
-
-        # Same story for the scores:
-        scores = scores.permute(0, 2, 3, 1).contiguous()
-        scores = scores.view(batch_size, -1)
-
-        """
-        we have 16 frames, and 28224 3d anchors for each 16 frames
-        """
         # Convert anchors into proposals via bbox transformations
-        # proposals = bbox_frames_transform_inv(anchors, bbox_deltas, batch_size)
+        print('anchors.shape :',anchors.shape)
+        print('bbox_frame.shape :',bbox_frame.shape)
         anchors_xy = anchors[:,:,[0,1,3,4]]
         proposals_xy = bbox_transform_inv(anchors_xy, bbox_frame, batch_size) # proposals have 441 * time_dim shape
 

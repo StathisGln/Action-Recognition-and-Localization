@@ -12,6 +12,7 @@ from torch.nn.functional import avg_pool3d
 from torch.autograd import Variable
 
 from resnet_3D import resnet34
+from resnext import resnet101
 from region_net import _RPN 
 from human_reg import _Regression_Layer
 
@@ -40,7 +41,9 @@ class ACT_net(nn.Module):
         self.spatial_scale = 1.0/16
     
         # define rpn
-        self.act_rpn = _RPN(128, sample_duration).cuda()
+        self.act_rpn = _RPN(256, sample_duration).cuda()
+
+        self.maxpool3d = nn.MaxPool3d(1, stride=(1,2,2))
 
         self.act_proposal_target = _ProposalTargetLayer(2).cuda() ## background/ foreground
         self.act_proposal_target_single = _ProposalTargetLayer_single(2) ## background/ foreground for only xy
@@ -56,6 +59,25 @@ class ACT_net(nn.Module):
     def create_architecture(self):
         self._init_modules()
         self._init_weights()
+
+    def _upsample_add(self, x, y):
+        '''Upsample and add two feature maps.
+        Args:
+          x: (Variable) top feature map to be upsampled.
+          y: (Variable) lateral feature map.
+        Returns:
+          (Variable) added feature map.
+        Note in PyTorch, when input size is odd, the upsampled feature map
+        with `F.upsample(..., scale_factor=2, mode='nearest')`
+        maybe not equal to the lateral feature map size.
+        e.g.
+        original input size: [N,_,15,15] ->
+        conv2d feature map size: [N,_,8,8] ->
+        upsampled feature map size: [N,_,16,16]
+        So we choose bilinear upsample which supports arbitrary output sizes.
+        '''
+        _,_,T,H,W = y.size()
+        return F.upsample(x, size=(T,H,W), mode='trilinear', align_corners=False) + y
 
     def forward(self, im_data, im_info, gt_tubes, gt_rois,  start_fr):
 
@@ -74,13 +96,27 @@ class ACT_net(nn.Module):
 
             gt_tubes[:,:,:-1] = gt_tubes[:,:,:-1].clamp_(min=0)
 
+        c1 = self.act_layer0(im_data)
+        c2 = self.act_layer1(c1)
+        c3 = self.act_layer2(c2)
+        c4 = self.act_layer3(c3)
+        c5 = self.act_layer4(c4)
 
-        # feed image data to base model to obtain base feature map
-        base_feat_1 = self.act_base_1(im_data)
-        base_feat   = self.act_base_2(base_feat_1)
+        # Top-down
+        p5 = self.act_toplayer(c5)
+        p4 = self._upsample_add(p5, self.act_latlayer1(c4))
+        p4 = self.act_smooth1(p4)
+        p3 = self._upsample_add(p4, self.act_latlayer2(c3))
+        p3 = self.act_smooth2(p3)
+        p2 = self._upsample_add(p3, self.act_latlayer3(c2))
+        p2 = self.act_smooth3(p2)
+
+        p6 = self.maxpool3d(p5)
+
+        rpn_feature_maps = [p2, p3, p4, p5, p6]
 
         rois, rois_16, rpn_loss_cls, rpn_loss_bbox, \
-            rpn_loss_cls_16, rpn_loss_bbox_16 = self.act_rpn(base_feat, im_info, gt_tubes, None)
+            rpn_loss_cls_16, rpn_loss_bbox_16 = self.act_rpn(rpn_feature_maps, im_info, gt_tubes, None)
 
         n_rois = rois.size(1)
         n_rois_16 = rois_16.size(1)
@@ -182,47 +218,72 @@ class ACT_net(nn.Module):
         normal_init(self.reg_layer.Conv, 0, 0.01, truncated)
         normal_init(self.reg_layer.bbox_pred, 0, 0.01, truncated)
 
+        normal_init(self.act_smooth1, 0, 0.01,  truncated)
+        normal_init(self.act_smooth2, 0, 0.01,  truncated)
+        normal_init(self.act_smooth3, 0, 0.01,  truncated)
+        normal_init(self.act_latlayer1, 0, 0.01,  truncated)
+        normal_init(self.act_latlayer2, 0, 0.01,  truncated)
+        normal_init(self.act_latlayer3, 0, 0.01,  truncated)
+
+
 
     def _init_modules(self):
 
-        resnet_shortcut = 'A'
-        # resnet_shortcut = 'B'
-        
+        # resnet_shortcut = 'A'
+        resnet_shortcut = 'B'
+
         sample_size = 112
 
-        model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
-                         sample_size=sample_size, sample_duration=self.sample_duration,
-                         last_fc=False)
-        # model = resnet101(num_classes=400, shortcut_type=resnet_shortcut,
+        # model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
         #                  sample_size=sample_size, sample_duration=self.sample_duration,
-        #                  )
+        #                  last_fc=False)
+        model = resnet101(num_classes=400, shortcut_type=resnet_shortcut,
+                         sample_size=sample_size, sample_duration=self.sample_duration,
+                         )
 
         model = nn.DataParallel(model, device_ids=None)
-        self.model_path = '../resnet-34-kinetics.pth'
-        # self.model_path = '../resnext-101-kinetics.pth'
+        # self.model_path = '../resnet-34-kinetics.pth'
+        self.model_path = '../resnext-101-kinetics.pth'
         print("Loading pretrained weights from %s" %(self.model_path))
         model_data = torch.load(self.model_path)
 
         model.load_state_dict(model_data['state_dict'])
 
         # Build resnet.
-        self.act_base_1 = nn.Sequential(model.module.conv1, model.module.bn1, model.module.relu,
-          model.module.maxpool,model.module.layer1)
-        self.act_base_2 = nn.Sequential(model.module.layer2)
+        self.act_layer0 = nn.Sequential(model.module.conv1, model.module.bn1, model.module.relu,
+          model.module.maxpool)
+        self.act_layer1 = nn.Sequential(model.module.layer1)
+        self.act_layer2 = nn.Sequential(model.module.layer2)
+        self.act_layer3 = nn.Sequential(model.module.layer3)
+        self.act_layer4 = nn.Sequential(model.module.layer4)
 
-        # self.act_top = nn.Sequential( model.module.layer3, model.module.layer4)
+        # Top layer
+        self.act_toplayer = nn.Conv3d(2048, 256, kernel_size=1, stride=1, padding=0)  # reduce channel
+
+        # Smooth layers
+        self.act_smooth1 = nn.Conv3d(256, 256, kernel_size=3, stride=1, padding=1)
+        self.act_smooth2 = nn.Conv3d(256, 256, kernel_size=3, stride=1, padding=1)
+        self.act_smooth3 = nn.Conv3d(256, 256, kernel_size=3, stride=1, padding=1)
+
+        # Lateral layers
+        self.act_latlayer1 = nn.Conv3d( 1024, 256, kernel_size=1, stride=1, padding=0)
+        self.act_latlayer2 = nn.Conv3d( 512,  256, kernel_size=1, stride=1, padding=0)
+        self.act_latlayer3 = nn.Conv3d( 256,  256, kernel_size=1, stride=1, padding=0)
+
+        # ROI Pool feature downsampling
+        self.act_roi_feat_ds = nn.Conv2d(256, 256, kernel_size=3, stride=2, padding=1)
 
         # Fix blocks
-        for p in self.act_base_1[0].parameters(): p.requires_grad=False
-        for p in self.act_base_1[1].parameters(): p.requires_grad=False
+        for p in self.act_layer0[0].parameters(): p.requires_grad=False
+        for p in self.act_layer0[1].parameters(): p.requires_grad=False
 
         fixed_blocks = 3
-        # if fixed_blocks >= 3:
-        #   for p in self.act_base_2[1].parameters(): p.requires_grad=False
+        if fixed_blocks >= 3:
+          for p in self.act_layer3.parameters(): p.requires_grad=False
         if fixed_blocks >= 2:
-          for p in self.act_base_2[0].parameters(): p.requires_grad=False
+          for p in self.act_layer2.parameters(): p.requires_grad=False
         if fixed_blocks >= 1:
-          for p in self.act_base_1[4].parameters(): p.requires_grad=False
+          for p in self.act_layer1.parameters(): p.requires_grad=False
 
         def set_bn_fix(m):
           classname = m.__class__.__name__
@@ -230,6 +291,9 @@ class ACT_net(nn.Module):
             for p in m.parameters(): p.requires_grad=False
 
     
-        self.act_base_1.apply(set_bn_fix)
-        self.act_base_2.apply(set_bn_fix)
+        self.act_layer0.apply(set_bn_fix)
+        self.act_layer1.apply(set_bn_fix)
+        self.act_layer2.apply(set_bn_fix)
+        self.act_layer3.apply(set_bn_fix)
+        self.act_layer4.apply(set_bn_fix)
 
