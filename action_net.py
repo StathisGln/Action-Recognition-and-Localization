@@ -54,7 +54,7 @@ class ACT_net(nn.Module):
 
         self.avgpool = nn.AvgPool3d((1, 7, 7), stride=1)
 
-        self.reg_layer = _Regression_Layer(64, self.sample_duration).cuda()
+        self.reg_layer = _Regression_Layer(256, self.sample_duration).cuda()
 
     def create_architecture(self):
         self._init_modules()
@@ -77,7 +77,8 @@ class ACT_net(nn.Module):
         So we choose bilinear upsample which supports arbitrary output sizes.
         '''
         _,_,T,H,W = y.size()
-        return F.upsample(x, size=(T,H,W), mode='trilinear', align_corners=False) + y
+        # return F.upsample(x, size=(T,H,W), mode='trilinear', align_corners=False) + y
+        return F.interpolate(x, size=(T,H,W), mode='trilinear', align_corners=False) + y
 
     def forward(self, im_data, im_info, gt_tubes, gt_rois,  start_fr):
 
@@ -165,13 +166,12 @@ class ACT_net(nn.Module):
             rpn_loss_bbox_16 = 0
 
         # do roi align based on predicted rois
-
         f_rois = torch.cat((rois,rois_16),dim=1)
         rois_s = f_rois[:,:,:7].contiguous()
 
 
         # ## regression
-        sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(base_feat_1,f_rois[:,:,:7], gt_rois)
+        sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(p2,f_rois[:,:,:7], gt_rois)
         # sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(pooled_feat_,f_rois[:,:,:7], gt_rois)
 
         if self.reg_layer.training:
@@ -194,7 +194,6 @@ class ACT_net(nn.Module):
             rpn_loss_cls_16, rpn_loss_bbox_16, \
             f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss 
 
-      
         return f_rois,  None, None, None, None, None, \
             None, sgl_rois_bbox_pred, None,
 

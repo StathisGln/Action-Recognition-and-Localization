@@ -196,7 +196,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         start_fr = torch.zeros(clips_.size(0)).to(device)
         # for i in range(2):
         #     print('gt_rois :',gt_rois[i,:n_actions[i]])
-        tubes, bbox_pred, _,_,_,_,_,_,_,_,sgl_rois_bbox_pred,_   = model(clips,
+        tubes, _,_,_,_,_,_,sgl_rois_bbox_pred,_   = model(clips,
                                                                        im_info,
                                                                        None, None,
                                                                        None)
@@ -368,7 +368,7 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    model_data = torch.load('./action_net_model_dropout_08_non_normalize.pwf')
+    model_data = torch.load('./action_net_model_126feats.pwf')
 
     model.load_state_dict(model_data)
     model.eval()

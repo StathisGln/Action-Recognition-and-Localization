@@ -58,7 +58,6 @@ class _ProposalLayer_xy(nn.Module):
 
         # the first set of _num_anchors channels are bg probs
         # the second set are the fg probs
-        print('self._time_dim :',self._time_dim)
         scores = input[0][:, :, 1]
         bbox_frame = input[1]
         im_info = input[2]
@@ -79,11 +78,12 @@ class _ProposalLayer_xy(nn.Module):
                 feat_shapes, self._fpn_feature_strides, self._fpn_anchor_stride)).type_as(scores)
 
         num_anchors = anchors.size(0)
+        anchors[:,2] = anchors[:,2] + anchors[:,5] + 1
+        anchors[:,5] = anchors[:,5] + anchors[:,5] + 1
         anchors = anchors.view(1, num_anchors, 6).expand(batch_size, num_anchors, 6)
 
         # Convert anchors into proposals via bbox transformations
-        print('anchors.shape :',anchors.shape)
-        print('bbox_frame.shape :',bbox_frame.shape)
+
         anchors_xy = anchors[:,:,[0,1,3,4]]
         proposals_xy = bbox_transform_inv(anchors_xy, bbox_frame, batch_size) # proposals have 441 * time_dim shape
 

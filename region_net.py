@@ -56,8 +56,8 @@ class _RPN(nn.Module):
         self.RPN_proposal_16 = _ProposalLayer_xy(self.feat_stride,  self.anchor_scales, self.anchor_ratios, [sample_duration])
 
         # define anchor target layer
-        # self.RPN_anchor_target = _AnchorTargetLayer(self.feat_stride,  self.anchor_scales, self.anchor_ratios, self.anchor_duration)
-        # self.RPN_anchor_16 = _AnchorTargetLayer_xy(self.feat_stride, self.anchor_scales, self.anchor_ratios, [sample_duration])
+        self.RPN_anchor_target = _AnchorTargetLayer(self.feat_stride,  self.anchor_scales, self.anchor_ratios, self.anchor_duration)
+        self.RPN_anchor_16 = _AnchorTargetLayer_xy(self.feat_stride, self.anchor_scales, self.anchor_ratios, [sample_duration])
 
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0
@@ -103,7 +103,6 @@ class _RPN(nn.Module):
         rpn_shapes_16 = []
 
         # for i in range(n_feat_maps):
-        print('n_feat_maps :',n_feat_maps)
         for i in range(n_feat_maps):
             feat_map = rpn_feature_maps[i]
             batch_size = feat_map.size(0)
@@ -126,7 +125,6 @@ class _RPN(nn.Module):
             rpn_cls_16_reshape = self.reshape2d(rpn_cls_16, 2)
             rpn_16_prob_reshape = F.softmax(rpn_cls_16_reshape, 1)
             rpn_16_prob = self.reshape2d(rpn_16_prob_reshape, self.nc_score_16)
-
 
             rpn_shapes.append([rpn_cls_score.size()[2], rpn_cls_score.size()[3],rpn_cls_score.size()[4]])
             rpn_cls_scores.append(rpn_cls_score.permute(0, 2, 3, 4, 1).contiguous().view(batch_size, -1, 2))
@@ -151,13 +149,11 @@ class _RPN(nn.Module):
         # proposal layer
         cfg_key = 'TRAIN' if self.training else 'TEST'
 
-        print('rpn_bbox_16_alls.shape :',rpn_bbox_16_alls.shape)
-        print('rpn_16_prob_alls.shape :',rpn_16_prob_alls.shape)
         rois = self.RPN_proposal((rpn_cls_prob_alls.data, rpn_bbox_pred_alls.data,
                                      im_info, cfg_key,rpn_shapes))
-        print('rois.shape :',rois.shape)
         rois_16 = self.RPN_proposal_16((rpn_16_prob_alls.data, rpn_bbox_16_alls.data,
                                         im_info, cfg_key,rpn_shapes_16))
+
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0
         self.rpn_loss_cls_16 = 0
@@ -179,56 +175,58 @@ class _RPN(nn.Module):
                     gt_boxes_16[dur_16[b,0],dur_16[b,1]] =  gt_boxes[dur_16[b,0],dur_16[b,1]]
 
             ## Regular data
-            rpn_data = self.RPN_anchor_target((rpn_cls_score.data, gt_boxes, im_info, gt_rois, self.sample_duration)) # time_limit = 16
-
-            rpn_cls_score = rpn_cls_score_reshape.permute(0, 2, 3,4, 1).contiguous()
-            rpn_cls_score = rpn_cls_score.view(batch_size, -1, 2) ## exw [1, 441, 2]
+            rpn_data = self.RPN_anchor_target((rpn_cls_score_alls.data, gt_boxes, im_info, rpn_shapes)) # time_limit = 16
 
             rpn_label = rpn_data[0].view(batch_size, -1)
             rpn_keep = Variable(rpn_label.view(-1).ne(-1).nonzero().view(-1))
 
-            rpn_cls_score = torch.index_select(rpn_cls_score.view(-1,2), 0, rpn_keep)
+            rpn_cls_score_alls = torch.index_select(rpn_cls_score_alls.view(-1,2), 0, rpn_keep)
 
             rpn_label = torch.index_select(rpn_label.view(-1), 0, rpn_keep.data)
             rpn_label = Variable(rpn_label.long())
 
-            self.rpn_loss_cls =  F.cross_entropy(rpn_cls_score, rpn_label)
+            self.rpn_loss_cls =  F.cross_entropy(rpn_cls_score_alls, rpn_label)
+
             fg_cnt = torch.sum(rpn_label.data.ne(0))
 
             rpn_bbox_targets, rpn_bbox_inside_weights, rpn_bbox_outside_weights = rpn_data[1:]
             
-            rpn_bbox_inside_weights = Variable(rpn_bbox_inside_weights)
-            rpn_bbox_outside_weights = Variable(rpn_bbox_outside_weights)
+            rpn_bbox_inside_weights = Variable(rpn_bbox_inside_weights.unsqueeze(2) \
+                                               .expand(batch_size, rpn_bbox_inside_weights.size(1), 6))
+            rpn_bbox_outside_weights = Variable(rpn_bbox_outside_weights.unsqueeze(2) \
+                                                .expand(batch_size, rpn_bbox_outside_weights.size(1), 6))
             rpn_bbox_targets = Variable(rpn_bbox_targets)
 
-            self.rpn_loss_box =  _smooth_l1_loss(rpn_bbox_pred, rpn_bbox_targets, rpn_bbox_inside_weights,
-                                                               rpn_bbox_outside_weights, sigma=3, dim=[1,2,3,4])
+            self.rpn_loss_box =  _smooth_l1_loss(rpn_bbox_pred_alls, rpn_bbox_targets, rpn_bbox_inside_weights,
+                                                               rpn_bbox_outside_weights, sigma=3)
 
             ## only 16 frames
-
-            rpn_data_16 = self.RPN_anchor_16((rpn_cls_16.data, gt_boxes_16, im_info, gt_rois, self.sample_duration)) # time_limit = 16
-
-            rpn_cls_16 = rpn_cls_16_reshape.permute(0, 2, 3, 1).contiguous()
-            rpn_cls_16 = rpn_cls_16.view(batch_size, -1, 2) ## exw [1, 441, 2]
+            rpn_data_16 = self.RPN_anchor_16((rpn_16_score_alls.data, gt_boxes_16, im_info, rpn_shapes_16))
 
             rpn_label_16 = rpn_data_16[0].view(batch_size, -1)
+
             rpn_keep_16 = Variable(rpn_label_16.view(-1).ne(-1).nonzero().view(-1))
-            rpn_cls_score_16 = torch.index_select(rpn_cls_16.view(-1,2), 0, rpn_keep_16)
+
+            rpn_16_score_alls = torch.index_select(rpn_16_score_alls.view(-1,2), 0, rpn_keep_16)
 
             rpn_label_16 = torch.index_select(rpn_label_16.view(-1), 0, rpn_keep_16.data)
             rpn_label_16 = Variable(rpn_label_16.long())
 
-            self.rpn_loss_cls_16 =  F.cross_entropy(rpn_cls_score_16, rpn_label_16)
+            self.rpn_loss_cls_16 =  F.cross_entropy(rpn_16_score_alls, rpn_label_16)
+
             fg_cnt_16 = torch.sum(rpn_label_16.data.ne(0))
 
             rpn_bbox_targets_16, rpn_bbox_inside_weights_16, rpn_bbox_outside_weights_16 = rpn_data_16[1:]
             
-            rpn_bbox_inside_weights_16 = Variable(rpn_bbox_inside_weights_16)
-            rpn_bbox_outside_weights_16 = Variable(rpn_bbox_outside_weights_16)
-            rpn_bbox_targets_16 = Variable(rpn_bbox_targets_16)
 
-            self.rpn_loss_box_16 =  _smooth_l1_loss(rpn_bbox_16, rpn_bbox_targets_16, rpn_bbox_inside_weights_16,
-                                                               rpn_bbox_outside_weights_16, sigma=3, dim=[1,2,3])
+            rpn_bbox_inside_weights_16 = Variable(rpn_bbox_inside_weights_16.unsqueeze(2) \
+                                               .expand(batch_size, rpn_bbox_inside_weights_16.size(1), 4))
+            rpn_bbox_outside_weights_16 = Variable(rpn_bbox_outside_weights_16.unsqueeze(2) \
+                                                .expand(batch_size, rpn_bbox_outside_weights_16.size(1), 4))
+            rpn_bbox_targets = Variable(rpn_bbox_targets)
+
+            self.rpn_loss_box_16 =  _smooth_l1_loss(rpn_bbox_16_alls, rpn_bbox_targets_16, rpn_bbox_inside_weights_16,
+                                                               rpn_bbox_outside_weights_16, sigma=3, dim=[1,2])
         return rois, rois_16, self.rpn_loss_cls, self.rpn_loss_box, self.rpn_loss_cls_16, self.rpn_loss_box_16
 
 

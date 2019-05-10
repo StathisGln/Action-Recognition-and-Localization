@@ -15,7 +15,8 @@ import numpy as np
 import numpy.random as npr
 
 from config import cfg
-from generate_3d_anchors import generate_anchors
+# from generate_3d_anchors import generate_anchors
+from generate_anchors import generate_anchors_all_pyramids
 # from bbox_transform import clip_boxes, bbox_overlaps_batch, bbox_overlaps_time, bbox_transform_batch
 from bbox_transform import clip_boxes, bbox_transform_batch_3d, bbox_overlaps_batch_3d
 import pdb
@@ -36,15 +37,14 @@ class _AnchorTargetLayer(nn.Module):
     """
     def __init__(self, feat_stride, scales, ratios, anchor_duration):
         super(_AnchorTargetLayer, self).__init__()
-
+        self._anchor_ratios = ratios
         self._feat_stride = feat_stride
-        self._scales = scales
-        anchor_scales = scales
-        self.anchor_duration = anchor_duration
-        self._anchors = torch.from_numpy(generate_anchors(scales=np.array(anchor_scales), ratios=np.array(ratios), time_dim=anchor_duration)).float()
-        self._num_anchors = self._anchors.size(0)
-
-
+        self._fpn_scales = scales
+        self._fpn_feature_strides = np.array([4, 8, 16, 32, 64])
+        self._fpn_anchor_stride  = 1
+        self._time_dim = anchor_duration
+        
+        # allow boxes to sit over the edge by a small amount
         self._allowed_border = 0  # default is 0
 
     def forward(self, input):
@@ -55,50 +55,36 @@ class _AnchorTargetLayer(nn.Module):
         #   apply predicted bbox deltas at cell i to each of the 9 anchors
         # filter out-of-image anchors
 
-        rpn_cls_score = input[0] ## rpn classification score
+        scores = input[0] ## rpn classification score
         gt_tubes = input[1]      ## gt tube
         im_info = input[2]       ## im_info
+        feat_shapes = input[3]
         # gt_rois = input[3]       ## gt rois for each frame
 
         # map of shape (..., H, W)
 
         ### Not sure about that
+        height, width = 0, 0
         batch_size = gt_tubes.size(0)
-        time, height, width  = rpn_cls_score.size(2), rpn_cls_score.size(3), rpn_cls_score.size(4)
-        feat_time, feat_height, feat_width,  = rpn_cls_score.size(2), rpn_cls_score.size(3), rpn_cls_score.size(4)
 
-        shift_x = np.arange(0, feat_width) * self._feat_stride
-        shift_y = np.arange(0, feat_height) * self._feat_stride
-        shift_z = np.arange(0, feat_time)
-        shift_x, shift_y, shift_z = np.meshgrid(shift_x, shift_y, shift_z)
-        # dev = gt_tubes.device
-        shifts = torch.from_numpy(np.vstack((shift_x.ravel(), shift_y.ravel(), shift_z.ravel(),
-                                             shift_x.ravel(), shift_y.ravel(), shift_z.ravel())).transpose())
-        shifts = shifts.contiguous().type_as(rpn_cls_score).float()#.to(dev)
-        self._anchors = self._anchors.type_as(gt_tubes)#.to(dev)
-        A = self._num_anchors
-        K = shifts.size(0)
+        anchors = torch.from_numpy(generate_anchors_all_pyramids(self._fpn_scales, self._anchor_ratios, self._time_dim,
+                feat_shapes, self._fpn_feature_strides, self._fpn_anchor_stride)).type_as(scores)    
+        total_anchors = anchors.size(0)
 
-        all_anchors = self._anchors.view(1, A, 6) + shifts.view(K, 1, 6)
-        all_anchors = all_anchors.view(K * A, 6)
-
-        total_anchors = int(K * A)
-
-        keep = ((all_anchors[:, 0] >= -self._allowed_border) &
-                (all_anchors[:, 1] >= -self._allowed_border) &
-                (all_anchors[:, 2] >= -self._allowed_border) &
-                (all_anchors[:, 3] < long(im_info[0][1]) + self._allowed_border) &
-                (all_anchors[:, 4] < long(im_info[0][0]) + self._allowed_border) &
-                (all_anchors[:, 5] < long(im_info[0][2]) + self._allowed_border))
+        keep = ((anchors[:, 0] >= -self._allowed_border) &
+                (anchors[:, 1] >= -self._allowed_border) &
+                (anchors[:, 2] >= -self._allowed_border) &
+                (anchors[:, 3] < long(im_info[0][1]) + self._allowed_border) &
+                (anchors[:, 4] < long(im_info[0][0]) + self._allowed_border) &
+                (anchors[:, 5] < long(im_info[0][2]) + self._allowed_border))
 
         inds_inside = torch.nonzero(keep).view(-1)
         
         # keep only inside anchors
-        anchors = all_anchors[inds_inside, :].type_as(gt_tubes)
+        anchors = anchors[inds_inside, :].type_as(gt_tubes)
 
         # label: 1 is positive, 0 is negative, -1 is dont care
         labels = gt_tubes.new(batch_size, inds_inside.size(0)).fill_(-1)
-
         bbox_inside_weights = gt_tubes.new(batch_size, inds_inside.size(0)).zero_()
         bbox_outside_weights = gt_tubes.new(batch_size, inds_inside.size(0)).zero_()
 
@@ -172,37 +158,30 @@ class _AnchorTargetLayer(nn.Module):
 
         bbox_outside_weights[labels == 1] = positive_weights
         bbox_outside_weights[labels == 0] = negative_weights
+
         labels = _unmap(labels, total_anchors, inds_inside, batch_size, fill=-1)
         bbox_targets = _unmap(bbox_targets, total_anchors, inds_inside, batch_size, fill=0)
         bbox_inside_weights = _unmap(bbox_inside_weights, total_anchors, inds_inside, batch_size, fill=0)
         bbox_outside_weights = _unmap(bbox_outside_weights, total_anchors, inds_inside, batch_size, fill=0)
 
         outputs = []
-        # print('labels :',labels)
-        # print('labels.shape :', labels.shape)
-        # print('gt_boxes.shape :', gt_tubes.shape)
-        # print('time :',time)
-        labels = labels.view(batch_size, time,height, width, A).permute(0,4,1,2,3).contiguous()
-        labels = labels.view(batch_size, 1, A * time* height, width)
-        # print('labels.shape :',labels.shape)
+
+        # labels = labels.view(batch_size, time,height, width, A).permute(0,4,1,2,3).contiguous()
+        # labels = labels.view(batch_size, 1, A * time* height, width)
         outputs.append(labels)
 
-        # print('bbox_targets.shape :',bbox_targets.shape)
-
-        bbox_targets = bbox_targets.view(batch_size, time, height, width,  A*6).permute(0,4,1,2,3).contiguous()
-        # print('bbox_targets.shape :',bbox_targets.shape)
+        # bbox_targets = bbox_targets.view(batch_size, time, height, width,  A*6).permute(0,4,1,2,3).contiguous()
         outputs.append(bbox_targets)
 
-        anchors_count = bbox_inside_weights.size(1)
-        bbox_inside_weights = bbox_inside_weights.view(batch_size,anchors_count,1).expand(batch_size, anchors_count, 6)
-
-        bbox_inside_weights = bbox_inside_weights.contiguous().view(batch_size, time,height, width,  A * 6)\
-                            .permute(0,4,1,2,3).contiguous()
+        # anchors_count = bbox_inside_weights.size(1)
+        # bbox_inside_weights = bbox_inside_weights.view(batch_size,anchors_count,1).expand(batch_size, anchors_count, 6)
+        # bbox_inside_weights = bbox_inside_weights.contiguous().view(batch_size, time,height, width,  A * 6)\
+        #                     .permute(0,4,1,2,3).contiguous()
         outputs.append(bbox_inside_weights)
 
-        bbox_outside_weights = bbox_outside_weights.view(batch_size,anchors_count,1).expand(batch_size, anchors_count, 6)
-        bbox_outside_weights = bbox_outside_weights.contiguous().view(batch_size, time,height, width,  A * 6)\
-                            .permute(0,4,1,2,3).contiguous()
+        # bbox_outside_weights = bbox_outside_weights.view(batch_size,anchors_count,1).expand(batch_size, anchors_count, 6)
+        # bbox_outside_weights = bbox_outside_weights.contiguous().view(batch_size, time,height, width,  A * 6)\
+        #                     .permute(0,4,1,2,3).contiguous()
 
         outputs.append(bbox_outside_weights)
 
@@ -232,8 +211,4 @@ def _unmap(data, count, inds, batch_size, fill=0):
 def _compute_targets_batch(ex_rois, gt_rois):
     """Compute bounding-box regression targets for an image."""
 
-    # return bbox_transform_time(ex_rois, gt_rois[:,:, :6])
-    # print('gt_rois[:,:, [0,1,3,4] :',gt_rois[:,:, [0,1,3,4]])
-    # print('ex_rois.shape :',ex_rois.shape)
-    # print('gt_rois.shape :',gt_rois.shape)
     return bbox_transform_batch_3d(ex_rois, gt_rois[:,:, :7].to(ex_rois.device))

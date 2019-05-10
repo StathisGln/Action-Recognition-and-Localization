@@ -85,8 +85,6 @@ class _ProposalLayer(nn.Module):
         anchors = anchors.view(1, num_anchors, 6).expand(batch_size, num_anchors, 6)
 
         # Convert anchors into proposals via bbox transformations
-        print('anchors.shape :',anchors.shape)
-        print('bbox_frame.shape :',bbox_frame.shape)
         proposals = bbox_transform_inv_3d(anchors, bbox_frame, batch_size)
 
         # 2. clip predicted boxes to image
@@ -100,7 +98,7 @@ class _ProposalLayer(nn.Module):
         _, order = torch.sort(scores, 1, True)
         
         output = scores.new(batch_size, post_nms_topN, 8).zero_()
-        # print('output.shape :',output.shape)
+
         for i in range(batch_size):
             # # 3. remove predicted boxes with either height or width < threshold
             # # (NOTE: convert min_size to input image scale stored in im_info[2])

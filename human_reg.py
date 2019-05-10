@@ -29,7 +29,7 @@ class _Regression_Layer(nn.Module):
 
         self.Conv = nn.Conv2d(self.din, din, 1, stride=1, padding=0, bias=True)
         self.head_to_tail_ = nn.Sequential(
-            nn.Linear(64 *7*  7, 2048),
+            nn.Linear(256 *7*  7, 2048),
             nn.ReLU(True),
             nn.Dropout(0.8),
             nn.Linear(2048,512),
@@ -78,7 +78,6 @@ class _Regression_Layer(nn.Module):
                     raise ValueError('A very specific bad thing happened.')
 
         rois = rois.permute(0,2,1,3).contiguous()
-
         ## modify tubes and rois_label
         if self.training:
 
@@ -92,6 +91,7 @@ class _Regression_Layer(nn.Module):
             bbox_outside_ws = Variable(bbox_outside_ws.view(-1, bbox_outside_ws.size(2)))
 
         ## modify feat
+
         base_feat = base_feat.permute(0,2,1,3,4).contiguous().view(-1,base_feat.size(1),base_feat.size(3),base_feat.size(4))
         base_feat = self.roi_align(base_feat, rois.view(-1,5))
 

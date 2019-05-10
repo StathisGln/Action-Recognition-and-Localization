@@ -160,7 +160,8 @@ def generate_anchors_single_pyramid(scales, ratios, dur, shape, feature_stride, 
     # Convert to corner coordinates (x1, y1, x2, y2)
     boxes = np.concatenate([box_centers - 0.5 * box_sizes,
                             box_centers + 0.5 * box_sizes], axis=1)
-    print('boxes.shape :',boxes.shape)
+    boxes[:,5] -= 1
+
     return boxes
 
 
@@ -177,9 +178,7 @@ def generate_anchors_all_pyramids(scales, ratios, durs, feature_shapes, feature_
     # Anchors
     # [anchor_count, (y1, x1, y2, x2)]
     anchors = []
-    print('scales :',scales)
-    print('feature_shapes :',feature_shapes)
-    print('feature_strides :',feature_strides)
+
     for i in range(len(scales)):
         anchors.append(generate_anchors_single_pyramid(scales[i], ratios, durs, feature_shapes[i],
                                         feature_strides[i], anchor_stride))

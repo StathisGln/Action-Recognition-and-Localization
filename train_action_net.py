@@ -63,8 +63,8 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
                                                          gt_tubes_r_, gt_rois_,
                                                          start_fr)
         if mode == 1:
-            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + rpn_loss_cls_16.mean() \
-                   + rpn_loss_bbox_16.mean() +  act_loss_bbox_16.mean() 
+            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + rpn_loss_cls_16.mean() \
+                   + rpn_loss_bbox_16.mean() 
         elif mode == 3:
             loss = sgl_rois_bbox_loss.mean()
 
@@ -79,7 +79,7 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         loss.backward()
         optimizer.step()
 
-    print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
+    print('Train Epoch: {} \tLoss:\t{:.6f}\t lr : {:.6f}'.format(
         epoch+1,loss_temp/(step+1), lr))
 
     return model, loss_temp
@@ -148,7 +148,7 @@ if __name__ == '__main__':
     act_model.to(device)
 
     lr = 0.1
-    lr_decay_step = 15
+    lr_decay_step = 25
     lr_decay_gamma = 0.1
     
     params = []
@@ -165,7 +165,7 @@ if __name__ == '__main__':
     lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
 
-    epochs = 40
+    epochs = 100
     n_devs = torch.cuda.device_count()
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
@@ -175,7 +175,7 @@ if __name__ == '__main__':
             lr *= lr_decay_gamma
             print('adjust learning rate {}...'.format(lr))
 
-        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=4)
+        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=1)
 
         if ( epoch + 1 ) % 5 == 0:
             torch.save(act_model.state_dict(), "action_net_model_126feats.pwf".format(epoch+1))
