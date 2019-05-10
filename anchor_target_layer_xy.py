@@ -16,7 +16,7 @@ import numpy.random as npr
 
 from config import cfg
 # from generate_3d_anchors import generate_anchors
-from generate_anchors import generate_anchors_all_pyramids
+from generate_anchors import generate_anchors_all_pyramids_2d
 
 # from bbox_transform import clip_boxes, bbox_overlaps_batch, bbox_overlaps_time, bbox_transform_batch
 from bbox_transform import clip_boxes, bbox_transform_batch_3d, bbox_overlaps_batch_3d
@@ -65,16 +65,11 @@ class _AnchorTargetLayer_xy(nn.Module):
         # map of shape (..., H, W)
 
         ### Not sure about that
-        # print('$$$$$$$$$$')
         batch_size = gt_tubes.size(0)
 
-        # print('time_limit :',time_limit)
-        # print('time :', time)
-
-        anchors = torch.from_numpy(generate_anchors_all_pyramids(self._fpn_scales, self._anchor_ratios, self._time_dim,
+        anchors = torch.from_numpy(generate_anchors_all_pyramids_2d(self._fpn_scales, self._anchor_ratios, self._time_dim,
                 feat_shapes, self._fpn_feature_strides, self._fpn_anchor_stride)).type_as(scores)    
-        anchors[:,2] = anchors[:,2] + anchors[:,5] + 1
-        anchors[:,5] = anchors[:,5] + anchors[:,5] + 1
+
         total_anchors = anchors.size(0)
 
         keep = ((anchors[:, 0] >= -self._allowed_border) &

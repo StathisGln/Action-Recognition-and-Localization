@@ -16,7 +16,7 @@ import math
 import yaml
 from conf import conf
 # from generate_3d_anchors import generate_anchors
-from generate_anchors import generate_anchors_all_pyramids
+from generate_anchors import generate_anchors_all_pyramids_2d
 from bbox_transform import bbox_transform_inv, clip_boxes, clip_boxes_batch
 
 import pdb
@@ -74,17 +74,16 @@ class _ProposalLayer_xy(nn.Module):
         ##################
         # Create anchors #
         ##################
-        anchors = torch.from_numpy(generate_anchors_all_pyramids(self._fpn_scales, self._anchor_ratios, self._time_dim,
+        anchors = torch.from_numpy(generate_anchors_all_pyramids_2d(self._fpn_scales, self._anchor_ratios, self._time_dim,
                 feat_shapes, self._fpn_feature_strides, self._fpn_anchor_stride)).type_as(scores)
 
         num_anchors = anchors.size(0)
-        anchors[:,2] = anchors[:,2] + anchors[:,5] + 1
-        anchors[:,5] = anchors[:,5] + anchors[:,5] + 1
         anchors = anchors.view(1, num_anchors, 6).expand(batch_size, num_anchors, 6)
 
         # Convert anchors into proposals via bbox transformations
 
         anchors_xy = anchors[:,:,[0,1,3,4]]
+
         proposals_xy = bbox_transform_inv(anchors_xy, bbox_frame, batch_size) # proposals have 441 * time_dim shape
 
         ## if any dimension exceeds the dims of the original image, clamp_ them

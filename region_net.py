@@ -23,7 +23,7 @@ class _RPN(nn.Module):
         
         self.din = din  # get depth of input feature map, e.g., 512
         self.sample_duration =sample_duration # get sample_duration
-        self.anchor_scales = [4, 8, 16, 32, 64]
+        self.anchor_scales = [ 8, 16, 32, 64]
         self.anchor_ratios = [0.5, 1, 2]
         self.feat_stride = [16, ]
         # self.anchor_duration = [16,8,4,3] # add
@@ -104,6 +104,7 @@ class _RPN(nn.Module):
 
         # for i in range(n_feat_maps):
         for i in range(n_feat_maps):
+
             feat_map = rpn_feature_maps[i]
             batch_size = feat_map.size(0)
 
@@ -112,7 +113,7 @@ class _RPN(nn.Module):
             # # ## get classification score for all anchors
             rpn_cls_score = self.RPN_cls_score(rpn_conv1)  # classification layer
             rpn_bbox_pred = self.RPN_bbox_pred(rpn_conv1)  # regression layer
-                        
+
             # 16 frames 
             # rpn_conv1 = rpn_conv1.permute(0,1,3,4,2).mean(4)
             rpn_cls_16    = self.RPN_cls_16(rpn_conv1).squeeze(-3)  # classification layer

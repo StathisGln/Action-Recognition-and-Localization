@@ -104,48 +104,36 @@ def _scale_enum(anchor, scales):
     anchors = _mkanchors(ws, hs, x_ctr, y_ctr)
     return anchors
 
-if __name__ == '__main__':
-    import time
-    t = time.time()
-    a = generate_anchors()
-    print(time.time() - t)
-    print(a)
-    from IPython import embed; embed()
+
 
 def generate_anchors_single_pyramid(scales, ratios, dur, shape, feature_stride, anchor_stride):
     """
     scales: 1D array of anchor sizes in pixels. Example: [32, 64, 128]
     ratios: 1D array of anchor ratios of width/height. Example: [0.5, 1, 2]
-    shape: [time, height, width] spatial shape of the feature map over which
+    shape: [height, width] spatial shape of the feature map over which
             to generate anchors.
     feature_stride: Stride of the feature map relative to the image in pixels.
     anchor_stride: Stride of anchors on the feature map. For example, if the
         value is 2 then generate anchors for every other feature map pixel.
     """
     # Get all combinations of scales and ratios
-    scales, ratios, dur = np.meshgrid(np.array(scales), np.array(ratios), np.array(dur))
-    # scales, ratios = np.meshgrid(np.array(scales), np.array(ratios))
+    scales, ratios = np.meshgrid(np.array(scales), np.array(ratios))
     scales = scales.flatten()
     ratios = ratios.flatten()
-    dur = dur.flatten()
 
     # Enumerate heights and widths from scales and ratios
     heights = scales / np.sqrt(ratios)
     widths = scales * np.sqrt(ratios)
 
     # Enumerate shifts in feature space
-    shifts_z = np.arange(0, shape[0] ) # z dim is time di
     shifts_y = np.arange(0, shape[1], anchor_stride) * feature_stride
     shifts_x = np.arange(0, shape[2], anchor_stride) * feature_stride
-    # shifts_x, shifts_y = np.meshgrid(shifts_x, shifts_y)
-    shifts_x, shifts_y, shifts_z = np.meshgrid(shifts_x, shifts_y, shifts_z)
+    shifts_x, shifts_y = np.meshgrid(shifts_x, shifts_y)
 
     # Enumerate combinations of shifts, widths, and heights
-
-    box_widths, box_centers_x  = np.meshgrid(widths, shifts_x)
+    box_widths, box_centers_x = np.meshgrid(widths, shifts_x)
     box_heights, box_centers_y = np.meshgrid(heights, shifts_y)
-    box_dur, box_centers_z = np.meshgrid(dur, shifts_z)
-    
+
     # # Reshape to get a list of (y, x) and a list of (h, w)
     # box_centers = np.stack(
     #     [box_centers_y, box_centers_x], axis=2).reshape([-1, 2])
@@ -154,16 +142,34 @@ def generate_anchors_single_pyramid(scales, ratios, dur, shape, feature_stride, 
     # NOTE: the original order is  (y, x), we changed it to (x, y) for our code
     # Reshape to get a list of (x, y) and a list of (w, h)
     box_centers = np.stack(
-        [box_centers_x, box_centers_y, box_centers_z], axis=2).reshape([-1, 3])
-    box_sizes = np.stack([box_widths, box_heights, box_dur], axis=2).reshape([-1, 3])
+        [box_centers_x, box_centers_y], axis=2).reshape([-1, 2])
+    box_sizes = np.stack([box_widths, box_heights], axis=2).reshape([-1, 2])
 
     # Convert to corner coordinates (x1, y1, x2, y2)
     boxes = np.concatenate([box_centers - 0.5 * box_sizes,
                             box_centers + 0.5 * box_sizes], axis=1)
-    boxes[:,5] -= 1
+    # time for time domain
+
+    shifts_z = np.arange(0, dur[0])
+    time_ar = np.stack((np.zeros(len(dur)), np.array(dur)-1), axis=1)
+    time_ar = np.repeat(time_ar, len(shifts_z), axis=0)
+
+ 
+    shifts_z, durs = np.meshgrid(shifts_z,dur)
+    durs = durs.flatten()
+    shifts_z = shifts_z.flatten()
+    shifts_z = np.repeat(shifts_z,2, axis=0).reshape(-1,2)
+    
+    time_ar = time_ar + shifts_z
+    num_time = time_ar.shape[0]
+    # concatenate
+    time_ar = np.repeat(time_ar, boxes.shape[0], axis=0)
+
+    boxes = np.repeat(np.array([boxes]),num_time,axis=0).reshape(-1,4)
+    boxes = np.concatenate([boxes,time_ar],axis=1)
+    boxes = boxes[:,[0,1,4,2,3,5]]
 
     return boxes
-
 
 def generate_anchors_all_pyramids(scales, ratios, durs, feature_shapes, feature_strides,
                              anchor_stride):
@@ -180,6 +186,90 @@ def generate_anchors_all_pyramids(scales, ratios, durs, feature_shapes, feature_
     anchors = []
 
     for i in range(len(scales)):
+
         anchors.append(generate_anchors_single_pyramid(scales[i], ratios, durs, feature_shapes[i],
                                         feature_strides[i], anchor_stride))
     return np.concatenate(anchors, axis=0)
+
+def generate_anchors_single_pyramid_2d(scales, ratios, dur, shape, feature_stride, anchor_stride):
+    """
+    scales: 1D array of anchor sizes in pixels. Example: [32, 64, 128]
+    ratios: 1D array of anchor ratios of width/height. Example: [0.5, 1, 2]
+    shape: [height, width] spatial shape of the feature map over which
+            to generate anchors.
+    feature_stride: Stride of the feature map relative to the image in pixels.
+    anchor_stride: Stride of anchors on the feature map. For example, if the
+        value is 2 then generate anchors for every other feature map pixel.
+    """
+    # Get all combinations of scales and ratios
+    scales, ratios = np.meshgrid(np.array(scales), np.array(ratios))
+    scales = scales.flatten()
+    ratios = ratios.flatten()
+
+    # Enumerate heights and widths from scales and ratios
+    heights = scales / np.sqrt(ratios)
+    widths = scales * np.sqrt(ratios)
+
+    # Enumerate shifts in feature space
+    shifts_y = np.arange(0, shape[1], anchor_stride) * feature_stride
+    shifts_x = np.arange(0, shape[2], anchor_stride) * feature_stride
+    shifts_x, shifts_y = np.meshgrid(shifts_x, shifts_y)
+
+    # Enumerate combinations of shifts, widths, and heights
+    box_widths, box_centers_x = np.meshgrid(widths, shifts_x)
+    box_heights, box_centers_y = np.meshgrid(heights, shifts_y)
+
+    # # Reshape to get a list of (y, x) and a list of (h, w)
+    # box_centers = np.stack(
+    #     [box_centers_y, box_centers_x], axis=2).reshape([-1, 2])
+    # box_sizes = np.stack([box_heights, box_widths], axis=2).reshape([-1, 2])
+
+    # NOTE: the original order is  (y, x), we changed it to (x, y) for our code
+    # Reshape to get a list of (x, y) and a list of (w, h)
+    box_centers = np.stack(
+        [box_centers_x, box_centers_y], axis=2).reshape([-1, 2])
+    box_sizes = np.stack([box_widths, box_heights], axis=2).reshape([-1, 2])
+
+    # Convert to corner coordinates (x1, y1, x2, y2)
+    boxes = np.concatenate([box_centers - 0.5 * box_sizes,
+                            box_centers + 0.5 * box_sizes], axis=1)
+
+    return boxes
+
+def generate_anchors_all_pyramids_2d(scales, ratios, durs, feature_shapes, feature_strides,
+                             anchor_stride):
+    """Generate anchors at different levels of a feature pyramid. Each scale
+    is associated with a level of the pyramid, but each ratio is used in
+    all levels of the pyramid.
+    Returns:
+    anchors: [N, (y1, x1, y2, x2)]. All generated anchors in one array. Sorted
+        with the same order of the given scales. So, anchors of scale[0] come
+        first, then anchors of scale[1], and so on.
+    """
+    # Anchors
+    # [anchor_count, (y1, x1, y2, x2)]
+    anchors = []
+
+    for i in range(len(scales)):
+
+        anchors.append(generate_anchors_single_pyramid_2d(scales[i], ratios, durs, feature_shapes[i],
+                                        feature_strides[i], anchor_stride))
+
+    anchors = np.concatenate(anchors, axis=0)
+    num_anchors = anchors.shape[0]
+    
+    anchors = np.concatenate([anchors[:,:2], np.zeros((num_anchors,1)),anchors[:,2:], np.ones((num_anchors,1))*durs[0]-1],axis=1)
+    return anchors
+
+if __name__ == '__main__':
+    import time
+    np.set_printoptions(threshold=np.inf)
+    t = time.time()
+    a = generate_anchors_all_pyramids_2d(scales=[  8, 16, 32, 64, ], ratios = [0.5, 1, 2],  durs = [16,12,8], \
+                                      feature_shapes = [[16, 28, 28], [16, 14, 14], [16, 7, 7], [16, 4, 4], [16, 2, 2]], \
+                                      feature_strides = [ 4,  8, 16, 32, 64],  anchor_stride = 1)
+    # b = generate_anchors(scales = np.array([8,16,32]), ratios= np.array([0.5, 1, 2]))
+    print('a.shape :',a.shape)
+    print('a[-36:] :',a[-36:])
+    # print('b.shape :',b.shape)
+    

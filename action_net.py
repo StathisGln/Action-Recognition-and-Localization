@@ -114,7 +114,7 @@ class ACT_net(nn.Module):
 
         p6 = self.maxpool3d(p5)
 
-        rpn_feature_maps = [p2, p3, p4, p5, p6]
+        rpn_feature_maps = [p2, p3, p4, p5]
 
         rois, rois_16, rpn_loss_cls, rpn_loss_bbox, \
             rpn_loss_cls_16, rpn_loss_bbox_16 = self.act_rpn(rpn_feature_maps, im_info, gt_tubes, None)

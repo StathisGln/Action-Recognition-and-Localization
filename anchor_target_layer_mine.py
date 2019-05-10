@@ -66,7 +66,6 @@ class _AnchorTargetLayer(nn.Module):
         ### Not sure about that
         height, width = 0, 0
         batch_size = gt_tubes.size(0)
-
         anchors = torch.from_numpy(generate_anchors_all_pyramids(self._fpn_scales, self._anchor_ratios, self._time_dim,
                 feat_shapes, self._fpn_feature_strides, self._fpn_anchor_stride)).type_as(scores)    
         total_anchors = anchors.size(0)
@@ -166,23 +165,9 @@ class _AnchorTargetLayer(nn.Module):
 
         outputs = []
 
-        # labels = labels.view(batch_size, time,height, width, A).permute(0,4,1,2,3).contiguous()
-        # labels = labels.view(batch_size, 1, A * time* height, width)
         outputs.append(labels)
-
-        # bbox_targets = bbox_targets.view(batch_size, time, height, width,  A*6).permute(0,4,1,2,3).contiguous()
         outputs.append(bbox_targets)
-
-        # anchors_count = bbox_inside_weights.size(1)
-        # bbox_inside_weights = bbox_inside_weights.view(batch_size,anchors_count,1).expand(batch_size, anchors_count, 6)
-        # bbox_inside_weights = bbox_inside_weights.contiguous().view(batch_size, time,height, width,  A * 6)\
-        #                     .permute(0,4,1,2,3).contiguous()
         outputs.append(bbox_inside_weights)
-
-        # bbox_outside_weights = bbox_outside_weights.view(batch_size,anchors_count,1).expand(batch_size, anchors_count, 6)
-        # bbox_outside_weights = bbox_outside_weights.contiguous().view(batch_size, time,height, width,  A * 6)\
-        #                     .permute(0,4,1,2,3).contiguous()
-
         outputs.append(bbox_outside_weights)
 
         return outputs
