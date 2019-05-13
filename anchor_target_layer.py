@@ -216,4 +216,4 @@ def _unmap(data, count, inds, batch_size, fill=0):
 def _compute_targets_batch(ex_rois, gt_rois):
     """Compute bounding-box regression targets for an image."""
 
-    return bbox_transform_batch(ex_rois, gt_rois[:, :, :4])
+    return bbox_transform_batch_3d(ex_rois, gt_rois[:, :, :4])

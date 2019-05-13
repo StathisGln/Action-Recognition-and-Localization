@@ -78,12 +78,16 @@ def _smooth_l1_loss(bbox_pred, bbox_targets, bbox_inside_weights, bbox_outside_w
     # bbox_targets[nan_values] = 1e-5 ## because nan appears
 
     box_diff = bbox_pred - bbox_targets
+    # print('bbox_pred :',bbox_pred.cpu().detach().numpy())
+    # print('bbox_targets :',bbox_targets.cpu().detach().numpy())
+    # print('box_diff :',box_diff.cpu().detach().numpy())
 
     # print(box_diff.detach().cpu().numpy())
     # nan_values = box_diff != box_diff
     # box_diff[nan_values] = 1e-5 ## because nan appears
 
     in_box_diff = bbox_inside_weights * box_diff
+
     # print('in_box_diff :',in_box_diff)
     abs_in_box_diff = torch.abs(in_box_diff)
     smoothL1_sign = (abs_in_box_diff < 1. / sigma_2).detach().float()

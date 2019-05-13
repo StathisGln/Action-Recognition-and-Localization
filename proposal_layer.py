@@ -62,6 +62,7 @@ class _ProposalLayer(nn.Module):
         # the second set are the fg probs
 
         scores = input[0][:, :, 1]
+
         bbox_frame = input[1]
         im_info = input[2]
         cfg_key = input[3]

@@ -200,6 +200,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                                                        im_info,
                                                                        None, None,
                                                                        None)
+        print('tubes :',tubes.cpu().numpy())
+        exit(-1)
         n_tubes = len(tubes)
         # init tensor for final frames
 

@@ -68,19 +68,11 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         elif mode == 3:
             loss = sgl_rois_bbox_loss.mean()
 
-        # elif mode == 4:
-        #     loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean()  + rpn_loss_cls_16.mean() \
-        #            + rpn_loss_bbox_16.mean()  + sgl_rois_bbox_loss.mean()
         elif mode == 4:
-            loss = rpn_loss_cls.mean()
-
+            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean()  + rpn_loss_cls_16.mean() \
+                   + rpn_loss_bbox_16.mean()  + sgl_rois_bbox_loss.mean()
 
         loss_temp += loss.item()
-
-        # print('rpn_loss_box :',rpn_loss_bbox)
-        # print('rpn_loss_box_16 :',rpn_loss_bbox_16)
-        print('rpn_loss_cls :',rpn_loss_cls)
-        # print('rpn_loss_cls_16 :',rpn_loss_cls_16)
 
         # backw\ard
         optimizer.zero_grad()
@@ -155,11 +147,18 @@ if __name__ == '__main__':
     act_model = nn.DataParallel(act_model)
     act_model.to(device)
 
+
+    model_data = torch.load('./action_net_model_126feats.pwf')
+
+    act_model.load_state_dict(model_data)
+
     lr = 0.1
     lr_decay_step = 25
     lr_decay_gamma = 0.1
     
     params = []
+    for p in act_model.module.parameters() : p.requires_grad=False
+    for p in act_model.module.reg_layer.parameters() : p.requires_grad=True
 
     for key, value in dict(act_model.named_parameters()).items():
         if value.requires_grad:
@@ -173,7 +172,7 @@ if __name__ == '__main__':
     lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
 
-    epochs = 100
+    epochs = 40
     n_devs = torch.cuda.device_count()
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
@@ -183,8 +182,8 @@ if __name__ == '__main__':
             lr *= lr_decay_gamma
             print('adjust learning rate {}...'.format(lr))
 
-        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=4)
+        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=3)
 
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_126feats.pwf".format(epoch+1))
-    torch.save(act_model.state_dict(), "action_net_model_126feats.pwf")
+            torch.save(act_model.state_dict(), "action_net_model_126feats_reg.pwf".format(epoch+1))
+    torch.save(act_model.state_dict(), "action_net_model_126feats_reg.pwf")
