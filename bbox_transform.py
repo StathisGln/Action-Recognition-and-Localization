@@ -35,80 +35,6 @@ def bbox_transform(ex_rois, gt_rois):
 
     return targets
 
-
-# def bbox_transform_time(ex_rois, gt_rois):
-#     '''
-#     ex_rois are the anchors shape [(
-#     gt_rois are the tubes shape [(0->x1),(1->y1),(2->t1),(3->x2),(4->y2),(5->t2)]
-#     '''
-#     if ex_rois.dim() == 2:
-#         print('ex_rois.shape :',ex_rois.shape)
-#         print('gt_rois.shape :',gt_rois.shape)
-
-#         ex_widths = ex_rois[:, 3] - ex_rois[:, 0] + 1.0
-#         ex_heights = ex_rois[:, 4] - ex_rois[:, 1] + 1.0
-#         ex_time = ex_rois[:,5] - ex_rois[:,2] + 1 # for time dim
-
-#         ex_ctr_x = ex_rois[:, 0] + 0.5 * ex_widths
-#         ex_ctr_y = ex_rois[:, 1] + 0.5 * ex_heights
-#         ex_ctr_t = ex_rois[:, 2] + 0.5 * ex_time  # center t
-
-#         ## groundtruth rois
-#         gt_widths = gt_rois[:, :, 3] - gt_rois[:, :, 0] + 1.0
-#         gt_heights = gt_rois[:, :, 4] - gt_rois[:, :, 1] + 1.0
-#         gt_time = gt_rois[:, :, 2] - gt_rois[:, :, 2] + 1.0
-
-#         gt_ctr_x = gt_rois[:, :, 0] + 0.5 * gt_widths
-#         gt_ctr_y = gt_rois[:, :, 1] + 0.5 * gt_heights
-#         gt_ctr_t = gt_rois[:, :, 2] + 0.5 * gt_heights
-
-#         targets_dx = (gt_ctr_x - ex_ctr_x.view(1, -
-#                                                1).expand_as(gt_ctr_x)) / ex_widths
-#         targets_dy = (gt_ctr_y - ex_ctr_y.view(1, -
-#                                                1).expand_as(gt_ctr_y)) / ex_heights
-#         targets_dt = (gt_ctr_t - ex_ctr_t.view(1, -
-#                                                1).expand_as(gt_ctr_t)) / ex_time
-
-#         targets_dw = torch.log(
-#             gt_widths / ex_widths.view(1, -1).expand_as(gt_widths))
-#         targets_dh = torch.log(
-#             gt_heights / ex_heights.view(1, -1).expand_as(gt_heights))
-#         targets_dh = torch.log(
-#             gt_time / ex_time.view(1, -1).expand_as(gt_time))
-
-#         print('For x1 : \n\tex_widths {}, \n\tex_ctr_x {}, \n\tgt_widths {}, \n\tgt_ctr_x {}, \n\ttargets_dx {}'.format(
-#             ex_widths, ex_ctr_x, gt_widths, gt_ctr_x, targets_dx))
-#         print('For x1 : \n\tex_height {}, \n\tex_ctr_y {}, \n\tgt_heights {}, \n\tgt_ctr_y {}, \n\ttargets_dy {}'.format(
-#             ex_heights, ex_ctr_y, gt_heights, gt_ctr_y, targets_dy))
-#         print('For x1 : \n\tex_time {}, \n\tex_ctr_t {}, \n\tgt_time {}, \n\tgt_ctr_t {}, \n\ttargets_dt {}'.format(
-#             ex_time, ex_ctr_t, gt_time, gt_ctr_t, targets_dt))
-        
-#     elif ex_rois.dim() == 3:
-#         ex_widths = ex_rois[:, :, 2] - ex_rois[:, :, 0] + 1.0
-#         ex_heights = ex_rois[:, :, 3] - ex_rois[:, :, 1] + 1.0
-#         ex_ctr_x = ex_rois[:, :, 0] + 0.5 * ex_widths
-#         ex_ctr_y = ex_rois[:, :, 1] + 0.5 * ex_heights
-
-#         gt_widths = gt_rois[:, :, 2] - gt_rois[:, :, 0] + 1.0
-#         gt_heights = gt_rois[:, :, 3] - gt_rois[:, :, 1] + 1.0
-#         gt_ctr_x = gt_rois[:, :, 0] + 0.5 * gt_widths
-#         gt_ctr_y = gt_rois[:, :, 1] + 0.5 * gt_heights
-
-#         targets_dx = (gt_ctr_x - ex_ctr_x) / ex_widths
-#         targets_dy = (gt_ctr_y - ex_ctr_y) / ex_heights
-#         targets_dw = torch.log(gt_widths / ex_widths)
-#         targets_dh = torch.log(gt_heights / ex_heights)
-#     else:
-#         raise ValueError('ex_roi input dimension is not correct.')
-
-#     targets = torch.stack(
-#         (targets_dx, targets_dy, targets_dw, targets_dh), 2)
-
-#     print('tagets :', targets)
-
-#     return targets
-
-
 def bbox_transform_batch(ex_rois, gt_rois):
 
     if ex_rois.dim() == 2:
@@ -130,11 +56,6 @@ def bbox_transform_batch(ex_rois, gt_rois):
             gt_widths / ex_widths.view(1, -1).expand_as(gt_widths))
         targets_dh = torch.log(
             gt_heights / ex_heights.view(1, -1).expand_as(gt_heights))
-
-        # print('For x : \n\tex_widths {}, \n\tex_ctr_x {}, \n\tgt_widths {}, \n\tgt_ctr_x {}, \n\ttargets_dx {}, \n\ttargets_dw {}'.format(
-        #     ex_widths, ex_ctr_x, gt_widths, gt_ctr_x, targets_dx, targets_dw))
-        # print('For y : \n\tex_height {}, \n\tex_ctr_y {}, \n\tgt_heights {}, \n\tgt_ctr_y {}, \n\ttargets_dy {}, \n\ttargets_dh {}'.format(
-        #     ex_heights, ex_ctr_y, gt_heights, gt_ctr_y, targets_dy, targets_dh))
 
     elif ex_rois.dim() == 3:
         
@@ -159,22 +80,19 @@ def bbox_transform_batch(ex_rois, gt_rois):
     targets = torch.stack(
         (targets_dx, targets_dy, targets_dw, targets_dh), 2)
 
-    # print('targets :',targets)
-    # print('targets.shape :',targets.shape)
-
     return targets
 
 def bbox_transform_batch_3d(ex_rois, gt_rois):
 
     if ex_rois.dim() == 2:
-        # print('edwww')
+
         ex_widths = ex_rois[:, 3] - ex_rois[:, 0] + 1.0
         ex_heights = ex_rois[:, 4] - ex_rois[:, 1] + 1.0
         ex_times = ex_rois[:, 5] - ex_rois[:, 2] + 1.0
 
         ex_ctr_x = ex_rois[:, 0] + 0.5 * ex_widths
         ex_ctr_y = ex_rois[:, 1] + 0.5 * ex_heights
-        ex_ctr_t = ex_rois[:, 2] + 0.5 * ex_heights
+        ex_ctr_t = ex_rois[:, 2] + 0.5 * ex_times
 
         gt_widths = gt_rois[:, :, 3] - gt_rois[:, :, 0] + 1.0
         gt_heights = gt_rois[:, :, 4] - gt_rois[:, :, 1] + 1.0
@@ -182,7 +100,7 @@ def bbox_transform_batch_3d(ex_rois, gt_rois):
 
         gt_ctr_x = gt_rois[:, :, 0] + 0.5 * gt_widths
         gt_ctr_y = gt_rois[:, :, 1] + 0.5 * gt_heights
-        gt_ctr_t = gt_rois[:, :, 2] + 0.5 * gt_heights
+        gt_ctr_t = gt_rois[:, :, 2] + 0.5 * gt_times
         
         targets_dx = (gt_ctr_x - ex_ctr_x.view(1, -
                                                1).expand_as(gt_ctr_x)) / ex_widths
@@ -199,9 +117,9 @@ def bbox_transform_batch_3d(ex_rois, gt_rois):
 
         targets_dt = torch.log(
             gt_times / ex_times.view(1, -1).expand_as(gt_times))
-        # print('target_dt :',targets_dt.cpu().numpy())
+
     elif ex_rois.dim() == 3:
-        # print('mpike kai edw')
+
         ex_widths = ex_rois[:, :, 3] - ex_rois[:, :, 0] + 1.0
         ex_heights = ex_rois[:, :, 4] - ex_rois[:, :, 1] + 1.0
         ex_time = ex_rois[:, :, 5] - ex_rois[:, :, 2] + 1.0
@@ -229,7 +147,7 @@ def bbox_transform_batch_3d(ex_rois, gt_rois):
 
     targets = torch.stack(
         (targets_dx, targets_dy, targets_dt, targets_dw, targets_dh, targets_dt), 2)
-    # print('targets[:,4] :',targets[:,:10].cpu().tolist())
+
     return targets
 
 
@@ -273,14 +191,11 @@ def bbox_frames_transform_inv(boxes, deltas, batch_size):
     ctr_x = boxes[:, :, 0] + 0.5 * widths
     ctr_y = boxes[:, :, 1] + 0.5 * heights
 
-    # print('widths {}, heights {},  ctr_x.shape {}, ctr_y {} '.format(widths.shape, heights.shape, ctr_x.shape,ctr_y.shape))
     dx = deltas[:, :, 0::4]
-    # print('dx[0] :', dx[0])
-    # print('dx.shape :', dx.shape)
     dy = deltas[:, :, 1::4]
     dw = deltas[:, :, 2::4]
     dh = deltas[:, :, 3::4]
-    # print('widths.shape :',widths.shape, 'widths.unsqueeze(2).shape :',widths.unsqueeze(2).shape)
+
     pred_ctr_x = dx * widths.unsqueeze(2) + ctr_x.unsqueeze(2)
     pred_ctr_y = dy * heights.unsqueeze(2) + ctr_y.unsqueeze(2)
     pred_w = torch.exp(dw) * widths.unsqueeze(2)
@@ -381,12 +296,7 @@ def clip_boxes_3d(boxes, im_shape, batch_size):
         boxes[i, :, 3::6]=boxes[i, :, 3::6].clamp_(0, im_shape[i, 1].item()-1)
         boxes[i, :, 4::6]=boxes[i, :, 4::6].clamp_(0, im_shape[i, 0].item()-1)
         boxes[i, :, 5::6]=boxes[i, :, 5::6].clamp_(0, im_shape[i, 2].item()-1)
-        # boxes[i, :, 0::6].clamp_(0, im_shape[i, 1]-1)
-        # boxes[i, :, 1::6].clamp_(0, im_shape[i, 0]-1)
-        # boxes[i, :, 2::6].clamp_(0, im_shape[i, 2]-1)
-        # boxes[i, :, 3::6].clamp_(0, im_shape[i, 1]-1)
-        # boxes[i, :, 4::6].clamp_(0, im_shape[i, 0]-1)
-        # boxes[i, :, 5::6].clamp_(0, im_shape[i, 2]-1)
+
     return boxes
 
 
@@ -660,51 +570,34 @@ def bbox_overlaps_batch(anchors, gt_boxes):
     """
     batch_size = gt_boxes.size(0)
 
-    # print('gt_bboxes.shape : {}'.format(gt_boxes.shape))
-    # print('anchors.dim() : ', anchors.dim())
+
     if anchors.dim() == 2:
-        # print('edwwww')
+
         N = anchors.size(0)
         K = gt_boxes.size(1)
-        # print('N : {}, K : {}'.format(N, K))
-        # print('achors shape before view :', anchors.shape)
+
         anchors = anchors.view(1, N, 4).expand(batch_size, N, 4).contiguous()
-        # print('achors shape after view :', anchors.shape)
-        # print('gt_boxes.shape ', gt_boxes.shape)
-        # print('gt_boxes ', gt_boxes[0])
         gt_boxes = gt_boxes[:, :, [0,1,3,4]].contiguous()
-        # print('gt_boxes.shape ', gt_boxes.shape)
 
         gt_boxes_x = (gt_boxes[:, :, 2] - gt_boxes[:, :, 0] + 1)
         gt_boxes_y = (gt_boxes[:, :, 3] - gt_boxes[:, :, 1] + 1)
 
-        # print('gt_boxes_x.shape : ', gt_boxes_x.shape)
         gt_boxes_area = (gt_boxes_x * gt_boxes_y)
-        # print('gt_boxes_area.shape :', gt_boxes_area.shape)
         gt_boxes_area = gt_boxes_area.view(batch_size, 1, K)
-        # gt_boxes_area = gt_boxes_area.view(batch_size, 1, F, K)
-        # print('gt_boxes_area.shape :', gt_boxes_area.shape)
 
         anchors_boxes_x = (anchors[:, :, 2] - anchors[:, :, 0] + 1)
         anchors_boxes_y = (anchors[:, :, 3] - anchors[:, :, 1] + 1)
         anchors_area = (anchors_boxes_x *
                         anchors_boxes_y).view(batch_size, N, 1)
 
-        # print('gt_boxes_x == 1 : ', gt_boxes_x == 1)
-        # print('gt_boxes_x :', gt_boxes_x)
-
         gt_area_zero = (gt_boxes_x == 1) & (gt_boxes_y == 1)
         anchors_area_zero = (anchors_boxes_x == 1) & (anchors_boxes_y == 1)
 
-        # print('gt_area_zero : ',gt_area_zero)
+
         boxes = anchors.view(batch_size, N, 1, 4).expand(batch_size, N, K, 4)
-        # print('gt_boxes.shape :', gt_boxes.shape)
         query_boxes = gt_boxes.view(batch_size, 1, K, 4)
-        # print('query_boxes.shape :', query_boxes.shape)
-        # print('query_boxes :', query_boxes)
         query_boxes = query_boxes.expand(batch_size, N, K, 4)
-        # print('query_boxes.shape :', query_boxes.shape)
-        # print('query_boxes :', query_boxes)
+
         iw = (torch.min(boxes[:, :, :, 2], query_boxes[:, :, :, 2]) -
               torch.max(boxes[:, :, :, 0], query_boxes[:, :, :, 0]) + 1)
         iw[iw < 0] = 0
@@ -720,9 +613,6 @@ def bbox_overlaps_batch(anchors, gt_boxes):
             batch_size, 1, K).expand(batch_size, N, K), 0)
         overlaps.masked_fill_(anchors_area_zero.view(
             batch_size, N, 1).expand(batch_size, N, K), -1)
-        # print('overlaps.shape  after mask:', overlaps.shape)
-        # mask the overlap here.
-
 
     elif anchors.dim() == 3:
 
@@ -786,7 +676,6 @@ def bbox_overlaps_batch_3d(anchors, gt_boxes):
         N = anchors.size(0)
         K = gt_boxes.size(1)
 
-        # print('N {} K {}'.format(N,K))
         anchors = anchors.view(1,N,6).expand(batch_size, N, 6).contiguous()
         gt_boxes = gt_boxes[:, :, :6].contiguous()
 
@@ -794,18 +683,12 @@ def bbox_overlaps_batch_3d(anchors, gt_boxes):
         gt_boxes_y = (gt_boxes[:, :, 4] - gt_boxes[:, :, 1] + 1)
         gt_boxes_t  = (gt_boxes[:, :, 5] - gt_boxes[:, :, 2] + 1)
 
-        # print('gt_boxes_t.shape :',gt_boxes_t)
-        # print('gt_boxes_t.view(batch_size,1,K :',gt_boxes_t.view(batch_size,1,K))
-
         gt_boxes_area_xy = (gt_boxes_x * gt_boxes_y )
         gt_boxes_area_xy = gt_boxes_area_xy.view(batch_size, 1, K)
 
         anchors_boxes_x = (anchors[:, :, 3] - anchors[:, :, 0] + 1)
         anchors_boxes_y = (anchors[:, :, 4] - anchors[:, :, 1] + 1)
         anchors_boxes_t = (anchors[:, :, 5] - anchors[:, :, 2] + 1)
-
-        # print('anchors_boxes_t.shape :',anchors_boxes_t.shape)
-        # print('anchors_boxes_t.view(batch_size,1,K :',anchors_boxes_t.view(batch_size,N,1))
 
         anchors_area_xy = (anchors_boxes_x * anchors_boxes_y ).view(batch_size, N, 1)  # for 1 frame
 
@@ -849,19 +732,12 @@ def bbox_overlaps_batch_3d(anchors, gt_boxes):
         N = anchors.size(1)
         K = gt_boxes.size(1)
 
-        # print('epaeeeeeee')
-        # print('anchors.shape :',anchors.shape)
-        # print('gt_boxes.shape ;',gt_boxes.shape)
-        # print('anchors.shape: ',anchors.shape)
         if anchors.size(2) == 6:
             anchors = anchors[:, :, :6].contiguous()
         else:
             anchors = anchors[:, :, 1:7].contiguous()
 
         gt_boxes = gt_boxes[:, :, :6].contiguous()
-
-        # print('gt_boxes :',gt_boxes)
-        # print('anchors :',anchors)
 
         gt_boxes_x = (gt_boxes[:, :, 3] - gt_boxes[:, :, 0] + 1)
         gt_boxes_y = (gt_boxes[:, :, 4] - gt_boxes[:, :, 1] + 1)
@@ -876,7 +752,6 @@ def bbox_overlaps_batch_3d(anchors, gt_boxes):
         anchors_area_xy = (anchors_boxes_x *
                         anchors_boxes_y ).view(batch_size, N, 1)
 
-        # print('anchors_area.shape :',anchors_area.shape)
         gt_area_zero = (gt_boxes_x == 1) & (gt_boxes_y == 1) & (gt_boxes_t == 1)
         anchors_area_zero = (anchors_boxes_x == 1) & (anchors_boxes_y == 1) & (anchors_boxes_t == 1)
 
@@ -904,11 +779,7 @@ def bbox_overlaps_batch_3d(anchors, gt_boxes):
         overlaps_t = it / ua_t
 
         overlaps = overlaps_xy * overlaps_t
-        # print('ua_xy :',ua_xy)
-        # print('anchors_area_xy:',anchors_area_xy)
-        # print('gt_boxes_area_xy :',gt_boxes_area_xy)
-        # print('overlaps_t :',overlaps_t)
-        # print('overlaps :',overlaps)
+
         # mask the overlap here.
         overlaps.masked_fill_(gt_area_zero.view(
             batch_size, 1, K).expand(batch_size, N, K), 0)
@@ -919,137 +790,4 @@ def bbox_overlaps_batch_3d(anchors, gt_boxes):
 
     return overlaps
 
-
-# def bbox_overlaps_batch_3d(anchors, gt_boxes):
-#     """
-#     anchors: (N, 6) ndarray of float
-#     gt_boxes: (b, K, 7) ndarray of float
-
-#     overlaps: (N, K) ndarray of overlap between boxes and query_boxes
-#     """
-#     batch_size = gt_boxes.size(0)
-
-#     # print('gt_bboxes.shape : {}'.format(gt_boxes.shape))
-#     # print('anchors.dim() : ', anchors.dim())
-#     if anchors.dim() == 2:
-
-#         N = anchors.size(0)
-#         K = gt_boxes.size(1)
-
-#         anchors = anchors.view(1,N,6).expand(batch_size, N, 6).contiguous()
-#         gt_boxes = gt_boxes[:, :, :6].contiguous()
-
-#         # print('anchors.shape  :',anchors.shape)
-
-#         gt_boxes_x = (gt_boxes[:, :, 3] - gt_boxes[:, :, 0] + 1)
-#         gt_boxes_y = (gt_boxes[:, :, 4] - gt_boxes[:, :, 1] + 1)
-#         gt_boxes_t = (gt_boxes[:, :, 5] - gt_boxes[:, :, 2] + 1)
-#         # print('gt_boxes_x :',gt_boxes_x)
-#         # print('gt_boxes :',gt_boxes)
-#         # if batch_size == 1:  # only 1 video in batch:
-#         #     gt_boxes_x = gt_boxes_x.unsqueeze(0)
-#         #     gt_boxes_y = gt_boxes_y.unsqueeze(0)
-#         #     gt_boxes_t = gt_boxes_t.unsqueeze(0)
-
-#         # print('gt_boxes_x.shape :', gt_boxes_x.shape)
-#         # print('gt_boxes_x :', gt_boxes_x)
-#         gt_boxes_area = (gt_boxes_x * gt_boxes_y * gt_boxes_t)
-#         gt_boxes_area = gt_boxes_area.view(batch_size, 1, K)
-
-#         for i in anchors.cpu().tolist():
-#             if i[5]==15 and i[2]==0:
-#                 print('edww i:',i)
-#         anchors_boxes_x = (anchors[:, :, 3] - anchors[:, :, 0] + 1)
-#         anchors_boxes_y = (anchors[:, :, 4] - anchors[:, :, 1] + 1)
-#         anchors_boxes_t = (anchors[:, :, 5] - anchors[:, :, 2] + 1)
-
-#         anchors_area = (anchors_boxes_x * anchors_boxes_y *
-#                         anchors_boxes_t).view(batch_size, N, 1)  # for 1 frame
-#         # print('gt_boxes_x == 1 : ', gt_boxes_x == 1)
-#         # print('gt_boxes_x :', gt_boxes_x)
-
-#         gt_area_zero = (gt_boxes_x == 1) & (gt_boxes_y == 1) & (gt_boxes_t == 1)
-#         anchors_area_zero = (anchors_boxes_x == 1) & (anchors_boxes_y == 1) & (anchors_boxes_t == 1)
-#         boxes = anchors.view(batch_size, N, 1, 6)
-#         boxes = boxes.expand(batch_size, N, K, 6)
-
-#         query_boxes = gt_boxes.view(batch_size, 1, K, 6)
-#         query_boxes = query_boxes.expand(batch_size, N, K, 6)
-
-#         iw = (torch.min(boxes[:, :, :, 3], query_boxes[:, :, :, 3]) -
-#               torch.max(boxes[:, :, :, 0], query_boxes[:, :, :, 0]) + 1)
-#         iw[iw < 0] = 0
-
-#         ih = (torch.min(boxes[:, :, :, 4], query_boxes[:, :, :, 4]) -
-#               torch.max(boxes[:, :, :, 1], query_boxes[:, :, :, 1]) + 1)
-#         ih[ih < 0] = 0
-
-#         it = (torch.min(boxes[:, :, :, 5], query_boxes[:, :, :, 5]) -
-#               torch.max(boxes[:, :, :, 2], query_boxes[:, :, :, 2]) + 1)
-#         it[it < 0] = 0
-
-#         ua = anchors_area + gt_boxes_area - (iw * ih * it)
-#         overlaps = iw * ih * it / ua
-
-#         overlaps.masked_fill_(gt_area_zero.view(
-#             batch_size, 1, K).expand(batch_size, N, K), 0)
-#         overlaps.masked_fill_(anchors_area_zero.view(
-#             batch_size, N, 1).expand(batch_size, N, K), -1)
-
-#     elif anchors.dim() == 3:
-#         N = anchors.size(1)
-#         K = gt_boxes.size(1)
-
-#         if anchors.size(2) == 6:
-#             anchors = anchors[:, :, :6].contiguous()
-#         else:
-#             anchors = anchors[:, :, 1:7].contiguous()
-
-#         # print('anchors.shape: ',anchors.shape)
-#         # print('gt_boxes :',gt_boxes)
-#         gt_boxes = gt_boxes[:, :, :6].contiguous()
-
-#         gt_boxes_x = (gt_boxes[:, :, 3] - gt_boxes[:, :, 0] + 1)
-#         gt_boxes_y = (gt_boxes[:, :, 4] - gt_boxes[:, :, 1] + 1)
-#         gt_boxes_z = (gt_boxes[:, :, 5] - gt_boxes[:, :, 2] + 1)
-#         gt_boxes_area = (gt_boxes_x * gt_boxes_y * gt_boxes_z).view(batch_size, 1, K)
-#         # print('gt_boxes_area.shape :',gt_boxes_area.shape)
-#         anchors_boxes_x = (anchors[:, :, 3] - anchors[:, :, 0] + 1)
-#         anchors_boxes_y = (anchors[:, :, 4] - anchors[:, :, 1] + 1)
-#         anchors_boxes_z = (anchors[:, :, 5] - anchors[:, :, 2] + 1)
-#         anchors_area = (anchors_boxes_x *
-#                         anchors_boxes_y * anchors_boxes_z).view(batch_size, N, 1)
-#         # print('anchors_area.shape :',anchors_area.shape)
-#         gt_area_zero = (gt_boxes_x == 1) & (gt_boxes_y == 1) & (gt_boxes_z == 1)
-#         anchors_area_zero = (anchors_boxes_x == 1) & (anchors_boxes_y == 1) & (anchors_boxes_z == 1)
-
-#         boxes = anchors.view(batch_size, N, 1, 6).expand(batch_size, N, K, 6)
-#         query_boxes = gt_boxes.view(
-#             batch_size, 1, K, 6).expand(batch_size, N, K, 6)
-
-#         iw = (torch.min(boxes[:, :, :, 3], query_boxes[:, :, :, 3]) -
-#               torch.max(boxes[:, :, :, 0], query_boxes[:, :, :, 0]) + 1)
-#         iw[iw < 0] = 0
-
-#         ih = (torch.min(boxes[:, :, :, 4], query_boxes[:, :, :, 4]) -
-#               torch.max(boxes[:, :, :, 1], query_boxes[:, :, :, 1]) + 1)
-#         ih[ih < 0] = 0
-
-#         it = (torch.min(boxes[:, :, :, 5], query_boxes[:, :, :, 5]) -
-#               torch.max(boxes[:, :, :, 2], query_boxes[:, :, :, 2]) + 1)
-#         it[it < 0] = 0
-
-#         ua = anchors_area + gt_boxes_area - (iw * ih * it)
-
-#         overlaps = iw * ih * it/ ua
-
-#         # mask the overlap here.
-#         overlaps.masked_fill_(gt_area_zero.view(
-#             batch_size, 1, K).expand(batch_size, N, K), 0)
-#         overlaps.masked_fill_(anchors_area_zero.view(
-#             batch_size, N, 1).expand(batch_size, N, K), -1)
-#     else:
-#         raise ValueError('anchors input dimension is not correct.')
-
-#     return overlaps
 

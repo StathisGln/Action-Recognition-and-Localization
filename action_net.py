@@ -40,7 +40,7 @@ class ACT_net(nn.Module):
         self.spatial_scale = 1.0/16
     
         # define rpn
-        self.act_rpn = _RPN(128, sample_duration).cuda()
+        self.act_rpn = _RPN(256, sample_duration).cuda()
 
         self.act_proposal_target = _ProposalTargetLayer(2).cuda() ## background/ foreground
         self.act_proposal_target_single = _ProposalTargetLayer_single(2) ## background/ foreground for only xy
@@ -81,7 +81,7 @@ class ACT_net(nn.Module):
 
         rois, rois_16, rpn_loss_cls, rpn_loss_bbox, \
             rpn_loss_cls_16, rpn_loss_bbox_16 = self.act_rpn(base_feat, im_info, gt_tubes, None)
-
+        
         n_rois = rois.size(1)
         n_rois_16 = rois_16.size(1)
 
@@ -208,7 +208,7 @@ class ACT_net(nn.Module):
         # Build resnet.
         self.act_base_1 = nn.Sequential(model.module.conv1, model.module.bn1, model.module.relu,
           model.module.maxpool,model.module.layer1)
-        self.act_base_2 = nn.Sequential(model.module.layer2)
+        self.act_base_2 = nn.Sequential(model.module.layer2, model.module.layer3)
 
         # self.act_top = nn.Sequential( model.module.layer3, model.module.layer4)
 
@@ -217,8 +217,8 @@ class ACT_net(nn.Module):
         for p in self.act_base_1[1].parameters(): p.requires_grad=False
 
         fixed_blocks = 3
-        # if fixed_blocks >= 3:
-        #   for p in self.act_base_2[1].parameters(): p.requires_grad=False
+        if fixed_blocks >= 3:
+          for p in self.act_base_2[1].parameters(): p.requires_grad=False
         if fixed_blocks >= 2:
           for p in self.act_base_2[0].parameters(): p.requires_grad=False
         if fixed_blocks >= 1:

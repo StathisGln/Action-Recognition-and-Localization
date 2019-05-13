@@ -24,7 +24,7 @@ class _RPN(nn.Module):
 
         self.din = din  # get depth of input feature map, e.g., 512
         self.sample_duration =sample_duration # get sample_duration
-        self.anchor_scales = [4, 8, 16 ]
+        self.anchor_scales = [1, 2, 4, 8, 16 ]
         self.anchor_ratios = [0.5, 1, 2]
         self.feat_stride = [16, ]
         # self.anchor_duration = [16,8,4,3] # add

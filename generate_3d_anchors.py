@@ -49,7 +49,9 @@ def generate_anchors(base_size=16, ratios=[0.5, 1, 2],
     Generate anchor (reference) windows by enumerating aspect ratios X
     scales wrt a reference (0, 0, 15, 15) window.
     """
-    anchors = np.zeros((len(time_dim),9,6))
+    num_ratios = len(ratios)
+    num_scales = len(scales)
+    anchors = np.zeros((len(time_dim),num_scales*num_ratios,6))
     for i in range(len(time_dim)):
         t = time_dim[i]
         anchors_tmp = np.array(_generate_anchors(base_size,ratios,scales))

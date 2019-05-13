@@ -92,9 +92,9 @@ class _ProposalLayer(nn.Module):
         self._anchors = self._anchors.type_as(scores)
 
         anchors = self._anchors.view(1, A, 6) + shifts.view(K, 1, 6)
+
         anchors = anchors.view(1, K * A, 6)
         anchors = anchors.expand(batch_size, K * A, 6)
-
 
         # Transpose and reshape predicted bbox transformations to get them
         # into the same order as the anchors:
@@ -107,12 +107,6 @@ class _ProposalLayer(nn.Module):
         scores = scores.permute(0, 2, 3, 4, 1).contiguous()
         scores = scores.view(batch_size, -1)
 
-        ###############################
-        # Until now, everything is ok #
-        ###############################
-        """
-        we have 16 frames, and 28224 3d anchors for each 16 frames
-        """
         # Convert anchors into proposals via bbox transformations
         proposals = bbox_transform_inv_3d(anchors, bbox_frame, batch_size) # proposals have 441 * time_dim shape
 

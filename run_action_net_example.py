@@ -109,10 +109,10 @@ if __name__ == '__main__':
     print('**********Starts**********')
 
     inputs = Variable(clips_)
-    tubes,  bbox_pred, _, \
+    tubes, _, \
     rpn_loss_cls,  rpn_loss_bbox, \
-    act_loss_bbox, rpn_loss_cls_16,\
-    rpn_loss_bbox_16, act_loss_bbox_16, rois_label, \
+    rpn_loss_cls_16,\
+    rpn_loss_bbox_16,  rois_label, \
     sgl_rois_bbox_pred, sgl_rois_bbox_loss,  = model(inputs, \
                                                 im_info_,
                                                 gt_tubes_r_, gt_rois_,
