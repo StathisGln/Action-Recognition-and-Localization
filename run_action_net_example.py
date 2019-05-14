@@ -24,6 +24,7 @@ np.random.seed(42)
 if __name__ == '__main__':
 
     # torch.cuda.device_count()
+
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 

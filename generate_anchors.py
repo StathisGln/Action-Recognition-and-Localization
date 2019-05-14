@@ -42,18 +42,36 @@ except NameError:
     xrange = range  # Python 3
 
 
+
 def generate_anchors(base_size=16, ratios=[0.5, 1, 2],
-                     scales=2**np.arange(3, 6)):
+                     scales=2**np.arange(3, 6), time_dim = [16,]):
     """
     Generate anchor (reference) windows by enumerating aspect ratios X
     scales wrt a reference (0, 0, 15, 15) window.
     """
-
     base_anchor = np.array([1, 1, base_size, base_size]) - 1
     ratio_anchors = _ratio_enum(base_anchor, ratios)
     anchors = np.vstack([_scale_enum(ratio_anchors[i, :], scales)
                          for i in xrange(ratio_anchors.shape[0])])
     return anchors
+
+
+def generate_3d_anchors(base_size=16, ratios=[0.5, 1, 2],
+                     scales=2**np.arange(3, 6), time_dim = [16,]):
+    """
+    Generate anchor (reference) windows by enumerating aspect ratios X
+    scales wrt a reference (0, 0, 15, 15) window.
+    """
+    f_anchors = []
+    for i in time_dim:
+        
+        base_anchor = np.array([1, 1, base_size, base_size]) - 1
+        ratio_anchors = _ratio_enum(base_anchor, ratios)
+        anchors = np.vstack([_scale_enum(ratio_anchors[i, :], scales)
+                             for i in xrange(ratio_anchors.shape[0])])
+        f_anchors.append( np.tile(anchors, [1,i]).reshape(len(ratios)*len(scales),i,4))
+        
+    return f_anchors
 
 def _whctrs(anchor):
     """
@@ -107,7 +125,8 @@ def _scale_enum(anchor, scales):
 if __name__ == '__main__':
     import time
     t = time.time()
-    a = generate_anchors()
-    print(time.time() - t)
-    print(a)
-    from IPython import embed; embed()
+    time_dur = [16,12,8,4]
+    a = generate_3d_anchors(time_dim=time_dur)
+    for i in range(len(time_dur)):
+        print(a[i].shape)
+    print(a[-1])

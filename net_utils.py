@@ -256,3 +256,13 @@ def from_tubes_to_rois(tubes, sample_duration):
             rois_f[b,i,inds,1:]= r[[1,2,4,5]]
     
     return rois_f.permute(0,2,1,3)
+
+def get_number_of_combinations(sample_duration, durs):
+
+    k = 0
+    for i in durs:
+        assert sample_duration >= i
+        k += sample_duration - i + 1
+    return k
+
+
