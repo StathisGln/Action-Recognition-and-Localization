@@ -63,7 +63,6 @@ def split_tube_into_boxes(tube, T=None):
     N = tube.shape[0]
 
     T = T or tube.shape[-1] // 4
-
     boxes = []
     if 4 * T != tube.shape[-1]:
         # Means it is the box-per-class kinda representation
@@ -216,17 +215,6 @@ def tube_overlaps(boxes, query_boxes):
     and average the overlaps over time for tubes. """
     parts, _ = split_tube_into_boxes(boxes)
     query_parts, _ = split_tube_into_boxes(query_boxes)
-    # z = []
-    # for part, query_part in zip(parts, query_parts):
-    #     t = bbox_overlaps(
-    #         part, query_part)
-    #     z.append(t)
-    #     print('t.shape :',t.shape)
-    # r = torch.stack(z)
-    # print('r[:,142] :',r[:,142])
-
-    # q = torch.mean(r, dim=0)
-    # print('q.shape :',q.shape)
 
     return torch.mean(torch.stack([
         bbox_overlaps(

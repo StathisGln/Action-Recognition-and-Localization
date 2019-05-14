@@ -31,8 +31,8 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
                  split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*8,
                                               shuffle=True, num_workers=32, pin_memory=True)
-    # data_loader = torch.utils.data.DataLoader(data, batch_size=2,
-    #                                           shuffle=True, num_workers=0, pin_memory=True)
+    # data_loader = torch.utils.data.DataLoader(data, batch_size=4,
+    #                                           shuffle=True, num_workers=2, pin_memory=True)
 
     model.train()
     loss_temp = 0
@@ -40,7 +40,7 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
     ## 2 rois : 1450
     for step, data  in enumerate(data_loader):
 
-        # if step == 2:
+        # if step == 5:
         #     exit(-1)
         #     break
 
@@ -69,8 +69,8 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
             loss = sgl_rois_bbox_loss.mean()
 
         elif mode == 4:
-            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean()  + rpn_loss_cls_16.mean() \
-                   + rpn_loss_bbox_16.mean()  + sgl_rois_bbox_loss.mean()
+            loss = rpn_loss_cls.mean() + 1/sample_duration * rpn_loss_bbox.mean() #  + rpn_loss_cls_16.mean() \
+                   # + rpn_loss_bbox_16.mean()  + sgl_rois_bbox_loss.mean()
 
         loss_temp += loss.item()
 
@@ -178,5 +178,5 @@ if __name__ == '__main__':
         act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=4)
 
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_126feats.pwf".format(epoch+1))
-    torch.save(act_model.state_dict(), "action_net_model_126feats.pwf")
+            torch.save(act_model.state_dict(), "action_net_model_steady_anchors.pwf".format(epoch+1))
+    torch.save(act_model.state_dict(), "action_net_model_steady_anchors.pwf")

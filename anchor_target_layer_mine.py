@@ -148,7 +148,7 @@ class _AnchorTargetLayer(nn.Module):
         for i in range(batch_size):
             # subsample positive labels if we have too many
             if sum_fg[i] > num_fg:
-                # print('mpikeeeee')
+
                 fg_inds = torch.nonzero(labels[i] == 1).view(-1)
                 # torch.randperm seems has a bug on multi-gpu setting that cause the segfault.
                 # See https://github.com/pytorch/pytorch/issues/1868 for more details.
@@ -173,14 +173,16 @@ class _AnchorTargetLayer(nn.Module):
         offset = torch.arange(0, batch_size)*gt_tubes.size(1)
 
         argmax_overlaps = argmax_overlaps + offset.view(batch_size, 1).type_as(argmax_overlaps)#.to(dev)
-        bbox_targets = _compute_targets_batch(anchors, gt_rois.view(-1,self.sample_duration*4)[argmax_overlaps.view(-1), :]).view(batch_size,-1,self.sample_duration*4)
-        print('bbox_targets.shape :',bbox_targets.shape)
+        
+        bbox_targets = _compute_targets_batch(anchors.unsqueeze(0).expand(batch_size,anchors.size(0),anchors.size(1)).\
+                                              contiguous().view(-1,self.sample_duration*4),\
+                                              gt_rois.view(-1,self.sample_duration*4)[argmax_overlaps.view(-1), :]). \
+                                              view(batch_size,-1,self.sample_duration*4)
+
         bbox_inside_weights[labels==1] = cfg.TRAIN.RPN_BBOX_INSIDE_WEIGHTS[0]
 
         if cfg.TRAIN.RPN_POSITIVE_WEIGHT < 0:
-            # print('edwww323r', cfg.TRAIN.RPN_POSITIVE_WEIGHT)
             num_examples = torch.sum(labels[i] >= 0)
-            # print('num_examples :',num_examples)
             positive_weights = 1.0 / num_examples.item()
             negative_weights = 1.0 / num_examples.item()
         else:
@@ -208,15 +210,16 @@ class _AnchorTargetLayer(nn.Module):
         outputs.append(bbox_targets)
 
         anchors_count = bbox_inside_weights.size(1)
-        bbox_inside_weights = bbox_inside_weights.view(batch_size,anchors_count,1).expand(batch_size, anchors_count, 4)
-
-        bbox_inside_weights = bbox_inside_weights.contiguous().view(batch_size, height, width,  A * 4)\
+        bbox_inside_weights = bbox_inside_weights.view(batch_size,anchors_count,1).\
+                              expand(batch_size, anchors_count, 4 * self.sample_duration)
+        bbox_inside_weights = bbox_inside_weights.contiguous().view(batch_size, height, width,  A * 4 * self.sample_duration)\
                             .permute(0,3,1,2).contiguous()
         outputs.append(bbox_inside_weights)
 
-        bbox_outside_weights = bbox_outside_weights.view(batch_size,anchors_count,1).expand(batch_size, anchors_count, 4)
-        bbox_outside_weights = bbox_outside_weights.contiguous().view(batch_size, height, width,  A * 4)\
-                            .permute(0,1,2,3).contiguous()
+        bbox_outside_weights = bbox_outside_weights.view(batch_size,anchors_count,1).\
+                               expand(batch_size, anchors_count, 4 * self.sample_duration)
+        bbox_outside_weights = bbox_outside_weights.contiguous().view(batch_size, height, width,  A * 4 * self.sample_duration)\
+                            .permute(0,3,1,2).contiguous()
 
         outputs.append(bbox_outside_weights)
 
@@ -236,9 +239,6 @@ def _unmap(data, count, inds, batch_size, fill=0):
 
     if data.dim() == 2:
         ret = torch.Tensor(batch_size, count).fill_(fill).type_as(data).to(data.device)
-        print('ret.shape :',ret.shape)
-        print('data.shape :',data.shape)
-        print('inds.shape :',inds.shape)
         ret[:, inds] = data
     else:
         ret = torch.Tensor(batch_size, count, data.size(2)).fill_(fill).type_as(data).to(data.device)

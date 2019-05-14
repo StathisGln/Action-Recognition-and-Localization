@@ -130,7 +130,9 @@ class _ProposalLayer(nn.Module):
         # exit(-1)
         # Convert anchors into proposals via bbox transformations
 
-        proposals = bbox_transform_inv(anchors_all.view(-1,anchors_all.size(2)), bbox_frame.view(-1,bbox_frame.size(2)), (1.0, 1.0, 1.0, 1.0)) # proposals have 441 * time_dim shape
+        proposals = bbox_transform_inv(anchors_all.contiguous().view(-1,anchors_all.size(2)),\
+                                       bbox_frame.contiguous().view(-1,bbox_frame.size(2)), \
+                                       (1.0, 1.0, 1.0, 1.0)) # proposals have 441 * time_dim shape
 
         # 2. clip predicted boxes to image
         ## if any dimension exceeds the dims of the original image, clamp_ them
