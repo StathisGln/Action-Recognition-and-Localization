@@ -16,7 +16,8 @@ import math
 import yaml
 # from config import cfg
 from conf import conf
-from generate_anchors import generate_anchors
+from generate_anchors import generate_anchors_all_pyramids
+# from generate_anchors import generate_anchors
 # from bbox_transform import bbox_transform_inv, clip_boxes_3d, clip_boxes_batch, bbox_transform_inv_3d
 from box_functions import bbox_transform_inv,clip_boxes
 import pdb
@@ -34,13 +35,10 @@ class _ProposalLayer(nn.Module):
 
         self.sample_duration = time_dim[0]
         self.time_dim = time_dim
-        self.scales = scales
-        self.ratios = ratios
-        self._feat_stride = feat_stride
-        self._anchors = torch.from_numpy(generate_anchors(scales=np.array(scales), 
-                                         ratios=np.array(ratios))).float()
-        self._num_anchors = num_anchors                                 
-        
+        self._fpn_scales = scales
+        self._anchor_ratios = ratios
+        self._fpn_feature_strides = np.array([ 4, 8, 16, 32])
+        self._fpn_anchor_stride  = 1
 
     def forward(self, input):
 
@@ -61,11 +59,13 @@ class _ProposalLayer(nn.Module):
         # the first set of _num_anchors channels are bg probs
         # the second set are the fg probs
 
-        scores = input[0][:, self._num_anchors:, :, :]
+        scores = input[0][ :, :, 1]
+        print('scores.shape :',scores.shape)
+        print('input[0].shape :',input[0].shape)
         bbox_frame = input[1]
         im_info = input[2]
         cfg_key = input[3]
-        time_dim = input[4]
+        feat_shapes = input[4]
         # print('bbox_frame.shape :',bbox_frame.shape)
 
         batch_size = bbox_frame.size(0)
@@ -79,22 +79,18 @@ class _ProposalLayer(nn.Module):
         # Create anchors #
         ##################
 
-        # print('batch_size :', batch_size)
-        feat_height,  feat_width= scores.size(2), scores.size(3) # (batch_size, 512/256, 7,7, 16/8)
-
-        shift_x = np.arange(0, feat_width) * self._feat_stride
-        shift_y = np.arange(0, feat_height) * self._feat_stride
-        shift_x, shift_y = np.meshgrid(shift_x, shift_y)
-        shifts = torch.from_numpy(np.vstack((shift_x.ravel(), shift_y.ravel(),
-                                             shift_x.ravel(), shift_y.ravel(),)).transpose())
-        shifts = shifts.contiguous().type_as(scores).float()
+        print('self._fpn_scales :',self._fpn_scales)
+        print('self._anchor_ratios :',self._anchor_ratios)
+        print('feat_shapes :',feat_shapes)
+        print('self._fpn_feature_strides :',self._fpn_feature_strides)
+        print('self._fpn_anchor_stride :',self._fpn_anchor_stride)
+        anchors = torch.from_numpy(generate_anchors_all_pyramids(self._fpn_scales, self._anchor_ratios, 
+                feat_shapes, self._fpn_feature_strides, self._fpn_anchor_stride)).type_as(scores)
         
-        A = self._anchors.size(0)
-        K = shifts.size(0)
+        num_anchors = anchors.size(0)
 
-        anchors = self._anchors.view(1, A, 4).type_as(shifts) + shifts.view(K, 1, 4)
-        anchors = anchors.view(K * A, 4)
-
+        print('anchors.shape :',anchors.shape)
+        exit(-1)
         # # get time anchors
         anchors_all = []
 

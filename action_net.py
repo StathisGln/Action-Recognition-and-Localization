@@ -96,21 +96,22 @@ class ACT_net(nn.Module):
 
 
         # feed image data to base model to obtain base feature map
-        feat_0 = self.act_base_0(im_data)
-        feat_1 = self.act_base_1(feat_0)
-        feat_2 = self.act_base_2(feat_1)
-        feat_3 = self.act_base_3(feat_2)
-        feat_4 = self.act_base_4(feat_3)
+        c1 = self.act_base_0(im_data)
+        c2 = self.act_base_1(c1)
+        c3 = self.act_base_2(c2)
+        c4 = self.act_base_3(c3)
+        c5 = self.act_base_4(c4)
 
-        p5 = self.act_toplayer(feat_4)
-        p4 = self._upsample_add(p5, self.act_latlayer1(feat_4))
+        p5 = self.act_toplayer(c5)
+        p4 = self._upsample_add(p5, self.act_latlayer1(c4))
         p4 = self.act_smooth1(p4)
-        p3 = self._upsample_add(p4, self.act_latlayer2(feat_3))
+        p3 = self._upsample_add(p4, self.act_latlayer2(c3))
         p3 = self.act_smooth2(p3)
-        p2 = self._upsample_add(p3, self.act_latlayer3(feat_2))
+        p2 = self._upsample_add(p3, self.act_latlayer3(c2))
         p2 = self.act_smooth3(p2)
 
-        base_feat = [p2,p3,p4]
+
+        base_feat = [p2,p3,p4,p5]
         rois, rois_16, rpn_loss_cls, rpn_loss_bbox, \
             rpn_loss_cls_16, rpn_loss_bbox_16 = self.act_rpn(base_feat, im_info, gt_tubes, gt_rois)
         
@@ -191,9 +192,9 @@ class ACT_net(nn.Module):
         self.act_smooth3 = nn.Conv3d(64, 64, kernel_size=3, stride=1, padding=1)
 
         # Lateral layers
-        self.act_latlayer1 = nn.Conv3d( 512, 64, kernel_size=1, stride=1, padding=0)
-        self.act_latlayer2 = nn.Conv3d( 256, 64, kernel_size=1, stride=1, padding=0)
-        self.act_latlayer3 = nn.Conv3d( 128, 64, kernel_size=1, stride=1, padding=0)
+        self.act_latlayer1 = nn.Conv3d( 256, 64, kernel_size=1, stride=1, padding=0)
+        self.act_latlayer2 = nn.Conv3d( 128, 64, kernel_size=1, stride=1, padding=0)
+        self.act_latlayer3 = nn.Conv3d( 64, 64, kernel_size=1, stride=1, padding=0)
 
         # Fix blocks
         for p in self.act_base_0[0].parameters(): p.requires_grad=False

@@ -25,7 +25,8 @@ class _RPN(nn.Module):
         self.din = din  # get depth of input feature map, e.g., 512
         self.sample_duration =sample_duration # get sample_duration
         # self.anchor_scales = [0.5,1, 2, 4, 8, 16 ]
-        self.anchor_scales = [1, 2, 4, 8, 16, 32 ]
+        # self.anchor_scales = [1, 2, 4, 8, 16, 32 ]
+        self.anchor_scales = [ 8, 16, 32 ]
         self.anchor_ratios = [0.5, 1, 2]
         self.feat_stride = [16, ]
         self.anchor_duration = [sample_duration,int(sample_duration*3/4), int(sample_duration/2)] #,int(sample_duration/4)] # add 
@@ -91,7 +92,6 @@ class _RPN(nn.Module):
 
         for i in range(n_map_feats):
             feat = base_feat[i]
-
             batch_size = feat.size(0)
             rpn_conv1 = F.relu(self.RPN_Conv(feat), inplace=True) # 3d convolution
             rpn_conv1 = self.avg_pool(rpn_conv1).squeeze(2)
@@ -116,15 +116,15 @@ class _RPN(nn.Module):
             rpn_bbox_pred_all.append(rpn_bbox_pred.permute(0,2,3,1).contiguous().view(batch_size,-1,self.sample_duration*4))
             rpn_cls_prob_all.append(rpn_cls_prob.permute(0,2,3,1).contiguous().view(batch_size,-1,2))
 
-        rpn_cls_score_alls = torch.cat(rpn_cls_scores, 1)
-        rpn_cls_prob_alls = torch.cat(rpn_cls_probs, 1)
-        rpn_bbox_pred_alls = torch.cat(rpn_bbox_preds, 1)
+        rpn_cls_score_all = torch.cat(rpn_cls_score_all, 1)
+        rpn_cls_prob_all = torch.cat(rpn_cls_prob_all, 1)
+        rpn_bbox_pred_all = torch.cat(rpn_bbox_pred_all, 1)
 
         # proposal layer
         cfg_key = 'TRAIN' if self.training else 'TEST'
 
-        rois = self.RPN_proposal((rpn_cls_prob.data, rpn_bbox_pred.data,
-                                     im_info, cfg_key,16))
+        rois = self.RPN_proposal((rpn_cls_prob_all.data, rpn_bbox_pred_all.data,
+                                     im_info, cfg_key, rpn_shapes))
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0
 
