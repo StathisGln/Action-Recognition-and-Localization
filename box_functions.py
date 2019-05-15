@@ -83,50 +83,88 @@ def split_tube_into_boxes(tube, T=None):
 
 
 
-def bbox_transform(boxes, deltas, weights):
+def bbox_transform(ex_rois, gt_rois, weights):
     """Forward transform that maps proposal boxes to ground-truth boxes using
     bounding-box regression deltas. See bbox_transform_inv for a description of
     the weights argument.
     """
 
-    if boxes.shape[1] > 4:
-        return tube_transform(boxes, deltas, weights)
-    if boxes.shape[0] == 0:
-        return np.zeros((0, deltas.shape[1]), dtype=deltas.dtype)
+    if ex_rois.shape[1] > 4:
+        return tube_transform(ex_rois, gt_rois, weights)
+    if ex_rois.shape[0] == 0:
+        return torch.zeros((0, gt_rois.shape[1])).type_as(gt_rois)
 
-    boxes = boxes.type_as(deltas)
+    ex_widths = ex_rois[:, 2] - ex_rois[:, 0] + 1.0
+    ex_heights = ex_rois[:, 3] - ex_rois[:, 1] + 1.0
+    ex_ctr_x = ex_rois[:, 0] + 0.5 * ex_widths
+    ex_ctr_y = ex_rois[:, 1] + 0.5 * ex_heights
 
-    widths = boxes[:, 2] - boxes[:, 0] + 1.0
-    heights = boxes[:, 3] - boxes[:, 1] + 1.0
-    ctr_x = boxes[:, 0] + 0.5 * widths
-    ctr_y = boxes[:, 1] + 0.5 * heights
+    gt_widths = gt_rois[:, 2] - gt_rois[:, 0] + 1.0
+    gt_heights = gt_rois[:, 3] - gt_rois[:, 1] + 1.0
+    gt_ctr_x = gt_rois[:, 0] + 0.5 * gt_widths
+    gt_ctr_y = gt_rois[:, 1] + 0.5 * gt_heights
 
-    wx, wy, ww, wh = weights
-    dx = deltas[:, 0::4] / wx
-    dy = deltas[:, 1::4] / wy
-    dw = deltas[:, 2::4] / ww
-    dh = deltas[:, 3::4] / wh
+    targets_dx = (gt_ctr_x - ex_ctr_x) / ex_widths
+    targets_dy = (gt_ctr_y - ex_ctr_y) / ex_heights
+    targets_dw = torch.log(gt_widths / ex_widths)
+    targets_dh = torch.log(gt_heights / ex_heights)
 
-    # Prevent sending too large values into np.exp()
-    dw = torch.min(dw, torch.log(torch.Tensor([1000. / 16.]).type_as(dw)))
-    dh = torch.min(dh, torch.log(torch.Tensor([1000. / 16.]).type_as(dw)))
+    targets = torch.stack(
+        (targets_dx, targets_dy, targets_dw, targets_dh), 1)
 
-    pred_ctr_x = dx * widths.unsqueeze(1) + ctr_x.unsqueeze(1)
-    pred_ctr_y = dy * heights.unsqueeze(1) + ctr_y.unsqueeze(1)
-    pred_w = torch.exp(dw) * widths.unsqueeze(1)
-    pred_h = torch.exp(dh) * heights.unsqueeze(1)
+    return targets
 
-    pred_boxes = torch.zeros(deltas.shape).type_as(deltas)
-    # x1
-    pred_boxes[:, 0::4] = pred_ctr_x - 0.5 * pred_w
-    # y1
-    pred_boxes[:, 1::4] = pred_ctr_y - 0.5 * pred_h
-    # x2
-    pred_boxes[:, 2::4] = pred_ctr_x + 0.5 * pred_w
-    # y2
-    pred_boxes[:, 3::4] = pred_ctr_y + 0.5 * pred_h
+# def bbox_transform(boxes, deltas, weights):
+#     """Forward transform that maps proposal boxes to ground-truth boxes using
+#     bounding-box regression deltas. See bbox_transform_inv for a description of
+#     the weights argument.
+#     """
 
-    return pred_boxes
+#     if boxes.shape[1] > 4:
+#         return tube_transform(boxes, deltas, weights)
+#     if boxes.shape[0] == 0:
+#         return np.zeros((0, deltas.shape[1]), dtype=deltas.dtype)
+
+#     boxes = boxes.type_as(deltas)
+#     print('boxes  :',boxes)
+#     print('deltas :',deltas)
+    
+#     widths = boxes[:, 2] - boxes[:, 0] + 1.0
+#     heights = boxes[:, 3] - boxes[:, 1] + 1.0
+#     ctr_x = boxes[:, 0] + 0.5 * widths
+#     ctr_y = boxes[:, 1] + 0.5 * heights
+
+#     wx, wy, ww, wh = weights
+#     dx = deltas[:, 0::4] / wx
+#     dy = deltas[:, 1::4] / wy
+#     dw = deltas[:, 2::4] / ww
+#     dh = deltas[:, 3::4] / wh
+
+#     print('dw :',dw)
+#     print('dh :',dh)
+#     # Prevent sending too large values into np.exp()
+#     dw = torch.min(dw, torch.log(torch.Tensor([1000. / 16.]).type_as(dw)))
+#     dh = torch.min(dh, torch.log(torch.Tensor([1000. / 16.]).type_as(dw)))
+
+
+#     exit(-1)
+#     pred_ctr_x = dx * widths.unsqueeze(1) + ctr_x.unsqueeze(1)
+#     pred_ctr_y = dy * heights.unsqueeze(1) + ctr_y.unsqueeze(1)
+#     pred_w = torch.exp(dw) * widths.unsqueeze(1)
+#     pred_h = torch.exp(dh) * heights.unsqueeze(1)
+
+#     pred_boxes = torch.zeros(deltas.shape).type_as(deltas)
+#     # x1
+#     pred_boxes[:, 0::4] = pred_ctr_x - 0.5 * pred_w
+#     # y1
+#     pred_boxes[:, 1::4] = pred_ctr_y - 0.5 * pred_h
+#     # x2
+#     pred_boxes[:, 2::4] = pred_ctr_x + 0.5 * pred_w
+#     # y2
+#     pred_boxes[:, 3::4] = pred_ctr_y + 0.5 * pred_h
+
+#     return pred_boxes
+
 
 
 def tube_transform(boxes, deltas, weights):
@@ -269,103 +307,3 @@ def bbox_overlaps(anchors, gt_boxes):
 
     return overlaps
 
-def bbox_overlaps_batch(anchors, gt_boxes):
-    """
-    anchors: (N, 4) ndarray of float
-    gt_boxes: (b, K, 5) ndarray of float
-
-    overlaps: (N, K) ndarray of overlap between boxes and query_boxes
-    """
-    batch_size = gt_boxes.size(0)
-    
-
-    if anchors.dim() == 2:
-
-        N = anchors.size(0)
-        K = gt_boxes.size(1)
-        print('N :',N, ' K :',K)
-
-        anchors = anchors.view(1, N, 4).expand(batch_size, N, 4).contiguous()
-        gt_boxes = gt_boxes[:, :, [0,1,3,4]].contiguous()
-
-        gt_boxes_x = (gt_boxes[:, :, 2] - gt_boxes[:, :, 0] + 1)
-        gt_boxes_y = (gt_boxes[:, :, 3] - gt_boxes[:, :, 1] + 1)
-
-        gt_boxes_area = (gt_boxes_x * gt_boxes_y)
-        gt_boxes_area = gt_boxes_area.view(batch_size, 1, K)
-
-        anchors_boxes_x = (anchors[:, :, 2] - anchors[:, :, 0] + 1)
-        anchors_boxes_y = (anchors[:, :, 3] - anchors[:, :, 1] + 1)
-        anchors_area = (anchors_boxes_x *
-                        anchors_boxes_y).view(batch_size, N, 1)
-
-        gt_area_zero = (gt_boxes_x == 1) & (gt_boxes_y == 1)
-        anchors_area_zero = (anchors_boxes_x == 1) & (anchors_boxes_y == 1)
-
-
-        boxes = anchors.view(batch_size, N, 1, 4).expand(batch_size, N, K, 4)
-        query_boxes = gt_boxes.view(batch_size, 1, K, 4)
-        query_boxes = query_boxes.expand(batch_size, N, K, 4)
-
-        iw = (torch.min(boxes[:, :, :, 2], query_boxes[:, :, :, 2]) -
-              torch.max(boxes[:, :, :, 0], query_boxes[:, :, :, 0]) + 1)
-        iw[iw < 0] = 0
-
-        ih = (torch.min(boxes[:, :, :, 3], query_boxes[:, :, :, 3]) -
-              torch.max(boxes[:, :, :, 1], query_boxes[:, :, :, 1]) + 1)
-        ih[ih < 0] = 0
-        ua = anchors_area + gt_boxes_area - (iw * ih)
-        overlaps = iw * ih / ua
-
-        # mask the overlap here.
-        overlaps.masked_fill_(gt_area_zero.view(
-            batch_size, 1, K).expand(batch_size, N, K), 0)
-        overlaps.masked_fill_(anchors_area_zero.view(
-            batch_size, N, 1).expand(batch_size, N, K), -1)
-
-    elif anchors.dim() == 3:
-
-        N = anchors.size(1)
-        K = gt_boxes.size(1)
-        if anchors.size(2) == 4:
-            anchors = anchors[:, :, :4].contiguous()
-        else:
-            anchors = anchors[:, :, 1:5].contiguous()
-        gt_boxes = gt_boxes[:, :, :4].contiguous()
-
-        gt_boxes_x = (gt_boxes[:, :, 2] - gt_boxes[:, :, 0] + 1)
-        gt_boxes_y = (gt_boxes[:, :, 3] - gt_boxes[:, :, 1] + 1)
-        gt_boxes_area = (gt_boxes_x * gt_boxes_y).view(batch_size, 1, K)
-
-        anchors_boxes_x = (anchors[:, :, 2] - anchors[:, :, 0] + 1)
-        anchors_boxes_y = (anchors[:, :, 3] - anchors[:, :, 1] + 1)
-        anchors_area = (anchors_boxes_x *
-                        anchors_boxes_y).view(batch_size, N, 1)
-
-        gt_area_zero = (gt_boxes_x == 1) & (gt_boxes_y == 1)
-        anchors_area_zero = (anchors_boxes_x == 1) & (anchors_boxes_y == 1)
-
-        boxes = anchors.view(batch_size, N, 1, 4).expand(batch_size, N, K, 4)
-        query_boxes = gt_boxes.view(
-            batch_size, 1, K, 4).expand(batch_size, N, K, 4)
-
-        iw = (torch.min(boxes[:, :, :, 2], query_boxes[:, :, :, 2]) -
-              torch.max(boxes[:, :, :, 0], query_boxes[:, :, :, 0]) + 1)
-        iw[iw < 0] = 0
-
-        ih = (torch.min(boxes[:, :, :, 3], query_boxes[:, :, :, 3]) -
-              torch.max(boxes[:, :, :, 1], query_boxes[:, :, :, 1]) + 1)
-        ih[ih < 0] = 0
-        ua = anchors_area + gt_boxes_area - (iw * ih)
-
-        overlaps = iw * ih / ua
-
-        # mask the overlap here.
-        overlaps.masked_fill_(gt_area_zero.view(
-            batch_size, 1, K).expand(batch_size, N, K), 0)
-        overlaps.masked_fill_(anchors_area_zero.view(
-            batch_size, N, 1).expand(batch_size, N, K), -1)
-    else:
-        raise ValueError('anchors input dimension is not correct.')
-
-    return overlaps

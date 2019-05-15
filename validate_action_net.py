@@ -27,7 +27,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     data = Video_UCF(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
                  split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
-    data_loader = torch.utils.data.DataLoader(data, batch_size=2,
+    data_loader = torch.utils.data.DataLoader(data, batch_size=4,
                                               shuffle=True, num_workers=0, pin_memory=True)
     model.eval()
 
@@ -47,7 +47,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
-        # if step == 2:
+        # if step == 50:
         #     break
         print('step :',step)
 
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     split_txt_path = '/gpu-data2/sgal/UCF101_Action_detection_splits/'
 
     sample_size = 112
-    sample_duration = 16  # len(images)
+    sample_duration = 16 # len(images)
 
     batch_size = 1
     # batch_size = 1
@@ -140,7 +140,7 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    model_data = torch.load('./action_net_model_126feats.pwf')
+    model_data = torch.load('./action_net_model_steady_anchors.pwf')
 
     model.load_state_dict(model_data)
     model.eval()

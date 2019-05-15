@@ -62,6 +62,8 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
                                                          im_info_,
                                                          gt_tubes_r_, gt_rois_,
                                                          start_fr)
+        # print('rpn_loss_cls :',rpn_loss_cls)
+        # print('rpn_loss_bbox :',rpn_loss_bbox, ' 1/T * rpn_loss_bbox :',1/16 * rpn_loss_bbox)
         if mode == 1:
             loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + rpn_loss_cls_16.mean() \
                    + rpn_loss_bbox_16.mean() +  act_loss_bbox_16.mean() 
@@ -148,7 +150,7 @@ if __name__ == '__main__':
     act_model.to(device)
 
     lr = 0.1
-    lr_decay_step = 15
+    lr_decay_step = 10
     lr_decay_gamma = 0.1
     
     params = []
@@ -165,12 +167,14 @@ if __name__ == '__main__':
     lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
 
-    epochs = 40
+    epochs = 20
+    # epochs = 1
+    # epochs = 40
     n_devs = torch.cuda.device_count()
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
 
-        if epoch % (lr_decay_step + 1) == 0:
+        if (epoch + 1) % (lr_decay_step ) == 0:
             adjust_learning_rate(optimizer, lr_decay_gamma)
             lr *= lr_decay_gamma
             print('adjust learning rate {}...'.format(lr))
