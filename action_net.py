@@ -40,7 +40,7 @@ class ACT_net(nn.Module):
         self.spatial_scale = 1.0/16
     
         # define rpn
-        self.act_rpn = _RPN(256, sample_duration).cuda()
+        self.act_rpn = _RPN(64, sample_duration).cuda()
 
         self.act_proposal_target = _ProposalTargetLayer(2).cuda() ## background/ foreground
         self.act_proposal_target_single = _ProposalTargetLayer_single(2) ## background/ foreground for only xy
@@ -56,6 +56,26 @@ class ACT_net(nn.Module):
     def create_architecture(self):
         self._init_modules()
         self._init_weights()
+
+    def _upsample_add(self, x, y):
+        '''Upsample and add two feature maps.
+        Args:
+          x: (Variable) top feature map to be upsampled.
+          y: (Variable) lateral feature map.
+        Returns:
+          (Variable) added feature map.
+        Note in PyTorch, when input size is odd, the upsampled feature map
+        with `F.upsample(..., scale_factor=2, mode='nearest')`
+        maybe not equal to the lateral feature map size.
+        e.g.
+        original input size: [N,_,15,15] ->
+        conv2d feature map size: [N,_,8,8] ->
+        upsampled feature map size: [N,_,16,16]
+        So we choose bilinear upsample which supports arbitrary output sizes.
+        '''
+        _,_,T,H,W = y.size()
+        # return F.upsample(x, size=(T,H,W), mode='trilinear', align_corners=False) + y
+        return F.interpolate(x, size=(T,H,W), mode='trilinear', align_corners=False) + y
 
     def forward(self, im_data, im_info, gt_tubes, gt_rois,  start_fr):
 
@@ -76,95 +96,34 @@ class ACT_net(nn.Module):
 
 
         # feed image data to base model to obtain base feature map
-        base_feat_1 = self.act_base_1(im_data)
-        base_feat_2 = self.act_base_2(base_feat_1)
-        base_feat_3 = self.act_base_3(base_feat_2)
+        feat_0 = self.act_base_0(im_data)
+        feat_1 = self.act_base_1(feat_0)
+        feat_2 = self.act_base_2(feat_1)
+        feat_3 = self.act_base_3(feat_2)
+        feat_4 = self.act_base_4(feat_3)
 
-        # base_feat = [base_feat_1, base_feat_2, base_feat_3]
+        p5 = self.act_toplayer(feat_4)
+        p4 = self._upsample_add(p5, self.act_latlayer1(feat_4))
+        p4 = self.act_smooth1(p4)
+        p3 = self._upsample_add(p4, self.act_latlayer2(feat_3))
+        p3 = self.act_smooth2(p3)
+        p2 = self._upsample_add(p3, self.act_latlayer3(feat_2))
+        p2 = self.act_smooth3(p2)
+
+        base_feat = [p2,p3,p4]
         rois, rois_16, rpn_loss_cls, rpn_loss_bbox, \
-            rpn_loss_cls_16, rpn_loss_bbox_16 = self.act_rpn(base_feat_3, im_info, gt_tubes, gt_rois)
+            rpn_loss_cls_16, rpn_loss_bbox_16 = self.act_rpn(base_feat, im_info, gt_tubes, gt_rois)
         
-        # n_rois = rois.size(1)
-        # n_rois_16 = rois_16.size(1)
-
-        # if self.training:
-
-        #     gt_tubes = torch.cat((gt_tubes,torch.ones(gt_tubes.size(0),gt_tubes.size(1),1).type_as(gt_tubes)),dim=2).type_as(gt_tubes)
-
-        #     roi_data = self.act_proposal_target(rois, gt_tubes)
-
-        #     rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = roi_data
-        #     f_n_rois = rois.size(1)        
-        #     n_rois = rois.size(1)
-
-        #     rois_label =rois_label.view(-1).long()
-        #     rois_target = rois_target.view(-1, rois_target.size(2))
-        #     rois_inside_ws = rois_inside_ws.view(-1, rois_inside_ws.size(2))
-        #     rois_outside_ws = rois_outside_ws.view(-1, rois_outside_ws.size(2))
-
-        #     roi_data_16 = self.act_proposal_target_single(rois_16[..., [0,1,2,4,5,7]], gt_tubes[...,[0,1,3,4,6,7]])
-          
-        #     rois_16, rois_label_16, rois_target_16, rois_inside_ws_16, rois_outside_ws_16 = roi_data_16
-        #     rois_16 = torch.cat((rois_16[:,:,[0,1,2]],torch.zeros((rois_16.size(0),rois_16.size(1),1)).type_as(rois_16),\
-        #                          rois_16[:,:,[3,4]], (torch.ones((rois_16.size(0), rois_16.size(1),1))*(self.sample_duration-1)).type_as(rois_16), \
-        #                          rois_16[:,:,[5]]), dim=-1)
-        #     rois_label_16 = rois_label_16.view(-1).long()
-        #     rois_target_16 = rois_target_16.view(-1, rois_target_16.size(2))
-        #     rois_inside_ws_16 = rois_inside_ws_16.view(-1, rois_inside_ws_16.size(2))
-        #     rois_outside_ws_16 = rois_outside_ws_16.view(-1, rois_outside_ws_16.size(2))
-
-        # else:
-
-        #     f_n_rois = n_rois + n_rois_16        
-        #     rois_label = None
-        #     rois_target = None
-        #     rois_inside_ws = None
-        #     rois_outside_ws = None
-        #     rpn_loss_cls = 0
-        #     rpn_loss_bbox = 0
-
-        #     rois_label_16 = None
-        #     rois_target_16 = None
-        #     rois_inside_ws_16 = None
-        #     rois_outside_ws_16 = None
-        #     rpn_loss_cls_16 = 0
-        #     rpn_loss_bbox_16 = 0
-
-        # # do roi align based on predicted rois
-
-        # f_rois = torch.cat((rois,rois_16),dim=1)
-        
-        # rois_s = f_rois[:,:,:7].contiguous()
-        f_rois = rois
-
-        # # ## regression
-        # sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(base_feat_1,f_rois[:,:,:7], gt_rois)
-        # # sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(pooled_feat_,f_rois[:,:,:7], gt_rois)
-
-        # if self.reg_layer.training:
-        #     sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(f_rois.size(0), self.sample_duration, f_n_rois, 4)
-        # else:
-        #     sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(f_rois.size(0), self.sample_duration, f_rois.size(1), 4)
-
-        # if not self.training:
-        #     sgl_rois_bbox_pred = Variable(sgl_rois_bbox_pred, requires_grad=False)
-
-        # # get features for proposed tubes
-        # if self.training:
-        
-        #     rois_label = rois_label.view(batch_size, n_rois,-1)
-        #     rois_label_16 = rois_label_16.view(batch_size, n_rois, -1)
-        #     f_rois_label = torch.cat((rois_label, rois_label_16),dim=1)
 
         if self.training:
-          return f_rois,  None, rpn_loss_cls, rpn_loss_bbox, \
+          return rois,  None, rpn_loss_cls, rpn_loss_bbox, \
               None,None, \
               None, None, None
             # rpn_loss_cls_16, rpn_loss_bbox_16, \
             # f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss 
 
       
-        return f_rois,  None, None, None, None, None, \
+        return rois,  None, None, None, None, None, \
             None, None, None,
 
     def _init_weights(self):
@@ -184,8 +143,13 @@ class ACT_net(nn.Module):
         normal_init(self.act_rpn.RPN_Conv, 0, 0.01, truncated)
         normal_init(self.act_rpn.RPN_cls_score, 0, 0.01, truncated)
         normal_init(self.act_rpn.RPN_bbox_pred, 0, 0.01, truncated)
-        # normal_init(self.reg_layer.Conv, 0, 0.01, truncated)
-        # normal_init(self.reg_layer.bbox_pred, 0, 0.01, truncated)
+
+        normal_init(self.act_smooth1, 0, 0.01,  truncated)
+        normal_init(self.act_smooth2, 0, 0.01,  truncated)
+        normal_init(self.act_smooth3, 0, 0.01,  truncated)
+        normal_init(self.act_latlayer1, 0, 0.01,  truncated)
+        normal_init(self.act_latlayer2, 0, 0.01,  truncated)
+        normal_init(self.act_latlayer3, 0, 0.01,  truncated)
 
 
     def _init_modules(self):
@@ -211,16 +175,29 @@ class ACT_net(nn.Module):
         model.load_state_dict(model_data['state_dict'])
 
         # Build resnet.
-        self.act_base_1 = nn.Sequential(model.module.conv1, model.module.bn1, model.module.relu,
-          model.module.maxpool,model.module.layer1)
+        self.act_base_0 = nn.Sequential(model.module.conv1, model.module.bn1, model.module.relu,
+                                        model.module.maxpool)
+        self.act_base_1 = nn.Sequential(model.module.layer1)
         self.act_base_2 = nn.Sequential(model.module.layer2)
         self.act_base_3 = nn.Sequential( model.module.layer3)
+        self.act_base_4 = nn.Sequential( model.module.layer4)
 
-        # self.act_top = nn.Sequential( model.module.layer3, model.module.layer4)
+        # Top layer
+        self.act_toplayer = nn.Conv3d(512, 64, kernel_size=1, stride=1, padding=0)  # reduce channel
+
+        # Smooth layers
+        self.act_smooth1 = nn.Conv3d(64, 64, kernel_size=3, stride=1, padding=1)
+        self.act_smooth2 = nn.Conv3d(64, 64, kernel_size=3, stride=1, padding=1)
+        self.act_smooth3 = nn.Conv3d(64, 64, kernel_size=3, stride=1, padding=1)
+
+        # Lateral layers
+        self.act_latlayer1 = nn.Conv3d( 512, 64, kernel_size=1, stride=1, padding=0)
+        self.act_latlayer2 = nn.Conv3d( 256, 64, kernel_size=1, stride=1, padding=0)
+        self.act_latlayer3 = nn.Conv3d( 128, 64, kernel_size=1, stride=1, padding=0)
 
         # Fix blocks
-        for p in self.act_base_1[0].parameters(): p.requires_grad=False
-        for p in self.act_base_1[1].parameters(): p.requires_grad=False
+        for p in self.act_base_0[0].parameters(): p.requires_grad=False
+        for p in self.act_base_0[1].parameters(): p.requires_grad=False
 
         fixed_blocks = 3
         if fixed_blocks >= 3:
@@ -228,7 +205,7 @@ class ACT_net(nn.Module):
         if fixed_blocks >= 2:
           for p in self.act_base_2[0].parameters(): p.requires_grad=False
         if fixed_blocks >= 1:
-          for p in self.act_base_1[4].parameters(): p.requires_grad=False
+          for p in self.act_base_1[0].parameters(): p.requires_grad=False
 
         def set_bn_fix(m):
           classname = m.__class__.__name__
@@ -236,7 +213,9 @@ class ACT_net(nn.Module):
             for p in m.parameters(): p.requires_grad=False
 
     
+        self.act_base_0.apply(set_bn_fix)
         self.act_base_1.apply(set_bn_fix)
         self.act_base_2.apply(set_bn_fix)
         self.act_base_3.apply(set_bn_fix)
+
 

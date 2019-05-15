@@ -28,7 +28,6 @@ class _RPN(nn.Module):
         self.anchor_scales = [1, 2, 4, 8, 16, 32 ]
         self.anchor_ratios = [0.5, 1, 2]
         self.feat_stride = [16, ]
-        # self.anchor_duration = [16,8,4,3] # add
         self.anchor_duration = [sample_duration,int(sample_duration*3/4), int(sample_duration/2)] #,int(sample_duration/4)] # add 
 
         # # define the convrelu layers processing input feature map
@@ -37,28 +36,19 @@ class _RPN(nn.Module):
 
         # define bg/fg classifcation score layer for each kernel 
         # 2(bg/fg) * 9  (anchors) * 3 (duration : 16,12,8)
-        self.nc_score_out = len(self.anchor_scales) * len(self.anchor_ratios) * self.anchor_num * 2
-        # 2(bg/fg) * 9  (anchors) 
-        self.nc_score_16 = len(self.anchor_scales) * len(self.anchor_ratios) * 2 
-
+        self.nc_score_out = 1 * len(self.anchor_ratios) * self.anchor_num * 2
         self.RPN_cls_score = nn.Conv2d(self.din, self.nc_score_out, 1, 1, 0)
-        # self.RPN_cls_16 = nn.Conv3d(self.din*2, self.nc_score_16, (sample_duration,1,1), 1, 0)
 
         # define anchor box offset prediction layer
         # 6(coords:x1,y1,t1) * 9 (anchors)  * 2 (duration)
-        self.nc_bbox_out = len(self.anchor_scales) * len(self.anchor_ratios) * self.anchor_num * self.sample_duration * 4
-        # 4(coords:x1,y1) * 9 (anchors)  
-        self.bbox_16 = len(self.anchor_scales) * len(self.anchor_ratios) * 4
+        self.nc_bbox_out = 1 * len(self.anchor_ratios) * self.anchor_num * self.sample_duration * 4
         self.RPN_bbox_pred = nn.Conv2d(self.din, self.nc_bbox_out, 1, 1, 0) # for regression
-        # self.RPN_bbox_only16 = nn.Conv3d(self.din*2, self.bbox_16, (sample_duration,1,1), 1, 0) # for regression
-        ## temporal regression
+
         # define proposal layer
         self.RPN_proposal = _ProposalLayer(self.feat_stride, self.anchor_scales, self.anchor_ratios, self.anchor_duration,  len(self.anchor_scales) * len(self.anchor_ratios) * self.anchor_num)
-        self.RPN_proposal_16 = _ProposalLayer_xy(self.feat_stride,  self.anchor_scales, self.anchor_ratios, [sample_duration])
 
         # define anchor target layer
         self.RPN_anchor_target = _AnchorTargetLayer(self.feat_stride,  self.anchor_scales, self.anchor_ratios, self.anchor_duration, self.anchor_num)
-        self.RPN_anchor_16 = _AnchorTargetLayer_xy(self.feat_stride, self.anchor_scales, self.anchor_ratios, [sample_duration])
 
         self.avg_pool = nn.AvgPool3d((self.sample_duration,1,1), stride=1)
         self.rpn_loss_cls = 0
@@ -92,55 +82,57 @@ class _RPN(nn.Module):
 
     def forward(self, base_feat, im_info, gt_boxes, gt_rois):
 
-        # n_map_feats = len(base_feat)
+        n_map_feats = len(base_feat)
 
+        rpn_shapes = []
+        rpn_cls_score_all = []
+        rpn_bbox_pred_all = []
+        rpn_cls_prob_all  = []
 
-        # for i in range(n_map_feats):
-        #     feats = base_feat[i]
-        #     print('feats.shape :',feats.shape)
-        # exit(-1)    
-        batch_size = base_feat.size(0)
-        rpn_conv1 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
-        rpn_conv1 = self.avg_pool(rpn_conv1).squeeze(2)
-        # # ## get classification score for all anchors
-        rpn_cls_score = self.RPN_cls_score(rpn_conv1)  # classification layer
-        rpn_bbox_pred = self.RPN_bbox_pred(rpn_conv1)  # regression layer
+        for i in range(n_map_feats):
+            feat = base_feat[i]
 
-        # 16 frames 
+            batch_size = feat.size(0)
+            rpn_conv1 = F.relu(self.RPN_Conv(feat), inplace=True) # 3d convolution
+            rpn_conv1 = self.avg_pool(rpn_conv1).squeeze(2)
 
-        # rpn_cls_16    = self.RPN_cls_16(rpn_conv1).squeeze(-3)  # classification layer
-        # rpn_bbox_16   = self.RPN_bbox_only16(rpn_conv1).squeeze(-3)
-        # print('rpn_bbox_pred.shape ',rpn_bbox_pred.shape)
-        # exit(-1)
-        # reshape
-        rpn_cls_score_reshape = self.reshape2d(rpn_cls_score, 2)
-        rpn_cls_prob_reshape = F.softmax(rpn_cls_score_reshape, 1)
-        rpn_cls_prob = self.reshape2d(rpn_cls_prob_reshape, self.nc_score_out)
+            # # ## get classification score for all anchors
+            rpn_cls_score = self.RPN_cls_score(rpn_conv1)  # classification layer
+            rpn_bbox_pred = self.RPN_bbox_pred(rpn_conv1)  # regression layer
 
-        # rpn_cls_16_reshape = self.reshape2d(rpn_cls_16, 2)
-        # rpn_16_prob_reshape = F.softmax(rpn_cls_16_reshape, 1)
-        # rpn_16_prob = self.reshape2d(rpn_16_prob_reshape, self.nc_score_16)
+            rpn_cls_score_reshape = self.reshape2d(rpn_cls_score, 2)
+            rpn_cls_prob_reshape = F.softmax(rpn_cls_score_reshape, 1)
+            rpn_cls_prob = self.reshape2d(rpn_cls_prob_reshape, self.nc_score_out)
+            
+            # print('rpn_cls_score.shape :',rpn_cls_score.shape)
+            # print('rpn_cls_score.shape :',rpn_cls_score.permute(0,2,3,1).contiguous().view(batch_size,-1,2).shape)
+            # print('rpn_bbox_pred.shape :',rpn_bbox_pred.shape)
+            # print('rpn_bbox_pred.shape :',rpn_bbox_pred.permute(0,2,3,1).contiguous().view(batch_size,-1,self.sample_duration*4).shape)
+            # print('rpn_cls_prob.shape :',rpn_cls_prob.shape)
+            # print('rpn_cls_score.shape :',rpn_cls_prob.permute(0,2,3,1).contiguous().view(batch_size,-1,2).shape)
+
+            rpn_shapes.append([rpn_cls_score.size()[2], rpn_cls_score.size()[3]])
+            rpn_cls_score_all.append(rpn_cls_score.permute(0,2,3,1).contiguous().view(batch_size,-1,2))
+            rpn_bbox_pred_all.append(rpn_bbox_pred.permute(0,2,3,1).contiguous().view(batch_size,-1,self.sample_duration*4))
+            rpn_cls_prob_all.append(rpn_cls_prob.permute(0,2,3,1).contiguous().view(batch_size,-1,2))
+
+        rpn_cls_score_alls = torch.cat(rpn_cls_scores, 1)
+        rpn_cls_prob_alls = torch.cat(rpn_cls_probs, 1)
+        rpn_bbox_pred_alls = torch.cat(rpn_bbox_preds, 1)
 
         # proposal layer
         cfg_key = 'TRAIN' if self.training else 'TEST'
 
         rois = self.RPN_proposal((rpn_cls_prob.data, rpn_bbox_pred.data,
                                      im_info, cfg_key,16))
-        # rois_16 = self.RPN_proposal_16((rpn_16_prob.data, rpn_bbox_16.data,
-        #                              im_info, cfg_key,16))
-
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0
-        # self.rpn_loss_cls_16 = 0
-        # self.rpn_loss_box_16 = 0
-
 
         # generating training labels a# nd build the rpn loss
         if self.training:
 
             assert gt_boxes is not None
 
-            # get tubes lasting sample duration
             gt_boxes_16 = gt_boxes.new(gt_boxes.shape).zero_()
 
             dur = gt_boxes[:,:,5] - gt_boxes[:,:,2] + 1
