@@ -395,8 +395,7 @@ class single_video(data.Dataset):
         clip = self.clips
         ## get bboxes and create gt tubes
         rois_indx = np.array(frame_indices) - frame_indices[0]
-        print('rois_indx :',rois_indx)
-        print('rois.shape :',rois.shape)
+
         rois_sample_tensor = np.zeros((rois.shape[0], rois_indx.shape[0],5))
 
         rois_sample_tensor = rois[:,rois_indx,:]

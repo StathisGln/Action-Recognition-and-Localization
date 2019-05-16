@@ -196,7 +196,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         start_fr = torch.zeros(clips_.size(0)).to(device)
         # for i in range(2):
         #     print('gt_rois :',gt_rois[i,:n_actions[i]])
-        tubes, bbox_pred, _,_,_,_,_,_,_,_,sgl_rois_bbox_pred,_   = model(clips,
+        tubes, bbox_pred, _,_,_,_,_,sgl_rois_bbox_pred,_   = model(clips,
                                                                        im_info,
                                                                        None, None,
                                                                        None)
