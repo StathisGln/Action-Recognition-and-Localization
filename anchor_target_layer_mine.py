@@ -15,9 +15,7 @@ import numpy as np
 import numpy.random as npr
 
 from config import cfg
-from generate_anchors import generate_anchors
-# from bbox_transform import clip_boxes, bbox_overlaps_batch, bbox_overlaps_time, bbox_transform_batch
-# from bbox_transform import clip_boxes, bbox_transform_batch_3d, bbox_overlaps_batch_3d
+from generate_anchors import generate_anchors_all_pyramids
 from box_functions import bbox_transform, bbox_transform_inv, clip_boxes, tube_overlaps
 import pdb
 
@@ -42,13 +40,10 @@ class _AnchorTargetLayer(nn.Module):
 
         self.sample_duration = anchor_duration[0]
         self.time_dim = anchor_duration
-        self.scales = scales
-        self.ratios = ratios
-
-        self.anchor_duration = anchor_duration
-        self._anchors = torch.from_numpy(generate_anchors(scales=np.array(scales), 
-                                         ratios=np.array(ratios))).float()
-        self._num_anchors = num_anchors                                 
+        self._fpn_scales = scales
+        self._anchor_ratios = ratios
+        self._fpn_feature_strides = np.array([ 4, 8, 16, 32])
+        self._fpn_anchor_stride  = 1
 
         self._allowed_border = 0  # default is 0
 
@@ -64,28 +59,14 @@ class _AnchorTargetLayer(nn.Module):
         gt_tubes = input[1]      ## gt tube
         im_info = input[2]       ## im_info
         gt_rois = input[3][:,:,:,:4].contiguous()       ## gt rois for each frame
+        feat_shapes = input[4]
 
         # map of shape (..., H, W)
-
-
-        ### Not sure about that
+        height, width = 0, 0
         batch_size = gt_tubes.size(0)
-        height, width  = rpn_cls_score.size(2), rpn_cls_score.size(3)
-        feat_height, feat_width,  =  rpn_cls_score.size(2), rpn_cls_score.size(3)
+        anchors = torch.from_numpy(generate_anchors_all_pyramids(self._fpn_scales, self._anchor_ratios, 
+                feat_shapes, self._fpn_feature_strides, self._fpn_anchor_stride)).type_as(rpn_cls_score)    
 
-        shift_x = np.arange(0, feat_width) * self._feat_stride
-        shift_y = np.arange(0, feat_height) * self._feat_stride
-        shift_x, shift_y = np.meshgrid(shift_x, shift_y)
-        # dev = gt_tubes.device
-        shifts = torch.from_numpy(np.vstack((shift_x.ravel(), shift_y.ravel(), 
-                                             shift_x.ravel(), shift_y.ravel() )).transpose())
-        shifts = shifts.contiguous().type_as(rpn_cls_score).float()#.to(dev)
-
-        A = self._anchors.size(0)
-        K = shifts.size(0)
-
-        anchors = self._anchors.view(1, A, 4).type_as(shifts) + shifts.view(K, 1, 4)
-        anchors = anchors.view(K * A, 4)
 
         # # get time anchors
         anchors_all = []
@@ -101,10 +82,10 @@ class _AnchorTargetLayer(nn.Module):
 
         anchors_all = torch.cat(anchors_all,0).cuda()
         anchors_all = anchors_all.view(anchors_all.size(0), self.sample_duration * 4)
-        A = A * self._num_anchors
-        total_anchors = int(K * A )
 
+        total_anchors =  anchors_all.size(0)
         anchors_all = anchors_all.view(total_anchors,self.sample_duration,4)
+
         keep = ((anchors_all[:, :, 0].ge(-self._allowed_border).all(dim=1)) &
                 (anchors_all[:, :, 1].ge(-self._allowed_border).all(dim=1)) &
                 (anchors_all[:, :, 2].lt(long(im_info[0][1]) + self._allowed_border).all(dim=1)) &
@@ -114,6 +95,7 @@ class _AnchorTargetLayer(nn.Module):
         # keep only inside anchors
         anchors = anchors_all[inds_inside,].type_as(gt_tubes)
         anchors = anchors.view(anchors.size(0),-1)
+
         # label: 1 is positive, 0 is negative, -1 is dont care
         labels = gt_tubes.new(batch_size, inds_inside.size(0)).fill_(-1)
 
@@ -201,26 +183,9 @@ class _AnchorTargetLayer(nn.Module):
 
         outputs = []
 
-        labels = labels.view(batch_size, height, width, A).permute(0,3,1,2).contiguous()
-        labels = labels.view(batch_size, 1, A* height, width)
         outputs.append(labels)
-
-        bbox_targets = bbox_targets.view(batch_size, height, width,  A * self.sample_duration * 4).permute(0,3,1,2).contiguous()
-
         outputs.append(bbox_targets)
-
-        anchors_count = bbox_inside_weights.size(1)
-        bbox_inside_weights = bbox_inside_weights.view(batch_size,anchors_count,1).\
-                              expand(batch_size, anchors_count, 4 * self.sample_duration)
-        bbox_inside_weights = bbox_inside_weights.contiguous().view(batch_size, height, width,  A * 4 * self.sample_duration)\
-                            .permute(0,3,1,2).contiguous()
         outputs.append(bbox_inside_weights)
-
-        bbox_outside_weights = bbox_outside_weights.view(batch_size,anchors_count,1).\
-                               expand(batch_size, anchors_count, 4 * self.sample_duration)
-        bbox_outside_weights = bbox_outside_weights.contiguous().view(batch_size, height, width,  A * 4 * self.sample_duration)\
-                            .permute(0,3,1,2).contiguous()
-
         outputs.append(bbox_outside_weights)
 
         return outputs

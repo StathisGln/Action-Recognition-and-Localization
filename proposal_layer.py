@@ -60,8 +60,6 @@ class _ProposalLayer(nn.Module):
         # the second set are the fg probs
 
         scores = input[0][ :, :, 1]
-        print('scores.shape :',scores.shape)
-        print('input[0].shape :',input[0].shape)
         bbox_frame = input[1]
         im_info = input[2]
         cfg_key = input[3]
@@ -79,18 +77,11 @@ class _ProposalLayer(nn.Module):
         # Create anchors #
         ##################
 
-        print('self._fpn_scales :',self._fpn_scales)
-        print('self._anchor_ratios :',self._anchor_ratios)
-        print('feat_shapes :',feat_shapes)
-        print('self._fpn_feature_strides :',self._fpn_feature_strides)
-        print('self._fpn_anchor_stride :',self._fpn_anchor_stride)
         anchors = torch.from_numpy(generate_anchors_all_pyramids(self._fpn_scales, self._anchor_ratios, 
                 feat_shapes, self._fpn_feature_strides, self._fpn_anchor_stride)).type_as(scores)
         
         num_anchors = anchors.size(0)
 
-        print('anchors.shape :',anchors.shape)
-        exit(-1)
         # # get time anchors
         anchors_all = []
 
@@ -110,12 +101,7 @@ class _ProposalLayer(nn.Module):
         # Transpose and reshape predicted bbox transformations to get them
         # into the same order as the anchors:
 
-        bbox_frame = bbox_frame.permute(0, 2, 3, 1).contiguous()
         bbox_frame = bbox_frame.view(batch_size, -1, self.sample_duration * 4)
-        
-        # Same story for the scores:
-
-        scores = scores.permute(0, 2, 3, 1).contiguous()
         scores = scores.view(batch_size, -1)
 
         # print('anchors_all.view(-1,anchors_all.size(2)).shape :',anchors_all.shape)
@@ -125,11 +111,10 @@ class _ProposalLayer(nn.Module):
         # print('bbox_frame.view(-1,bbox_frame.size(2)).shape :',bbox_frame.view(-1,bbox_frame.size(2)).shape)
         # exit(-1)
         # Convert anchors into proposals via bbox transformations
-
+        
         proposals = bbox_transform_inv(anchors_all.contiguous().view(-1,anchors_all.size(2)),\
                                        bbox_frame.contiguous().view(-1,bbox_frame.size(2)), \
                                        (1.0, 1.0, 1.0, 1.0)) # proposals have 441 * time_dim shape
-
         # 2. clip predicted boxes to image
         ## if any dimension exceeds the dims of the original image, clamp_ them
         proposals = proposals.view(batch_size,-1,self.sample_duration*4)

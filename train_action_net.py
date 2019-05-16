@@ -150,7 +150,7 @@ if __name__ == '__main__':
     act_model.to(device)
 
     lr = 0.1
-    lr_decay_step = 10
+    lr_decay_step = 15
     lr_decay_gamma = 0.1
     
     params = []
@@ -167,7 +167,7 @@ if __name__ == '__main__':
     lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
 
-    epochs = 20
+    epochs = 60
     # epochs = 1
     # epochs = 40
     n_devs = torch.cuda.device_count()
