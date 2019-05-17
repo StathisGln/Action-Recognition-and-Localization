@@ -71,7 +71,8 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
             loss = sgl_rois_bbox_loss.mean()
 
         elif mode == 4:
-            loss = rpn_loss_cls.mean() + 1/sample_duration * rpn_loss_bbox.mean() #  + rpn_loss_cls_16.mean() \
+            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() #  + rpn_loss_cls_16.mean() \
+            # loss = rpn_loss_cls.mean() + 1/sample_duration * rpn_loss_bbox.mean() #  + rpn_loss_cls_16.mean() \
                    # + rpn_loss_bbox_16.mean()  + sgl_rois_bbox_loss.mean()
 
         loss_temp += loss.item()
