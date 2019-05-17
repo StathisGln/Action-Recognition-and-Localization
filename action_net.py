@@ -112,7 +112,7 @@ class ACT_net(nn.Module):
         p2 = self._upsample_add(p3, self.act_latlayer3(c2))
         p2 = self.act_smooth3(p2)
 
-        p6 = self.maxpool3d(p5)
+        # p6 = self.maxpool3d(p5)
 
         rpn_feature_maps = [p2, p3, p4, p5]
 
@@ -121,88 +121,13 @@ class ACT_net(nn.Module):
 
         n_rois = rois.size(1)
         f_rois = rois
-        # n_rois_16 = rois_16.size(1)
-
-        # if self.training:
-
-        #     gt_tubes = torch.cat((gt_tubes,torch.ones(gt_tubes.size(0),gt_tubes.size(1),1).type_as(gt_tubes)),dim=2).type_as(gt_tubes)
-
-        #     roi_data = self.act_proposal_target(rois, gt_tubes)
-
-        #     rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = roi_data
-        #     # print('rois.shape :',rois.shape)
-        #     # print('rois :',rois.cpu().detach().numpy())
-        #     # exit(-1)
-        #     f_n_rois = rois.size(1)        
-        #     n_rois = rois.size(1)
-
-        #     rois_label =rois_label.view(-1).long()
-        #     rois_target = rois_target.view(-1, rois_target.size(2))
-        #     rois_inside_ws = rois_inside_ws.view(-1, rois_inside_ws.size(2))
-        #     rois_outside_ws = rois_outside_ws.view(-1, rois_outside_ws.size(2))
-
-        #     roi_data_16 = self.act_proposal_target_single(rois_16[..., [0,1,2,4,5,7]], gt_tubes[...,[0,1,3,4,6,7]])
-          
-        #     rois_16, rois_label_16, rois_target_16, rois_inside_ws_16, rois_outside_ws_16 = roi_data_16
-        #     rois_16 = torch.cat((rois_16[:,:,[0,1,2]],torch.zeros((rois_16.size(0),rois_16.size(1),1)).type_as(rois_16),\
-        #                          rois_16[:,:,[3,4]], (torch.ones((rois_16.size(0), rois_16.size(1),1))*(self.sample_duration-1)).type_as(rois_16), \
-        #                          rois_16[:,:,[5]]), dim=-1)
-        #     rois_label_16 = rois_label_16.view(-1).long()
-        #     rois_target_16 = rois_target_16.view(-1, rois_target_16.size(2))
-        #     rois_inside_ws_16 = rois_inside_ws_16.view(-1, rois_inside_ws_16.size(2))
-        #     rois_outside_ws_16 = rois_outside_ws_16.view(-1, rois_outside_ws_16.size(2))
-
-        # else:
-
-        #     f_n_rois = n_rois + n_rois_16        
-        #     rois_label = None
-        #     rois_target = None
-        #     rois_inside_ws = None
-        #     rois_outside_ws = None
-        #     rpn_loss_cls = 0
-        #     rpn_loss_bbox = 0
-
-        #     rois_label_16 = None
-        #     rois_target_16 = None
-        #     rois_inside_ws_16 = None
-        #     rois_outside_ws_16 = None
-        #     rpn_loss_cls_16 = 0
-        #     rpn_loss_bbox_16 = 0
-
-        # # do roi align based on predicted rois
-        # f_rois = torch.cat((rois,rois_16),dim=1)
-        # rois_s = f_rois[:,:,:7].contiguous()
-
-
-        # # ## regression
-        # sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(p2,f_rois[:,:,:7], gt_rois)
-        # # sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(pooled_feat_,f_rois[:,:,:7], gt_rois)
-
-        # if self.reg_layer.training:
-        #     sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(f_rois.size(0), self.sample_duration, f_n_rois, 4)
-        # else:
-        #     sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(f_rois.size(0), self.sample_duration, f_rois.size(1), 4)
-
-        # if not self.training:
-        #     sgl_rois_bbox_pred = Variable(sgl_rois_bbox_pred, requires_grad=False)
-
-        # # get features for proposed tubes
-        # if self.training:
-        
-        #     rois_label = rois_label.view(batch_size, n_rois,-1)
-        #     rois_label_16 = rois_label_16.view(batch_size, n_rois, -1)
-        #     f_rois_label = torch.cat((rois_label, rois_label_16),dim=1)
 
         if self.training:
-          return f_rois,  None, rpn_loss_cls, rpn_loss_bbox, \
-            0,0,0,0,0
-          # return f_rois,  None, rpn_loss_cls, rpn_loss_bbox, \
-          #   rpn_loss_cls_16, rpn_loss_bbox_16, \
-          #   f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss 
-
+          return f_rois,  None, rpn_loss_cls, None, \
+            None,None,None,None,None,
 
         return f_rois,  None, None, None, None, None, \
-            None, sgl_rois_bbox_pred, None,
+            None, None, None,
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):
@@ -220,9 +145,9 @@ class ACT_net(nn.Module):
         truncated = False
         normal_init(self.act_rpn.RPN_Conv, 0, 0.01, truncated)
         normal_init(self.act_rpn.RPN_cls_score, 0, 0.01, truncated)
-        normal_init(self.act_rpn.RPN_bbox_pred, 0, 0.01, truncated)
-        normal_init(self.reg_layer.Conv, 0, 0.01, truncated)
-        normal_init(self.reg_layer.bbox_pred, 0, 0.01, truncated)
+        # normal_init(self.act_rpn.RPN_bbox_pred, 0, 0.01, truncated)
+        # normal_init(self.reg_layer.Conv, 0, 0.01, truncated)
+        # normal_init(self.reg_layer.bbox_pred, 0, 0.01, truncated)
 
         normal_init(self.act_smooth1, 0, 0.01,  truncated)
         normal_init(self.act_smooth2, 0, 0.01,  truncated)

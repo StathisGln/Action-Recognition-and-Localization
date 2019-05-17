@@ -79,7 +79,7 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
 
         # print('rpn_loss_box :',rpn_loss_bbox)
         # print('rpn_loss_box_16 :',rpn_loss_bbox_16)
-        print('rpn_loss_cls :',rpn_loss_cls)
+        # print('rpn_loss_cls :',rpn_loss_cls)
         # print('rpn_loss_cls_16 :',rpn_loss_cls_16)
 
         # backw\ard

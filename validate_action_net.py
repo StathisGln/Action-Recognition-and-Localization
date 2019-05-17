@@ -183,8 +183,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
-        # if step == 2:
-        #     break
+        if step == 1:
+            break
         print('step :',step)
 
         clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
@@ -194,82 +194,30 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         n_actions_ = n_actions.to(device)
         im_info_ = im_info.to(device)
         start_fr = torch.zeros(clips_.size(0)).to(device)
-        # for i in range(2):
-        #     print('gt_rois :',gt_rois[i,:n_actions[i]])
-        tubes, _,_,_,_,_,_,sgl_rois_bbox_pred,_   = model(clips,
-                                                                       im_info,
-                                                                       None, None,
-                                                                       None)
-        n_tubes = len(tubes)
+
+        tubes, _,_,_,_,_,_,_,_   = model(clips,
+                                         im_info,
+                                         None, None,
+                                         None)
+        n_tubes = tubes.size(1)
+
         # init tensor for final frames
 
-        
-        # # use bbox_pred for tubes
-        # tubes[:,:,1:7] = bbox_transform_inv_3d(tubes[:,:,1:7], bbox_pred,tubes.size(0))
-        # tubes[:,:,1:7] = clip_boxes_3d(tubes[:,:,1:7], im_info, tubes.size(0))
-
-        tubes_exp = tubes.unsqueeze(-2).expand(tubes.shape[:-1]+(sample_duration,8)).permute(0,2,1,3).contiguous()
-
-        tubes_time = torch.zeros(tubes.size(0), tubes.size(1),2).type_as(tubes).long()
-        tubes_time[:,:,0] = torch.round(tubes[:,:,3]).clamp_(min=0, max=sample_duration)
-        tubes_time[:,:,1] = torch.round(tubes[:,:,6]).clamp_(min=0, max=sample_duration)
-        
-        # print('tubes_exp[i,j,tubes_t[i,j,0]:tubes[i,j,1]].shape :',tubes_exp[0,0,tubes_time[0,0,0]:tubes_time[0,0,1]].shape)
-        # print('tubes_exp[i,j,tubes_t[i,j,0]:tubes[i,j,1]].shape :',tubes_exp[0,0,tubes_time[0,0,0]:tubes_time[0,0,1]])
-        # print('tubes_exp.shape :',tubes_exp.shape)
-
-        # for i in range(tubes_time.size(0)):
-        #     for j in range(tubes_time.size(1)):
-        #         final_frames[i,j,tubes_time[i,j,0] :tubes_time[i,j,1]+1] = tubes_exp[i,j,tubes_time[i,j,0]:tubes_time[i,j,1]+1,[1,2,4,5]]
-
         for i in range(tubes.size(0)): # how many frames we have
-            # calculate single frame overlaps
-            final_frames =  torch.zeros((tubes.size(1), sample_duration, 4))
-            tubes_exp_ = tubes_exp[i]
-            # print('tubes_exp :',tubes_exp.cpu().numpy())
-            tubes_exp_[:,:,[1,2,4,5]] = bbox_transform_inv(tubes_exp_[:,:,[1,2,4,5]], \
-                                            sgl_rois_bbox_pred[i],sgl_rois_bbox_pred.size(1))
-            tubes_exp_[:,:,[1,2,4,5]] = clip_boxes(tubes_exp_[:,:,[1,2,4,5]], \
-                                                   im_info[0].unsqueeze(0).expand(sgl_rois_bbox_pred.size(1),3), \
-                                                   sgl_rois_bbox_pred.size(1))
-            tubes_exp_ = tubes_exp_.permute(1,0,2)
-            for j in range(tubes.size(1)):
-                final_frames[j,tubes_time[i,j,0] :tubes_time[i,j,1]+1]= tubes_exp_[j,tubes_time[i,j,0]:tubes_time[i,j,1]+1,[1,2,4,5]]
 
-            boxes_ = gt_rois[i]
+            tubes_t = torch.zeros(n_tubes, 7).type_as(gt_tubes_r_)
+            for j in range(n_tubes):
+                tubes_t[j] = tubes[i][j][:7].type_as(tubes_t)
+            
+            overlaps, overlaps_xy, overlaps_t = bbox_overlaps_batch_3d(tubes_t.squeeze(0), gt_tubes_r_[i].unsqueeze(0)) # check one video each time
 
-            non_empty_frames = boxes_[:,:,4].nonzero()
-
-            if non_empty_frames.nelement() == 0: continue
-
-            non_empty_frames_actions = torch.unique(non_empty_frames[:,0], sorted=True)
-            boxes_ = boxes_[non_empty_frames_actions,:,:]
-
-            rois_overlaps = bbox_overlaps_batch(final_frames.permute(1,0,2), boxes_.permute(1,0,2)).permute(1,0,2).clamp_(min=0)
-            rois_overlaps_mean = torch.mean(rois_overlaps, 1)
-
-            gt_max_overlaps_sgl, _ = torch.max(rois_overlaps_mean, 0)
-            gt_max_overlaps_sgl = torch.where(gt_max_overlaps_sgl > iou_thresh, gt_max_overlaps_sgl, torch.zeros_like(gt_max_overlaps_sgl).type_as(gt_max_overlaps_sgl))
-            sgl_detected =  gt_max_overlaps_sgl.ne(0).sum()
-            n_elems = gt_max_overlaps_sgl.nelement()
-            sgl_true_pos += sgl_detected
-            sgl_false_neg += n_elems - sgl_detected
-
-            tubes_t = tubes[i,:,:7]
-            # tubes_t = bbox_transform_inv_3d(tubes_t.unsqueeze(0), bbox_pred[i].unsqueeze(0),1)
-            # tubes_t = clip_boxes_3d(tubes_t, im_info, 1).squeeze(0)
-
-            # keep only non-empty gt_tubes
-            gt_tube_indices = gt_tubes_r_[i,:,-1].gt(0).nonzero()
-            gt_tub = gt_tubes_r[i,gt_tube_indices]
-            if gt_tub.nelement() == 0:
-                continue
-            overlaps, overlaps_xy, overlaps_t = bbox_overlaps_batch_3d(tubes_t, gt_tub.permute(1,0,2).type_as(tubes_t)) # check one video each time
             ## for the whole tube
             gt_max_overlaps, _ = torch.max(overlaps, 1)
             gt_max_overlaps = torch.where(gt_max_overlaps > iou_thresh, gt_max_overlaps, torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
             detected =  gt_max_overlaps.ne(0).sum()
-            n_elements = gt_max_overlaps.nelement()
+
+            n_elements = gt_tubes_r[i,:,-1].ne(0).sum().item()
+
             true_pos += detected
             false_neg += n_elements - detected
 
@@ -278,17 +226,15 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             gt_max_overlaps_xy = torch.where(gt_max_overlaps_xy > iou_thresh, gt_max_overlaps_xy, torch.zeros_like(gt_max_overlaps_xy).type_as(gt_max_overlaps_xy))
 
             detected_xy =  gt_max_overlaps_xy.ne(0).sum()
-            n_elements_xy = gt_max_overlaps_xy.nelement()
             true_pos_xy += detected_xy
-            false_neg_xy += n_elements_xy - detected_xy
+            false_neg_xy += n_elements - detected_xy
 
             ## for t - area
             gt_max_overlaps_t, _ = torch.max(overlaps_t, 1)
             gt_max_overlaps_t = torch.where(gt_max_overlaps_t > iou_thresh, gt_max_overlaps_t, torch.zeros_like(gt_max_overlaps_t).type_as(gt_max_overlaps_t))
             detected_t =  gt_max_overlaps_t.ne(0).sum()
-            n_elements_t = gt_max_overlaps_t.nelement()
             true_pos_t += detected_t
-            false_neg_t += n_elements_t - detected_t
+            false_neg_t += n_elements - detected_t
 
             tubes_sum += 1
 
@@ -296,7 +242,6 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     recall     = float(true_pos)      / (float(true_pos)      + float(false_neg))
     recall_xy  = float(true_pos_xy)   / (float(true_pos_xy)   + float(false_neg_xy))
     recall_t   = float(true_pos_t)    / (float(true_pos_t)    + float(false_neg_t))
-    sgl_recall = float(sgl_true_pos)  / (float(sgl_true_pos)  + float(sgl_false_neg))
 
     print(' -----------------------')
     print('| Validation Epoch: {: >3} | '.format(epoch+1))
@@ -315,13 +260,13 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     print('|                       |')
     print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
         step, true_pos_t, false_neg_t, recall_t))
-    print('|                       |')
-    print('| Single frame          |')
-    print('|                       |')
-    print('| In {: >6} steps    :  |'.format(step))
-    print('|                       |')
-    print('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
-        sgl_true_pos, sgl_false_neg, sgl_recall))
+    # print('|                       |')
+    # print('| Single frame          |')
+    # print('|                       |')
+    # print('| In {: >6} steps    :  |'.format(step))
+    # print('|                       |')
+    # print('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+    #     sgl_true_pos, sgl_false_neg, sgl_recall))
 
 
     print(' -----------------------')
@@ -369,7 +314,7 @@ if __name__ == '__main__':
     model.to(device)
 
 
-    model_data = torch.load('./action_net_model_126feats_reg.pwf')
+    model_data = torch.load('./action_net_model_126feats.pwf')
 
     model.load_state_dict(model_data)
 

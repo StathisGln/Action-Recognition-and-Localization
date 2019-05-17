@@ -40,7 +40,7 @@ class _AnchorTargetLayer(nn.Module):
         self._anchor_ratios = ratios
         self._feat_stride = feat_stride
         self._fpn_scales = scales
-        self._fpn_feature_strides = np.array([4, 8, 16, 32, 64])
+        self._fpn_feature_strides = np.array([4, 8, 16, 32])
         self._fpn_anchor_stride  = 1
         self._time_dim = anchor_duration
         
