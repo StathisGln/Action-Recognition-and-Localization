@@ -169,7 +169,6 @@ class _ProposalLayer(nn.Module):
                 output[i,:num_proposal,1:-1] = proposals_single
                 output[i,:num_proposal,-1] = scores_single.squeeze()
 
-
         return output
 
     def backward(self, top, propagate_down, bottom):

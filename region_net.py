@@ -101,6 +101,8 @@ class _RPN(nn.Module):
             rpn_cls_score = self.RPN_cls_score(rpn_conv1)  # classification layer
             rpn_bbox_pred = self.RPN_bbox_pred(rpn_conv1)  # regression layer
 
+
+
             rpn_cls_score_reshape = self.reshape2d(rpn_cls_score, 2)
             rpn_cls_prob_reshape = F.softmax(rpn_cls_score_reshape, 1)
             rpn_cls_prob = self.reshape2d(rpn_cls_prob_reshape, self.nc_score_out)
