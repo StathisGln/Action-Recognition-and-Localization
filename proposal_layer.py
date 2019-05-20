@@ -105,7 +105,7 @@ class _ProposalLayer(nn.Module):
         anchors = anchors.view(K * A, 4)
 
         bboxes = [bbox_frame, bbox_frame_3_4, bbox_frame_2]
-
+        
         anchors_all = []
         bbox_frame_all = []
 
@@ -125,12 +125,12 @@ class _ProposalLayer(nn.Module):
                 anchors_all.append(anc)
                 bbox_frame_all.append(bbox)
                 
-        anchors_all = torch.cat(anchors_all,0).cuda() 
-        bbox_frame_all = torch.cat(bbox_frame_all,0).cuda()
+        anchors_all = torch.cat(anchors_all,0).type_as(scores) 
+        bbox_frame_all = torch.cat(bbox_frame_all,0).type_as(scores)
 
         bbox_frame_all = bbox_frame_all.view(batch_size, -1, self.sample_duration * 4)
         anchors_all = anchors_all.view(batch_size, -1, self.sample_duration * 4)
-        print('bbox_frame_all.shape :',bbox_frame_all.shape)
+
         # # Same story for the scores:
 
         scores = scores.permute(0, 2, 3, 4, 1).contiguous()
@@ -151,7 +151,6 @@ class _ProposalLayer(nn.Module):
         # 2. clip predicted boxes to image
         ## if any dimension exceeds the dims of the original image, clamp_ them
         proposals = proposals.view(batch_size,-1,self.sample_duration*4)
-
         proposals = clip_boxes(proposals, im_info, batch_size)
 
         scores_keep = scores

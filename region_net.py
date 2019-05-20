@@ -92,21 +92,29 @@ class _RPN(nn.Module):
 
     def forward(self, base_feat, im_info, gt_boxes, gt_rois):
 
-        batch_size = base_feat.size(0)
-        rpn_conv1 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
+        # batch_size = base_feat.size(0)
+        # rpn_conv1 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
 
-        rpn_conv_avg = self.avg_pool(rpn_conv1)
-        rpn_conv_avg_3_4 = self.avg_pool_3_4(rpn_conv1)
-        rpn_conv_avg_2 = self.avg_pool_2(rpn_conv1)
+        # rpn_conv_avg = self.avg_pool(rpn_conv1)
+        # rpn_conv_avg_3_4 = self.avg_pool_3_4(rpn_conv1)
+        # rpn_conv_avg_2 = self.avg_pool_2(rpn_conv1)
 
-        rpn_cls_score = self.RPN_cls_score(rpn_conv_avg)  # classification layer
-        rpn_cls_score_3_4 = self.RPN_cls_score(rpn_conv_avg_3_4)  # classification layer
-        rpn_cls_score_2 = self.RPN_cls_score(rpn_conv_avg_2)  # classification layer
+        # rpn_cls_score = self.RPN_cls_score(rpn_conv_avg)  # classification layer
+        # rpn_cls_score_3_4 = self.RPN_cls_score(rpn_conv_avg_3_4)  # classification layer
+        # rpn_cls_score_2 = self.RPN_cls_score(rpn_conv_avg_2)  # classification layer
 
-        rpn_bbox_pred = self.RPN_bbox_pred(rpn_conv_avg)  # regression layer
-        rpn_bbox_pred_3_4 = self.RPN_bbox_pred_3_4(rpn_conv_avg_3_4)  # regression layer
-        rpn_bbox_pred_2 = self.RPN_bbox_pred_2(rpn_conv_avg_2)  # regression layer
+        # rpn_bbox_pred = self.RPN_bbox_pred(rpn_conv_avg)  # regression layer
+        # rpn_bbox_pred_3_4 = self.RPN_bbox_pred_3_4(rpn_conv_avg_3_4)  # regression layer
+        # rpn_bbox_pred_2 = self.RPN_bbox_pred_2(rpn_conv_avg_2)  # regression layer
 
+
+        rpn_cls_score = torch.rand([1, 30, 1, 14, 14])
+        rpn_cls_score_3_4 = torch.rand([1, 30, 5, 14, 14])
+        rpn_cls_score_2 = torch.rand([1, 30, 9, 14, 14])
+
+        rpn_bbox_pred = torch.rand([1, 960, 1, 14, 14])
+        rpn_bbox_pred_3_4 = torch.rand([1, 720, 5, 14, 14])
+        rpn_bbox_pred_2 = torch.rand([1, 480, 9, 14, 14])
 
         rpn_cls_score_reshape = self.reshape(rpn_cls_score, 2)
         rpn_cls_prob_reshape = F.softmax(rpn_cls_score_reshape, 1)
@@ -120,6 +128,10 @@ class _RPN(nn.Module):
         rpn_cls_prob_reshape_2 = F.softmax(rpn_cls_score_reshape_2, 1)
         rpn_cls_prob_2 = self.reshape(rpn_cls_prob_reshape_2, self.nc_score_out)
 
+        print('rpn_bbox_pred.shape :',rpn_bbox_pred.shape)
+        print('rpn_bbox_pred_3_4.shape :',rpn_bbox_pred_3_4.shape)
+        print('rpn_bbox_pred_2.shape :',rpn_bbox_pred_2.shape)
+        
         # proposal layer
         cfg_key = 'TRAIN' if self.training else 'TEST'
 
@@ -149,7 +161,9 @@ class _RPN(nn.Module):
                     gt_boxes_16[dur_16[b,0],dur_16[b,1]] =  gt_boxes[dur_16[b,0],dur_16[b,1]]
 
             ## Regular data
-            rpn_data = self.RPN_anchor_target((rpn_cls_score.data, gt_boxes, im_info, gt_rois, self.sample_duration)) # time_limit = 16
+            rpn_data = self.RPN_anchor_target((rpn_cls_score.data, rpn_cls_score_3_4.data, \
+                                               rpn_cls_score_2.data, gt_boxes, im_info,    \
+                                               gt_rois)) # time_limit = 16
 
             rpn_cls_score = rpn_cls_score_reshape.permute(0, 2, 3, 1).contiguous()
             rpn_cls_score = rpn_cls_score.view(batch_size, -1, 2) ## exw [1, 441, 2]
