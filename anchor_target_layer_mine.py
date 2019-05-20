@@ -104,11 +104,10 @@ class _AnchorTargetLayer(nn.Module):
                 anchors_all.append(anc)
                 
         anchors_all = torch.cat(anchors_all,0).type_as(rpn_cls_score) 
-        print('anchors_all.shape :',anchors_all.shape)
 
         total_anchors = anchors_all.size(0)
         anchors_all = anchors_all.view(total_anchors,self.sample_duration,4)
-        print('anchors_all.shape :',anchors_all.shape)
+
         keep = ((anchors_all[:, :, 0].ge(-self._allowed_border).all(dim=1)) &
                 (anchors_all[:, :, 1].ge(-self._allowed_border).all(dim=1)) &
                 (anchors_all[:, :, 2].lt(long(im_info[0][1]) + self._allowed_border).all(dim=1)) &
@@ -222,7 +221,7 @@ class _AnchorTargetLayer(nn.Module):
         labels_2 = labels[:,time_3_4_bdry: time_2_bdry].view(batch_size,time_2, height, width, A).permute(0,4,1,2,3).contiguous()
         labels_2 = labels_2.view(batch_size, 1, A * time_2 * height, width)
 
-        outputs.append(labels)
+        outputs.append(labels_)
         outputs.append(labels_3_4)
         outputs.append(labels_2)
         
@@ -232,9 +231,6 @@ class _AnchorTargetLayer(nn.Module):
 
         bbox_targets_list= []
         time_limits = [0, time_bdry,time_3_4_bdry]
-
-        print('K * A :',K * A)
-        print('time_limits :',time_limits)
 
         for i in range(len(self.time_dim)):
             for j in range(0,self.sample_duration-self.time_dim[i]+1):
@@ -299,9 +295,9 @@ class _AnchorTargetLayer(nn.Module):
         bbox_outside_weights_2 = bbox_outside_weights_2.contiguous().view(batch_size, time_2, height, width, A * 4 * self.time_dim[2]).\
                                permute(0,4,1,2,3).contiguous()
 
-        print('bbox_outside_weights.shape :',bbox_outside_weights_.shape)
-        print('bbox_outside_weights_3_4.shape :',bbox_outside_weights_3_4.shape)
-        print('bbox_outside_weights_2.shape :',bbox_outside_weights_2.shape)
+        # print('bbox_outside_weights.shape :',bbox_outside_weights_.shape)
+        # print('bbox_outside_weights_3_4.shape :',bbox_outside_weights_3_4.shape)
+        # print('bbox_outside_weights_2.shape :',bbox_outside_weights_2.shape)
 
         outputs.append(bbox_outside_weights_)
         outputs.append(bbox_outside_weights_3_4)

@@ -143,7 +143,7 @@ class _ProposalLayer(nn.Module):
         scores_2 = scores_2.view(batch_size, -1)
 
         scores_all = torch.cat([scores, scores_3_4, scores_2],1)
-        print('anchors_all.shape :',anchors_all.shape)
+
         # Convert anchors into proposals via bbox transformations
         proposals = bbox_transform_inv(anchors_all.contiguous().view(-1, self.sample_duration*4), \
                                        bbox_frame_all.contiguous().view(-1, self.sample_duration*4), \
