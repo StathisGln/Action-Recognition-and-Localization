@@ -13,6 +13,12 @@ __C = edict()
 #   from fast_rcnn_config import cfg
 conf = __C
 
+# Use GPU implementation of non-maximum suppression
+__C.USE_GPU_NMS = True
+
+
+
+# Train 
 __C.TRAIN = edict()
 
 

@@ -190,6 +190,7 @@ def bbox_transform_inv(ex_rois, gt_rois, weights):
     proposal boxes and ground-truth boxes. The weights argument should be a
     4-tuple of multiplicative weights that are applied to the regression target.
     """
+
     if ex_rois.shape[1] > 4:
         return tube_transform_inv(ex_rois, gt_rois, weights)
     ex_widths = ex_rois[:, 2] - ex_rois[:, 0] + 1.0

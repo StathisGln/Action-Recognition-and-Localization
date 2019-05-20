@@ -14,10 +14,13 @@ import torch.nn as nn
 import numpy as np
 import math
 import yaml
-# from config import cfg
+
 from conf import conf
 from generate_anchors import generate_anchors
 # from bbox_transform import bbox_transform_inv, clip_boxes_3d, clip_boxes_batch, bbox_transform_inv_3d
+from nms.py_nms import py_cpu_nms_tubes as nms
+# from nms.nms_wrapper import nms
+
 from box_functions import bbox_transform_inv,clip_boxes
 import pdb
 
@@ -62,11 +65,13 @@ class _ProposalLayer(nn.Module):
         # the second set are the fg probs
 
         scores = input[0][:, self._num_anchors:, :, :]
-        bbox_frame = input[1]
-        im_info = input[2]
-        cfg_key = input[3]
-        time_dim = input[4]
-        # print('bbox_frame.shape :',bbox_frame.shape)
+        scores_3_4 = input[1][:, self._num_anchors:, :, :]
+        scores_2 = input[2][:, self._num_anchors:, :, :]
+        bbox_frame = input[3]
+        bbox_frame_3_4 = input[4]
+        bbox_frame_2 = input[5]
+        im_info = input[6]
+        cfg_key = input[7]
 
         batch_size = bbox_frame.size(0)
 
@@ -80,7 +85,11 @@ class _ProposalLayer(nn.Module):
         ##################
 
         # print('batch_size :', batch_size)
-        feat_height,  feat_width= scores.size(2), scores.size(3) # (batch_size, 512/256, 7,7, 16/8)
+        feat_time = scores.size(2)
+        feat_time_3_4 = scores_3_4.size(2)
+        feat_time_2 = scores_2.size(2)
+
+        feat_height,  feat_width= scores.size(3), scores.size(4) # (batch_size, 512/256, 7,7, 16/8)
 
         shift_x = np.arange(0, feat_width) * self._feat_stride
         shift_y = np.arange(0, feat_height) * self._feat_stride
@@ -88,52 +97,57 @@ class _ProposalLayer(nn.Module):
         shifts = torch.from_numpy(np.vstack((shift_x.ravel(), shift_y.ravel(),
                                              shift_x.ravel(), shift_y.ravel(),)).transpose())
         shifts = shifts.contiguous().type_as(scores).float()
-        
+
         A = self._anchors.size(0)
         K = shifts.size(0)
 
         anchors = self._anchors.view(1, A, 4).type_as(shifts) + shifts.view(K, 1, 4)
         anchors = anchors.view(K * A, 4)
 
-        # # get time anchors
+        bboxes = [bbox_frame, bbox_frame_3_4, bbox_frame_2]
+
         anchors_all = []
+        bbox_frame_all = []
+
 
         for i in range(len(self.time_dim)):
             for j in range(0,self.sample_duration-self.time_dim[i]+1):
+
                 anc = torch.zeros((self.sample_duration,anchors.size(0),4))
-                
+                bbox =  torch.zeros((batch_size, anchors.size(0),self.sample_duration,4))
+
                 anc[ j:j+self.time_dim[i]] = anchors
                 anc = anc.permute(1,0,2)
 
+                t = bboxes[i][:,:,j].permute(0,2,3,1).contiguous().view(batch_size, anchors.size(0), self.time_dim[i],4)
+                bbox[:,:,j:j+self.time_dim[i],:] = t
+
                 anchors_all.append(anc)
+                bbox_frame_all.append(bbox)
+                
+        anchors_all = torch.cat(anchors_all,0).cuda() 
+        bbox_frame_all = torch.cat(bbox_frame_all,0).cuda()
 
-        anchors_all = torch.cat(anchors_all,0).cuda()
-        anchors_all = anchors_all.view(1,anchors_all.size(0), self.sample_duration * 4)
-        anchors_all = anchors_all.expand(batch_size, anchors_all.size(1), self.sample_duration * 4)
+        bbox_frame_all = bbox_frame_all.view(batch_size, -1, self.sample_duration * 4)
+        anchors_all = anchors_all.view(batch_size, -1, self.sample_duration * 4)
+        print('bbox_frame_all.shape :',bbox_frame_all.shape)
+        # # Same story for the scores:
 
-        # Transpose and reshape predicted bbox transformations to get them
-        # into the same order as the anchors:
-
-        bbox_frame = bbox_frame.permute(0, 2, 3, 1).contiguous()
-        bbox_frame = bbox_frame.view(batch_size, -1, self.sample_duration * 4)
-        
-        # Same story for the scores:
-
-        scores = scores.permute(0, 2, 3, 1).contiguous()
+        scores = scores.permute(0, 2, 3, 4, 1).contiguous()
         scores = scores.view(batch_size, -1)
 
-        # print('anchors_all.view(-1,anchors_all.size(2)).shape :',anchors_all.shape)
-        # print('bbox_frame.view(-1,bbox_frame.size(2)).shape :',bbox_frame.shape)
+        scores_3_4 = scores_3_4.permute(0, 2, 3, 4, 1).contiguous()
+        scores_3_4 = scores_3_4.view(batch_size, -1)
 
-        # print('anchors_all.view(-1,anchors_all.size(2)).shape :',anchors_all.view(-1,anchors_all.size(2)).shape)
-        # print('bbox_frame.view(-1,bbox_frame.size(2)).shape :',bbox_frame.view(-1,bbox_frame.size(2)).shape)
-        # exit(-1)
+        scores_2 = scores_2.permute(0, 2, 3, 4, 1).contiguous()
+        scores_2 = scores_2.view(batch_size, -1)
+
+        scores_all = torch.cat([scores, scores_3_4, scores_2],1)
+        print('anchors_all.shape :',anchors_all.shape)
         # Convert anchors into proposals via bbox transformations
-
-        proposals = bbox_transform_inv(anchors_all.contiguous().view(-1,anchors_all.size(2)),\
-                                       bbox_frame.contiguous().view(-1,bbox_frame.size(2)), \
+        proposals = bbox_transform_inv(anchors_all.contiguous().view(-1, self.sample_duration*4), \
+                                       bbox_frame_all.contiguous().view(-1, self.sample_duration*4), \
                                        (1.0, 1.0, 1.0, 1.0)) # proposals have 441 * time_dim shape
-
         # 2. clip predicted boxes to image
         ## if any dimension exceeds the dims of the original image, clamp_ them
         proposals = proposals.view(batch_size,-1,self.sample_duration*4)
@@ -153,15 +167,26 @@ class _ProposalLayer(nn.Module):
             proposals_single = proposals_keep[i]
             scores_single = scores_keep[i]
             order_single = order[i]
+            
+            if pre_nms_topN > 0 and pre_nms_topN < scores_keep.numel():
+                order_single = order_single[:pre_nms_topN]
 
             proposals_single = proposals_single[order_single, :]
             scores_single = scores_single[order_single].view(-1,1)
-            proposals_single = proposals_single[:post_nms_topN, :]
-            scores_single = scores_single[:post_nms_topN]
+
+            keep_idx_i = torch.Tensor(nms(torch.cat((proposals_single, scores_single), 1).cpu().numpy(), nms_thresh)).type_as(scores_single)
+            keep_idx_i = keep_idx_i.long().view(-1)
+
+            if post_nms_topN > 0:
+                keep_idx_i = keep_idx_i[:post_nms_topN]
+
+            proposals_single = proposals_single[keep_idx_i, :]
+            scores_single = scores_single[keep_idx_i, :]
+
             
             # adding score at the end.
             num_proposal = proposals_single.size(0)
-            output[i,:num_proposal,0] = i
+            output[i,:,0] = i
             output[i,:num_proposal,1:-1] = proposals_single
             output[i,:num_proposal,-1] = scores_single.squeeze()
 
