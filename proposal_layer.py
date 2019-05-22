@@ -105,7 +105,6 @@ class _ProposalLayer(nn.Module):
         anchors = anchors.view(K * A, 4)
 
         bboxes = [bbox_frame, bbox_frame_3_4, bbox_frame_2]
-        
         anchors_all = []
         bbox_frame_all = []
 
@@ -128,8 +127,9 @@ class _ProposalLayer(nn.Module):
         anchors_all = torch.cat(anchors_all,0).type_as(scores) 
         bbox_frame_all = torch.cat(bbox_frame_all,0).type_as(scores)
 
+        anchors_all = anchors_all.view(1, -1, self.sample_duration * 4)
+        anchors_all = anchors_all.expand(batch_size, anchors_all.size(1), self.sample_duration * 4)
         bbox_frame_all = bbox_frame_all.view(batch_size, -1, self.sample_duration * 4)
-        anchors_all = anchors_all.view(batch_size, -1, self.sample_duration * 4)
 
         # # Same story for the scores:
 

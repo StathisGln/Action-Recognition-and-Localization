@@ -105,14 +105,14 @@ class _RPN(nn.Module):
         # rpn_bbox_pred_3_4 = self.RPN_bbox_pred_3_4(rpn_conv_avg_3_4)  # regression layer
         # rpn_bbox_pred_2 = self.RPN_bbox_pred_2(rpn_conv_avg_2)  # regression layer
 
+        batch_size = 2
+        rpn_cls_score = torch.rand([batch_size, 30, 1, 14, 14])
+        rpn_cls_score_3_4 = torch.rand([batch_size, 30, 5, 14, 14])
+        rpn_cls_score_2 = torch.rand([batch_size, 30, 9, 14, 14])
 
-        rpn_cls_score = torch.rand([1, 30, 1, 14, 14])
-        rpn_cls_score_3_4 = torch.rand([1, 30, 5, 14, 14])
-        rpn_cls_score_2 = torch.rand([1, 30, 9, 14, 14])
-
-        rpn_bbox_pred = torch.rand([1, 960, 1, 14, 14])
-        rpn_bbox_pred_3_4 = torch.rand([1, 720, 5, 14, 14])
-        rpn_bbox_pred_2 = torch.rand([1, 480, 9, 14, 14])
+        rpn_bbox_pred = torch.rand([batch_size, 960, 1, 14, 14])
+        rpn_bbox_pred_3_4 = torch.rand([batch_size, 720, 5, 14, 14])
+        rpn_bbox_pred_2 = torch.rand([batch_size, 480, 9, 14, 14])
 
         rpn_cls_score_reshape = self.reshape(rpn_cls_score, 2)
         rpn_cls_prob_reshape = F.softmax(rpn_cls_score_reshape, 1)
@@ -126,10 +126,6 @@ class _RPN(nn.Module):
         rpn_cls_prob_reshape_2 = F.softmax(rpn_cls_score_reshape_2, 1)
         rpn_cls_prob_2 = self.reshape(rpn_cls_prob_reshape_2, self.nc_score_out)
 
-        # print('rpn_bbox_pred.shape :',rpn_bbox_pred.shape)
-        # print('rpn_bbox_pred_3_4.shape :',rpn_bbox_pred_3_4.shape)
-        # print('rpn_bbox_pred_2.shape :',rpn_bbox_pred_2.shape)
-        
         # proposal layer
         cfg_key = 'TRAIN' if self.training else 'TEST'
 
