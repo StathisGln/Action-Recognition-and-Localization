@@ -56,18 +56,23 @@ class _AnchorTargetLayer(nn.Module):
         # filter out-of-image anchors
 
         rpn_cls_score = input[0] ## rpn classification score
-        gt_tubes = input[1]      ## gt tube
-        im_info = input[2]       ## im_info
-        gt_rois = input[3][:,:,:,:4].contiguous()       ## gt rois for each frame
-        feat_shapes = input[4]
-
-        # map of shape (..., H, W)
-        height, width = 0, 0
+        rpn_cls_score_3_4 = input[1]
+        rpn_cls_score_2 = input[2]
+        gt_tubes = input[3]      ## gt tube
+        im_info = input[4]       ## im_info
+        gt_rois = input[5][:,:,:,:4].contiguous()       ## gt rois for each frame
+        feat_shapes = input[6]
+        
+        ### Not sure about that
         batch_size = gt_tubes.size(0)
+        height, width  = rpn_cls_score.size(3), rpn_cls_score.size(4)
+        time = rpn_cls_score.size(2)
+        time_3_4 = rpn_cls_score_3_4.size(2)
+        time_2 = rpn_cls_score_2.size(2)
+
         anchors = torch.from_numpy(generate_anchors_all_pyramids(self._fpn_scales, self._anchor_ratios, 
                 feat_shapes, self._fpn_feature_strides, self._fpn_anchor_stride)).type_as(rpn_cls_score)    
-
-
+        A = anchors.size(0)
         # # get time anchors
         anchors_all = []
 
@@ -80,8 +85,7 @@ class _AnchorTargetLayer(nn.Module):
 
                 anchors_all.append(anc)
 
-        anchors_all = torch.cat(anchors_all,0).cuda()
-        anchors_all = anchors_all.view(anchors_all.size(0), self.sample_duration * 4)
+        anchors_all = torch.cat(anchors_all,0).type_as(rpn_cls_score) 
 
         total_anchors =  anchors_all.size(0)
         anchors_all = anchors_all.view(total_anchors,self.sample_duration,4)
@@ -103,7 +107,6 @@ class _AnchorTargetLayer(nn.Module):
         bbox_outside_weights = gt_tubes.new(batch_size, inds_inside.size(0)).zero_()
 
         overlaps = tube_overlaps(anchors, gt_rois.view(-1,self.sample_duration*4)).view(batch_size,anchors.size(0),gt_rois.size(1))
-
         max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
         gt_max_overlaps, _ = torch.max(overlaps, 1)
 
@@ -160,7 +163,6 @@ class _AnchorTargetLayer(nn.Module):
                                               contiguous().view(-1,self.sample_duration*4),\
                                               gt_rois.view(-1,self.sample_duration*4)[argmax_overlaps.view(-1), :]). \
                                               view(batch_size,-1,self.sample_duration*4)
-
         bbox_inside_weights[labels==1] = cfg.TRAIN.RPN_BBOX_INSIDE_WEIGHTS[0]
 
         if cfg.TRAIN.RPN_POSITIVE_WEIGHT < 0:
@@ -182,11 +184,76 @@ class _AnchorTargetLayer(nn.Module):
         bbox_outside_weights = _unmap(bbox_outside_weights, total_anchors, inds_inside, batch_size, fill=0)
 
         outputs = []
+        time_bdry = A*time
+        time_3_4_bdry = A * time_3_4 + time_bdry
+        time_2_bdry = A * time_2 + time_3_4_bdry
 
-        outputs.append(labels)
-        outputs.append(bbox_targets)
-        outputs.append(bbox_inside_weights)
-        outputs.append(bbox_outside_weights)
+        ## break targets
+
+        labels_ = labels[:,:time_bdry]
+        labels_3_4 = labels[:,time_bdry:time_3_4_bdry]
+        labels_2 = labels[:,time_3_4_bdry:time_2_bdry]
+
+        outputs.append(labels_)
+        outputs.append(labels_3_4)
+        outputs.append(labels_2)
+
+        # print('bbox_targets.shape :',bbox_targets.shape)
+        bbox_targets_ = bbox_targets[:,:time_bdry]
+        bbox_targets_3_4 = bbox_targets[:,time_bdry:time_3_4_bdry]
+        bbox_targets_2 = bbox_targets[:,time_3_4_bdry:time_2_bdry]
+        # print('bbox_targets_.shape :',bbox_targets_.shape)
+        # print('bbox_targets_3_4.shape :',bbox_targets_3_4.shape)
+        # print('bbox_targets_2.shape :',bbox_targets_2.shape)
+        bbox_targets_list= []
+        time_limits = [0, time_bdry,time_3_4_bdry]
+
+        for i in range(len(self.time_dim)):
+            for j in range(0,self.sample_duration-self.time_dim[i]+1):
+                # print('i :',i, ' j :',j, '(time_limits[i]+j*K*A) :', \
+                #       (time_limits[i]+j*A), ' (time_limits[i]+(j+1)*K*A) :',(time_limits[i]+(j+1)*A), \
+                #       ' distance :',(time_limits[i]+(j+1)*A)-(time_limits[i]+j*A))
+                # print('bbox_targets[:,(time_limits[i]+j*A):(time_limits[i]+(j+1)*A),j*4:(j+self.time_dim[i])*4].shape :',bbox_targets[:,(time_limits[i]+j*A):(time_limits[i]+(j+1)*A),j*4:(j+self.time_dim[i])*4].shape)
+                bbox_targets_list.append(bbox_targets[:,(time_limits[i]+j*A):(time_limits[i]+(j+1)*A),j*4:(j+self.time_dim[i])*4])
+
+        bbox_targets_ = torch.stack(bbox_targets_list[:time],dim=1) 
+        bbox_targets_3_4 = torch.stack(bbox_targets_list[time:time_3_4+time],dim=1)
+        bbox_targets_2 = torch.stack(bbox_targets_list[time_3_4+time:],dim=1)
+
+        outputs.append(bbox_targets_)
+        outputs.append(bbox_targets_3_4)
+        outputs.append(bbox_targets_2)
+
+        anchors_count = bbox_inside_weights.size(1)
+        bbox_inside_weights = bbox_inside_weights.view(batch_size,anchors_count,1)
+
+        bbox_inside_weights_ = bbox_inside_weights[:,:time_bdry].view(batch_size,time,-1,1)
+        bbox_inside_weights_3_4 = bbox_inside_weights[:,time_bdry:time_3_4_bdry].view(batch_size,time_3_4,-1,1)
+        bbox_inside_weights_2 = bbox_inside_weights[:,time_3_4_bdry:time_2_bdry].view(batch_size,time_2,-1,1)
+
+        # print('bbox_inside_weights_.shape :',bbox_inside_weights_.shape)
+        # print('bbox_inside_weights_.shape :',bbox_inside_weights_3_4.shape)
+        # print('bbox_inside_weights_.shape :',bbox_inside_weights_2.shape)
+
+        outputs.append(bbox_inside_weights_)
+        outputs.append(bbox_inside_weights_3_4)
+        outputs.append(bbox_inside_weights_2)
+
+
+        anchors_count = bbox_outside_weights.size(1)
+        bbox_outside_weights = bbox_outside_weights.view(batch_size,anchors_count,1)
+
+        bbox_outside_weights_ = bbox_outside_weights[:,:time_bdry].view(batch_size,time,-1,1)
+        bbox_outside_weights_3_4 = bbox_outside_weights[:,time_bdry:time_3_4_bdry].view(batch_size,time_3_4,-1,1)
+        bbox_outside_weights_2 = bbox_outside_weights[:,time_3_4_bdry:time_2_bdry].view(batch_size,time_2,-1,1)
+
+        # print('bbox_outside_weights_.shape :',bbox_outside_weights_.shape)
+        # print('bbox_outside_weights_.shape :',bbox_outside_weights_3_4.shape)
+        # print('bbox_outside_weights_.shape :',bbox_outside_weights_2.shape)
+
+        outputs.append(bbox_outside_weights_)
+        outputs.append(bbox_outside_weights_3_4)
+        outputs.append(bbox_outside_weights_2)
 
         return outputs
 

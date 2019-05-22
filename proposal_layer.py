@@ -60,13 +60,23 @@ class _ProposalLayer(nn.Module):
         # the first set of _num_anchors channels are bg probs
         # the second set are the fg probs
 
-        scores = input[0][ :, :, 1]
-        bbox_frame = input[1]
-        im_info = input[2]
-        cfg_key = input[3]
-        feat_shapes = input[4]
+        scores = input[0][ :, :, :, 1]
+        scores_3_4 = input[1][ :, :, :, 1]
+        scores_2 = input[2][ :, :, :, 1]
+        bbox_frame = input[3]
+        bbox_frame_3_4 = input[4]
+        bbox_frame_2 = input[5]
+        im_info = input[6]
+        cfg_key = input[7]
+        feat_shapes = input[8]
+        
         # print('bbox_frame.shape :',bbox_frame.shape)
-
+        # print('bbox_frame.shape :',bbox_frame_3_4.shape)
+        # print('bbox_frame.shape :',bbox_frame_2.shape)
+        # print('scores.shape :',scores.shape)
+        # print('scores_3_4.shape :',scores_3_4.shape)
+        # print('scores_2.shape :',scores_2.shape)
+        # print('feat_shapes :',feat_shapes)
         batch_size = bbox_frame.size(0)
 
         pre_nms_topN  = conf[cfg_key].RPN_PRE_NMS_TOP_N
@@ -85,41 +95,48 @@ class _ProposalLayer(nn.Module):
 
         # # get time anchors
         anchors_all = []
+        bbox_frame_all = []
+                
+        bboxes = [bbox_frame, bbox_frame_3_4, bbox_frame_2]
+
 
         for i in range(len(self.time_dim)):
             for j in range(0,self.sample_duration-self.time_dim[i]+1):
                 anc = torch.zeros((self.sample_duration,anchors.size(0),4))
+                bbox =  torch.zeros((batch_size, anchors.size(0),self.sample_duration,4))
                 
                 anc[ j:j+self.time_dim[i]] = anchors
                 anc = anc.permute(1,0,2)
+                t = bboxes[i][:,j].view(batch_size, anchors.size(0), self.time_dim[i],4)
+
+                bbox[:,:,j:j+self.time_dim[i],:] = t
 
                 anchors_all.append(anc)
+                bbox_frame_all.append(bbox)
 
-        anchors_all = torch.cat(anchors_all,0).cuda()
-        anchors_all = anchors_all.view(1,anchors_all.size(0), self.sample_duration * 4)
-        anchors_all = anchors_all.expand(batch_size, anchors_all.size(1), self.sample_duration * 4)
+        anchors_all = torch.cat(anchors_all,0).type_as(scores)
+        bbox_frame_all = torch.cat(bbox_frame_all,0).type_as(scores)
 
-        # Transpose and reshape predicted bbox transformations to get them
-        # into the same order as the anchors:
+        anchors_all = anchors_all.view(1,anchors_all.size(0), self.sample_duration * 4).\
+                      expand(batch_size, anchors_all.size(0), self.sample_duration * 4)
+        bbox_frame_all = bbox_frame_all.view(batch_size, -1, self.sample_duration * 4)
 
-        bbox_frame = bbox_frame.view(batch_size, -1, self.sample_duration * 4)
+        # # Same story for the scores:
+
         scores = scores.view(batch_size, -1)
+        scores_3_4 = scores_3_4.view(batch_size, -1)
+        scores_2 = scores_2.view(batch_size, -1)
 
-        # print('anchors_all.view(-1,anchors_all.size(2)).shape :',anchors_all.shape)
-        # print('bbox_frame.view(-1,bbox_frame.size(2)).shape :',bbox_frame.shape)
+        scores_all = torch.cat([scores, scores_3_4, scores_2],1)
 
-        # print('anchors_all.view(-1,anchors_all.size(2)).shape :',anchors_all.view(-1,anchors_all.size(2)).shape)
-        # print('bbox_frame.view(-1,bbox_frame.size(2)).shape :',bbox_frame.view(-1,bbox_frame.size(2)).shape)
-        # exit(-1)
         # Convert anchors into proposals via bbox transformations
-        
         proposals = bbox_transform_inv(anchors_all.contiguous().view(-1,anchors_all.size(2)),\
-                                       bbox_frame.contiguous().view(-1,bbox_frame.size(2)), \
+                                       bbox_frame_all.contiguous().view(-1,anchors_all.size(2)), \
                                        (1.0, 1.0, 1.0, 1.0)) # proposals have 441 * time_dim shape
+
         # 2. clip predicted boxes to image
         ## if any dimension exceeds the dims of the original image, clamp_ them
         proposals = proposals.view(batch_size,-1,self.sample_duration*4)
-
         proposals = clip_boxes(proposals, im_info, batch_size)
 
         scores_keep = scores
