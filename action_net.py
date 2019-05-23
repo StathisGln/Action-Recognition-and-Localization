@@ -13,11 +13,11 @@ from torch.autograd import Variable
 
 from resnet_3D import resnet34
 from region_net import _RPN 
-from human_reg import _Regression_Layer
+# from human_reg import _Regression_Layer
 
 from proposal_target_layer_cascade import _ProposalTargetLayer
 from proposal_target_layer_cascade_single_frame import _ProposalTargetLayer as _ProposalTargetLayer_single
-from roi_align_3d.modules.roi_align  import RoIAlignAvg, RoIAlign
+# from roi_align_3d.modules.roi_align  import RoIAlignAvg, RoIAlign
 from net_utils import _smooth_l1_loss
 from bbox_transform import  clip_boxes, bbox_transform_inv, clip_boxes_3d, bbox_transform_inv_3d
 
@@ -47,7 +47,7 @@ class ACT_net(nn.Module):
 
         self.time_dim =sample_duration
         self.temp_scale = 1.0
-        self.act_roi_align = RoIAlign(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale).cuda()
+        # self.act_roi_align = RoIAlign(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale).cuda()
 
         self.avgpool = nn.AvgPool3d((1, 7, 7), stride=1)
 

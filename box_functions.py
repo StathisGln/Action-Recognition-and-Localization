@@ -20,41 +20,6 @@ from __future__ import unicode_literals
 import numpy as np
 import torch
 
-
-# def split_tube_into_boxes(tube, T=None):
-#     """ N tubes are represented as a (N, 4 * T,) dimensional matrix,
-#     or sometimes (N, 4 * T * num_classes) matrix. In the latter case, T should
-#     be passed as input. In some cases, there can be a score value at the end of
-#     the tube vector, which will be copied to each split box. """
-#     N = tube.shape[0]
-
-#     if tube.shape[1] % 4 == 0:
-#         scores = np.zeros((N, 0))
-#     elif (tube.shape[1] - 1) % 4 == 0:
-#         scores = tube[:, (-1,)]
-#         tube = tube[:, :-1]
-#     else:
-#         raise ValueError('Invalid tube dimensions {}'.format(tube.shape))
-#     T = T or tube.shape[-1] // 4
-#     boxes = []
-#     if 4 * T != tube.shape[-1]:
-#         # Means it is the box-per-class kinda representation
-#         # Take ith box from each class
-#         assert(tube.shape[-1] % (4 * T) == 0)
-#         num_classes = tube.shape[-1] // (4 * T)
-#         for t in range(T):
-#             box_rep = np.zeros((tube.shape[0], 4 * num_classes))
-#             for cid in range(num_classes):
-#                 box_rep[:, cid * 4: (cid + 1) * 4] = \
-#                     tube[:, cid * 4 * T: (cid + 1) * 4 * T][:, t * 4: (t + 1) * 4]
-#             boxes.append(box_rep)
-#     else:
-#         for t in range(T):
-#             boxes.append(tube[..., t * 4: (t + 1) * 4])
-#     # Add the scores back, if there were any
-#     boxes = [np.hstack((box, scores)) for box in boxes]
-#     return boxes, T
-
 def split_tube_into_boxes(tube, T=None):
     """ N tubes are represented as a (N, 4 * T,) dimensional matrix,
     or sometimes (N, 4 * T * num_classes) matrix. In the latter case, T should
@@ -81,98 +46,65 @@ def split_tube_into_boxes(tube, T=None):
 
     return boxes, T
 
-
-
-def bbox_transform(ex_rois, gt_rois, weights):
-    """Forward transform that maps proposal boxes to ground-truth boxes using
-    bounding-box regression deltas. See bbox_transform_inv for a description of
-    the weights argument.
+def bbox_transform_inv(boxes, deltas, weights):
+    """Backward transform that computes bounding-box regression deltas given
+    proposal boxes and ground-truth boxes. The weights argument should be a
+    4-tuple of multiplicative weights that are applied to the regression target.
     """
+    print('edw..')
+    exit(-1)
+    if boxes.shape[1] > 4:
+        return tube_transform(boxes, deltas, weights)
+    if boxes.shape[0] == 0:
+        return np.zeros((0, deltas.shape[1]), dtype=deltas.dtype)
 
-    if ex_rois.shape[1] > 4:
-        return tube_transform(ex_rois, gt_rois, weights)
-    if ex_rois.shape[0] == 0:
-        return torch.zeros((0, gt_rois.shape[1])).type_as(gt_rois)
-
-    ex_widths = ex_rois[:, 2] - ex_rois[:, 0] + 1.0
-    ex_heights = ex_rois[:, 3] - ex_rois[:, 1] + 1.0
-    ex_ctr_x = ex_rois[:, 0] + 0.5 * ex_widths
-    ex_ctr_y = ex_rois[:, 1] + 0.5 * ex_heights
-
-    gt_widths = gt_rois[:, 2] - gt_rois[:, 0] + 1.0
-    gt_heights = gt_rois[:, 3] - gt_rois[:, 1] + 1.0
-    gt_ctr_x = gt_rois[:, 0] + 0.5 * gt_widths
-    gt_ctr_y = gt_rois[:, 1] + 0.5 * gt_heights
-
-    targets_dx = (gt_ctr_x - ex_ctr_x) / ex_widths
-    targets_dy = (gt_ctr_y - ex_ctr_y) / ex_heights
-    targets_dw = torch.log(gt_widths / ex_widths)
-    targets_dh = torch.log(gt_heights / ex_heights)
-
-    targets = torch.stack(
-        (targets_dx, targets_dy, targets_dw, targets_dh), 1)
-
-    return targets
-
-# def bbox_transform(boxes, deltas, weights):
-#     """Forward transform that maps proposal boxes to ground-truth boxes using
-#     bounding-box regression deltas. See bbox_transform_inv for a description of
-#     the weights argument.
-#     """
-
-#     if boxes.shape[1] > 4:
-#         return tube_transform(boxes, deltas, weights)
-#     if boxes.shape[0] == 0:
-#         return np.zeros((0, deltas.shape[1]), dtype=deltas.dtype)
-
-#     boxes = boxes.type_as(deltas)
-#     print('boxes  :',boxes)
-#     print('deltas :',deltas)
+    boxes = boxes.type_as(deltas)
     
-#     widths = boxes[:, 2] - boxes[:, 0] + 1.0
-#     heights = boxes[:, 3] - boxes[:, 1] + 1.0
-#     ctr_x = boxes[:, 0] + 0.5 * widths
-#     ctr_y = boxes[:, 1] + 0.5 * heights
+    widths = boxes[:, 2] - boxes[:, 0] + 1.0
+    heights = boxes[:, 3] - boxes[:, 1] + 1.0
 
-#     wx, wy, ww, wh = weights
-#     dx = deltas[:, 0::4] / wx
-#     dy = deltas[:, 1::4] / wy
-#     dw = deltas[:, 2::4] / ww
-#     dh = deltas[:, 3::4] / wh
+    zero_area = (widths == 1) & (heights == 1)
 
-#     print('dw :',dw)
-#     print('dh :',dh)
-#     # Prevent sending too large values into np.exp()
-#     dw = torch.min(dw, torch.log(torch.Tensor([1000. / 16.]).type_as(dw)))
-#     dh = torch.min(dh, torch.log(torch.Tensor([1000. / 16.]).type_as(dw)))
+    ctr_x = boxes[:, 0] + 0.5 * widths
+    ctr_y = boxes[:, 1] + 0.5 * heights
+
+    wx, wy, ww, wh = weights
+    dx = deltas[:, 0::4] / wx
+    dy = deltas[:, 1::4] / wy
+    dw = deltas[:, 2::4] / ww
+    dh = deltas[:, 3::4] / wh
+
+    # Prevent sending too large values into np.exp()
+    dw = torch.min(dw, torch.log(torch.Tensor([1000. / 16.]).type_as(dw)))
+    dh = torch.min(dh, torch.log(torch.Tensor([1000. / 16.]).type_as(dw)))
+
+    pred_ctr_x = dx * widths.unsqueeze(1) + ctr_x.unsqueeze(1)
+    pred_ctr_y = dy * heights.unsqueeze(1) + ctr_y.unsqueeze(1)
+    pred_w = torch.exp(dw) * widths.unsqueeze(1)
+    pred_h = torch.exp(dh) * heights.unsqueeze(1)
+
+    pred_boxes = torch.zeros(deltas.shape).type_as(deltas)
+    # x1
+    pred_boxes[:, 0::4] = pred_ctr_x - 0.5 * pred_w
+    # y1
+    pred_boxes[:, 1::4] = pred_ctr_y - 0.5 * pred_h
+    # x2
+    pred_boxes[:, 2::4] = pred_ctr_x + 0.5 * pred_w
+    # y2
+    pred_boxes[:, 3::4] = pred_ctr_y + 0.5 * pred_h
+
+    pred_boxes.masked_fill_(zero_area.view(zero_area.size(0),1).expand(zero_area.size(0),4),0)
+    
+    return pred_boxes
 
 
-#     exit(-1)
-#     pred_ctr_x = dx * widths.unsqueeze(1) + ctr_x.unsqueeze(1)
-#     pred_ctr_y = dy * heights.unsqueeze(1) + ctr_y.unsqueeze(1)
-#     pred_w = torch.exp(dw) * widths.unsqueeze(1)
-#     pred_h = torch.exp(dh) * heights.unsqueeze(1)
 
-#     pred_boxes = torch.zeros(deltas.shape).type_as(deltas)
-#     # x1
-#     pred_boxes[:, 0::4] = pred_ctr_x - 0.5 * pred_w
-#     # y1
-#     pred_boxes[:, 1::4] = pred_ctr_y - 0.5 * pred_h
-#     # x2
-#     pred_boxes[:, 2::4] = pred_ctr_x + 0.5 * pred_w
-#     # y2
-#     pred_boxes[:, 3::4] = pred_ctr_y + 0.5 * pred_h
-
-#     return pred_boxes
-
-
-
-def tube_transform(boxes, deltas, weights):
+def tube_transform_inv(boxes, deltas, weights):
     """ Use the bbox_transform to compute the transform,
     and apply to all the boxes. """
     boxes_parts, time_dim = split_tube_into_boxes(boxes)
     deltas_parts, _ = split_tube_into_boxes(deltas, time_dim)
-    all_tx = [bbox_transform(boxes_part, deltas_part, weights) for
+    all_tx = [bbox_transform_inv(boxes_part, deltas_part, weights) for
               boxes_part, deltas_part in zip(boxes_parts, deltas_parts)]
     # Now need to interleave the boxes in the same way they were un-interleaved
     # in the split_tube_into_boxes function
@@ -185,10 +117,10 @@ def tube_transform(boxes, deltas, weights):
                 :, t * 4: (t + 1) * 4] = all_tx[t][:, cid * 4: (cid + 1) * 4]
     return res
 
-def bbox_transform_inv(ex_rois, gt_rois, weights):
-    """Backward transform that computes bounding-box regression deltas given
-    proposal boxes and ground-truth boxes. The weights argument should be a
-    4-tuple of multiplicative weights that are applied to the regression target.
+def bbox_transform(ex_rois, gt_rois, weights):
+    """Forward transform that maps proposal boxes to ground-truth boxes using
+    bounding-box regression deltas. See bbox_transform_inv for a description of
+    the weights argument.
     """
 
     if ex_rois.shape[1] > 4:
@@ -216,7 +148,7 @@ def bbox_transform_inv(ex_rois, gt_rois, weights):
     return targets
 
 
-def tube_transform_inv(ex_rois, gt_rois, weights):
+def tube_transform(ex_rois, gt_rois, weights):
     """ Tube extension of the box rois. """
     # print('ex_rois.shape :',ex_rois.shape)
     # print('gt_rois.shape :',gt_rois.shape)
@@ -224,7 +156,7 @@ def tube_transform_inv(ex_rois, gt_rois, weights):
     assert(ex_rois.shape[1] == gt_rois.shape[1])
     ex_rois_parts, _ = split_tube_into_boxes(ex_rois)
     gt_rois_parts, _ = split_tube_into_boxes(gt_rois)
-    all_tx = [bbox_transform_inv(ex_rois_part, gt_rois_part, weights) for
+    all_tx = [bbox_transform(ex_rois_part, gt_rois_part, weights) for
               ex_rois_part, gt_rois_part in zip(ex_rois_parts, gt_rois_parts)]
     return torch.cat(all_tx, dim=1)
 

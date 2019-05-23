@@ -20,7 +20,7 @@ from generate_anchors import generate_anchors_all_pyramids
 # from generate_anchors import generate_anchors
 # from bbox_transform import bbox_transform_inv, clip_boxes_3d, clip_boxes_batch, bbox_transform_inv_3d
 from box_functions import bbox_transform_inv,clip_boxes
-from nms_3d.nms_wrapper import nms
+# from nms_3d.nms_wrapper import nms
 import pdb
 
 DEBUG = False
@@ -128,11 +128,11 @@ class _ProposalLayer(nn.Module):
         scores_2 = scores_2.view(batch_size, -1)
 
         scores_all = torch.cat([scores, scores_3_4, scores_2],1)
-
         # Convert anchors into proposals via bbox transformations
         proposals = bbox_transform_inv(anchors_all.contiguous().view(-1,anchors_all.size(2)),\
                                        bbox_frame_all.contiguous().view(-1,anchors_all.size(2)), \
                                        (1.0, 1.0, 1.0, 1.0)) # proposals have 441 * time_dim shape
+
 
         # 2. clip predicted boxes to image
         ## if any dimension exceeds the dims of the original image, clamp_ them
@@ -159,32 +159,32 @@ class _ProposalLayer(nn.Module):
             proposals_single = proposals_single[order_single, :]
             scores_single = scores_single[order_single].view(-1,1)
 
-            if cfg_key =='TEST' :
+            # if cfg_key =='TEST' :
 
-                keep_idx_i = nms(torch.cat((proposals_single, scores_single), 1), nms_thresh)
-                keep_idx_i = keep_idx_i.long().view(-1)
+            #     keep_idx_i = nms(torch.cat((proposals_single, scores_single), 1), nms_thresh)
+            #     keep_idx_i = keep_idx_i.long().view(-1)
 
-                if post_nms_topN > 0:
-                    keep_idx_i = keep_idx_i[:post_nms_topN]
-                    proposals_single = proposals_single[keep_idx_i, :]
-                    scores_single = scores_single[keep_idx_i, :]
+            #     if post_nms_topN > 0:
+            #         keep_idx_i = keep_idx_i[:post_nms_topN]
+            #         proposals_single = proposals_single[keep_idx_i, :]
+            #         scores_single = scores_single[keep_idx_i, :]
             
-                    # adding score at the end.
-                    num_proposal = proposals_single.size(0)
-                    output[i,:num_proposal,0] = i
-                    output[i,:num_proposal,1:-1] = proposals_single
-                    output[i,:num_proposal,-1] = scores_single.squeeze()
+            #         # adding score at the end.
+            #         num_proposal = proposals_single.size(0)
+            #         output[i,:num_proposal,0] = i
+            #         output[i,:num_proposal,1:-1] = proposals_single
+            #         output[i,:num_proposal,-1] = scores_single.squeeze()
 
-            else:
-                ## without NMS code
-                proposals_single = proposals_single[:post_nms_topN, :]
-                scores_single = scores_single[:post_nms_topN]
-            
-                # adding score at the end.
-                num_proposal = proposals_single.size(0)
-                output[i,:num_proposal,0] = i
-                output[i,:num_proposal,1:-1] = proposals_single
-                output[i,:num_proposal,-1] = scores_single.squeeze()
+            # else:
+            #     ## without NMS code
+            proposals_single = proposals_single[:post_nms_topN, :]
+            scores_single = scores_single[:post_nms_topN]
+
+            # adding score at the end.
+            num_proposal = proposals_single.size(0)
+            output[i,:num_proposal,0] = i
+            output[i,:num_proposal,1:-1] = proposals_single
+            output[i,:num_proposal,-1] = scores_single.squeeze()
 
         return output
 
