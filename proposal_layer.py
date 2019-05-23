@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 # --------------------------------------------------------
 # Faster R-CNN
 # Copyright (c) 2015 Microsoft
@@ -18,7 +18,7 @@ import yaml
 from conf import conf
 from generate_anchors import generate_anchors
 # from bbox_transform import bbox_transform_inv, clip_boxes_3d, clip_boxes_batch, bbox_transform_inv_3d
-from nms.py_nms import py_cpu_nms_tubes as nms
+# from nms.py_nms import py_cpu_nms_tubes as nms
 # from nms.nms_wrapper import nms
 
 from box_functions import bbox_transform_inv,clip_boxes
@@ -157,10 +157,11 @@ class _ProposalLayer(nn.Module):
 
         # 2. clip predicted boxes to image
         ## if any dimension exceeds the dims of the original image, clamp_ them
-        print('anchors_all[0,2000:3000,:12] :',anchors_all[0,2900:3000,:12].cpu().numpy())
-        print('bbox_frame_all[0,2000:3000,:12] :',bbox_frame_all[0,2900:3000,:12].cpu().numpy())
+        print('anchors_all[0,17500:17700] :',anchors_all[0,17500:17700].cpu().numpy())
+        print('bbox_frame_all[0,17500:17700] :',bbox_frame_all[0,17500:17700].cpu().numpy())
         proposals = proposals.view(batch_size,-1,self.sample_duration*4)
-        print('proposals.shape :',proposals[0,17500:18000].cpu().numpy())
+        print('proposals.shape :',proposals.shape)
+        print('proposals.shape :',proposals[0,17500:17700].cpu().numpy())
         exit(-1)
         proposals = clip_boxes(proposals, im_info, batch_size)
 
@@ -244,7 +245,7 @@ if __name__ == '__main__':
     # define proposal layer
     RPN_proposal = _ProposalLayer(feat_stride, anchor_scales, anchor_ratios, anchor_duration,  len(anchor_scales) * len(anchor_ratios) )
 
-    batch_size = 1
+    batch_size = 2
     
     rpn_cls_score = torch.rand([batch_size, 30, 1, 14, 14])
     rpn_cls_score_3_4 = torch.rand([batch_size, 30, 5, 14, 14])
@@ -252,8 +253,8 @@ if __name__ == '__main__':
 
     # rpn_bbox_pred = torch.arange(14*14*15).view(1,15,1,1,14,14).expand(1,15,64,1,14,14).contiguous()
     # rpn_bbox_pred = rpn_bbox_pred.view(1,-1,1,14,14)
-    rpn_bbox_pred = torch.arange(14*14).view(1,1,1,14,14).expand(1,15*64,1,14,14).contiguous()
-    rpn_bbox_pred_3_4 = torch.arange(14*14*5).view(1,1,5,14,14).expand(1,15*48,5,14,14).contiguous()
+    rpn_bbox_pred = torch.arange(batch_size*14*14).view(batch_size,1,1,14,14).expand(batch_size,15*64,1,14,14).contiguous()
+    rpn_bbox_pred_3_4 = torch.arange(batch_size*14*14*5).view(batch_size,1,5,14,14).expand(batch_size,15*48,5,14,14).contiguous()
     # rpn_bbox_pred = torch.arange(960).view(1,960,1).expand(1,960,14*14).contiguous().view(1,960,1,14,14)
     # rpn_bbox_pred = rpn_bbox_pred.view(1,-1,1,14,14)
 

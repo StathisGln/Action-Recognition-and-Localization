@@ -28,9 +28,9 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_frames = '/gpu-data2/sgal/UCF-101-frames'
-    boxes_file = '/gpu-data2/sgal/pyannot.pkl'
-    split_txt_path = '/gpu-data2/sgal/UCF101_Action_detection_splits/'
+    dataset_frames = '../../Documents/UCF-101-frames'
+    boxes_file = '../pyannot.pkl'
+    split_txt_path = '../UCF101_Action_detection_splits/'
 
     # dataset_frames = '../UCF-101-frames'
     # boxes_file = '../pyannot.pkl'
