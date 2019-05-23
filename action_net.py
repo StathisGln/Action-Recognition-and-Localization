@@ -80,7 +80,7 @@ class ACT_net(nn.Module):
         base_feat_2 = self.act_base_2(base_feat_1)
 
         # base_feat = [base_feat_1, base_feat_2, base_feat_3]
-        print('base_feat_2.shape :',base_feat_2.shape)
+
         rois, rois_16, rpn_loss_cls, rpn_loss_bbox, \
             rpn_loss_cls_16, rpn_loss_bbox_16 = self.act_rpn(base_feat_2, im_info, gt_tubes, gt_rois)
         

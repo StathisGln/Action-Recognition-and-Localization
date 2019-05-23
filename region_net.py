@@ -91,28 +91,28 @@ class _RPN(nn.Module):
     def forward(self, base_feat, im_info, gt_boxes, gt_rois):
 
         batch_size = base_feat.size(0)
-        # rpn_conv1 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
+        rpn_conv1 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
 
-        # rpn_conv_avg = self.avg_pool(rpn_conv1)
-        # rpn_conv_avg_3_4 = self.avg_pool_3_4(rpn_conv1)
-        # rpn_conv_avg_2 = self.avg_pool_2(rpn_conv1)
+        rpn_conv_avg = self.avg_pool(rpn_conv1)
+        rpn_conv_avg_3_4 = self.avg_pool_3_4(rpn_conv1)
+        rpn_conv_avg_2 = self.avg_pool_2(rpn_conv1)
 
-        # rpn_cls_score = self.RPN_cls_score(rpn_conv_avg)  # classification layer
-        # rpn_cls_score_3_4 = self.RPN_cls_score(rpn_conv_avg_3_4)  # classification layer
-        # rpn_cls_score_2 = self.RPN_cls_score(rpn_conv_avg_2)  # classification layer
+        rpn_cls_score = self.RPN_cls_score(rpn_conv_avg)  # classification layer
+        rpn_cls_score_3_4 = self.RPN_cls_score(rpn_conv_avg_3_4)  # classification layer
+        rpn_cls_score_2 = self.RPN_cls_score(rpn_conv_avg_2)  # classification layer
 
-        # rpn_bbox_pred = self.RPN_bbox_pred(rpn_conv_avg)  # regression layer
-        # rpn_bbox_pred_3_4 = self.RPN_bbox_pred_3_4(rpn_conv_avg_3_4)  # regression layer
-        # rpn_bbox_pred_2 = self.RPN_bbox_pred_2(rpn_conv_avg_2)  # regression layer
+        rpn_bbox_pred = self.RPN_bbox_pred(rpn_conv_avg)  # regression layer
+        rpn_bbox_pred_3_4 = self.RPN_bbox_pred_3_4(rpn_conv_avg_3_4)  # regression layer
+        rpn_bbox_pred_2 = self.RPN_bbox_pred_2(rpn_conv_avg_2)  # regression layer
 
-        batch_size = 2
-        rpn_cls_score = torch.rand([batch_size, 30, 1, 14, 14])
-        rpn_cls_score_3_4 = torch.rand([batch_size, 30, 5, 14, 14])
-        rpn_cls_score_2 = torch.rand([batch_size, 30, 9, 14, 14])
+        # batch_size = 2
+        # rpn_cls_score = torch.rand([batch_size, 30, 1, 14, 14])
+        # rpn_cls_score_3_4 = torch.rand([batch_size, 30, 5, 14, 14])
+        # rpn_cls_score_2 = torch.rand([batch_size, 30, 9, 14, 14])
 
-        rpn_bbox_pred = torch.rand([batch_size, 960, 1, 14, 14])
-        rpn_bbox_pred_3_4 = torch.rand([batch_size, 720, 5, 14, 14])
-        rpn_bbox_pred_2 = torch.rand([batch_size, 480, 9, 14, 14])
+        # rpn_bbox_pred = torch.rand([batch_size, 960, 1, 14, 14])
+        # rpn_bbox_pred_3_4 = torch.rand([batch_size, 720, 5, 14, 14])
+        # rpn_bbox_pred_2 = torch.rand([batch_size, 480, 9, 14, 14])
 
         rpn_cls_score_reshape = self.reshape(rpn_cls_score, 2)
         rpn_cls_prob_reshape = F.softmax(rpn_cls_score_reshape, 1)
