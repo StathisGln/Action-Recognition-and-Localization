@@ -172,6 +172,7 @@ if __name__ == '__main__':
     # epochs = 1
     # epochs = 40
     n_devs = torch.cuda.device_count()
+    losses = []
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
 
@@ -180,8 +181,11 @@ if __name__ == '__main__':
             lr *= lr_decay_gamma
             print('adjust learning rate {}...'.format(lr))
 
-        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=4)
+        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*4, 0, lr, mode=4)
+
+        losses.append(loss)
 
         if ( epoch + 1 ) % 5 == 0:
             torch.save(act_model.state_dict(), "action_net_model_steady_anchors.pwf".format(epoch+1))
     torch.save(act_model.state_dict(), "action_net_model_steady_anchors.pwf")
+    

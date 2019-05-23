@@ -108,179 +108,195 @@ class _RPN(nn.Module):
         rpn_cls_prob_all_3_4  = []
         rpn_cls_prob_all_2  = []
 
-        # for i in range(n_map_feats):
+        for i in range(n_map_feats):
 
-        #     feat = base_feat[i]
-        #     batch_size = feat.size(0)
-        #     rpn_conv1 = F.relu(self.RPN_Conv(feat), inplace=True) # 3d convolution
+            feat = base_feat[i]
+            batch_size = feat.size(0)
+            rpn_conv1 = F.relu(self.RPN_Conv(feat), inplace=True) # 3d convolution
 
-        #     rpn_conv_avg = self.avg_pool(rpn_conv1)
-        #     rpn_conv_avg_3_4 = self.avg_pool_3_4(rpn_conv1)
-        #     rpn_conv_avg_2 = self.avg_pool_2(rpn_conv1)
+            rpn_conv_avg = self.avg_pool(rpn_conv1)
+            rpn_conv_avg_3_4 = self.avg_pool_3_4(rpn_conv1)
+            rpn_conv_avg_2 = self.avg_pool_2(rpn_conv1)
 
-        #     # # ## get classification score for all anchors
-        #     rpn_cls_score = self.RPN_cls_score(rpn_conv_avg)  # classification layer
-        #     rpn_cls_score_3_4 = self.RPN_cls_score(rpn_conv_avg_3_4)  # classification layer
-        #     rpn_cls_score_2 = self.RPN_cls_score(rpn_conv_avg_2)  # classification layer
+            time = rpn_conv_avg.size(2)
+            time_3_4 = rpn_conv_avg_3_4.size(2)
+            time_2 = rpn_conv_avg_2.size(2)
 
-        #     rpn_bbox_pred = self.RPN_bbox_pred(rpn_conv_avg)  # regression layer
-        #     rpn_bbox_pred_3_4 = self.RPN_bbox_pred_3_4(rpn_conv_avg_3_4)  # regression layer
-        #     rpn_bbox_pred_2 = self.RPN_bbox_pred_2(rpn_conv_avg_2)  # regression layer
+            # # ## get classification score for all anchors
+            rpn_cls_score = self.RPN_cls_score(rpn_conv_avg)  # classification layer
+            rpn_cls_score_3_4 = self.RPN_cls_score(rpn_conv_avg_3_4)  # classification layer
+            rpn_cls_score_2 = self.RPN_cls_score(rpn_conv_avg_2)  # classification layer
 
-        #     rpn_cls_score_reshape = self.reshape(rpn_cls_score, 2)
-        #     rpn_cls_prob_reshape = F.softmax(rpn_cls_score_reshape, 1)
-        #     rpn_cls_prob = self.reshape(rpn_cls_prob_reshape, self.nc_score_out)
+            rpn_bbox_pred = self.RPN_bbox_pred(rpn_conv_avg)  # regression layer
+            rpn_bbox_pred_3_4 = self.RPN_bbox_pred_3_4(rpn_conv_avg_3_4)  # regression layer
+            rpn_bbox_pred_2 = self.RPN_bbox_pred_2(rpn_conv_avg_2)  # regression layer
 
-        #     rpn_cls_score_reshape_3_4 = self.reshape(rpn_cls_score_3_4, 2)
-        #     rpn_cls_prob_reshape_3_4 = F.softmax(rpn_cls_score_reshape_3_4, 1)
-        #     rpn_cls_prob_3_4 = self.reshape(rpn_cls_prob_reshape_3_4, self.nc_score_out)
+            rpn_cls_score_reshape = self.reshape(rpn_cls_score, 2)
+            rpn_cls_prob_reshape = F.softmax(rpn_cls_score_reshape, 1)
+            rpn_cls_prob = self.reshape(rpn_cls_prob_reshape, self.nc_score_out)
 
-        #     rpn_cls_score_reshape_2 = self.reshape(rpn_cls_score_2, 2)
-        #     rpn_cls_prob_reshape_2 = F.softmax(rpn_cls_score_reshape_2, 1)
-        #     rpn_cls_prob_2 = self.reshape(rpn_cls_prob_reshape_2, self.nc_score_out)
+            rpn_cls_score_reshape_3_4 = self.reshape(rpn_cls_score_3_4, 2)
+            rpn_cls_prob_reshape_3_4 = F.softmax(rpn_cls_score_reshape_3_4, 1)
+            rpn_cls_prob_3_4 = self.reshape(rpn_cls_prob_reshape_3_4, self.nc_score_out)
 
-        #     print('rpn_conv_avg.shape :',rpn_conv_avg.shape)
-        #     print('rpn_conv_avg_3_4.shape :',rpn_conv_avg_3_4.shape)
-        #     print('rpn_conv_avg_2.shape :',rpn_conv_avg_2.shape)
+            rpn_cls_score_reshape_2 = self.reshape(rpn_cls_score_2, 2)
+            rpn_cls_prob_reshape_2 = F.softmax(rpn_cls_score_reshape_2, 1)
+            rpn_cls_prob_2 = self.reshape(rpn_cls_prob_reshape_2, self.nc_score_out)
 
-        #     print('rpn_bbox_pred.shape :',rpn_bbox_pred.shape)
-        #     print('rpn_bbox_pred_3_4.shape :',rpn_bbox_pred_3_4.shape)
-        #     print('rpn_bbox_pred_2.shape :',rpn_bbox_pred_2.shape)
+            # print('rpn_conv_avg.shape :',rpn_conv_avg.shape)
+            # print('rpn_conv_avg_3_4.shape :',rpn_conv_avg_3_4.shape)
+            # print('rpn_conv_avg_2.shape :',rpn_conv_avg_2.shape)
 
-        #     print('rpn_cls_prob.shape :',rpn_cls_prob.shape)
-        #     print('rpn_cls_prob_3_4.shape :',rpn_cls_prob_3_4.shape)
-        #     print('rpn_cls_prob_2.shape :',rpn_cls_prob_2.shape)
+            # print('rpn_bbox_pred.shape :',rpn_bbox_pred.shape)
+            # print('rpn_bbox_pred_3_4.shape :',rpn_bbox_pred_3_4.shape)
+            # print('rpn_bbox_pred_2.shape :',rpn_bbox_pred_2.shape)
+
+            # print('rpn_cls_prob.shape :',rpn_cls_prob.shape)
+            # print('rpn_cls_prob_3_4.shape :',rpn_cls_prob_3_4.shape)
+            # print('rpn_cls_prob_2.shape :',rpn_cls_prob_2.shape)
             
-        #     # rpn_shapes.append([rpn_cls_score.size()[2], rpn_cls_score.size()[3]])
-        #     # rpn_cls_score_all.append(rpn_cls_score.permute(0,2,3,1).contiguous().view(batch_size,-1,2))
-        #     # rpn_bbox_pred_all.append(rpn_bbox_pred.permute(0,2,3,1).contiguous().view(batch_size,-1,self.sample_duration*4))
-        #     # rpn_cls_prob_all.append(rpn_cls_prob.permute(0,2,3,1).contiguous().view(batch_size,-1,2))
+            rpn_shapes.append([rpn_cls_score.size()[3], rpn_cls_score.size()[4]])
+            # score
+            rpn_cls_score_all.append(rpn_cls_score.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,2))
+            rpn_cls_score_all_3_4.append(rpn_cls_score_3_4.permute(0,2,3,4,1).contiguous().view(batch_size,time_3_4,-1,2))
+            rpn_cls_score_all_2.append(rpn_cls_score_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,2))
 
-        ####################################################################################################
-        ## to remove
+            # bbox_pred
+            rpn_bbox_pred_all.append(rpn_bbox_pred.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,4 * self.anchor_duration[0]))
+            rpn_bbox_pred_all_3_4.append(rpn_bbox_pred_3_4.permute(0,2,3,4,1).contiguous().\
+                                         view(batch_size,time_3_4,-1,4 * self.anchor_duration[1]))
+            rpn_bbox_pred_all_2.append(rpn_bbox_pred_2.permute(0,2,3,4,1).contiguous().\
+                                       view(batch_size,time_2,-1,4 * self.anchor_duration[2]))
 
-        # 28
-        batch_size = 2
+            rpn_cls_prob_all.append(rpn_cls_prob.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,2))
+            rpn_cls_prob_all_3_4.append(rpn_cls_prob_3_4.permute(0,2,3,4,1).contiguous().view(batch_size,time_3_4,-1,2))
+            rpn_cls_prob_all_2.append(rpn_cls_prob_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,2))
+
+        # ####################################################################################################
+        # ## to remove
+
+        # # 28
+        # batch_size = 2
             
-        rpn_shapes.append([28,28])
+        # rpn_shapes.append([28,28])
 
-        time = 1
-        time_3_4 = 5
-        time_2 = 9
+        # time = 1
+        # time_3_4 = 5
+        # time_2 = 9
         
-        rpn_cls_score = torch.rand([batch_size, 6, 1, 28, 28])
-        rpn_cls_score_3_4 = torch.rand([batch_size, 6, 5, 28, 28])
-        rpn_cls_score_2 = torch.rand([batch_size, 6, 9, 28, 28])
+        # rpn_cls_score = torch.rand([batch_size, 6, 1, 28, 28])
+        # rpn_cls_score_3_4 = torch.rand([batch_size, 6, 5, 28, 28])
+        # rpn_cls_score_2 = torch.rand([batch_size, 6, 9, 28, 28])
 
-        rpn_cls_score_all.append(rpn_cls_score.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,2))
-        rpn_cls_score_all_3_4.append(rpn_cls_score_3_4.permute(0,2,3,4,1).contiguous().view(batch_size,time_3_4,-1,2))
-        rpn_cls_score_all_2.append(rpn_cls_score_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,2))
+        # rpn_cls_score_all.append(rpn_cls_score.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,2))
+        # rpn_cls_score_all_3_4.append(rpn_cls_score_3_4.permute(0,2,3,4,1).contiguous().view(batch_size,time_3_4,-1,2))
+        # rpn_cls_score_all_2.append(rpn_cls_score_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,2))
         
-        rpn_bbox_pred = torch.rand([batch_size,192,1,28,28])
-        rpn_bbox_pred_3_4 = torch.rand([batch_size,144,5,28,28])
-        rpn_bbox_pred_2 = torch.rand([batch_size,96,9,28,28])
+        # rpn_bbox_pred = torch.rand([batch_size,192,1,28,28])
+        # rpn_bbox_pred_3_4 = torch.rand([batch_size,144,5,28,28])
+        # rpn_bbox_pred_2 = torch.rand([batch_size,96,9,28,28])
 
-        rpn_bbox_pred_all.append(rpn_bbox_pred.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,4 * self.anchor_duration[0]))
-        rpn_bbox_pred_all_3_4.append(rpn_bbox_pred_3_4.permute(0,2,3,4,1).contiguous().\
-                                     view(batch_size,time_3_4,-1,4 * self.anchor_duration[1]))
-        rpn_bbox_pred_all_2.append(rpn_bbox_pred_2.permute(0,2,3,4,1).contiguous().\
-                                   view(batch_size,time_2,-1,4 * self.anchor_duration[2]))
+        # rpn_bbox_pred_all.append(rpn_bbox_pred.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,4 * self.anchor_duration[0]))
+        # rpn_bbox_pred_all_3_4.append(rpn_bbox_pred_3_4.permute(0,2,3,4,1).contiguous().\
+        #                              view(batch_size,time_3_4,-1,4 * self.anchor_duration[1]))
+        # rpn_bbox_pred_all_2.append(rpn_bbox_pred_2.permute(0,2,3,4,1).contiguous().\
+        #                            view(batch_size,time_2,-1,4 * self.anchor_duration[2]))
 
-        rpn_cls_prob = torch.rand([batch_size, 6, 1, 28, 28])
-        rpn_cls_prob_3_4 = torch.rand([batch_size, 6, 5, 28, 28])
-        rpn_cls_prob_2 = torch.rand([batch_size, 6, 9, 28, 28])
+        # rpn_cls_prob = torch.rand([batch_size, 6, 1, 28, 28])
+        # rpn_cls_prob_3_4 = torch.rand([batch_size, 6, 5, 28, 28])
+        # rpn_cls_prob_2 = torch.rand([batch_size, 6, 9, 28, 28])
 
-        rpn_cls_prob_all.append(rpn_cls_prob.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,2))
-        rpn_cls_prob_all_3_4.append(rpn_cls_prob_3_4.permute(0,2,3,4,1).contiguous().view(batch_size,time_3_4,-1,2))
-        rpn_cls_prob_all_2.append(rpn_cls_prob_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,2))
+        # rpn_cls_prob_all.append(rpn_cls_prob.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,2))
+        # rpn_cls_prob_all_3_4.append(rpn_cls_prob_3_4.permute(0,2,3,4,1).contiguous().view(batch_size,time_3_4,-1,2))
+        # rpn_cls_prob_all_2.append(rpn_cls_prob_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,2))
 
-        # 14
-        rpn_shapes.append([14,14])
+        # # 14
+        # rpn_shapes.append([14,14])
 
-        rpn_cls_score = torch.rand([batch_size, 6, 1, 14, 14])
-        rpn_cls_score_3_4 = torch.rand([batch_size, 6, 5, 14, 14])
-        rpn_cls_score_2 = torch.rand([batch_size, 6, 9, 14, 14])
+        # rpn_cls_score = torch.rand([batch_size, 6, 1, 14, 14])
+        # rpn_cls_score_3_4 = torch.rand([batch_size, 6, 5, 14, 14])
+        # rpn_cls_score_2 = torch.rand([batch_size, 6, 9, 14, 14])
 
-        rpn_cls_score_all.append(rpn_cls_score.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,2))
-        rpn_cls_score_all_3_4.append(rpn_cls_score_3_4.permute(0,2,3,4,1).contiguous().view(batch_size,time_3_4,-1,2))
-        rpn_cls_score_all_2.append(rpn_cls_score_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,2))
+        # rpn_cls_score_all.append(rpn_cls_score.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,2))
+        # rpn_cls_score_all_3_4.append(rpn_cls_score_3_4.permute(0,2,3,4,1).contiguous().view(batch_size,time_3_4,-1,2))
+        # rpn_cls_score_all_2.append(rpn_cls_score_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,2))
         
-        rpn_bbox_pred = torch.rand([batch_size,192,1,14,14])
-        rpn_bbox_pred_3_4 = torch.rand([batch_size,144,5,14,14])
-        rpn_bbox_pred_2 = torch.rand([batch_size,96,9,14,14])
+        # rpn_bbox_pred = torch.rand([batch_size,192,1,14,14])
+        # rpn_bbox_pred_3_4 = torch.rand([batch_size,144,5,14,14])
+        # rpn_bbox_pred_2 = torch.rand([batch_size,96,9,14,14])
 
-        rpn_bbox_pred_all.append(rpn_bbox_pred.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,4 * self.anchor_duration[0]))
-        rpn_bbox_pred_all_3_4.append(rpn_bbox_pred_3_4.permute(0,2,3,4,1).contiguous().\
-                                     view(batch_size,time_3_4,-1,4 * self.anchor_duration[1]))
-        rpn_bbox_pred_all_2.append(rpn_bbox_pred_2.permute(0,2,3,4,1).contiguous().\
-                                   view(batch_size,time_2,-1,4 * self.anchor_duration[2]))
+        # rpn_bbox_pred_all.append(rpn_bbox_pred.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,4 * self.anchor_duration[0]))
+        # rpn_bbox_pred_all_3_4.append(rpn_bbox_pred_3_4.permute(0,2,3,4,1).contiguous().\
+        #                              view(batch_size,time_3_4,-1,4 * self.anchor_duration[1]))
+        # rpn_bbox_pred_all_2.append(rpn_bbox_pred_2.permute(0,2,3,4,1).contiguous().\
+        #                            view(batch_size,time_2,-1,4 * self.anchor_duration[2]))
 
-        rpn_cls_prob = torch.rand([batch_size, 6, 1, 14, 14])
-        rpn_cls_prob_3_4 = torch.rand([batch_size, 6, 5, 14, 14])
-        rpn_cls_prob_2 = torch.rand([batch_size, 6, 9, 14, 14])
+        # rpn_cls_prob = torch.rand([batch_size, 6, 1, 14, 14])
+        # rpn_cls_prob_3_4 = torch.rand([batch_size, 6, 5, 14, 14])
+        # rpn_cls_prob_2 = torch.rand([batch_size, 6, 9, 14, 14])
 
-        rpn_cls_prob_all.append(rpn_cls_prob.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,2))
-        rpn_cls_prob_all_3_4.append(rpn_cls_prob_3_4.permute(0,2,3,4,1).contiguous().view(batch_size,time_3_4,-1,2))
-        rpn_cls_prob_all_2.append(rpn_cls_prob_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,2))
+        # rpn_cls_prob_all.append(rpn_cls_prob.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,2))
+        # rpn_cls_prob_all_3_4.append(rpn_cls_prob_3_4.permute(0,2,3,4,1).contiguous().view(batch_size,time_3_4,-1,2))
+        # rpn_cls_prob_all_2.append(rpn_cls_prob_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,2))
 
 
-        # 7
-        rpn_shapes.append([7,7])
+        # # 7
+        # rpn_shapes.append([7,7])
 
-        rpn_cls_score = torch.rand([batch_size, 6, 1, 7, 7])
-        rpn_cls_score_3_4 = torch.rand([batch_size, 6, 5, 7, 7])
-        rpn_cls_score_2 = torch.rand([batch_size, 6, 9, 7, 7])
+        # rpn_cls_score = torch.rand([batch_size, 6, 1, 7, 7])
+        # rpn_cls_score_3_4 = torch.rand([batch_size, 6, 5, 7, 7])
+        # rpn_cls_score_2 = torch.rand([batch_size, 6, 9, 7, 7])
 
-        rpn_cls_score_all.append(rpn_cls_score.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,2))
-        rpn_cls_score_all_3_4.append(rpn_cls_score_3_4.permute(0,2,3,4,1).contiguous().view(batch_size,time_3_4,-1,2))
-        rpn_cls_score_all_2.append(rpn_cls_score_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,2))
+        # rpn_cls_score_all.append(rpn_cls_score.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,2))
+        # rpn_cls_score_all_3_4.append(rpn_cls_score_3_4.permute(0,2,3,4,1).contiguous().view(batch_size,time_3_4,-1,2))
+        # rpn_cls_score_all_2.append(rpn_cls_score_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,2))
         
-        rpn_bbox_pred = torch.rand([batch_size,192,1,7,7])
-        rpn_bbox_pred_3_4 = torch.rand([batch_size,144,5,7,7])
-        rpn_bbox_pred_2 = torch.rand([batch_size,96,9,7,7])
+        # rpn_bbox_pred = torch.rand([batch_size,192,1,7,7])
+        # rpn_bbox_pred_3_4 = torch.rand([batch_size,144,5,7,7])
+        # rpn_bbox_pred_2 = torch.rand([batch_size,96,9,7,7])
 
-        rpn_bbox_pred_all.append(rpn_bbox_pred.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,4 * self.anchor_duration[0]))
-        rpn_bbox_pred_all_3_4.append(rpn_bbox_pred_3_4.permute(0,2,3,4,1).contiguous().\
-                                     view(batch_size,time_3_4,-1,4 * self.anchor_duration[1]))
-        rpn_bbox_pred_all_2.append(rpn_bbox_pred_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,4 * self.anchor_duration[2]))
+        # rpn_bbox_pred_all.append(rpn_bbox_pred.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,4 * self.anchor_duration[0]))
+        # rpn_bbox_pred_all_3_4.append(rpn_bbox_pred_3_4.permute(0,2,3,4,1).contiguous().\
+        #                              view(batch_size,time_3_4,-1,4 * self.anchor_duration[1]))
+        # rpn_bbox_pred_all_2.append(rpn_bbox_pred_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,4 * self.anchor_duration[2]))
 
-        rpn_cls_prob = torch.rand([batch_size, 6, 1, 7, 7])
-        rpn_cls_prob_3_4 = torch.rand([batch_size, 6, 5, 7, 7])
-        rpn_cls_prob_2 = torch.rand([batch_size, 6, 9, 7, 7])
+        # rpn_cls_prob = torch.rand([batch_size, 6, 1, 7, 7])
+        # rpn_cls_prob_3_4 = torch.rand([batch_size, 6, 5, 7, 7])
+        # rpn_cls_prob_2 = torch.rand([batch_size, 6, 9, 7, 7])
 
-        rpn_cls_prob_all.append(rpn_cls_prob.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,2))
-        rpn_cls_prob_all_3_4.append(rpn_cls_prob_3_4.permute(0,2,3,4,1).contiguous().view(batch_size,time_3_4,-1,2))
-        rpn_cls_prob_all_2.append(rpn_cls_prob_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,2))
+        # rpn_cls_prob_all.append(rpn_cls_prob.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,2))
+        # rpn_cls_prob_all_3_4.append(rpn_cls_prob_3_4.permute(0,2,3,4,1).contiguous().view(batch_size,time_3_4,-1,2))
+        # rpn_cls_prob_all_2.append(rpn_cls_prob_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,2))
 
-        # 4
-        rpn_shapes.append([4,4])
+        # # 4
+        # rpn_shapes.append([4,4])
 
-        rpn_cls_score = torch.rand([batch_size, 6, 1, 4, 4])
-        rpn_cls_score_3_4 = torch.rand([batch_size, 6, 5, 4, 4])
-        rpn_cls_score_2 = torch.rand([batch_size, 6, 9, 4, 4])
+        # rpn_cls_score = torch.rand([batch_size, 6, 1, 4, 4])
+        # rpn_cls_score_3_4 = torch.rand([batch_size, 6, 5, 4, 4])
+        # rpn_cls_score_2 = torch.rand([batch_size, 6, 9, 4, 4])
 
-        rpn_cls_score_all.append(rpn_cls_score.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,2))
-        rpn_cls_score_all_3_4.append(rpn_cls_score_3_4.permute(0,2,3,4,1).contiguous().view(batch_size,time_3_4,-1,2))
-        rpn_cls_score_all_2.append(rpn_cls_score_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,2))
+        # rpn_cls_score_all.append(rpn_cls_score.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,2))
+        # rpn_cls_score_all_3_4.append(rpn_cls_score_3_4.permute(0,2,3,4,1).contiguous().view(batch_size,time_3_4,-1,2))
+        # rpn_cls_score_all_2.append(rpn_cls_score_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,2))
         
-        rpn_bbox_pred = torch.rand([batch_size,192,1,4,4])
-        rpn_bbox_pred_3_4 = torch.rand([batch_size,144,5,4,4])
-        rpn_bbox_pred_2 = torch.rand([batch_size,96,9,4,4])
+        # rpn_bbox_pred = torch.rand([batch_size,192,1,4,4])
+        # rpn_bbox_pred_3_4 = torch.rand([batch_size,144,5,4,4])
+        # rpn_bbox_pred_2 = torch.rand([batch_size,96,9,4,4])
 
-        rpn_bbox_pred_all.append(rpn_bbox_pred.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,4 * self.anchor_duration[0]))
-        rpn_bbox_pred_all_3_4.append(rpn_bbox_pred_3_4.permute(0,2,3,4,1).contiguous().\
-                                     view(batch_size,time_3_4,-1,4 * self.anchor_duration[1]))
-        rpn_bbox_pred_all_2.append(rpn_bbox_pred_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,4 * self.anchor_duration[2]))
+        # rpn_bbox_pred_all.append(rpn_bbox_pred.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,4 * self.anchor_duration[0]))
+        # rpn_bbox_pred_all_3_4.append(rpn_bbox_pred_3_4.permute(0,2,3,4,1).contiguous().\
+        #                              view(batch_size,time_3_4,-1,4 * self.anchor_duration[1]))
+        # rpn_bbox_pred_all_2.append(rpn_bbox_pred_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,4 * self.anchor_duration[2]))
 
-        rpn_cls_prob = torch.rand([batch_size, 6, 1, 4, 4])
-        rpn_cls_prob_3_4 = torch.rand([batch_size, 6, 5, 4, 4])
-        rpn_cls_prob_2 = torch.rand([batch_size, 6, 9, 4, 4])
+        # rpn_cls_prob = torch.rand([batch_size, 6, 1, 4, 4])
+        # rpn_cls_prob_3_4 = torch.rand([batch_size, 6, 5, 4, 4])
+        # rpn_cls_prob_2 = torch.rand([batch_size, 6, 9, 4, 4])
 
-        rpn_cls_prob_all.append(rpn_cls_prob.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,2))
-        rpn_cls_prob_all_3_4.append(rpn_cls_prob_3_4.permute(0,2,3,4,1).contiguous().view(batch_size,time_3_4,-1,2))
-        rpn_cls_prob_all_2.append(rpn_cls_prob_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,2))
+        # rpn_cls_prob_all.append(rpn_cls_prob.permute(0,2,3,4,1).contiguous().view(batch_size,time,-1,2))
+        # rpn_cls_prob_all_3_4.append(rpn_cls_prob_3_4.permute(0,2,3,4,1).contiguous().view(batch_size,time_3_4,-1,2))
+        # rpn_cls_prob_all_2.append(rpn_cls_prob_2.permute(0,2,3,4,1).contiguous().view(batch_size,time_2,-1,2))
 
-        ####################################################################################################
+        # ####################################################################################################
 
         rpn_cls_score_all = torch.cat(rpn_cls_score_all, 2)
         rpn_cls_score_all_3_4 = torch.cat(rpn_cls_score_all_3_4, 2)

@@ -112,10 +112,10 @@ class ACT_net(nn.Module):
 
 
         base_feat = [p2,p3,p4,p5]
-        print('p2.shape :',p2.shape)
-        print('p3.shape :',p3.shape)
-        print('p4.shape :',p4.shape)
-        print('p5.shape :',p5.shape)
+        # print('p2.shape :',p2.shape)
+        # print('p3.shape :',p3.shape)
+        # print('p4.shape :',p4.shape)
+        # print('p5.shape :',p5.shape)
         rois, rois_16, rpn_loss_cls, rpn_loss_bbox, \
             rpn_loss_cls_16, rpn_loss_bbox_16 = self.act_rpn(base_feat, im_info, gt_tubes, gt_rois)
         
