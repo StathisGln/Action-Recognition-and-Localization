@@ -18,6 +18,7 @@ from temporal_transforms import LoopPadding
 from action_net import ACT_net
 from resize_rpn import resize_rpn, resize_tube
 import pdb
+from box_functions import tube_overlaps
 
 np.random.seed(42)
 
@@ -125,7 +126,34 @@ if __name__ == '__main__':
                    None)
 
     print('**********VGIKE**********')
-    print('tubes :',tubes[0,:10].cpu().numpy())
-    # print('rois.shape :',rois.shape)
-    # print('rois :',rois)
+    print('tubes.shape :',tubes.shape)
+    tubes_t = tubes[0,:,1:-1].contiguous()
+    gt_rois_t = gt_rois_[0,:,:,:4].contiguous().view(-1,sample_duration*4)
 
+    rois_overlaps = tube_overlaps(tubes_t,gt_rois_t)
+    
+    gt_max_overlaps_sgl, _ = torch.max(rois_overlaps, 0)
+    print('gt_max_overlaps_sgl :',gt_max_overlaps_sgl)
+    iou_thresh = 0.5
+    gt_max_overlaps_sgl = torch.where(gt_max_overlaps_sgl > iou_thresh, gt_max_overlaps_sgl, torch.zeros_like(gt_max_overlaps_sgl).type_as(gt_max_overlaps_sgl))
+    sgl_detected =  gt_max_overlaps_sgl.ne(0).sum()
+    n_elems = gt_tubes_r_[0,:,-1].ne(0).sum().item()
+    sgl_true_pos = sgl_detected
+    sgl_false_neg = n_elems - sgl_detected
+
+    recall = float(sgl_true_pos)  / (float(sgl_true_pos)  + float(sgl_false_neg))
+
+    print(' -----------------------')
+    print('| Validation Epoch: {: >3} | '.format(1))
+    print('|                       |')
+    print('| Proposed Action Tubes |')
+    print('|                       |')
+    print('| Single frame          |')
+    print('|                       |')
+    print('| In {: >6} steps    :  |'.format(1))
+    print('|                       |')
+    print('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        sgl_true_pos, sgl_false_neg, recall))
+
+
+    print(' -----------------------')

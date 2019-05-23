@@ -16,8 +16,6 @@ import numpy.random as npr
 
 from config import cfg
 from generate_anchors import generate_anchors
-# from bbox_transform import clip_boxes, bbox_overlaps_batch, bbox_overlaps_time, bbox_transform_batch
-# from bbox_transform import clip_boxes, bbox_transform_batch_3d, bbox_overlaps_batch_3d
 from box_functions import bbox_transform, bbox_transform_inv, clip_boxes, tube_overlaps
 import pdb
 
@@ -184,7 +182,6 @@ class _AnchorTargetLayer(nn.Module):
                                               contiguous().view(-1,self.sample_duration*4),\
                                               gt_rois.view(-1,self.sample_duration*4)[argmax_overlaps.view(-1), :]). \
                                               view(batch_size,-1,self.sample_duration*4)
-
         bbox_inside_weights[labels==1] = cfg.TRAIN.RPN_BBOX_INSIDE_WEIGHTS[0]
 
         if cfg.TRAIN.RPN_POSITIVE_WEIGHT < 0:
@@ -250,10 +247,6 @@ class _AnchorTargetLayer(nn.Module):
         bbox_targets_2 = torch.stack(bbox_targets_list[time_3_4+time:],dim=1).\
                          view(batch_size, time_2, height,width, A * self.time_dim[2] * 4). \
                          permute(0,4,1,2,3).contiguous()
-
-        # print('bbox_targets_.shape :',bbox_targets_.shape)
-        # print('bbox_targets_3_4.shape :',bbox_targets_3_4.shape)
-        # print('bbox_targets_2.shape :',bbox_targets_2.shape)
 
         outputs.append(bbox_targets_)
         outputs.append(bbox_targets_3_4)

@@ -157,12 +157,7 @@ class _ProposalLayer(nn.Module):
 
         # 2. clip predicted boxes to image
         ## if any dimension exceeds the dims of the original image, clamp_ them
-        print('anchors_all[0,17500:17700] :',anchors_all[0,17500:17700].cpu().numpy())
-        print('bbox_frame_all[0,17500:17700] :',bbox_frame_all[0,17500:17700].cpu().numpy())
         proposals = proposals.view(batch_size,-1,self.sample_duration*4)
-        print('proposals.shape :',proposals.shape)
-        print('proposals.shape :',proposals[0,17500:17700].cpu().numpy())
-        exit(-1)
         proposals = clip_boxes(proposals, im_info, batch_size)
 
         scores_keep = scores
