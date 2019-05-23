@@ -106,14 +106,6 @@ class _RPN(nn.Module):
         rpn_bbox_pred_2 = self.RPN_bbox_pred_2(rpn_conv_avg_2)  # regression layer
 
         # batch_size = 2
-        # rpn_cls_score = torch.rand([batch_size, 30, 1, 14, 14])
-        # rpn_cls_score_3_4 = torch.rand([batch_size, 30, 5, 14, 14])
-        # rpn_cls_score_2 = torch.rand([batch_size, 30, 9, 14, 14])
-
-        # rpn_bbox_pred = torch.rand([batch_size, 960, 1, 14, 14])
-        # rpn_bbox_pred_3_4 = torch.rand([batch_size, 720, 5, 14, 14])
-        # rpn_bbox_pred_2 = torch.rand([batch_size, 480, 9, 14, 14])
-
         rpn_cls_score_reshape = self.reshape(rpn_cls_score, 2)
         rpn_cls_prob_reshape = F.softmax(rpn_cls_score_reshape, 1)
         rpn_cls_prob = self.reshape(rpn_cls_prob_reshape, self.nc_score_out)

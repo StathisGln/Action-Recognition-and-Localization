@@ -108,7 +108,7 @@ class _ProposalLayer(nn.Module):
         anchors_all = []
         bbox_frame_all = []
 
-
+        # for i in range(1,2):
         for i in range(len(self.time_dim)):
             for j in range(0,self.sample_duration-self.time_dim[i]+1):
 
@@ -120,16 +120,21 @@ class _ProposalLayer(nn.Module):
 
                 t = bboxes[i][:,:,j].permute(0,2,3,1).contiguous().view(batch_size, anchors.size(0), self.time_dim[i],4)
                 bbox[:,:,j:j+self.time_dim[i],:] = t
-
                 anchors_all.append(anc)
                 bbox_frame_all.append(bbox)
-                
-        anchors_all = torch.cat(anchors_all,0).type_as(scores) 
-        bbox_frame_all = torch.cat(bbox_frame_all,0).type_as(scores)
+
+        anchors_all = torch.stack(anchors_all,0).type_as(scores) 
+        bbox_frame_all = torch.stack(bbox_frame_all,1).type_as(scores)
 
         anchors_all = anchors_all.view(1, -1, self.sample_duration * 4)
+
         anchors_all = anchors_all.expand(batch_size, anchors_all.size(1), self.sample_duration * 4)
         bbox_frame_all = bbox_frame_all.view(batch_size, -1, self.sample_duration * 4)
+        # print('bbox_frame_all.shape :',bbox_frame_all.shape)
+        # print('bbox_frame[0,3000] :',bbox_frame_all[0,17500:18000].cpu().numpy())
+        # print('anchors_all.shape :',anchors_all.shape)
+        # print('anchors_all[0,2000:3000,:12] :',anchors_all[0,2900:3000,:12].cpu().numpy())
+        # print('bbox_frame_all[0,2000:3000,:12] :',bbox_frame_all[0,2900:3000,:12].cpu().numpy())
 
         # # Same story for the scores:
 
@@ -143,14 +148,20 @@ class _ProposalLayer(nn.Module):
         scores_2 = scores_2.view(batch_size, -1)
 
         scores_all = torch.cat([scores, scores_3_4, scores_2],1)
-
+        # print('anchors_all[0,:150,:4] :',anchors_all[0,:150,:4].cpu().numpy())
+        # print('bbox_frame_all[0,:150,:4] :',bbox_frame_all[0,:150,:4].cpu().numpy())
         # Convert anchors into proposals via bbox transformations
         proposals = bbox_transform_inv(anchors_all.contiguous().view(-1, self.sample_duration*4), \
                                        bbox_frame_all.contiguous().view(-1, self.sample_duration*4), \
                                        (1.0, 1.0, 1.0, 1.0)) # proposals have 441 * time_dim shape
+
         # 2. clip predicted boxes to image
         ## if any dimension exceeds the dims of the original image, clamp_ them
+        print('anchors_all[0,2000:3000,:12] :',anchors_all[0,2900:3000,:12].cpu().numpy())
+        print('bbox_frame_all[0,2000:3000,:12] :',bbox_frame_all[0,2900:3000,:12].cpu().numpy())
         proposals = proposals.view(batch_size,-1,self.sample_duration*4)
+        print('proposals.shape :',proposals[0,17500:18000].cpu().numpy())
+        exit(-1)
         proposals = clip_boxes(proposals, im_info, batch_size)
 
         scores_keep = scores
@@ -163,29 +174,44 @@ class _ProposalLayer(nn.Module):
         for i in range(batch_size):
             # # 3. remove predicted boxes with either height or width < threshold
             # # (NOTE: convert min_size to input image scale stored in im_info[2])
+            # proposals_single = proposals_keep[i]
+            # scores_single = scores_keep[i]
+            # order_single = order[i]
+            
+            # if pre_nms_topN > 0 and pre_nms_topN < scores_keep.numel():
+            #     order_single = order_single[:pre_nms_topN]
+
+            # proposals_single = proposals_single[order_single, :]
+            # scores_single = scores_single[order_single].view(-1,1)
+
+            # keep_idx_i = torch.Tensor(nms(torch.cat((proposals_single, scores_single), 1).cpu().numpy(), nms_thresh)).type_as(scores_single)
+            # keep_idx_i = keep_idx_i.long().view(-1)
+
+            # if post_nms_topN > 0:
+            #     keep_idx_i = keep_idx_i[:post_nms_topN]
+
+            # proposals_single = proposals_single[keep_idx_i, :]
+            # scores_single = scores_single[keep_idx_i, :]
+
+            
+            # # adding score at the end.
+            # num_proposal = proposals_single.size(0)
+            # output[i,:,0] = i
+            # output[i,:num_proposal,1:-1] = proposals_single
+            # output[i,:num_proposal,-1] = scores_single.squeeze()
+
             proposals_single = proposals_keep[i]
             scores_single = scores_keep[i]
             order_single = order[i]
-            
-            if pre_nms_topN > 0 and pre_nms_topN < scores_keep.numel():
-                order_single = order_single[:pre_nms_topN]
 
             proposals_single = proposals_single[order_single, :]
             scores_single = scores_single[order_single].view(-1,1)
-
-            keep_idx_i = torch.Tensor(nms(torch.cat((proposals_single, scores_single), 1).cpu().numpy(), nms_thresh)).type_as(scores_single)
-            keep_idx_i = keep_idx_i.long().view(-1)
-
-            if post_nms_topN > 0:
-                keep_idx_i = keep_idx_i[:post_nms_topN]
-
-            proposals_single = proposals_single[keep_idx_i, :]
-            scores_single = scores_single[keep_idx_i, :]
-
+            proposals_single = proposals_single[:post_nms_topN, :]
+            scores_single = scores_single[:post_nms_topN]
             
             # adding score at the end.
             num_proposal = proposals_single.size(0)
-            output[i,:,0] = i
+            output[i,:num_proposal,0] = i
             output[i,:num_proposal,1:-1] = proposals_single
             output[i,:num_proposal,-1] = scores_single.squeeze()
 
@@ -205,3 +231,42 @@ class _ProposalLayer(nn.Module):
         hs = boxes[:, :, 3] - boxes[:, :, 1] + 1
         keep = ((ws >= min_size.view(-1,1).expand_as(ws)) & (hs >= min_size.view(-1,1).expand_as(hs)))
         return keep
+
+if __name__ == '__main__':
+
+    np.set_printoptions(threshold=np.inf)
+    anchor_scales = [1, 2, 4, 8, 16 ]
+    anchor_ratios = [0.5, 1, 2]
+    feat_stride = [16, ]
+    sample_duration = 16
+    anchor_duration = [sample_duration,int(sample_duration*3/4), int(sample_duration/2)] #,int(sample_duration/4)] # add 
+            
+    # define proposal layer
+    RPN_proposal = _ProposalLayer(feat_stride, anchor_scales, anchor_ratios, anchor_duration,  len(anchor_scales) * len(anchor_ratios) )
+
+    batch_size = 1
+    
+    rpn_cls_score = torch.rand([batch_size, 30, 1, 14, 14])
+    rpn_cls_score_3_4 = torch.rand([batch_size, 30, 5, 14, 14])
+    rpn_cls_score_2 = torch.rand([batch_size, 30, 9, 14, 14])
+
+    # rpn_bbox_pred = torch.arange(14*14*15).view(1,15,1,1,14,14).expand(1,15,64,1,14,14).contiguous()
+    # rpn_bbox_pred = rpn_bbox_pred.view(1,-1,1,14,14)
+    rpn_bbox_pred = torch.arange(14*14).view(1,1,1,14,14).expand(1,15*64,1,14,14).contiguous()
+    rpn_bbox_pred_3_4 = torch.arange(14*14*5).view(1,1,5,14,14).expand(1,15*48,5,14,14).contiguous()
+    # rpn_bbox_pred = torch.arange(960).view(1,960,1).expand(1,960,14*14).contiguous().view(1,960,1,14,14)
+    # rpn_bbox_pred = rpn_bbox_pred.view(1,-1,1,14,14)
+
+    print('rpn_bbox_pred[0,0] :',rpn_bbox_pred[0,0])
+    # print('rpn_bbox_pred[0,0] :',rpn_bbox_pred[0,1])
+    print('rpn_bbox_pred[0,0] :',rpn_bbox_pred[0,1])
+    print('rpn_bbox_pred[0,0] :',rpn_bbox_pred.shape)
+    # rpn_bbox_pred = torch.rand([batch_size, 960, 1, 14, 14])
+    # rpn_bbox_pred_3_4 = torch.rand([batch_size, 720, 5, 14, 14])
+    rpn_bbox_pred_2 = torch.rand([batch_size, 480, 9, 14, 14])
+
+    im_info = torch.Tensor([[112,112,16]]*batch_size)
+    cfg_key = 'TRAIN'
+    ret = RPN_proposal((rpn_cls_score.data, rpn_cls_score_3_4.data, rpn_cls_score_2.data,
+                        rpn_bbox_pred.data, rpn_bbox_pred_3_4.data, rpn_bbox_pred_2.data, 
+                        im_info, cfg_key))

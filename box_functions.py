@@ -193,6 +193,7 @@ def bbox_transform_inv(ex_rois, gt_rois, weights):
 
     if ex_rois.shape[1] > 4:
         return tube_transform_inv(ex_rois, gt_rois, weights)
+
     ex_widths = ex_rois[:, 2] - ex_rois[:, 0] + 1.0
     ex_heights = ex_rois[:, 3] - ex_rois[:, 1] + 1.0
     ex_ctr_x = ex_rois[:, 0] + 0.5 * ex_widths

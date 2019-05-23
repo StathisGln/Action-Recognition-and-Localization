@@ -83,19 +83,16 @@ class ACT_net(nn.Module):
 
         rois, rois_16, rpn_loss_cls, rpn_loss_bbox, \
             rpn_loss_cls_16, rpn_loss_bbox_16 = self.act_rpn(base_feat_2, im_info, gt_tubes, gt_rois)
-        
-        f_rois = rois
-
 
         if self.training:
-          return f_rois,  None, rpn_loss_cls, rpn_loss_bbox, \
+          return rois,  None, rpn_loss_cls, rpn_loss_bbox, \
               None,None, \
               None, None, None
             # rpn_loss_cls_16, rpn_loss_bbox_16, \
             # f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss 
 
       
-        return f_rois,  None, None, None, None, None, \
+        return rois,  None, None, None, None, None, \
             None, None, None,
 
     def _init_weights(self):
