@@ -72,30 +72,36 @@ def save_checkpoint(state, filename):
 
 def _smooth_l1_loss(bbox_pred, bbox_targets, bbox_inside_weights, bbox_outside_weights, sigma=1.0, dim=[1]):
 
-    # print('-----\nInside _smooth_l1_loss')
+
     sigma_2 = sigma ** 2
-    # nan_values = bbox_targets != bbox_targets
-    # bbox_targets[nan_values] = 1e-5 ## because nan appears
 
     box_diff = bbox_pred - bbox_targets
-
-    # print(box_diff.detach().cpu().numpy())
-    # nan_values = box_diff != box_diff
-    # box_diff[nan_values] = 1e-5 ## because nan appears
-
+    # print('bbox_inside_weights.shape :',bbox_inside_weights.shape)
+    # print('bbox_outside_weights.shape :',bbox_outside_weights.shape)
+    # print('bbox_targets.shape :',bbox_targets.shape)
+    # print('bbox_pred.shape :',bbox_pred.shape)
+    # print('box_diff.shape  :',box_diff.shape)
+    
     in_box_diff = bbox_inside_weights * box_diff
-    # print('in_box_diff :',in_box_diff)
+    # print('in_box_diff.shape :',in_box_diff.shape)
+    # print('in_box_diff :',in_box_diff.nonzero().shape)
     abs_in_box_diff = torch.abs(in_box_diff)
     smoothL1_sign = (abs_in_box_diff < 1. / sigma_2).detach().float()
+    # print('smoothL1_sign.shape :',smoothL1_sign.shape)
+
     in_loss_box = torch.pow(in_box_diff, 2) * (sigma_2 / 2.) * smoothL1_sign \
                   + (abs_in_box_diff - (0.5 / sigma_2)) * (1. - smoothL1_sign)
+    # print('in_loss_box.shape :',in_loss_box.shape)
     out_loss_box = bbox_outside_weights * in_loss_box
-    # print('out_loss_box :',out_loss_box)
+    # print('out_loss_box.shape :',out_loss_box.shape)
+
     loss_box = out_loss_box
-    # print('edw loss_box.shape :',loss_box.shape)
+
     for i in sorted(dim, reverse=True):
       loss_box = loss_box.sum(i)
+    # print('loss_box.shape:',loss_box.shape)
     loss_box = loss_box.mean()
+
     return loss_box
 
 def _crop_pool_layer(bottom, rois, max_pool=True):

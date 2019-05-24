@@ -228,11 +228,11 @@ class _RPN(nn.Module):
             # print('rpn_bbox_targets_2 :',rpn_bbox_targets_2.shape)
 
             rpn_loss_box =  _smooth_l1_loss(rpn_bbox_pred, rpn_bbox_targets_, rpn_bbox_inside_weights_,
-                                                               rpn_bbox_outside_weights_, sigma=3)
+                                                               rpn_bbox_outside_weights_, sigma=3,dim=[1,2,3,4])
             rpn_loss_box_3_4 =  _smooth_l1_loss(rpn_bbox_pred, rpn_bbox_targets_, rpn_bbox_inside_weights_,
-                                                               rpn_bbox_outside_weights_, sigma=3)
+                                                               rpn_bbox_outside_weights_, sigma=3, dim=[1,2,3,4])
             rpn_loss_box_2 =  _smooth_l1_loss(rpn_bbox_pred, rpn_bbox_targets_, rpn_bbox_inside_weights_,
-                                                               rpn_bbox_outside_weights_, sigma=3)
+                                                               rpn_bbox_outside_weights_, sigma=3, dim=[1,2,3,4])
 
             self.rpn_loss_cls = rpn_loss_cls + rpn_loss_cls_3_4 + rpn_loss_cls_2
             self.rpn_loss_box = rpn_loss_box + rpn_loss_box_3_4 + rpn_loss_box_2

@@ -234,11 +234,6 @@ class _AnchorTargetLayer(nn.Module):
                 #       bbox_targets[:,(time_limits[i]+j*K*A):(time_limits[i]+(j+1)*K*A),j*4:(j+self.time_dim[i])*4].shape)
                 bbox_targets_list.append(bbox_targets[:,(time_limits[i]+j*K*A):(time_limits[i]+(j+1)*K*A),j*4:(j+self.time_dim[i])*4])
 
-        # for i in range(len(bbox_targets_list)):
-        #     print('bbox_targets_list[i].shape :',bbox_targets_list[i].shape)
-
-        # exit(-1)
-
         bbox_targets_ = torch.stack(bbox_targets_list[:time],dim=1).view(batch_size, time, height,width, A * self.time_dim[0] * 4). \
                         permute(0,4,1,2,3).contiguous()
         bbox_targets_3_4 = torch.stack(bbox_targets_list[time:time_3_4+time],dim=1).\
@@ -255,14 +250,23 @@ class _AnchorTargetLayer(nn.Module):
         anchors_count = bbox_inside_weights.size(1)
 
         bbox_inside_weights = bbox_inside_weights.view(batch_size,anchors_count,1)
-
+        # print('bbox_inside_weights.nonzero.squeeze() :',bbox_inside_weights.nonzero().squeeze())
+        # print('bbox_inside_weights.nonzero.squeeze() :',bbox_outside_weights.nonzero().squeeze())
+        # print('bbox_inside_weights.shape :',bbox_inside_weights[0,881])
+        # print('bbox_inside_weights.shape :',bbox_outside_weights[0,41190])
+        # print(' bbox_inside_weights[:,:time_bdry] :', bbox_inside_weights[:,:time_bdry].shape)
+        # print(' bbox_inside_weights[:,:time_bdry] :', bbox_inside_weights[:,:time_bdry].expand(batch_size, time_bdry, 4* self.time_dim[0]).shape)
+        # print(' bbox_inside_weights[:,:time_bdry] :', bbox_inside_weights[:,:time_bdry].\
+        #       expand(batch_size, time_bdry, 4* self.time_dim[0]).contiguous().\
+        #       view(batch_size, time, height, width, A * 4 * self.time_dim[0]).shape)
+  
+        # exit(-1)
         bbox_inside_weights_ = bbox_inside_weights[:,:time_bdry].\
                                expand(batch_size, time_bdry, 4* self.time_dim[0])
         bbox_inside_weights_3_4 = bbox_inside_weights[:,time_bdry:time_3_4_bdry].\
                                   expand(batch_size,time_3_4_bdry-time_bdry, 4 * self.time_dim[1])
         bbox_inside_weights_2 = bbox_inside_weights[:,time_3_4_bdry:time_2_bdry].\
                                 expand(batch_size, time_2_bdry-time_3_4_bdry, 4 * self.time_dim[2])
-
 
         bbox_inside_weights_ = bbox_inside_weights_.contiguous().view(batch_size, time, height, width, A * 4 * self.time_dim[0]).\
                                permute(0,4,1,2,3).contiguous()
@@ -276,6 +280,7 @@ class _AnchorTargetLayer(nn.Module):
         outputs.append(bbox_inside_weights_2)
 
         anchors_count = bbox_outside_weights.size(1)
+
         bbox_outside_weights = bbox_outside_weights.view(batch_size,anchors_count,1)
 
         bbox_outside_weights_ = bbox_outside_weights[:,:time_bdry].\
@@ -284,16 +289,13 @@ class _AnchorTargetLayer(nn.Module):
                                   expand(batch_size,time_3_4_bdry-time_bdry, 4 * self.time_dim[1])
         bbox_outside_weights_2 = bbox_outside_weights[:,time_3_4_bdry:time_2_bdry].\
                                 expand(batch_size, time_2_bdry-time_3_4_bdry, 4 * self.time_dim[2])
+
         bbox_outside_weights_ = bbox_outside_weights_.contiguous().view(batch_size, time, height, width, A * 4 * self.time_dim[0]).\
                                permute(0,4,1,2,3).contiguous()
         bbox_outside_weights_3_4 = bbox_outside_weights_3_4.contiguous().view(batch_size, time_3_4, height, width, A * 4 * self.time_dim[1]).\
                                permute(0,4,1,2,3).contiguous()
         bbox_outside_weights_2 = bbox_outside_weights_2.contiguous().view(batch_size, time_2, height, width, A * 4 * self.time_dim[2]).\
                                permute(0,4,1,2,3).contiguous()
-
-        # print('bbox_outside_weights.shape :',bbox_outside_weights_.shape)
-        # print('bbox_outside_weights_3_4.shape :',bbox_outside_weights_3_4.shape)
-        # print('bbox_outside_weights_2.shape :',bbox_outside_weights_2.shape)
 
         outputs.append(bbox_outside_weights_)
         outputs.append(bbox_outside_weights_3_4)
