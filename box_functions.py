@@ -140,14 +140,14 @@ def tube_transform_inv(boxes, deltas, weights):
               boxes_part, deltas_part in zip(boxes_parts, deltas_parts)]
     # Now need to interleave the boxes in the same way they were un-interleaved
     # in the split_tube_into_boxes function
-    nclasses = all_tx[0].shape[-1] // 4
-    time_dim = len(all_tx)
-    res = torch.zeros(deltas.shape).type_as(deltas)
-    for cid in range(nclasses):
-        for t in range(time_dim):
-            res[:, cid * 4 * time_dim: (cid + 1) * 4 * time_dim][
-                :, t * 4: (t + 1) * 4] = all_tx[t][:, cid * 4: (cid + 1) * 4]
-    return res
+    # nclasses = all_tx[0].shape[-1] // 4
+    # time_dim = len(all_tx)
+    # res = torch.zeros(deltas.shape).type_as(deltas)
+    # for cid in range(nclasses):
+    #     for t in range(time_dim):
+    #         res[:, cid * 4 * time_dim: (cid + 1) * 4 * time_dim][
+    #             :, t * 4: (t + 1) * 4] = all_tx[t][:, cid * 4: (cid + 1) * 4]
+    return torch.cat(all_tx, dim=1)
 
 def tube_transform(ex_rois, gt_rois, weights):
     """ Tube extension of the box rois. """

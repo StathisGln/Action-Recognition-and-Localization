@@ -139,8 +139,8 @@ if __name__ == '__main__':
     split_txt_path = '/gpu-data2/sgal/UCF101_Action_detection_splits/'
 
     sample_size = 112
-    sample_duration = 8 # len(images)
-    # sample_duration = 16 # len(images)
+    # sample_duration = 8 # len(images)
+    sample_duration = 16 # len(images)
 
 
     batch_size = 1
@@ -174,7 +174,7 @@ if __name__ == '__main__':
     model.to(device)
 
     model_data = torch.load('./action_net_model_steady_anchors.pwf')
-    model_data = torch.load('./action_net_model_steady_anchors_8_fr.pwf')
+    # model_data = torch.load('./action_net_model_steady_anchors_8_fr.pwf')
 
 
     model.load_state_dict(model_data)
