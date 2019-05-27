@@ -326,5 +326,8 @@ def _unmap(data, count, inds, batch_size, fill=0):
 
 def _compute_targets_batch(ex_rois, gt_rois):
     """Compute bounding-box regression targets for an image."""
-
+    # print('ex_rois.shape :',ex_rois.shape)
+    # print('ex_rois.shape :',ex_rois[0])
+    # print('gt_rois.shape :',gt_rois.shape)
+    # print('gt_rois.shape :',gt_rois[0)
     return bbox_transform(ex_rois, gt_rois.to(ex_rois.device),(1.0,1.0,1.0,1.0))

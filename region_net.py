@@ -244,8 +244,7 @@ if __name__ == '__main__':
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # a good example is v_TrampolineJumping_g17_c01
-    # feats = torch.rand(1,512,16,4,4).cuda()
-    # feats = torch.rand(1,512,8,4,4).cuda().float()
+
     feats = torch.rand(2,256,16,7,7).float().to(device)
     gt_bboxes = torch.Tensor([[[42., 44.,  0., 68., 98., 15., 11.]],
                               [[34., 52.,  0., 67., 98., 15., 11.]]]).to(device)

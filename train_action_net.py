@@ -106,6 +106,7 @@ if __name__ == '__main__':
 
     sample_size = 112
     sample_duration = 16
+    # sample_duration = 8
 
     # # get mean
     mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
@@ -149,7 +150,8 @@ if __name__ == '__main__':
     act_model = nn.DataParallel(act_model)
     act_model.to(device)
 
-    lr = 0.1
+    # lr = 0.1
+    lr = 0.01
     lr_decay_step = 10
     lr_decay_gamma = 0.1
     
@@ -174,7 +176,7 @@ if __name__ == '__main__':
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
 
-        if (epoch + 1) % (lr_decay_step ) == 0:
+        if (epoch) % (lr_decay_step + 1 ) == 0:
             adjust_learning_rate(optimizer, lr_decay_gamma)
             lr *= lr_decay_gamma
             print('adjust learning rate {}...'.format(lr))
