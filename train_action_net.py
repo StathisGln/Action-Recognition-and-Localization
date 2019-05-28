@@ -184,5 +184,5 @@ if __name__ == '__main__':
         act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*4, 0, lr, mode=4)
 
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_steady_anchors.pwf".format(epoch+1))
-    torch.save(act_model.state_dict(), "action_net_model_steady_anchors.pwf")
+            torch.save(act_model.state_dict(), "action_net_model_steady_anchors_512f.pwf".format(epoch+1))
+    torch.save(act_model.state_dict(), "action_net_model_steady_anchors_512f.pwf")

@@ -173,7 +173,9 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    model_data = torch.load('./action_net_model_steady_anchors.pwf')
+    model_data = torch.load('./action_net_model_steady_anchors_512f.pwf')
+    # model_data = torch.load('./action_net_model_steady_anchors.pwf')
+
     # model_data = torch.load('./action_net_model_steady_anchors_8_fr.pwf')
 
 

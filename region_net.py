@@ -92,7 +92,7 @@ class _RPN(nn.Module):
 
         batch_size = base_feat.size(0)
         rpn_conv1 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
-
+        # print('rpn_con1.shape :',rpn_conv1.shape)
         rpn_conv_avg = self.avg_pool(rpn_conv1)
         rpn_conv_avg_3_4 = self.avg_pool_3_4(rpn_conv1)
         rpn_conv_avg_2 = self.avg_pool_2(rpn_conv1)
