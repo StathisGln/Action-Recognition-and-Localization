@@ -78,9 +78,9 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    model_data = torch.load('./action_net_model_steady_anchors.pwf')
+    # model_data = torch.load('./action_net_model_steady_anchors_roi_align.pwf')
 
-    model.load_state_dict(model_data)
+    # model.load_state_dict(model_data)
     model.eval()
 
     data = Video_UCF(dataset_frames, frames_dur=sample_duration, spatial_transform=spatial_transform,

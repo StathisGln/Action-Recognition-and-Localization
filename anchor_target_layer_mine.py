@@ -14,7 +14,7 @@ import torch.nn as nn
 import numpy as np
 import numpy.random as npr
 
-from config import cfg
+from conf import conf as  cfg
 from generate_anchors import generate_anchors
 from box_functions import bbox_transform, bbox_transform_inv, clip_boxes, tube_overlaps
 import pdb
@@ -61,9 +61,10 @@ class _AnchorTargetLayer(nn.Module):
         rpn_cls_score = input[0] ## rpn classification score
         rpn_cls_score_3_4 = input[1]
         rpn_cls_score_2 = input[2]
-        gt_tubes = input[3]      ## gt tube
-        im_info = input[4]       ## im_info
-        gt_rois = input[5][:,:,:,:4].contiguous()       ## gt rois for each frame
+        rpn_cls_score_4 = input[3]
+        gt_tubes = input[4]      ## gt tube
+        im_info = input[5]       ## im_info
+        gt_rois = input[6][:,:,:,:4].contiguous()       ## gt rois for each frame
         
         ### Not sure about that
         batch_size = gt_tubes.size(0)
@@ -71,6 +72,7 @@ class _AnchorTargetLayer(nn.Module):
         time = rpn_cls_score.size(2)
         time_3_4 = rpn_cls_score_3_4.size(2)
         time_2 = rpn_cls_score_2.size(2)
+        time_4 = rpn_cls_score_4.size(2)
         feat_height, feat_width,  =  rpn_cls_score.size(3), rpn_cls_score.size(4)
 
         shift_x = np.arange(0, feat_width) * self._feat_stride
@@ -83,9 +85,7 @@ class _AnchorTargetLayer(nn.Module):
 
         A = self._anchors.size(0)
         K = shifts.size(0)
-        # print('A :',A, ' K :',K)
-        # print('K * A :',K * A)
-        # exit(-1)
+
         anchors = self._anchors.view(1, A, 4).type_as(shifts) + shifts.view(K, 1, 4)
         anchors = anchors.view(K * A, 4)
         
@@ -105,13 +105,14 @@ class _AnchorTargetLayer(nn.Module):
 
         total_anchors = anchors_all.size(0)
         anchors_all = anchors_all.view(total_anchors,self.sample_duration,4)
-        
+
         keep = ((anchors_all[:, :, 0].ge(-self._allowed_border).all(dim=1)) &
                 (anchors_all[:, :, 1].ge(-self._allowed_border).all(dim=1)) &
                 (anchors_all[:, :, 2].lt(long(im_info[0][1]) + self._allowed_border).all(dim=1)) &
                 (anchors_all[:, :, 3].lt(long(im_info[0][0]) + self._allowed_border).all(dim=1)) )
 
         inds_inside = torch.nonzero(keep).view(-1)
+
         # keep only inside anchors
         anchors = anchors_all[inds_inside,].type_as(gt_tubes)
         anchors = anchors.view(anchors.size(0),-1)
@@ -121,28 +122,28 @@ class _AnchorTargetLayer(nn.Module):
 
         bbox_inside_weights = gt_tubes.new(batch_size, inds_inside.size(0)).zero_()
         bbox_outside_weights = gt_tubes.new(batch_size, inds_inside.size(0)).zero_()
+        overlaps = []
+        for i in range(batch_size):
+            overlaps.append(tube_overlaps(anchors.view(-1,self.sample_duration*4), gt_rois[i].view(-1,self.sample_duration*4)))
 
-        overlaps = tube_overlaps(anchors, gt_rois.view(-1,self.sample_duration*4)).view(batch_size,anchors.size(0),gt_rois.size(1))
-
+        overlaps = torch.stack(overlaps).contiguous()
+        # print('overlaps.shape :',overlaps.shape)
+        # print('overlaps :',overlaps[0,:].cpu().numpy())
+        # exit(-1)
         max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
-        gt_max_overlaps, _ = torch.max(overlaps, 1)
 
+        gt_max_overlaps, idx = torch.max(overlaps, 1)
         if not cfg.TRAIN.RPN_CLOBBER_POSITIVES:
             labels[max_overlaps < cfg.TRAIN.RPN_NEGATIVE_OVERLAP] = 0
 
-        gt_max_overlaps[gt_max_overlaps==0] = 1e-5
-        # print('gt_max_overlaps.view(batch_size,1,-1).shape :',gt_max_overlaps.view(batch_size,1,-1).shape)
-        # print('gt_max_overlaps.view(batch_size,1,-1).expand_as(overlaps).shape :',gt_max_overlaps.view(batch_size,1,-1).expand_as(overlaps).shape)
+        gt_max_overlaps[gt_max_overlaps<=0] = 1e-5
+
         keep = torch.sum(overlaps.eq(gt_max_overlaps.view(batch_size,1,-1).expand_as(overlaps)), 2)
-        # print('keep.shape :',keep.shape)
         if torch.sum(keep) > 0:
             labels[keep>0] = 1
 
         # fg label: above threshold IOU
         labels[max_overlaps >= cfg.TRAIN.RPN_POSITIVE_OVERLAP] = 1
-
-        if cfg.TRAIN.RPN_CLOBBER_POSITIVES:
-            labels[max_overlaps < cfg.TRAIN.RPN_NEGATIVE_OVERLAP] = 0
 
         num_fg = int(cfg.TRAIN.RPN_FG_FRACTION * cfg.TRAIN.RPN_BATCHSIZE)
 
@@ -196,8 +197,9 @@ class _AnchorTargetLayer(nn.Module):
         bbox_outside_weights[labels == 1] = positive_weights
         bbox_outside_weights[labels == 0] = negative_weights
 
+
         labels = _unmap(labels, total_anchors, inds_inside, batch_size, fill=-1)
-        
+
         bbox_targets = _unmap(bbox_targets, total_anchors, inds_inside, batch_size, fill=0)
         bbox_inside_weights = _unmap(bbox_inside_weights, total_anchors, inds_inside, batch_size, fill=0)
         bbox_outside_weights = _unmap(bbox_outside_weights, total_anchors, inds_inside, batch_size, fill=0)
@@ -208,6 +210,7 @@ class _AnchorTargetLayer(nn.Module):
         time_bdry = K*A*time
         time_3_4_bdry = K*A*time_3_4 + time_bdry
         time_2_bdry =  K*A*time_2 + time_3_4_bdry
+        time_4_bdry =  K*A*time_4 + time_2_bdry
 
         labels_ = labels[:,:time_bdry].view(batch_size,time, height, width, A).permute(0,4,1,2,3).contiguous()
         labels_ = labels_.view(batch_size, 1, A * time * height, width)
@@ -218,12 +221,16 @@ class _AnchorTargetLayer(nn.Module):
         labels_2 = labels[:,time_3_4_bdry: time_2_bdry].view(batch_size,time_2, height, width, A).permute(0,4,1,2,3).contiguous()
         labels_2 = labels_2.view(batch_size, 1, A * time_2 * height, width)
 
+        labels_4 = labels[:,time_2_bdry: time_4_bdry].view(batch_size,time_4, height, width, A).permute(0,4,1,2,3).contiguous()
+        labels_4 = labels_4.view(batch_size, 1, A * time_4 * height, width)
+
         outputs.append(labels_)
         outputs.append(labels_3_4)
         outputs.append(labels_2)
+        outputs.append(labels_4)
         
         bbox_targets_list= []
-        time_limits = [0, time_bdry,time_3_4_bdry]
+        time_limits = [0, time_bdry,time_3_4_bdry,time_2_bdry]
 
         for i in range(len(self.time_dim)):
             for j in range(0,self.sample_duration-self.time_dim[i]+1):
@@ -239,34 +246,32 @@ class _AnchorTargetLayer(nn.Module):
         bbox_targets_3_4 = torch.stack(bbox_targets_list[time:time_3_4+time],dim=1).\
                            view(batch_size, time_3_4, height,width, A * self.time_dim[1] * 4). \
                            permute(0,4,1,2,3).contiguous()
-        bbox_targets_2 = torch.stack(bbox_targets_list[time_3_4+time:],dim=1).\
+        bbox_targets_2 = torch.stack(bbox_targets_list[time_3_4+time:time_2+time_3_4+time],dim=1).\
                          view(batch_size, time_2, height,width, A * self.time_dim[2] * 4). \
                          permute(0,4,1,2,3).contiguous()
+        bbox_targets_4 = torch.stack(bbox_targets_list[time_2+time_3_4+time:],dim=1).\
+                         view(batch_size, time_4, height,width, A * self.time_dim[3] * 4). \
+                         permute(0,4,1,2,3).contiguous()
+
 
         outputs.append(bbox_targets_)
         outputs.append(bbox_targets_3_4)
         outputs.append(bbox_targets_2)
+        outputs.append(bbox_targets_4)
 
         anchors_count = bbox_inside_weights.size(1)
 
         bbox_inside_weights = bbox_inside_weights.view(batch_size,anchors_count,1)
-        # print('bbox_inside_weights.nonzero.squeeze() :',bbox_inside_weights.nonzero().squeeze())
-        # print('bbox_inside_weights.nonzero.squeeze() :',bbox_outside_weights.nonzero().squeeze())
-        # print('bbox_inside_weights.shape :',bbox_inside_weights[0,881])
-        # print('bbox_inside_weights.shape :',bbox_outside_weights[0,41190])
-        # print(' bbox_inside_weights[:,:time_bdry] :', bbox_inside_weights[:,:time_bdry].shape)
-        # print(' bbox_inside_weights[:,:time_bdry] :', bbox_inside_weights[:,:time_bdry].expand(batch_size, time_bdry, 4* self.time_dim[0]).shape)
-        # print(' bbox_inside_weights[:,:time_bdry] :', bbox_inside_weights[:,:time_bdry].\
-        #       expand(batch_size, time_bdry, 4* self.time_dim[0]).contiguous().\
-        #       view(batch_size, time, height, width, A * 4 * self.time_dim[0]).shape)
-  
-        # exit(-1)
+
         bbox_inside_weights_ = bbox_inside_weights[:,:time_bdry].\
                                expand(batch_size, time_bdry, 4* self.time_dim[0])
         bbox_inside_weights_3_4 = bbox_inside_weights[:,time_bdry:time_3_4_bdry].\
                                   expand(batch_size,time_3_4_bdry-time_bdry, 4 * self.time_dim[1])
         bbox_inside_weights_2 = bbox_inside_weights[:,time_3_4_bdry:time_2_bdry].\
                                 expand(batch_size, time_2_bdry-time_3_4_bdry, 4 * self.time_dim[2])
+        bbox_inside_weights_4 = bbox_inside_weights[:,time_2_bdry:time_4_bdry].\
+                                expand(batch_size, time_4_bdry-time_2_bdry, 4 * self.time_dim[3])
+
 
         bbox_inside_weights_ = bbox_inside_weights_.contiguous().view(batch_size, time, height, width, A * 4 * self.time_dim[0]).\
                                permute(0,4,1,2,3).contiguous()
@@ -274,10 +279,15 @@ class _AnchorTargetLayer(nn.Module):
                                permute(0,4,1,2,3).contiguous()
         bbox_inside_weights_2 = bbox_inside_weights_2.contiguous().view(batch_size, time_2, height, width, A * 4 * self.time_dim[2]).\
                                permute(0,4,1,2,3).contiguous()
+        bbox_inside_weights_4 = bbox_inside_weights_4.contiguous().view(batch_size, time_4, height, width, A * 4 * self.time_dim[3]).\
+                               permute(0,4,1,2,3).contiguous()
+
 
         outputs.append(bbox_inside_weights_)
         outputs.append(bbox_inside_weights_3_4)
         outputs.append(bbox_inside_weights_2)
+        outputs.append(bbox_inside_weights_4)
+
 
         anchors_count = bbox_outside_weights.size(1)
 
@@ -289,6 +299,9 @@ class _AnchorTargetLayer(nn.Module):
                                   expand(batch_size,time_3_4_bdry-time_bdry, 4 * self.time_dim[1])
         bbox_outside_weights_2 = bbox_outside_weights[:,time_3_4_bdry:time_2_bdry].\
                                 expand(batch_size, time_2_bdry-time_3_4_bdry, 4 * self.time_dim[2])
+        bbox_outside_weights_4 = bbox_outside_weights[:,time_2_bdry:time_4_bdry].\
+                                expand(batch_size, time_4_bdry-time_2_bdry, 4 * self.time_dim[3])
+
 
         bbox_outside_weights_ = bbox_outside_weights_.contiguous().view(batch_size, time, height, width, A * 4 * self.time_dim[0]).\
                                permute(0,4,1,2,3).contiguous()
@@ -296,10 +309,14 @@ class _AnchorTargetLayer(nn.Module):
                                permute(0,4,1,2,3).contiguous()
         bbox_outside_weights_2 = bbox_outside_weights_2.contiguous().view(batch_size, time_2, height, width, A * 4 * self.time_dim[2]).\
                                permute(0,4,1,2,3).contiguous()
+        bbox_outside_weights_4 = bbox_outside_weights_4.contiguous().view(batch_size, time_4, height, width, A * 4 * self.time_dim[3]).\
+                               permute(0,4,1,2,3).contiguous()
+
 
         outputs.append(bbox_outside_weights_)
         outputs.append(bbox_outside_weights_3_4)
         outputs.append(bbox_outside_weights_2)
+        outputs.append(bbox_outside_weights_4)
 
         return outputs
 

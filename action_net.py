@@ -13,7 +13,7 @@ from torch.autograd import Variable
 
 from resnet_3D import resnet34
 from region_net import _RPN 
-# from human_reg import _Regression_Layer
+from human_reg import _Regression_Layer
 
 from proposal_target_layer_cascade import _ProposalTargetLayer
 from proposal_target_layer_cascade_single_frame import _ProposalTargetLayer as _ProposalTargetLayer_single
@@ -40,18 +40,13 @@ class ACT_net(nn.Module):
         self.spatial_scale = 1.0/16
     
         # define rpn
-        self.act_rpn = _RPN(128, sample_duration).cuda()
+        self.act_rpn = _RPN(256, sample_duration).cuda()
 
-        self.act_proposal_target = _ProposalTargetLayer(2).cuda() ## background/ foreground
-        self.act_proposal_target_single = _ProposalTargetLayer_single(2) ## background/ foreground for only xy
+        self.act_proposal_target = _ProposalTargetLayer(sample_duration).cuda() ## background/ foreground
 
         self.time_dim =sample_duration
         self.temp_scale = 1.0
-        # self.act_roi_align = RoIAlign(self.pooling_size, self.pooling_size, self.time_dim, self.spatial_scale, self.temp_scale).cuda()
-
-        self.avgpool = nn.AvgPool3d((1, 7, 7), stride=1)
-
-        # self.reg_layer = _Regression_Layer(64, self.sample_duration).cuda()
+        self.reg_layer = _Regression_Layer(256, self.sample_duration).cuda()
 
     def create_architecture(self):
         self._init_modules()
@@ -79,21 +74,48 @@ class ACT_net(nn.Module):
         base_feat_1 = self.act_base_1(im_data)
         base_feat_2 = self.act_base_2(base_feat_1)
 
-        # base_feat = [base_feat_1, base_feat_2, base_feat_3]
-
-        rois, rois_16, rpn_loss_cls, rpn_loss_bbox, \
-            rpn_loss_cls_16, rpn_loss_bbox_16 = self.act_rpn(base_feat_2, im_info, gt_tubes, gt_rois)
+        rois, _, rpn_loss_cls, rpn_loss_bbox, \
+            _, _ = self.act_rpn(base_feat_2, im_info, gt_tubes, gt_rois)
 
         if self.training:
-          return rois,  None, rpn_loss_cls, rpn_loss_bbox, \
-              None,None, \
-              None, None, None
-            # rpn_loss_cls_16, rpn_loss_bbox_16, \
-            # f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss 
 
-      
-        return rois,  None, None, None, None, None, \
-            None, None, None,
+            roi_data = self.act_proposal_target(rois, gt_rois)
+
+            rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = roi_data
+            rois_label =rois_label.view(-1).long()
+            rois_target = rois_target.view(-1, rois_target.size(2))
+            rois_inside_ws = rois_inside_ws.view(-1, rois_inside_ws.size(2))
+            rois_outside_ws = rois_outside_ws.view(-1, rois_outside_ws.size(2))
+
+        else:
+
+            rois_label = None
+            rois_target = None
+            rois_inside_ws = None
+            rois_outside_ws = None
+            rpn_loss_cls = 0
+            rpn_loss_bbox = 0
+            
+        sgl_rois_bbox_pred, feats = self.reg_layer(base_feat_2,rois[:,:,1:-1], gt_rois)
+
+        if self.training:
+
+            sgl_rois_bbox_loss = _smooth_l1_loss(sgl_rois_bbox_pred, rois_target, rois_inside_ws, rois_outside_ws,
+                                                 sigma=3, dim=[1])
+            sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(batch_size,-1, self.sample_duration*4)
+            feats = feats.view(batch_size,-1, feats.size(1), feats.size(2), feats.size(3), feats.size(4))
+            # return rois,  None, rpn_loss_cls, rpn_loss_bbox, None,None, \
+            #     None, None, None
+            
+            return rois,  feats, rpn_loss_cls, rpn_loss_bbox, None,None, \
+                rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss
+
+
+        # return rois, None, None, None, None, None, \
+        #     None, None, None,
+        return rois, feats, None, None, None, None, \
+            None, sgl_rois_bbox_pred, None,
+
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, ptruncated=False):
@@ -141,8 +163,7 @@ class ACT_net(nn.Module):
         # Build resnet.
         self.act_base_1 = nn.Sequential(model.module.conv1, model.module.bn1, model.module.relu,
           model.module.maxpool,model.module.layer1)
-        self.act_base_2 = nn.Sequential(model.module.layer2)
-        # self.act_base_3 = nn.Sequential( model.module.layer3)
+        self.act_base_2 = nn.Sequential(model.module.layer2, model.module.layer3)
 
         # self.act_top = nn.Sequential( model.module.layer3, model.module.layer4)
 
@@ -162,7 +183,6 @@ class ACT_net(nn.Module):
           classname = m.__class__.__name__
           if classname.find('BatchNorm') != -1:
             for p in m.parameters(): p.requires_grad=False
-
     
         self.act_base_1.apply(set_bn_fix)
         self.act_base_2.apply(set_bn_fix)

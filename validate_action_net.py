@@ -23,22 +23,16 @@ np.random.seed(42)
 
 def validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads):
 
-    iou_thresh = 0.1 # Intersection Over Union thresh
+    iou_thresh = 0.5 # Intersection Over Union thresh
     data = Video_UCF(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
                  split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
-    data_loader = torch.utils.data.DataLoader(data, batch_size=4,
+    data_loader = torch.utils.data.DataLoader(data, batch_size=16,
                                               shuffle=True, num_workers=0, pin_memory=True)
+    # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*4,
+    #                                           shuffle=True, num_workers=0, pin_memory=True)
+
     model.eval()
-
-    true_pos = 0
-    false_neg = 0
-
-    true_pos_xy = 0
-    false_neg_xy = 0
-
-    true_pos_t = 0
-    false_neg_t = 0
 
     sgl_true_pos = 0
     sgl_false_neg = 0
@@ -47,8 +41,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
-        if step == 50:
-            break
+        # if step == 50:
+        #     break
         print('step :',step)
 
         clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
@@ -66,19 +60,35 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                                None)
         n_tubes = len(tubes)
 
+        # print('tubes.cpu().numpy() :',tubes.cpu().numpy())
+        # exit(-1)
+        # print('gt_rois_[:,0] :',gt_rois_[:,0])
+
         for i in range(tubes.size(0)): # how many frames we have
             
             tubes_t = tubes[i,:,1:-1].contiguous()
             gt_rois_t = gt_rois_[i,:,:,:4].contiguous().view(-1,sample_duration*4)
 
             rois_overlaps = tube_overlaps(tubes_t,gt_rois_t)
-            
-            gt_max_overlaps_sgl, _ = torch.max(rois_overlaps, 0)
+            gt_max_overlaps_sgl, max_indices = torch.max(rois_overlaps, 0)
+            non_empty_indices =  gt_rois_t.ne(0).any(dim=1).nonzero().view(-1)
+            n_elems = non_empty_indices.nelement()            
+
+            # if gt_max_overlaps_sgl[0] > 0.5:
+            #     print('max_indices :',max_indices, max_indices.shape, gt_max_overlaps_sgl )
+            #     print('tubes_t[max_indices[0]] :',tubes_t[max_indices[0]])
+            #     print('gt_rois_t[0] :',gt_rois_t[0])
+
             gt_max_overlaps_sgl = torch.where(gt_max_overlaps_sgl > iou_thresh, gt_max_overlaps_sgl, torch.zeros_like(gt_max_overlaps_sgl).type_as(gt_max_overlaps_sgl))
-            sgl_detected =  gt_max_overlaps_sgl.ne(0).sum()
-            n_elems = gt_tubes_r[i,:,-1].ne(0).sum().item()
+
+            sgl_detected =  gt_max_overlaps_sgl[non_empty_indices].ne(0).sum()
+
             sgl_true_pos += sgl_detected
             sgl_false_neg += n_elems - sgl_detected
+
+        # if step == 0:
+        #     break
+        #     # exit(-1)
 
 
     recall = float(sgl_true_pos)  / (float(sgl_true_pos)  + float(sgl_false_neg))
@@ -111,7 +121,6 @@ if __name__ == '__main__':
     sample_duration = 16 # len(images)
 
     batch_size = 1
-    # batch_size = 1
     n_threads = 0
 
     # # get mean
@@ -140,9 +149,9 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    model_data = torch.load('./action_net_model_steady_anchors.pwf')
+    model_data = torch.load('./action_net_model_steady_anchors_roi_align.pwf')
 
     model.load_state_dict(model_data)
     model.eval()
 
-    validation(0, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, batch_size, n_threads)
+    validation(0, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, 4, n_threads)

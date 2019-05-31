@@ -34,8 +34,27 @@ __C.TRAIN.BBOX_INSIDE_WEIGHTS = (1.0, 1.0, 1.0, 1.0)
 __C.TRAIN.BATCH_SIZE = 16
 __C.TRAIN.FG_FRACTION = 0.25
 
+# IOU >= thresh: positive example
+__C.TRAIN.RPN_POSITIVE_OVERLAP = 0.8
+# IOU < thresh: negative example
+__C.TRAIN.RPN_NEGATIVE_OVERLAP = 0.5
+# Deprecated (outside weights)
+__C.TRAIN.RPN_BBOX_INSIDE_WEIGHTS = (1.0, 1.0, 1.0, 1.0)
+# Set to -1.0 to use uniform example weighting
+__C.TRAIN.RPN_POSITIVE_WEIGHT = -1.0
+
+# Max number of foreground examples
+__C.TRAIN.RPN_FG_FRACTION = 0.5
+# Total number of examples
+__C.TRAIN.RPN_BATCHSIZE = 256
+
+# If an anchor statisfied by positive and negative conditions set to negative
+__C.TRAIN.RPN_CLOBBER_POSITIVES = False
+# Max number of foreground examples
+
+
 # Overlap threshold for a ROI to be considered foreground (if >= FG_THRESH)
-__C.TRAIN.FG_THRESH = 0.7
+__C.TRAIN.FG_THRESH = 0.8
 
 # Overlap threshold for a ROI to be considered background (class = 0 if
 # overlap in [LO, HI))

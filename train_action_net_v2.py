@@ -20,9 +20,124 @@ from model import Model
 from action_net import ACT_net
 from resize_rpn import resize_boxes
 import argparse
-
+from box_functions import tube_overlaps
 np.random.seed(42)
 
+        
+def validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads):
+
+    iou_thresh = 0.5 # Intersection Over Union thresh
+    iou_thresh_4 = 0.4 # Intersection Over Union thresh
+    iou_thresh_3 = 0.3 # Intersection Over Union thresh
+    data = Video_UCF(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
+                 temporal_transform=temporal_transform, json_file = boxes_file,
+                 split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
+    data_loader = torch.utils.data.DataLoader(data, batch_size=4,
+                                              shuffle=True, num_workers=0, pin_memory=True)
+    model.eval()
+
+    sgl_true_pos = 0
+    sgl_false_neg = 0
+
+    sgl_true_pos_4 = 0
+    sgl_false_neg_4 = 0
+
+    sgl_true_pos_3 = 0
+    sgl_false_neg_3 = 0
+
+    ## 2 rois : 1450
+    tubes_sum = 0
+    for step, data  in enumerate(data_loader):
+
+        # if step == 2:
+        #     break
+        # print('step :',step)
+
+        clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
+        clips_   = clips.to(device)
+        gt_tubes_r_ = gt_tubes_r.to(device)
+        gt_rois_ = gt_rois.to(device)
+        n_actions_ = n_actions.to(device)
+        im_info_ = im_info.to(device)
+        start_fr = torch.zeros(clips_.size(0)).to(device)
+        # for i in range(2):
+        #     print('gt_rois :',gt_rois[i,:n_actions[i]])
+        tubes, _, _, _, _, _, _, _, _  = model(clips,
+                                               im_info,
+                                               None, None,
+                                               None)
+        n_tubes = len(tubes)
+
+        for i in range(tubes.size(0)): # how many frames we have
+            
+            tubes_t = tubes[i,:,1:-1].contiguous()
+            gt_rois_t = gt_rois_[i,:,:,:4].contiguous().view(-1,sample_duration*4)
+            # print('gt_rois.shape_ :',gt_rois_.shape)
+            # print('gt_rois_t.shape :',gt_rois_t.shape)
+            rois_overlaps = tube_overlaps(tubes_t,gt_rois_t)
+            
+            gt_max_overlaps_sgl, _ = torch.max(rois_overlaps, 0)
+            # print('gt_max_overlaps_sgl.shape :',gt_max_overlaps_sgl.shape)
+            n_elems = gt_tubes_r[i,:,-1].ne(0).sum().item()
+            # print('n_elems :',n_elems)
+            # 0.5
+            gt_max_overlaps_sgl_ = torch.where(gt_max_overlaps_sgl > iou_thresh, gt_max_overlaps_sgl, torch.zeros_like(gt_max_overlaps_sgl).type_as(gt_max_overlaps_sgl))
+            # print('gt_max_overlaps_sgl_.shape :',gt_max_overlaps_sgl_.shape)
+            # print('gt_max_overlaps_sgl_.shape :',gt_max_overlaps_sgl_)
+            sgl_detected =  gt_max_overlaps_sgl_.ne(0).sum()
+            sgl_true_pos += sgl_detected
+            sgl_false_neg += n_elems - sgl_detected
+            # print('sgl_detected :',sgl_detected)
+            # print('sgl_detected :',sgl_true_pos)
+            # print('sgl_detected :',sgl_false_neg)
+
+            # 0.4
+            gt_max_overlaps_sgl_ = torch.where(gt_max_overlaps_sgl > iou_thresh_4, gt_max_overlaps_sgl, torch.zeros_like(gt_max_overlaps_sgl).type_as(gt_max_overlaps_sgl))
+            sgl_detected =  gt_max_overlaps_sgl_.ne(0).sum()
+            sgl_true_pos_4 += sgl_detected
+            sgl_false_neg_4 += n_elems - sgl_detected
+            # print('sgl_detected :',sgl_detected)
+            # print('sgl_detected :',sgl_true_pos)
+            # print('sgl_detected :',sgl_false_neg)
+            
+
+            # 0.3
+            gt_max_overlaps_sgl_ = torch.where(gt_max_overlaps_sgl > iou_thresh_3, gt_max_overlaps_sgl, torch.zeros_like(gt_max_overlaps_sgl).type_as(gt_max_overlaps_sgl))
+            sgl_detected =  gt_max_overlaps_sgl_.ne(0).sum()
+            sgl_true_pos_3 += sgl_detected
+            sgl_false_neg_3 += n_elems - sgl_detected
+    # print('sgl_true_pos :',sgl_true_pos)
+
+    recall   = float(sgl_true_pos)  / (float(sgl_true_pos)  + float(sgl_false_neg))
+    recall_4 = float(sgl_true_pos_4)  / (float(sgl_true_pos_4)  + float(sgl_false_neg_4))
+    recall_3 = float(sgl_true_pos_3)  / (float(sgl_true_pos_3)  + float(sgl_false_neg_3))
+
+    print(' -----------------------')
+    print('| Validation Epoch: {: >3} | '.format(epoch+1))
+    print('|                       |')
+    print('| Proposed Action Tubes |')
+    print('|                       |')
+    print('| Single frame          |')
+    print('|                       |')
+    print('| In {: >6} steps    :  |'.format(step))
+    print('|                       |')
+    print('| Threshold : 0.5       |')
+    print('|                       |')
+    print('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        sgl_true_pos, sgl_false_neg, recall))
+    print('|                       |')
+    print('| Threshold : 0.4       |')
+    print('|                       |')
+    print('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        sgl_true_pos_4, sgl_false_neg_4, recall_4))
+    print('|                       |')
+    print('| Threshold : 0.3       |')
+    print('|                       |')
+    print('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        sgl_true_pos_3, sgl_false_neg_3, recall_3))
+
+
+    print(' -----------------------')
         
 def training(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads, lr, mode = 1):
 
@@ -40,8 +155,7 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
     ## 2 rois : 1450
     for step, data  in enumerate(data_loader):
 
-        # if step == 5:
-        #     exit(-1)
+        # if step == 2:
         #     break
 
         clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
@@ -71,7 +185,7 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
             loss = sgl_rois_bbox_loss.mean()
 
         elif mode == 4:
-            loss = rpn_loss_cls.mean() +  rpn_loss_bbox.mean() # + sgl_rois_bbox_loss.mean()
+            loss = rpn_loss_cls.mean() +  rpn_loss_bbox.mean()  + sgl_rois_bbox_loss.mean()
 
         loss_temp += loss.item()
 
@@ -167,8 +281,6 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(params)
 
     epochs = 40
-    # epochs = 40
-
     # epochs = 1
     # epochs = 40
     n_devs = torch.cuda.device_count()
@@ -180,8 +292,14 @@ if __name__ == '__main__':
             lr *= lr_decay_gamma
             print('adjust learning rate {}...'.format(lr))
 
-        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*8, 0, lr, mode=4)
+        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*16, 0, lr, mode=4)
 
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_steady_anchors_roi_align_08_05.pwf".format(epoch+1))
-    torch.save(act_model.state_dict(), "action_net_model_steady_anchors_roi_align.pwf")
+            torch.save(act_model.state_dict(), "action_net_model_steady_anchors_roi_align_ok.pwf".format(epoch+1))
+ 
+
+        if ( epoch + 1 ) % 5 == 0:
+            print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
+            validation(epoch+1, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*4, 0)
+
+    torch.save(act_model.state_dict(), "action_net_model_steady_anchors_roi_align_ok.pwf")

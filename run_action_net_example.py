@@ -41,7 +41,6 @@ if __name__ == '__main__':
     sample_duration = 16  # len(images)
     # sample_duration = 8  # len(images)
 
-
     batch_size = 1
     n_threads = 0
 
@@ -86,6 +85,18 @@ if __name__ == '__main__':
     clips_ = clips.unsqueeze(0).to(device)
     gt_tubes_r_ = gt_tubes_r.unsqueeze(0).to(device)
     gt_rois_ = gt_rois.unsqueeze(0).to(device)
+    # print('gt_rois_[0,0] :',gt_rois_[0,0,:,:4].shape)
+    # print(torch.Tensor([43., 59., 55., 80., 43., 59., 55., 80., 44., 60., 56., 81., 44., 60.,
+    #                            56., 81., 32.,  32.,  21.,  21.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
+    #                            0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
+    #                            0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
+                               # 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]).shape)
+    gt_rois_[0,0,:,:4] =  torch.Tensor([43., 59., 55., 80., 43., 59., 55., 80., 44., 60., 56., 81., 44., 60.,
+                               56., 81., 32.,  32.,  21.,  21.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
+                               0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
+                               0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
+                                        0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]).view(16,4)
+
     n_actions_ = torch.from_numpy(n_actions).to(device)
     im_info_ = im_info.unsqueeze(0).to(device)
     start_fr = torch.zeros((1,1)).to(device)
@@ -97,20 +108,30 @@ if __name__ == '__main__':
     im_info_2 = im_info2.unsqueeze(0).to(device)
     start_fr_2 = torch.zeros((1,1)).to(device)
 
-    # clips = torch.cat((clips_,clips_2))
-    # gt_tubes_r_ = torch.cat((gt_tubes_r_, gt_tubes_r_2))
-    # gt_rois_ = torch.cat((gt_rois_, gt_rois_2))
-    # n_actions_ = torch.cat((n_actions_, n_actions_2))
-    # start_fr = torch.cat((start_fr,start_fr_2))
+    clips_ = torch.cat((clips_,clips_2))
+    gt_tubes_r_ = torch.cat((gt_tubes_r_, gt_tubes_r_2))
+    gt_rois_ = torch.cat((gt_rois_, gt_rois_2))
+    n_actions_ = torch.cat((n_actions_, n_actions_2))
+    start_fr = torch.cat((start_fr,start_fr_2))
+    im_info_ = torch.Tensor([[112,112,16],[112,112,16]]).to(device)
+
+    # clips_ = torch.cat((clips_,clips_2,clips_,clips_2))
+    # gt_tubes_r_ = torch.cat((gt_tubes_r_, gt_tubes_r_2,gt_tubes_r_, gt_tubes_r_2))
+    # gt_rois_ = torch.cat((gt_rois_, gt_rois_2,gt_rois_, gt_rois_2))
+    # n_actions_ = torch.cat((n_actions_, n_actions_2,n_actions_, n_actions_2))
+    # start_fr = torch.cat((start_fr,start_fr_2,start_fr,start_fr_2))
+    # im_info_ = torch.Tensor([[112,112,16],[112,112,16],[112,112,16],[112,112,16]]).to(device)
+
 
     print('gt_tubes_r_.shape :',gt_tubes_r_.shape)
     print('gt_rois_.shape :',gt_rois_.shape)
     print('n_actions_.shape :',n_actions_.shape)
     print('start_fr.shape :',start_fr.shape)
+    print('im_info_.shape :',im_info_.shape)
     print('**********Starts**********')
-
+    # exit(-1)
     inputs = Variable(clips_)
-    tubes, _, \
+    rois, feats, \
     rpn_loss_cls,  rpn_loss_bbox, \
     rpn_loss_cls_16,\
     rpn_loss_bbox_16,  rois_label, \
@@ -120,6 +141,7 @@ if __name__ == '__main__':
                                                 start_fr)
 
     print('**********VGIKE**********')
-    # print('rois.shape :',rois.shape)
-    # print('rois :',rois)
+    print('feats.shape :',feats.shape)
+    print('rois.shape :',rois.shape)
+    print('sgl_rois_bbox_pred.shape :',sgl_rois_bbox_pred.shape)
 
