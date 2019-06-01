@@ -16,7 +16,7 @@ from temporal_transforms import LoopPadding
 from action_net import ACT_net
 from resize_rpn import resize_rpn, resize_tube
 import pdb
-from box_functions import bbox_transform, bbox_transform_inv, clip_boxes, tube_overlaps
+from box_functions import bbox_transform, tube_transform_inv, clip_boxes, tube_overlaps
 
 np.random.seed(42)
 
@@ -54,12 +54,21 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         start_fr = torch.zeros(clips_.size(0)).to(device)
         # for i in range(2):
         #     print('gt_rois :',gt_rois[i,:n_actions[i]])
-        tubes, _, _, _, _, _, _, _, _  = model(clips,
-                                               im_info,
-                                               None, None,
-                                               None)
+        tubes, _, _, _, _, _, _, \
+        sgl_rois_bbox_pred, _  = model(clips,
+                                       im_info,
+                                       None, None,
+                                       None)
         n_tubes = len(tubes)
-
+        # print('tubes[0]:',tubes[0])
+        # print('tubes[0]:',tubes.shape)
+        tubes = tubes.view(-1, sample_duration*4+2)
+        tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
+                                           sgl_rois_bbox_pred.view(-1,sample_duration*4),(1.0,1.0,1.0,1.0))
+        tubes = tubes.view(n_tubes,-1, sample_duration*4+2)
+        # print('tubes[0]:',tubes[0])
+        # print('tubes[0]:',tubes.shape)
+        # exit(-1)
         # print('tubes.cpu().numpy() :',tubes.cpu().numpy())
         # exit(-1)
         # print('gt_rois_[:,0] :',gt_rois_[:,0])
@@ -149,7 +158,9 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    model_data = torch.load('./action_net_model_steady_anchors_roi_align.pwf')
+    model_data = torch.load('./actio_net_model_both.pwf')
+    # model_data = torch.load('./action_net_model_steady_anchors_roi_align.pwf')
+
 
     model.load_state_dict(model_data)
     model.eval()

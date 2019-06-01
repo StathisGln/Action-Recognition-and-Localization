@@ -130,16 +130,11 @@ class _Regression_TargetLayer(nn.Module):
         assert ex_rois.size(2) == 4
         assert gt_rois.size(2) == 4
 
-        # print('ex_rois :',ex_rois.cpu().numpy())
-        # print('gt_rois :',gt_rois.cpu().numpy())
+
         batch_size = ex_rois.size(0)
         rois_per_image = ex_rois.size(1)
-        # print('ex_rois.shape :',ex_rois.shape)
-        # print('gt_rois.shape :',gt_rois.shape)
         targets = bbox_transform_batch(ex_rois, gt_rois)
-        # print('targets :',targets.shape)
-        # print('targets :',targets.cpu().numpy())
-        # exit(-1)
+
         if cfg.TRAIN.BBOX_NORMALIZE_TARGETS_PRECOMPUTED:
             # Optionally normalize targets by a precomputed mean and stdev
             targets = ((targets - self.BBOX_NORMALIZE_MEANS.expand_as(targets))

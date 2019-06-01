@@ -20,7 +20,7 @@ from model import Model
 from action_net import ACT_net
 from resize_rpn import resize_boxes
 import argparse
-from box_functions import tube_overlaps
+from box_functions import tube_overlaps, tube_transform_inv
 np.random.seed(42)
 
         
@@ -60,26 +60,28 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         n_actions_ = n_actions.to(device)
         im_info_ = im_info.to(device)
         start_fr = torch.zeros(clips_.size(0)).to(device)
-        # for i in range(2):
-        #     print('gt_rois :',gt_rois[i,:n_actions[i]])
-        tubes, _, _, _, _, _, _, _, _  = model(clips,
-                                               im_info,
-                                               None, None,
-                                               None)
-        n_tubes = len(tubes)
+
+        tubes, _, _, _, _, _, _, \
+        sgl_rois_bbox_pred, _  = model(clips,
+                                       im_info,
+                                       None, None,
+                                       None)
+        batch_size = len(tubes)
+
+        tubes = tubes.view(-1, sample_duration*4+2)
+        tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
+                                           sgl_rois_bbox_pred.view(-1,sample_duration*4),(1.0,1.0,1.0,1.0))
+        tubes = tubes.view(batch_size,-1, sample_duration*4+2)
 
         for i in range(tubes.size(0)): # how many frames we have
             
             tubes_t = tubes[i,:,1:-1].contiguous()
             gt_rois_t = gt_rois_[i,:,:,:4].contiguous().view(-1,sample_duration*4)
-            # print('gt_rois.shape_ :',gt_rois_.shape)
-            # print('gt_rois_t.shape :',gt_rois_t.shape)
             rois_overlaps = tube_overlaps(tubes_t,gt_rois_t)
             
             gt_max_overlaps_sgl, _ = torch.max(rois_overlaps, 0)
-            # print('gt_max_overlaps_sgl.shape :',gt_max_overlaps_sgl.shape)
             n_elems = gt_tubes_r[i,:,-1].ne(0).sum().item()
-            # print('n_elems :',n_elems)
+
             # 0.5
             gt_max_overlaps_sgl_ = torch.where(gt_max_overlaps_sgl > iou_thresh, gt_max_overlaps_sgl, torch.zeros_like(gt_max_overlaps_sgl).type_as(gt_max_overlaps_sgl))
             # print('gt_max_overlaps_sgl_.shape :',gt_max_overlaps_sgl_.shape)
@@ -106,6 +108,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             sgl_detected =  gt_max_overlaps_sgl_.ne(0).sum()
             sgl_true_pos_3 += sgl_detected
             sgl_false_neg_3 += n_elems - sgl_detected
+
     # print('sgl_true_pos :',sgl_true_pos)
 
     recall   = float(sgl_true_pos)  / (float(sgl_true_pos)  + float(sgl_false_neg))
@@ -144,8 +147,8 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
     data = Video_UCF(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
                  split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
-    data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*8,
-                                              shuffle=True, num_workers=32, pin_memory=True)
+    data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*4,
+                                              shuffle=True, num_workers=32, pin_memory=False)
     # data_loader = torch.utils.data.DataLoader(data, batch_size=4,
     #                                           shuffle=True, num_workers=2, pin_memory=True)
 
@@ -296,7 +299,6 @@ if __name__ == '__main__':
 
         if ( epoch + 1 ) % 5 == 0:
             torch.save(act_model.state_dict(), "action_net_model_steady_anchors_roi_align_ok.pwf".format(epoch+1))
- 
 
         if ( epoch + 1 ) % 5 == 0:
             print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))

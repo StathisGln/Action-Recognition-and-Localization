@@ -79,7 +79,7 @@ class _ProposalLayer(nn.Module):
 
         batch_size = bbox_frame.size(0)
 
-        # pre_nms_topN  = 50
+
         pre_nms_topN  = conf[cfg_key].RPN_PRE_NMS_TOP_N
         post_nms_topN = conf[cfg_key].RPN_POST_NMS_TOP_N
 
@@ -179,69 +179,69 @@ class _ProposalLayer(nn.Module):
         output = scores.new(batch_size, post_nms_topN, self.sample_duration*4+2).zero_()
         # print('output.shape :',output.shape)
         for i in range(batch_size):
-            if cfg_key == 'TEST':
-                # 3. remove predicted boxes with either height or width < threshold
-                # (NOTE: convert min_size to input image scale stored in im_info[2])
-                proposals_single = proposals_keep[i]
-                scores_single = scores_keep[i]
-                # print('scores_single.shape :',scores_single.shape)
-                # print('proposals_single.shape :',proposals_single.shape)
-                # print('order[i].shape :',order[i].shape)
-                # exit(-1)
-                order_single = order[i]
+            # if cfg_key == 'TEST':
+            # 3. remove predicted boxes with either height or width < threshold
+            # (NOTE: convert min_size to input image scale stored in im_info[2])
+            proposals_single = proposals_keep[i]
+            scores_single = scores_keep[i]
+            # print('scores_single.shape :',scores_single.shape)
+            # print('proposals_single.shape :',proposals_single.shape)
+            # print('order[i].shape :',order[i].shape)
+            # exit(-1)
+            order_single = order[i]
 
-                if pre_nms_topN > 0 and pre_nms_topN < scores_keep.numel():
-                    order_single = order_single[:pre_nms_topN]
-                
-                proposals_single = proposals_single[order_single, :]
-                scores_single = scores_single[order_single].view(-1,1)
-                # print('proposals_single :',proposals_single)
-                # print('proposals_single[11] :',proposals_single[[0]])
-                # print('proposals_single[12] :',proposals_single[48])
-                # print('scores_single :',scores_single[11])
-                # print('scores_single :',scores_single[12])
-                # print('scores_single:',scores_single)
-                # keep_idx_i = torch.Tensor(nms_cpu(torch.cat((proposals_single, scores_single), 1).cpu().numpy(), nms_thresh)).long()
-                
-                # print('keep_idx_i :',keep_idx_i.cpu().numpy(), keep_idx_i.nelement())
-                keep_idx_i = nms_gpu(torch.cat((proposals_single, scores_single), 1),nms_thresh).type_as(scores_single)
-                keep_idx_i = keep_idx_i.long().view(-1)
-                # print('keep_idx_i :',keep_idx_i.cpu().numpy(),keep_idx_i.nelement())
-                # exit(-1)
+            if pre_nms_topN > 0 and pre_nms_topN < scores_keep.numel():
+                order_single = order_single[:pre_nms_topN]
 
+            proposals_single = proposals_single[order_single, :]
+            scores_single = scores_single[order_single].view(-1,1)
+            # print('proposals_single :',proposals_single)
+            # print('proposals_single[11] :',proposals_single[[0]])
+            # print('proposals_single[12] :',proposals_single[48])
+            # print('scores_single :',scores_single[11])
+            # print('scores_single :',scores_single[12])
+            # print('scores_single:',scores_single)
+            # keep_idx_i = torch.Tensor(nms_cpu(torch.cat((proposals_single, scores_single), 1).cpu().numpy(), nms_thresh)).long()
 
-
-                if post_nms_topN > 0:
-                    keep_idx_i = keep_idx_i[:post_nms_topN]
-
-                proposals_single = proposals_single[keep_idx_i, :]
-                # print('proposal_single :',proposals_single[:,:4].cpu().numpy())
-                # exit(-1)
-                scores_single = scores_single[keep_idx_i, :]
+            # print('keep_idx_i :',keep_idx_i.cpu().numpy(), keep_idx_i.nelement())
+            keep_idx_i = nms_gpu(torch.cat((proposals_single, scores_single), 1),nms_thresh).type_as(scores_single)
+            keep_idx_i = keep_idx_i.long().view(-1)
+            # print('keep_idx_i :',keep_idx_i.cpu().numpy(),keep_idx_i.nelement())
+            # exit(-1)
 
 
-                # adding score at the end.
-                num_proposal = proposals_single.size(0)
-                output[i,:,0] = i
-                output[i,:num_proposal,1:-1] = proposals_single
-                output[i,:num_proposal,-1] = scores_single.squeeze()
 
-            else:
+            if post_nms_topN > 0:
+                keep_idx_i = keep_idx_i[:post_nms_topN]
 
-                proposals_single = proposals_keep[i]
-                scores_single = scores_keep[i]
-                order_single = order[i]
+            proposals_single = proposals_single[keep_idx_i, :]
+            # print('proposal_single :',proposals_single[:,:4].cpu().numpy())
+            # exit(-1)
+            scores_single = scores_single[keep_idx_i, :]
 
-                proposals_single = proposals_single[order_single, :]
-                scores_single = scores_single[order_single].view(-1,1)
-                proposals_single = proposals_single[:post_nms_topN, :]
-                scores_single = scores_single[:post_nms_topN]
 
-                # adding score at the end.
-                num_proposal = proposals_single.size(0)
-                output[i,:num_proposal,0] = i
-                output[i,:num_proposal,1:-1] = proposals_single
-                output[i,:num_proposal,-1] = scores_single.squeeze()
+            # adding score at the end.
+            num_proposal = proposals_single.size(0)
+            output[i,:,0] = i
+            output[i,:num_proposal,1:-1] = proposals_single
+            output[i,:num_proposal,-1] = scores_single.squeeze()
+
+            # else:
+
+            #     proposals_single = proposals_keep[i]
+            #     scores_single = scores_keep[i]
+            #     order_single = order[i]
+
+            #     proposals_single = proposals_single[order_single, :]
+            #     scores_single = scores_single[order_single].view(-1,1)
+            #     proposals_single = proposals_single[:post_nms_topN, :]
+            #     scores_single = scores_single[:post_nms_topN]
+
+            #     # adding score at the end.
+            #     num_proposal = proposals_single.size(0)
+            #     output[i,:num_proposal,0] = i
+            #     output[i,:num_proposal,1:-1] = proposals_single
+            #     output[i,:num_proposal,-1] = scores_single.squeeze()
 
         return output
 
