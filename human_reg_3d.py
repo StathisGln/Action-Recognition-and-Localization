@@ -29,7 +29,7 @@ class _Regression_Layer(nn.Module):
 
         self.Conv = nn.Conv3d(self.din, din, 1, stride=1, padding=0, bias=True)
         self.head_to_tail_ = nn.Sequential(
-            nn.Linear(din*self.sample_duration*7*7 , 2048),
+            nn.Linear(din * 7 *  7, 2048),
             nn.ReLU(True),
             nn.Dropout(0.8),
             nn.Linear(2048,512),
@@ -40,7 +40,7 @@ class _Regression_Layer(nn.Module):
         self.bbox_pred = nn.Linear(512,self.sample_duration*4)
 
         self.roi_align = RoIAlign(self.pooling_size, self.pooling_size, self.spatial_scale)
-        self.avg_pool = nn.MaxPool3d((1,7,7), stride=1)
+        self.avg_pool = nn.AvgPool3d((int(sample_duration),1,1), stride=1)
         self.reg_target = _Regression_TargetLayer()
 
     def forward(self, base_feat, rois, gt_rois):
@@ -64,14 +64,17 @@ class _Regression_Layer(nn.Module):
         
         rois = rois.permute(0,2,1,3).contiguous()
 
-        base_feat = base_feat.permute(0,2,1,3,4).contiguous().view(-1,base_feat.size(1),base_feat.size(3),base_feat.size(4)).contiguous()
+        base_feat = base_feat.permute(0,2,1,3,4).contiguous().view(-1,base_feat.size(1),base_feat.size(3),base_feat.size(4))
+
         base_feat = self.roi_align(base_feat, rois.view(-1,5))
         base_feat = base_feat.view(batch_size, self.sample_duration, rois_per_image,base_feat.size(1),base_feat.size(2),base_feat.size(3)).\
                     contiguous()
+
         base_feat = base_feat.permute(0,2,3,1,4,5).contiguous().view(batch_size*rois_per_image, base_feat.size(3),\
                                                                       self.sample_duration, base_feat.size(4),base_feat.size(5))
-
+        
         conv1_feats = self.Conv(base_feat)
+        conv1_feats = self.avg_pool(conv1_feats)
         conv1_feats = self.head_to_tail_(conv1_feats.view(conv1_feats.size(0),-1))
         bbox_pred = self.bbox_pred(conv1_feats) # regression layer
 

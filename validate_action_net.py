@@ -16,7 +16,8 @@ from temporal_transforms import LoopPadding
 from action_net import ACT_net
 from resize_rpn import resize_rpn, resize_tube
 import pdb
-from box_functions import bbox_transform, tube_transform_inv, clip_boxes, tube_overlaps
+from overlaps.module.calc import Tube_Overlaps
+from box_functions import bbox_transform, tube_transform_inv, clip_boxes
 
 np.random.seed(42)
 
@@ -59,13 +60,14 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                        im_info,
                                        None, None,
                                        None)
+        tubes_ = tubes.contiguous()
         n_tubes = len(tubes)
         # print('tubes[0]:',tubes[0])
         # print('tubes[0]:',tubes.shape)
-        tubes = tubes.view(-1, sample_duration*4+2)
-        tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
-                                           sgl_rois_bbox_pred.view(-1,sample_duration*4),(1.0,1.0,1.0,1.0))
-        tubes = tubes.view(n_tubes,-1, sample_duration*4+2)
+        # tubes = tubes.view(-1, sample_duration*4+2)
+        # tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
+        #                                    sgl_rois_bbox_pred.view(-1,sample_duration*4),(1.0,1.0,1.0,1.0))
+        # tubes = tubes.view(n_tubes,-1, sample_duration*4+2)
         # print('tubes[0]:',tubes[0])
         # print('tubes[0]:',tubes.shape)
         # exit(-1)
@@ -78,15 +80,24 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             tubes_t = tubes[i,:,1:-1].contiguous()
             gt_rois_t = gt_rois_[i,:,:,:4].contiguous().view(-1,sample_duration*4)
 
-            rois_overlaps = tube_overlaps(tubes_t,gt_rois_t)
+            # rois_overlaps = tube_overlaps(tubes_t,gt_rois_t)
+            rois_overlaps = Tube_Overlaps()(tubes_t,gt_rois_t)
+
             gt_max_overlaps_sgl, max_indices = torch.max(rois_overlaps, 0)
             non_empty_indices =  gt_rois_t.ne(0).any(dim=1).nonzero().view(-1)
             n_elems = non_empty_indices.nelement()            
+            # print('non_empty_indices :',non_empty_indices)
+            # if gt_tubes_r[i,0,5] - gt_tubes_r[i,0,2 ] < 12 and gt_tubes_r[i,0,5] - gt_tubes_r[i,0,2 ] > 0:
+            #     print('tubes_t.cpu().numpy() :',tubes_t[:5].detach().cpu().numpy())
+            #     print('sgl_rois_bbox_pred.cpu().numpy() :',sgl_rois_bbox_pred[i,:5].detach().cpu().numpy())
+            #     print('tubes_.detach.cpu().numpy() :',tubes_[i,:5].detach().cpu().numpy())
+            #     print('gt_rubes_r[i] :',gt_tubes_r[i])
+            #     exit(-1)
 
-            # if gt_max_overlaps_sgl[0] > 0.5:
-            #     print('max_indices :',max_indices, max_indices.shape, gt_max_overlaps_sgl )
-            #     print('tubes_t[max_indices[0]] :',tubes_t[max_indices[0]])
-            #     print('gt_rois_t[0] :',gt_rois_t[0])
+            if gt_max_overlaps_sgl[0] > 0.5 and gt_rois_t[0,-4:].sum()==0:
+                print('max_indices :',max_indices, max_indices.shape, gt_max_overlaps_sgl )
+                print('tubes_t[max_indices[0]] :',tubes_t[max_indices[0]])
+                print('gt_rois_t[0] :',gt_rois_t[0])
 
             gt_max_overlaps_sgl = torch.where(gt_max_overlaps_sgl > iou_thresh, gt_max_overlaps_sgl, torch.zeros_like(gt_max_overlaps_sgl).type_as(gt_max_overlaps_sgl))
 
@@ -158,11 +169,16 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    model_data = torch.load('./actio_net_model_both.pwf')
+    # model_data = torch.load('./actio_net_model_both.pwf')
+    # model_data = torch.load('./action_net_model_both_without_avg.pwf')
+    # model_data = torch.load('./action_net_model_both_without_avg.pwf')
+    # 
     # model_data = torch.load('./action_net_model_steady_anchors_roi_align.pwf')
 
 
-    model.load_state_dict(model_data)
+    # model.load_state_dict(model_data)
+    model_data = torch.load('./region_net.pwf')
+    model.module.act_rpn.load_state_dict(model_data)
     model.eval()
 
     validation(0, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, 4, n_threads)

@@ -78,7 +78,7 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    # model_data = torch.load('./action_net_model_steady_anchors_roi_align.pwf')
+    model_data = torch.load('./action_net_model_both_without_avg.pwf')
 
     # model.load_state_dict(model_data)
     model.eval()
@@ -120,13 +120,17 @@ if __name__ == '__main__':
     _,  _, \
     _,\
     _,  _, \
-    _, _,  = model(inputs, \
+    sgl_rois_bbox_pred, _,  = model(inputs, \
                    im_info_,
                    None, None,
                    None)
 
     print('**********VGIKE**********')
     print('tubes.shape :',tubes.shape)
+    print('sgl_rois_bbox_pred.shape :',sgl_rois_bbox_pred.shape)
+    print('tubes[0,2] :',tubes[0].cpu().numpy())
+    print('sgl_rois_bbox_pred[0,2] :',sgl_rois_bbox_pred[0,10])
+    exit(-1)
     tubes_t = tubes[0,:,1:-1].contiguous()
     gt_rois_t = gt_rois_[0,:,:,:4].contiguous().view(-1,sample_duration*4)
 

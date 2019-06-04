@@ -46,7 +46,8 @@ class ACT_net(nn.Module):
 
         self.time_dim =sample_duration
         self.temp_scale = 1.0
-        self.reg_layer = _Regression_Layer(256, self.sample_duration).cuda()
+        # self.reg_layer = _Regression_Layer(256, self.sample_duration).cuda()
+        self.reg_layer = _Regression_Layer(64, self.sample_duration).cuda()
 
     def create_architecture(self):
         self._init_modules()
@@ -96,7 +97,7 @@ class ACT_net(nn.Module):
             rpn_loss_cls = 0
             rpn_loss_bbox = 0
             
-        sgl_rois_bbox_pred, feats = self.reg_layer(base_feat_2,rois[:,:,1:-1], gt_rois)
+        sgl_rois_bbox_pred, feats = self.reg_layer(base_feat_1,rois[:,:,1:-1], gt_rois)
 
         if self.training:
 
@@ -137,8 +138,8 @@ class ACT_net(nn.Module):
         normal_init(self.act_rpn.RPN_Conv, 0, 0.01, truncated)
         normal_init(self.act_rpn.RPN_cls_score, 0, 0.01, truncated)
         normal_init(self.act_rpn.RPN_bbox_pred, 0, 0.01, truncated)
-        # normal_init(self.reg_layer.Conv, 0, 0.01, truncated)
-        # normal_init(self.reg_layer.bbox_pred, 0, 0.01, truncated)
+        normal_init(self.reg_layer.Conv, 0, 0.01, truncated)
+        normal_init(self.reg_layer.bbox_pred, 0, 0.01, truncated)
 
 
     def _init_modules(self):

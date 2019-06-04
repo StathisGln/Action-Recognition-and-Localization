@@ -14,6 +14,7 @@ import torch.nn as nn
 import numpy as np
 import numpy.random as npr
 from conf import conf
+from overlaps.module.calc import Tube_Overlaps
 from box_functions import tube_overlaps, bbox_transform
 import pdb
 
@@ -158,6 +159,9 @@ class _ProposalTargetLayer(nn.Module):
             # print('gt_boxes[i].view(-1,self.sample_duration*4).shape :',gt_boxes[i,:,:-1].view(-1,self.sample_duration*4))
             overlaps.append(tube_overlaps(all_rois[i, :,1:-1].contiguous().view(-1,self.sample_duration*4),\
                                      gt_boxes[i,:,:-1].view(-1,self.sample_duration*4)))
+            # overlaps.append(Tube_Overlaps()(all_rois[i, :,1:-1].contiguous().view(-1,self.sample_duration*4),\
+            #                          gt_boxes[i,:,:-1].view(-1,self.sample_duration*4)))
+
         overlaps = torch.stack(overlaps,dim=0)
 
         max_overlaps, gt_assignment = torch.max(overlaps, 2)

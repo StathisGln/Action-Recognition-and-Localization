@@ -16,6 +16,8 @@ import numpy.random as npr
 
 from conf import conf as  cfg
 from generate_anchors import generate_anchors
+from overlaps.module.calc import Tube_Overlaps
+
 from box_functions import bbox_transform, bbox_transform_inv, clip_boxes, tube_overlaps
 import pdb
 
@@ -125,6 +127,8 @@ class _AnchorTargetLayer(nn.Module):
         overlaps = []
         for i in range(batch_size):
             overlaps.append(tube_overlaps(anchors.view(-1,self.sample_duration*4), gt_rois[i].view(-1,self.sample_duration*4)))
+            # overlaps.append(Tube_Overlaps()(anchors.view(-1,self.sample_duration*4), gt_rois[i].view(-1,self.sample_duration*4)))
+
 
         overlaps = torch.stack(overlaps).contiguous()
         # print('overlaps.shape :',overlaps.shape)
