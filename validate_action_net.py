@@ -17,7 +17,7 @@ from action_net import ACT_net
 from resize_rpn import resize_rpn, resize_tube
 import pdb
 from overlaps.module.calc import Tube_Overlaps
-from box_functions import bbox_transform, tube_transform_inv, clip_boxes
+from box_functions import bbox_transform, tube_transform_inv, clip_boxes, tube_overlaps
 
 np.random.seed(42)
 
@@ -25,6 +25,7 @@ np.random.seed(42)
 def validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads):
 
     iou_thresh = 0.5 # Intersection Over Union thresh
+    # iou_thresh = 0.1 # Intersection Over Union thresh
     data = Video_UCF(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
                  split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
@@ -42,7 +43,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
-        # if step == 50:
+        # if step == 10:
         #     break
         print('step :',step)
 
@@ -62,12 +63,14 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                        None)
         tubes_ = tubes.contiguous()
         n_tubes = len(tubes)
-        # print('tubes[0]:',tubes[0])
-        # print('tubes[0]:',tubes.shape)
+
         # tubes = tubes.view(-1, sample_duration*4+2)
+
         # tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
         #                                    sgl_rois_bbox_pred.view(-1,sample_duration*4),(1.0,1.0,1.0,1.0))
         # tubes = tubes.view(n_tubes,-1, sample_duration*4+2)
+        # tubes[:,:,1:-1] = clip_boxes(tubes[:,:,1:-1], im_info, tubes.size(0))
+
         # print('tubes[0]:',tubes[0])
         # print('tubes[0]:',tubes.shape)
         # exit(-1)
@@ -80,10 +83,11 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             tubes_t = tubes[i,:,1:-1].contiguous()
             gt_rois_t = gt_rois_[i,:,:,:4].contiguous().view(-1,sample_duration*4)
 
-            # rois_overlaps = tube_overlaps(tubes_t,gt_rois_t)
-            rois_overlaps = Tube_Overlaps()(tubes_t,gt_rois_t)
+            rois_overlaps = tube_overlaps(tubes_t,gt_rois_t)
+            # rois_overlaps = Tube_Overlaps()(tubes_t,gt_rois_t)
 
             gt_max_overlaps_sgl, max_indices = torch.max(rois_overlaps, 0)
+
             non_empty_indices =  gt_rois_t.ne(0).any(dim=1).nonzero().view(-1)
             n_elems = non_empty_indices.nelement()            
             # print('non_empty_indices :',non_empty_indices)
@@ -138,7 +142,8 @@ if __name__ == '__main__':
     split_txt_path = '/gpu-data2/sgal/UCF101_Action_detection_splits/'
 
     sample_size = 112
-    sample_duration = 16 # len(images)
+    sample_duration = 8 # len(images)
+    # sample_duration = 16 # len(images)
 
     batch_size = 1
     n_threads = 0
@@ -173,12 +178,12 @@ if __name__ == '__main__':
     # model_data = torch.load('./action_net_model_both_without_avg.pwf')
     # model_data = torch.load('./action_net_model_both_without_avg.pwf')
     # 
-    # model_data = torch.load('./action_net_model_steady_anchors_roi_align.pwf')
+    model_data = torch.load('./action_net_model_part1_1_8frm.pwf')
+    model.load_state_dict(model_data)
 
+    # model_data = torch.load('./region_net_8frm.pwf')
+    # model.module.act_rpn.load_state_dict(model_data)
 
-    # model.load_state_dict(model_data)
-    model_data = torch.load('./region_net.pwf')
-    model.module.act_rpn.load_state_dict(model_data)
     model.eval()
 
     validation(0, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, 4, n_threads)

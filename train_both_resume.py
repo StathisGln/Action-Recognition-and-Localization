@@ -173,6 +173,9 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
             loss = sgl_rois_bbox_loss.mean()
         elif mode == 4:
             loss = rpn_loss_cls.mean() +  rpn_loss_bbox.mean() 
+        elif mode == 5:
+            loss = rpn_loss_cls.mean() +  rpn_loss_bbox.mean() + sgl_rois_bbox_loss.mean()
+
 
         loss_temp += loss.item()
 
@@ -204,7 +207,9 @@ if __name__ == '__main__':
     split_txt_path = '../UCF101_Action_detection_splits/'
 
     sample_size = 112
-    sample_duration = 8  # len(images)
+    # sample_duration = 8  # len(images)
+    sample_duration = 16  # len(images)
+
 
     # # get mean
     mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
@@ -246,86 +251,21 @@ if __name__ == '__main__':
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
 
     act_model = nn.DataParallel(act_model)
-
     act_model.to(device)
 
-    lr = 0.1
+    model_data = torch.load('./action_net_model_16frm.pwf')
+    act_model.load_state_dict(model_data)
+
+
+    # lr = 0.1
+    lr = 0.00001
     lr_decay_step = 10
     lr_decay_gamma = 0.1
     
     params = []
 
-    for p in act_model.module.reg_layer.parameters() : p.requires_grad=False
+    # for p in act_model.module.reg_layer.parameters() : p.requires_grad=False
 
-    for key, value in dict(act_model.named_parameters()).items():
-        # print(key, value.requires_grad)
-        if value.requires_grad:
-            print('key :',key)
-            if 'bias' in key:
-                params += [{'params':[value],'lr':lr*(True + 1), \
-                            'weight_decay': False and 0.0005 or 0}]
-            else:
-                params += [{'params':[value],'lr':lr, 'weight_decay': 0.0005}]
-
-    lr = lr * 0.1
-    optimizer = torch.optim.Adam(params)
-
-    epochs = 40
-    # epochs = 5
-
-    n_devs = torch.cuda.device_count()
-    for epoch in range(epochs):
-        print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
-
-        if epoch % (lr_decay_step + 1) == 0:
-            adjust_learning_rate(optimizer, lr_decay_gamma)
-            lr *= lr_decay_gamma
-
-
-        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*2, 0, lr, mode=4)
-
-        if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_part1_1_8frm.pwf".format(epoch+1))
-
-        if (epoch + 1) % (5) == 0:
-            print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
-            validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
-
-    torch.save(act_model.module.act_rpn.state_dict(), "region_net_8frm.pwf")
-
-    # #####################################################
-    # #          Part 1-2 - train TPN - only reg          #
-    # #####################################################
-
-    print(' --------------------------------------------------')
-    print('|          Part 1-2 - train TPN - only reg         |')
-    print(' --------------------------------------------------')
-
-    # # Init action_net
-    # act_model = ACT_net(actions, sample_duration)
-    # act_model.create_architecture()
-    # if torch.cuda.device_count() > 1:
-    #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
-
-    # act_model = nn.DataParallel(act_model)
-
-    # act_model.to(device)
-
-
-    # # model_data = torch.load('./action_net_model_part1_1.pwf')
-    # model_data = torch.load('./region_net.pwf')
-
-    # # act_model.load_state_dict(model_data)
-    # act_model.module.act_rpn.load_state_dict(model_data)
-    # # torch.save(act_model.module.act_rpn.state_dict(), 'region_net.pwf')
-    # # exit(-1)
-    lr = 0.1
-    lr_decay_step = 5
-    lr_decay_gamma = 0.1
-
-    params = []
-    for p in act_model.module.parameters() : p.requires_grad=False
-    for p in act_model.module.reg_layer.parameters() : p.requires_grad=True
     for key, value in dict(act_model.named_parameters()).items():
         # print(key, value.requires_grad)
         if value.requires_grad:
@@ -340,7 +280,7 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(params)
 
     epochs = 20
-    # epochs = 1
+    # epochs = 5
 
     n_devs = torch.cuda.device_count()
     for epoch in range(epochs):
@@ -349,13 +289,16 @@ if __name__ == '__main__':
         if epoch % (lr_decay_step + 1) == 0:
             adjust_learning_rate(optimizer, lr_decay_gamma)
             lr *= lr_decay_gamma
-        act_model.module.act_rpn.eval()
-        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=3)
 
-        if (epoch + 1) % 5 == 0:
-            print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
-            validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*2, 0)
+
+        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*4, 0, lr, mode=5)
 
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_both_max_pooling_8frm.pwf".format(epoch+1))
-    torch.save(act_model.state_dict(), "action_net_model_both_max_pooling_8frm.pwf".format(epoch))
+            torch.save(act_model.state_dict(), "action_net_model_16frm_resume.pwf".format(epoch+1))
+
+        if (epoch + 1) % (5) == 0:
+            print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
+            validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
+
+    torch.save(act_model.state_dict(), "action_net_model_16frm_resume.pwf")
+
