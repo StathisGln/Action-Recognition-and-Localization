@@ -36,7 +36,7 @@ class _Regression_Layer(nn.Module):
             nn.ReLU(True)
             )
             
-        # self.avg_pool = nn.AvgPool2d((7, 7), stride=1)
+        self.avg_pool = nn.AvgPool3d((1, 7, 7), stride=1)
         self.bbox_pred = nn.Linear(512,self.sample_duration*4)
 
         self.roi_align = RoIAlign(self.pooling_size, self.pooling_size, self.spatial_scale)
@@ -70,11 +70,11 @@ class _Regression_Layer(nn.Module):
                     contiguous()
         base_feat = base_feat.permute(0,2,3,1,4,5).contiguous().view(batch_size*rois_per_image, base_feat.size(3),\
                                                                       self.sample_duration, base_feat.size(4),base_feat.size(5))
-
+        
         conv1_feats = self.Conv(base_feat)
         conv1_feats = self.head_to_tail_(conv1_feats.view(conv1_feats.size(0),-1))
         bbox_pred = self.bbox_pred(conv1_feats) # regression layer
-
+        base_feat = self.avg_pool(base_feat)
         return bbox_pred, base_feat
 
     

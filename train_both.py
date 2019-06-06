@@ -179,7 +179,17 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
 
         loss_temp += loss.item()
 
-        # backw\ard
+
+        # # backw\ard
+        # if step % 4 == 0:
+        #     optimizer.zero_grad()
+
+        # loss.backward()
+
+        # if step % 4 == 0:
+        #     optimizer.step()
+
+
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -290,11 +300,11 @@ if __name__ == '__main__':
         act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*2, 0, lr, mode=5)
 
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_16frm.pwf".format(epoch+1))
+            torch.save(act_model.state_dict(), "action_net_model_16frm_128.pwf".format(epoch+1))
 
         if (epoch + 1) % (5) == 0:
             print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
             validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
 
-    torch.save(act_model.state_dict(), "action_net_model_16frm.pwf")
+    torch.save(act_model.state_dict(), "action_net_model_16frm_128.pwf")
 

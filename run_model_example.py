@@ -104,12 +104,11 @@ if __name__ == '__main__':
     mode = 'train'
     print('**********Starts**********')
 
-    tubes,  bbox_pred, \
-    prob_out, rpn_loss_cls, \
-    rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(n_devs, dataset_frames, \
-                                                     vid_names, clips, vid_id,  \
-                                                     boxes, \
-                                                     mode, cls2idx, n_actions,n_frames, h, w)
+    tubes,  \
+    prob_out, cls_loss =  model(n_devs, dataset_frames, \
+                                vid_names, clips, vid_id,  \
+                                boxes, \
+                                mode, cls2idx, n_actions,n_frames, h, w)
 
     # rois,  bbox_pred, cls_prob, \
     # rpn_loss_cls,  rpn_loss_bbox, \
@@ -119,6 +118,6 @@ if __name__ == '__main__':
     #                                                  n_actions)
 
     print('**********VGIKE**********')
-    # print('rois.shape :',rois.shape)
-    # print('rois :',rois)
+    print('rois.shape :',tubes.shape)
+    print('rois :',tubes)
 

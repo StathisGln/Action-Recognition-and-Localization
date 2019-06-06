@@ -34,7 +34,8 @@ class Calculator(Function):
         final_poss   = torch.Tensor().int().cuda()
 
         for indx in range(1,N):
-            print(indx)
+            # print(indx)
+
             # first find number of combinations
             next_pos_max_size = array_size * K + K
             next_pos = pos.new(next_pos_max_size, N, 2).zero_().view(-1) -1
@@ -90,10 +91,20 @@ class Calculator(Function):
 
             f_poss = next_pos[over_thresh_idx]
             f_scores = f_scores[over_thresh_idx]
-            if f_scores.nelement() != 0:
+            if f_scores.nelement() > 0 and final_scores.nelement() > 0:
+
                 final_scores = torch.cat((final_scores, f_scores), dim=0)
                 final_poss = torch.cat((final_poss, f_poss), dim=0)
-
+            elif final_scores.nelement() == 0  :
+                # print('final_scores.shape :',final_scores.shape)
+                # print('f_scores.shape :',f_scores.shape)
+                # exit(-1)
+                final_scores = f_scores
+                final_poss = f_poss
+            else:
+                print('f_scores.shape :',f_scores.shape)
+                print('final_scores.shape :',final_scores.shape)
+                # exit(-1)
             pos = torch.tensor(f_poss).contiguous()
             pos_indices = torch.tensor(next_pos_indices[over_thresh_idx]).contiguous()
 
@@ -130,7 +141,7 @@ class Calculator(Function):
             #     for j in range(next_pos_indices[i]+1):
             #         print(' ',next_pos[i,j,0].item(),' ',next_pos[i,j,1].item(),' | ',end='')
             #     print('')
-        print('New loopa...\n')
+        # print('New loopa...\n')
         # lens = torch.zeros(final_scores.size(0))
         # for i in range(final_scores.size(0)):
         #     for j in range(N):
@@ -140,16 +151,16 @@ class Calculator(Function):
         
         # _, indices = torch.sort(lens)
         # for i in indices:
-        for i in range(final_scores.size(0)):
-            # print('i :',i.item(),' score ',final_scores[i].item(),' $$ ', end='')
-            print('i :',i,' score ',final_scores[i].item(),' $$ ', end='')
-            for j in range(N):
-                if final_poss[i,j,0] == -1:
-                    break
-                print(' ',final_poss[i,j,0].item(),' ',final_poss[i,j,1].item(),'({0:.2f}) | '.format(scores[final_poss[i,j,0],final_poss[i,j,1]]),end='')
-            print('')
+        # for i in range(final_scores.size(0)):
+        #     # print('i :',i.item(),' score ',final_scores[i].item(),' $$ ', end='')
+        #     print('i :',i,' score ',final_scores[i].item(),' $$ ', end='')
+        #     for j in range(N):
+        #         if final_poss[i,j,0] == -1:
+        #             break
+        #         print(' ',final_poss[i,j,0].item(),' ',final_poss[i,j,1].item(),'({0:.2f}) | '.format(scores[final_poss[i,j,0],final_poss[i,j,1]]),end='')
+        #     print('')
 
-        exit(-1)
+        # exit(-1)
 
 
         return final_scores, final_poss
@@ -157,13 +168,13 @@ class Calculator(Function):
     def update_scores(self, final_scores, final_poss, f_scores, pos, pos_indices, actioness, \
                       overlaps_scr):
 
-        print('Updating thresh')
+        # print('Updating thresh')
         # self.thresh = self.thresh + 
         ## first update next loop
         _, indices = torch.sort(f_scores,descending=True)
         # print('f_scores :',f_scores.cpu().numpy())
         if self.thresh == f_scores[indices[self.k]].item():
-            print('f_scores[:self.k] :',f_scores[:self.k].cpu().numpy())
+            # print('f_scores[:self.k] :',f_scores[:self.k].cpu().numpy())
             self.thresh = self.thresh + 0.001
         else:
             self.thresh = f_scores[indices[self.k]].item()

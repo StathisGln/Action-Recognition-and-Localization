@@ -14,7 +14,8 @@ from temporal_transforms import LoopPadding
 from net_utils import adjust_learning_rate
 
 from create_video_id import get_vid_dict
-from video_dataset import video_names
+from ucf_dataset import Video_UCF, video_names
+
 from model import Model
 from resize_rpn import resize_tube
 
@@ -46,7 +47,7 @@ def validate_model(model,  val_data, val_data_loader):
         if step == 2:
             break
         
-        vid_id, boxes, n_frames, n_actions = data
+        vid_id, clips, boxes, n_frames, n_actions, h, w =data
         
         mode = 'test'
         boxes_ = boxes.cuda()
@@ -122,14 +123,16 @@ if __name__ == '__main__':
     ##########################################
 
     model = Model(actions, sample_duration, sample_size)
-    model.create_architecture()
+    model.load_part_model()
     model.deactivate_action_net_grad()
+
     # if torch.cuda.device_count() > 1:
 
     #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
-    #     model = nn.DataParallel(model)
+    #     model.act_net = nn.DataParallel(model.act_net)
 
-    model.to(device)
+    # model.to(device)
+    # model.act_net.to(device)
 
     lr = 0.1
     lr_decay_step = 5
@@ -167,7 +170,8 @@ if __name__ == '__main__':
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
         model.act_net = nn.DataParallel(model.act_net)
 
-    model.act_net = model.act_net.cuda()
+    model.act_net.to(device)
+    model.to(device)
 
     # if torch.cuda.device_count() > 1:
 
@@ -184,7 +188,7 @@ if __name__ == '__main__':
 
         # start = time.time()
         if (ep +1) % (lr_decay_step ) == 0:
-            print('time to reduce learning rate ')
+            print('time to reduce learning rate ', lr)
             adjust_learning_rate(optimizer, lr_decay_gamma)
             lr *= lr_decay_gamma
 
@@ -192,11 +196,10 @@ if __name__ == '__main__':
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(ep+1, epochs))
         for step, data  in enumerate(data_loader):
 
-            # if step == 2:
-            #     break
+            if step == 2:
+                break
             print('step :',step)
-            vid_id, boxes, n_frames, n_actions, h, w = data
-            
+            vid_id, clips, boxes, n_frames, n_actions, h, w =data            
             ###################################
             #          Function here          #
             ###################################
@@ -208,14 +211,13 @@ if __name__ == '__main__':
             n_actions_ = n_actions.to(device)
             h_ = h.to(device)
             w_ = w.to(device)
-            tubes,  bbox_pred, \
-            prob_out, rpn_loss_cls, \
-            rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(n_devs, dataset_folder, \
-                                                             vid_names, vid_id_, spatial_transform, \
-                                                             temporal_transform, boxes, \
-                                                             mode, cls2idx, n_actions_,n_frames_, h_, w_)
+            tubes,   \
+            prob_out, cls_loss =  model(n_devs, dataset_folder, \
+                                        vid_names, clips, vid_id_, \
+                                        boxes, \
+                                        mode, cls2idx, n_actions_,n_frames_, h_, w_)
 
-            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + cls_loss.mean()
+            loss =  cls_loss.mean()
 
             # backw\ard
             optimizer.zero_grad()
