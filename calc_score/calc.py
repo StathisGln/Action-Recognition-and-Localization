@@ -1,6 +1,8 @@
 import torch
 from torch.autograd import Function
+# from _ext import calc as c
 from ._ext import calc as c
+
 import sys
 import numpy
 
@@ -92,8 +94,26 @@ class Calculator(Function):
             f_poss = next_pos[over_thresh_idx]
             f_scores = f_scores[over_thresh_idx]
             if f_scores.nelement() > 0 and final_scores.nelement() > 0:
+                try:
+                    if f_scores.dim() == 0:
+                        f_scores = f_scores.unsqueeze(0)
+                        f_poss = f_poss.unsqueeze(0)
 
-                final_scores = torch.cat((final_scores, f_scores), dim=0)
+                    if final_scores.dim() == 0:
+                        final_scores = final_scores.unsqueeze(0)
+                        final_poss = final_poss.unsqueeze(0)
+
+                    final_scores = torch.cat((final_scores, f_scores), dim=0)
+                except:
+                    print('final_scores :',final_scores.cpu().numpy())
+                    print('f_scores :',f_scores.cpu().numpy())
+                    print('final_scores.dim() :',final_scores.dim())
+                    print('f_scores.dim() :',f_scores.dim)
+                    print('self.thresh :',self.thresh)
+                    print('f_scores.shape :',f_scores.shape)
+                    print('final_scores.shape :',final_scores.shape)
+
+                    raise 
                 final_poss = torch.cat((final_poss, f_poss), dim=0)
             elif final_scores.nelement() == 0  :
                 # print('final_scores.shape :',final_scores.shape)
@@ -102,8 +122,9 @@ class Calculator(Function):
                 final_scores = f_scores
                 final_poss = f_poss
             else:
-                print('f_scores.shape :',f_scores.shape)
+                print('f_scores.shape :',f_scores)
                 print('final_scores.shape :',final_scores.shape)
+                print('self.thresh :',self.thresh)
                 # exit(-1)
             pos = torch.tensor(f_poss).contiguous()
             pos_indices = torch.tensor(next_pos_indices[over_thresh_idx]).contiguous()
@@ -129,6 +150,18 @@ class Calculator(Function):
             
             pos[-K:,0,0] = ones_t * indx
             pos[-K:,0,1] = offset
+            
+            # print('pos_indices.shape :',pos_indices.shape)
+            # print('pos_indices.shape :',pos_indices.dim())
+            # print('indx :',indx)
+            # print('scores[indx] :',scores[indx])
+            # print('actioness:',actioness)
+            # print('K :',K)
+
+            if pos_indices.dim()==0:
+                pos_indices = pos_indices.unsqueeze(0)
+                actioness = actioness.unsqueeze(0)
+                overlaps_scr = overlaps_scr.unsqueeze(0)
 
             pos_indices = torch.cat((pos_indices,torch.zeros((K)).type_as(pos_indices)),dim=0)
             actioness = torch.cat((actioness, scores[indx]),dim=0)
@@ -174,7 +207,7 @@ class Calculator(Function):
         _, indices = torch.sort(f_scores,descending=True)
         # print('f_scores :',f_scores.cpu().numpy())
         if self.thresh == f_scores[indices[self.k]].item():
-            # print('f_scores[:self.k] :',f_scores[:self.k].cpu().numpy())
+            print('f_scores[:self.k] :',f_scores[:self.k].cpu().numpy())
             self.thresh = self.thresh + 0.001
         else:
             self.thresh = f_scores[indices[self.k]].item()
@@ -182,7 +215,7 @@ class Calculator(Function):
         indices = indices[:self.k].long()
         # print('self.thresh :',self.thresh)
         # print('indices :',indices.shape)
-        # print('indices :',indices[:self.k])
+        print('indices :',indices[:self.k])
         # exit(-1)
         indices = f_scores.ge(self.thresh).nonzero()
         indices = indices.squeeze()
@@ -205,8 +238,13 @@ class Calculator(Function):
         
 if __name__ == '__main__':
 
-    scores = torch.rand(5,20).cuda()
-    overlaps = torch.rand(4,20,20).cuda()
+    # with open('../overlaps.pwf', 'rb') as fp:
+    overlaps = torch.load('../overlaps.pwf')
+    scores = torch.load('../scores.pwf')
+    print('overlaps.shape :',overlaps.shape)
+    print('scores.shape :',scores.shape)
+    # scores = torch.rand(5,20).cuda()
+    # overlaps = torch.rand(4,20,20).cuda()
     N = torch.Tensor([5])
     K = torch.Tensor([20])
     calc = Calculator(100, 1000, 1.5)

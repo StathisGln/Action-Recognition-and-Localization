@@ -249,6 +249,7 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
 
             video_path = os.path.join(cls,vid)
             if video_path not in boxes_data or not(vid in file_names):
+
                 # print('OXI to ',video_path)
                 continue
 
@@ -259,6 +260,8 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
             if n_frames > max_frames:
                 max_frames = n_frames
 
+            if n_frames < 800:
+                continue
             if n_actions > max_actions:
                 max_actions = n_actions
             # # pos 0 --> starting frame, pos 1 --> ending frame

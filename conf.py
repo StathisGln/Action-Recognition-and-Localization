@@ -35,9 +35,11 @@ __C.TRAIN.BATCH_SIZE = 16
 __C.TRAIN.FG_FRACTION = 0.25
 
 # IOU >= thresh: positive example
-__C.TRAIN.RPN_POSITIVE_OVERLAP = 0.8
+__C.TRAIN.RPN_POSITIVE_OVERLAP = 0.7
 # IOU < thresh: negative example
 __C.TRAIN.RPN_NEGATIVE_OVERLAP = 0.5
+# __C.TRAIN.RPN_NEGATIVE_OVERLAP = 0.5
+
 # Deprecated (outside weights)
 __C.TRAIN.RPN_BBOX_INSIDE_WEIGHTS = (1.0, 1.0, 1.0, 1.0)
 # Set to -1.0 to use uniform example weighting

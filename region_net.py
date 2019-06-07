@@ -154,7 +154,7 @@ class _RPN(nn.Module):
         # generating training labels a# nd build the rpn loss
         if self.training:
 
-            assert gt_boxes is not None
+            assert gt_rois is not None
 
             ## Regular data
             rpn_data = self.RPN_anchor_target((rpn_cls_score.data, rpn_cls_score_3_4.data, \

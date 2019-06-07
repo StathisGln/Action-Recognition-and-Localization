@@ -46,8 +46,8 @@ class ACT_net(nn.Module):
 
         self.time_dim =sample_duration
         self.temp_scale = 1.0
-        # self.reg_layer = _Regression_Layer(64, self.sample_duration).cuda()
-        self.reg_layer = _Regression_Layer(128, self.sample_duration).cuda()
+        self.reg_layer = _Regression_Layer(64, self.sample_duration).cuda()
+        # self.reg_layer = _Regression_Layer(128, self.sample_duration).cuda()
         # self.reg_layer = _Regression_Layer(256, self.sample_duration).cuda()
 
     def create_architecture(self):
@@ -58,19 +58,6 @@ class ACT_net(nn.Module):
 
         batch_size = im_data.size(0)
         im_info = im_info.data
-
-        if self.training:
-
-            gt_tubes = gt_tubes.data
-            gt_rois =  gt_rois.data
-
-            for i in range(batch_size):
-
-              gt_tubes[i,:,2] = gt_tubes[i,:,2] - start_fr[i].type_as(gt_tubes)
-              gt_tubes[i,:,5] = gt_tubes[i,:,5] - start_fr[i].type_as(gt_tubes)
-
-            gt_tubes[:,:,:-1] = gt_tubes[:,:,:-1].clamp_(min=0)
-
 
         # feed image data to base model to obtain base feature map
         base_feat_1 = self.act_base_1(im_data)
@@ -99,7 +86,7 @@ class ACT_net(nn.Module):
             rpn_loss_cls = 0
             rpn_loss_bbox = 0
             
-        sgl_rois_bbox_pred, feats = self.reg_layer(base_feat_2,rois[:,:,1:-1], gt_rois)
+        sgl_rois_bbox_pred, feats = self.reg_layer(base_feat_1,rois[:,:,1:-1], gt_rois)
 
         # if not self.training:
         #     sgl_rois_bbox_pred = Variable(sgl_rois_bbox_pred, requires_grad=False)

@@ -43,7 +43,7 @@ class Model(nn.Module):
         self.sample_duration = sample_duration
         self.sample_size = sample_size
         self.step = int(self.sample_duration/2)
-        self.p_feat_size = 128 # 64 # 256 # 512
+        self.p_feat_size = 64 # 128 # 256 # 512
         
         # For connection 
         self.max_num_tubes = conf.MAX_NUMBER_TUBES
@@ -57,16 +57,21 @@ class Model(nn.Module):
         '''
         TODO describe procedure
         '''
-        boxes = boxes.squeeze(0).permute(1,0,2).cpu()
-        clips = clips.squeeze(0)
-        # print('----------Inside----------')
+
         # print('boxes.shape :',boxes.shape)
 
         ## define a dataloader for the whole video
-        boxes = boxes[:num_frames,:num_actions]
+        # print('----------Inside----------')
+        print('num_frames :',num_frames)
+        print('clips.shape :',clips.shape)
+
+        clips = clips.squeeze(0)
         clips = clips[:num_frames]
-        print('boxes.shape :',boxes.shape)
-        # exit(-1)
+
+        if self.training:
+            boxes = boxes.squeeze(0).permute(1,0,2).cpu()
+            boxes = boxes[:num_frames,:num_actions]
+
         batch_size = 2 # 
         # batch_size = 16 # 
 
@@ -104,13 +109,20 @@ class Model(nn.Module):
 
             # if step == 1:
             #     break
-            print('step :',step)
+            print('\tstep :',step)
+
             frame_indices, im_info, start_fr = dt
-            boxes_ = boxes[frame_indices].cuda()
+            # print('frame_indices :',frame_indices)
             clips_ = clips[frame_indices].cuda()
 
-            gt_tubes = create_tube_with_frames(boxes_.permute(0,2,1,3), im_info, self.sample_duration)
-            gt_tubes_ = gt_tubes.type_as(clips).cuda()
+            if self.training:
+                boxes_ = boxes[frame_indices].cuda()
+                box_ = boxes_.permute(0,2,1,3).float().contiguous()[:,:,:,:-1]
+            else:
+                box_ = None
+                
+            # gt_tubes = create_tube_with_frames(boxes_.permute(0,2,1,3), im_info, self.sample_duration)
+            # gt_tubes_ = gt_tubes.type_as(clips).cuda()
 
             im_info = im_info.cuda()
             start_fr = start_fr.cuda()
@@ -121,8 +133,8 @@ class Model(nn.Module):
                 _,_, rois_label, \
                 sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.act_net(clips_.permute(0,2,1,3,4),
                                                             im_info,
-                                                            gt_tubes_,
-                                                            boxes_.permute(0,2,1,3).float().contiguous()[:,:,:,:-1],
+                                                            None,
+                                                            box_,
                                                             start_fr)
 
             pooled_feat = pooled_feat.view(-1,rois_per_image,self.p_feat_size,self.sample_duration)
@@ -145,7 +157,6 @@ class Model(nn.Module):
                 f_gt_tubes[idx_s:idx_e] = box
                 tubes_labels[idx_s:idx_e] = rois_label.squeeze(-1).type_as(tubes_labels)
 
-
         ########################################################
         #          Calculate overlaps and connections          #
         ########################################################
@@ -153,26 +164,54 @@ class Model(nn.Module):
         overlaps_scores = torch.zeros(n_clips-1, rois_per_image, rois_per_image).type_as(overlaps_scores)
 
         for i in range(n_clips-1):
-            overlaps_scores[i] = tube_overlaps(p_tubes[i,:,int(self.sample_duration*4/2):],p_tubes[i+1,:int(self.sample_duration*4/2)])
+            overlaps_scores[i] = tube_overlaps(p_tubes[i,:,int(self.sample_duration*4/2):],p_tubes[i+1,:,:int(self.sample_duration*4/2)])
 
         final_scores, final_poss = self.calc(overlaps_scores.cuda(), actioness_score.cuda(),
-                                             torch.Tensor([n_clips]),torch.Tensor([rois_per_image/2]))
+                                             torch.Tensor([n_clips]),torch.Tensor([rois_per_image]))
+        ## Now connect the tubes
+        final_tubes = torch.zeros(final_poss.size(0), num_frames, 4)
+        f_tubes  = []
+        for i in range(final_poss.size(0)):
+            tub = []
+            for j in range(final_poss.size(1)):
+
+                curr_ = final_poss[i,j]
+                start_fr = curr_[0]* int(self.sample_duration/2)
+                end_fr = curr_[0]*int(self.sample_duration/2)+self.sample_duration
+
+                if curr_[0] == -1:
+                    break
+                
+                curr_frames = p_tubes[curr_[0], curr_[1]]
+                tub.append((curr_[0].item(),  curr_[1].item()))
+                ## TODO change with avg
+                final_tubes[i,start_fr:end_fr] =  torch.max( curr_frames.view(-1,4), final_tubes[i,start_fr:end_fr])
+            f_tubes.append(tub)
+
 
         ###################################################
         #          Choose gth Tubes for RCNN\TCN          #
         ###################################################
-        # print('f_gt_tubes :',f_gt_tubes)
-        # print('f_gt_tubes.shape :',f_gt_tubes.shape)
         if self.training:
 
             # # get gt tubes and feats
-            print('f_gt_tubes.shape :',f_gt_tubes.shape)
-            print('p_tubes.shape :',p_tubes.shape)
+            ##  calculate overlaps
+            boxes_ = boxes.permute(1,0,2).contiguous()
+            boxes_ = boxes_[:,:,:4].contiguous().view(num_actions,-1)
+
+            overlaps = tube_overlaps(final_tubes.view(-1,num_frames*4), boxes_.type_as(final_tubes))
+            max_overlaps,_ = torch.max(overlaps,1)
+            max_overlaps = max_overlaps.clamp_(min=0)
+            ## TODO change numbers
+            bg_tubes_indices = max_overlaps.lt(0.3).nonzero()
+            bg_tubes_indices_picked = (torch.rand(5)*bg_tubes_indices.size(0)).long()
+            bg_tubes_list = [f_tubes[i] for i in bg_tubes_indices[bg_tubes_indices_picked]]
+            bg_labels = torch.zeros(len(bg_tubes_list))
 
             gt_tubes_list = [[] for i in range(num_actions)]
 
-            # fg_tubes = torch.zeros(n_clips, num_actions)
             for i in range(n_clips):
+
                 overlaps = tube_overlaps(p_tubes[i], f_gt_tubes[i])
                 max_overlaps, argmax_overlaps = torch.max(overlaps, 0)
                 
@@ -180,21 +219,9 @@ class Model(nn.Module):
                     if max_overlaps[j] == 1.0: 
                         gt_tubes_list[j].append((i,j))
 
-            # gt_tubes_feats,gt_tubes_list = get_gt_tubes_feats_label(f_tubes, p_tubes, features, tubes_labels, f_gt_tubes)
-            # bg_tubes = get_tubes_feats_label(f_tubes, p_tubes, features, tubes_labels, video_tubes.cpu())
-
-            # gt_tubes_list = [x for x in gt_tubes_list if x != []]
-            # gt_lbl = torch.zeros(len(gt_tubes_list)).type_as(f_gt_tubes)
-        
-            # for i in torch.arange(len(gt_tubes_list)).long():
-            #     gt_lbl[i] = f_gt_tubes[gt_tubes_list[i][0][0],i,6]
-            # bg_lbl = torch.zeros((len(bg_tubes))).type_as(f_gt_tubes)
-            
-
             ## concate fb, bg tubes
-            f_tubes = gt_tubes_list ## + bg_tubes
-            # target_lbl = torch.cat((gt_lbl,bg_lbl),0)
-            target_lbl = labels
+            f_tubes = gt_tubes_list + bg_tubes_list
+            target_lbl = torch.cat([labels, bg_labels],dim=0)
 
         ##############################################
  
@@ -211,32 +238,34 @@ class Model(nn.Module):
             seq = f_tubes[i]
             tmp_tube = torch.Tensor(len(seq),6)
             feats = torch.Tensor(len(seq),self.p_feat_size)
+            
             for j in range(len(seq)):
-                feats[j] = features[seq[j][0],seq[j][1]].mean(1)
 
+                feats[j] = features[seq[j][0],seq[j][1]].mean(1)
                 tmp_tube[j] = p_tubes[seq[j]][1:7]
+
             prob_out[i] = self.act_rnn(feats.cuda())
             if prob_out[i,0] != prob_out[i,0]:
                 print('tmp_tube :',tmp_tube, ' prob_out :', prob_out ,' feats :',feats.cpu().numpy(), ' numpy(), feats.shape  :,', feats.shape ,' target_lbl :',target_lbl, \
                       ' \ntmp_tube :',tmp_tube, )
                 exit(-1)
 
-            final_video_tubes[i] = create_tube_from_tubes(tmp_tube).type_as(boxes)
-        
+            
         # ##########################################
         # #           Time for Linear Loss         #
         # ##########################################
 
         cls_loss = torch.Tensor([0]).cuda()
 
+        final_tubes = final_tubes.type_as(final_poss)
         # # classification probability
         if self.training:
             cls_loss = F.cross_entropy(prob_out.cpu(), target_lbl.long()).cuda()
 
         if self.training:
-            return final_video_tubes, prob_out,  cls_loss, 
+            return final_tubes, prob_out,  cls_loss, 
         else:
-            return final_video_tubes, prob_out
+            return final_tubes, prob_out, None
 
     def deactivate_action_net_grad(self):
 
