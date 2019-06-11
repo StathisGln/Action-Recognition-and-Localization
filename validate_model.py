@@ -50,7 +50,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
-        if step == 1:
+        if step == 50:
             break
         print('step =>',step)
 
@@ -195,7 +195,7 @@ if __name__ == '__main__':
     temporal_transform = LoopPadding(sample_duration)
 
     # Init action_net
-    action_model_path = './action_model.pwf'
+    action_model_path = './action_net_model_both_max_pooling.pwf'
     
     model = Model(actions, sample_duration, sample_size)
     model.load_part_model(action_model_path=action_model_path)

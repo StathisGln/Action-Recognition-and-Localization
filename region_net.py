@@ -61,15 +61,15 @@ class _RPN(nn.Module):
         # define anchor target layer
         self.RPN_anchor_target = _AnchorTargetLayer(self.feat_stride,  self.anchor_scales, self.anchor_ratios, self.anchor_duration, None)
 
-        self.avg_pool = nn.MaxPool3d((self.sample_duration,1,1), stride=1)
-        self.avg_pool_3_4 = nn.MaxPool3d((int(sample_duration*3/4),1,1), stride=1)
-        self.avg_pool_2 = nn.MaxPool3d((int(sample_duration/2),1,1), stride=1)
-        self.avg_pool_4 = nn.MaxPool3d((int(sample_duration/4),1,1), stride=1)
+        # self.avg_pool = nn.MaxPool3d((self.sample_duration,1,1), stride=1)
+        # self.avg_pool_3_4 = nn.MaxPool3d((int(sample_duration*3/4),1,1), stride=1)
+        # self.avg_pool_2 = nn.MaxPool3d((int(sample_duration/2),1,1), stride=1)
+        # self.avg_pool_4 = nn.MaxPool3d((int(sample_duration/4),1,1), stride=1)
 
-        # self.avg_pool = nn.AvgPool3d((self.sample_duration,1,1), stride=1)
-        # self.avg_pool_3_4 = nn.AvgPool3d((int(sample_duration*3/4),1,1), stride=1)
-        # self.avg_pool_2 = nn.AvgPool3d((int(sample_duration/2),1,1), stride=1)
-        # self.avg_pool_4 = nn.AvgPool3d((int(sample_duration/4),1,1), stride=1)
+        self.avg_pool = nn.AvgPool3d((self.sample_duration,1,1), stride=1)
+        self.avg_pool_3_4 = nn.AvgPool3d((int(sample_duration*3/4),1,1), stride=1)
+        self.avg_pool_2 = nn.AvgPool3d((int(sample_duration/2),1,1), stride=1)
+        self.avg_pool_4 = nn.AvgPool3d((int(sample_duration/4),1,1), stride=1)
 
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0
@@ -117,7 +117,6 @@ class _RPN(nn.Module):
         rpn_bbox_pred_3_4 = self.RPN_bbox_pred_3_4(rpn_conv_avg_3_4)  # regression layer
         rpn_bbox_pred_2 = self.RPN_bbox_pred_2(rpn_conv_avg_2)  # regression layer
         rpn_bbox_pred_4 = self.RPN_bbox_pred_4(rpn_conv_avg_4)  # regression layer
-
 
         # batch_size = 2
         rpn_cls_score_reshape = self.reshape(rpn_cls_score, 2)

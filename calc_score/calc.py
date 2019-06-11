@@ -146,8 +146,16 @@ class Calculator(Function):
             #     print('')
 
             ## add the new tubes scores
-            pos= torch.cat((pos,zeros_t),dim=0)
-            
+            try:
+                pos= torch.cat((pos,zeros_t),dim=0)
+            except:
+                print('----------ERROR----------')
+                print('pos :',pos)
+                print('pos :',pos.dim())
+                pos = pos.unsqueeze(0)
+                pos= torch.cat((pos,zeros_t),dim=0)
+                
+                
             pos[-K:,0,0] = ones_t * indx
             pos[-K:,0,1] = offset
             

@@ -29,20 +29,29 @@ class _Regression_Layer(nn.Module):
 
         self.Conv = nn.Conv3d(self.din, din, 1, stride=1, padding=0, bias=True)
         self.head_to_tail_ = nn.Sequential(
+            # nn.Linear(din*7*7 , 2048),
             nn.Linear(din*self.sample_duration*7*7 , 2048),
+
             nn.ReLU(True),
             nn.Dropout(0.8),
             nn.Linear(2048,512),
             nn.ReLU(True)
             )
             
-        self.avg_pool = nn.AvgPool3d((1, 7, 7), stride=1)
+        self.avg_pool = nn.AvgPool3d((sample_duration, 1, 1), stride=1)
         self.bbox_pred = nn.Linear(512,self.sample_duration*4)
 
         self.roi_align = RoIAlign(self.pooling_size, self.pooling_size, self.spatial_scale)
-        self.avg_pool = nn.MaxPool3d((1,7,7), stride=1)
+        self.max_pool = nn.MaxPool3d((1,7,7), stride=1)
         self.reg_target = _Regression_TargetLayer()
 
+        self.init_head_to_tail_weights()
+
+    def init_head_to_tail_weights(self, stddev=0, mean=0.01,):
+        for m in self.head_to_tail_.modules():
+            if m == nn.Linear:
+                m.weight.data.normal_().fmod_(2).mul_(stddev).add_(mean) # not a perfect approximation
+        
     def forward(self, base_feat, rois, gt_rois):
         
         # base_feat.shape : [num_tubes, num_channels, sample_duration, width, height] : [32,512,16,4,4]
@@ -72,9 +81,10 @@ class _Regression_Layer(nn.Module):
                                                                       self.sample_duration, base_feat.size(4),base_feat.size(5))
         
         conv1_feats = self.Conv(base_feat)
+        # conv1_feats = self.avg_pool(conv1_feats)
         conv1_feats = self.head_to_tail_(conv1_feats.view(conv1_feats.size(0),-1))
         bbox_pred = self.bbox_pred(conv1_feats) # regression layer
-        base_feat = self.avg_pool(base_feat)
+        base_feat = self.max_pool(base_feat)
         return bbox_pred, base_feat
 
     

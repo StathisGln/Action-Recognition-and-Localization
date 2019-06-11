@@ -64,12 +64,12 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         tubes_ = tubes.contiguous()
         n_tubes = len(tubes)
 
-        # tubes = tubes.view(-1, sample_duration*4+2)
+        tubes = tubes.view(-1, sample_duration*4+2)
 
-        # tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
-        #                                    sgl_rois_bbox_pred.view(-1,sample_duration*4),(1.0,1.0,1.0,1.0))
-        # tubes = tubes.view(n_tubes,-1, sample_duration*4+2)
-        # tubes[:,:,1:-1] = clip_boxes(tubes[:,:,1:-1], im_info, tubes.size(0))
+        tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
+                                           sgl_rois_bbox_pred.view(-1,sample_duration*4),(1.0,1.0,1.0,1.0))
+        tubes = tubes.view(n_tubes,-1, sample_duration*4+2)
+        tubes[:,:,1:-1] = clip_boxes(tubes[:,:,1:-1], im_info, tubes.size(0))
 
         # print('tubes[0]:',tubes[0])
         # print('tubes[0]:',tubes.shape)
@@ -142,8 +142,8 @@ if __name__ == '__main__':
     split_txt_path = '/gpu-data2/sgal/UCF101_Action_detection_splits/'
 
     sample_size = 112
-    sample_duration = 8 # len(images)
-    # sample_duration = 16 # len(images)
+    # sample_duration = 8 # len(images)
+    sample_duration = 16 # len(images)
 
     batch_size = 1
     n_threads = 0
@@ -176,9 +176,9 @@ if __name__ == '__main__':
 
     # model_data = torch.load('./actio_net_model_both.pwf')
     # model_data = torch.load('./action_net_model_both_without_avg.pwf')
-    # model_data = torch.load('./action_net_model_both_without_avg.pwf')
+    model_data = torch.load('./action_net_model_16frm_64.pwf')
     # 
-    model_data = torch.load('./action_net_model_part1_1_8frm.pwf')
+    # model_data = torch.load('./action_net_model_part1_1_8frm.pwf')
     model.load_state_dict(model_data)
 
     # model_data = torch.load('./region_net_8frm.pwf')

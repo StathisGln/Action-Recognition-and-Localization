@@ -2,15 +2,13 @@ import os
 import numpy as np
 import glob
 
-from  tqdm import tqdm
-
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from resnet_3D import resnet34
-from simple_dataset import Video
+from jhmdb_dataset import Video
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
@@ -64,11 +62,6 @@ if __name__ == '__main__':
     # Init action_net
     model = Model(classes, sample_duration, sample_size)
     model.create_architecture()
-    if torch.cuda.device_count() > 1:
-        print('Using {} GPUs!'.format(torch.cuda.device_count()))
-
-        model = nn.DataParallel(model)
-
     model.to(device)
 
 
@@ -117,8 +110,8 @@ if __name__ == '__main__':
     print('**********Start**********')
     ret = model(clips_t, target_t,
                 im_info_t,
-                gt_tubes_t, None,
-                n_frames_t, num_boxes, max_dim=1, phase=2)
+                gt_tubes_t, gt_rois_t,
+                start_fr)
 
     print('**********VGIKE**********')
     # print('rois.shape :',rois.shape)

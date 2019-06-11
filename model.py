@@ -224,7 +224,11 @@ class Model(nn.Module):
             target_lbl = torch.cat([labels, bg_labels],dim=0)
 
         ##############################################
- 
+
+        if len(f_tubes) == 0:
+            print('------------------')
+            print('    empty tube    ')
+            return torch.Tensor([]).cuda(), torch.Tensor([]).cuda(), None
         max_seq = reduce(lambda x, y: y if len(y) > len(x) else x, f_tubes)
         max_length = len(max_seq)
 
