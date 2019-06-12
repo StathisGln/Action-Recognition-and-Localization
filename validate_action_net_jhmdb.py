@@ -7,7 +7,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from resnet_3D import resnet34
-from ucf_dataset import Video_UCF, video_names
+from jhmdb_dataset import Video
 
 from net_utils import adjust_learning_rate
 from spatial_transforms import (
@@ -26,9 +26,9 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
     iou_thresh = 0.5 # Intersection Over Union thresh
     # iou_thresh = 0.1 # Intersection Over Union thresh
-    data = Video_UCF(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
+    data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
-                 split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
+                 split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(data, batch_size=16,
                                               shuffle=True, num_workers=0, pin_memory=True)
     # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*4,
@@ -43,14 +43,14 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
-        # if step == 10:
+        # if step == 1:
         #     break
         print('step :',step)
 
         clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
         clips_   = clips.to(device)
         gt_tubes_r_ = gt_tubes_r.to(device)
-        gt_rois_ = gt_rois.to(device)
+        gt_rois_ = gt_rois.float().to(device)
         n_actions_ = n_actions.to(device)
         im_info_ = im_info.to(device)
         start_fr = torch.zeros(clips_.size(0)).to(device)
@@ -61,6 +61,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                        im_info,
                                        None, None,
                                        None)
+
         tubes_ = tubes.contiguous()
         n_tubes = len(tubes)
 
@@ -84,24 +85,11 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             gt_rois_t = gt_rois_[i,:,:,:4].contiguous().view(-1,sample_duration*4)
 
             rois_overlaps = tube_overlaps(tubes_t,gt_rois_t)
-            # rois_overlaps = Tube_Overlaps()(tubes_t,gt_rois_t)
 
             gt_max_overlaps_sgl, max_indices = torch.max(rois_overlaps, 0)
 
             non_empty_indices =  gt_rois_t.ne(0).any(dim=1).nonzero().view(-1)
             n_elems = non_empty_indices.nelement()            
-            # print('non_empty_indices :',non_empty_indices)
-            # if gt_tubes_r[i,0,5] - gt_tubes_r[i,0,2 ] < 12 and gt_tubes_r[i,0,5] - gt_tubes_r[i,0,2 ] > 0:
-            #     print('tubes_t.cpu().numpy() :',tubes_t[:5].detach().cpu().numpy())
-            #     print('sgl_rois_bbox_pred.cpu().numpy() :',sgl_rois_bbox_pred[i,:5].detach().cpu().numpy())
-            #     print('tubes_.detach.cpu().numpy() :',tubes_[i,:5].detach().cpu().numpy())
-            #     print('gt_rubes_r[i] :',gt_tubes_r[i])
-            #     exit(-1)
-
-            if gt_max_overlaps_sgl[0] > 0.5 and gt_rois_t[0,-4:].sum()==0:
-                print('max_indices :',max_indices, max_indices.shape, gt_max_overlaps_sgl )
-                print('tubes_t[max_indices[0]] :',tubes_t[max_indices[0]])
-                print('gt_rois_t[0] :',gt_rois_t[0])
 
             gt_max_overlaps_sgl = torch.where(gt_max_overlaps_sgl > iou_thresh, gt_max_overlaps_sgl, torch.zeros_like(gt_max_overlaps_sgl).type_as(gt_max_overlaps_sgl))
 
@@ -137,9 +125,9 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_folder = '/gpu-data2/sgal/UCF-101-frames'
-    boxes_file = '/gpu-data2/sgal/pyannot.pkl'
-    split_txt_path = '/gpu-data2/sgal/UCF101_Action_detection_splits/'
+    dataset_folder = '../JHMDB-act-detector-frames'
+    split_txt_path =  '../splits'
+    boxes_file = '../poses.json'
 
     sample_size = 112
     # sample_duration = 8 # len(images)
@@ -149,16 +137,13 @@ if __name__ == '__main__':
     n_threads = 0
 
     # # get mean
-    # mean =  [103.75581543 104.79421473  91.16894564] # jhmdb
-    # mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
-    mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
-    # generate model
+    mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
 
-    actions = ['__background__', 'Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
-               'Diving','Fencing','FloorGymnastics','GolfSwing','HorseRiding','IceDancing',
-               'LongJump','PoleVault','RopeClimbing','SalsaSpin','SkateBoarding','Skiing',
-               'Skijet','SoccerJuggling','Surfing','TennisSwing','TrampolineJumping',
-               'VolleyballSpiking','WalkingWithDog']
+    # generate model
+    actions = ['__background__','brush_hair', 'clap', 'golf', 'kick_ball', 'pour',
+               'push', 'shoot_ball', 'shoot_gun', 'stand', 'throw', 'wave',
+               'catch','climb_stairs', 'jump', 'pick', 'pullup', 'run', 'shoot_bow', 'sit',
+               'swing_baseball', 'walk' ]
 
 
     cls2idx = {actions[i]: i for i in range(0, len(actions))}
@@ -176,9 +161,7 @@ if __name__ == '__main__':
 
     # model_data = torch.load('./actio_net_model_both.pwf')
     # model_data = torch.load('./action_net_model_both_without_avg.pwf')
-    # model_data = torch.load('./action_net_model_16frm_64.pwf')
-    model_data = torch.load('./action_net_model_16frm_64_avgpool.pwf')
-
+    model_data = torch.load('./action_net_model_jhmdb_16frm_64.pwf')
     # 
     # model_data = torch.load('./action_net_model_part1_1_8frm.pwf')
     model.load_state_dict(model_data)

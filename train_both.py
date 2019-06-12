@@ -66,12 +66,13 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                        im_info,
                                        None, None,
                                        None)
-        batch_size = len(tubes)
+        n_tubes = len(tubes)
 
         tubes = tubes.view(-1, sample_duration*4+2)
         tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
                                            sgl_rois_bbox_pred.view(-1,sample_duration*4),(1.0,1.0,1.0,1.0))
-        tubes = tubes.view(batch_size,-1, sample_duration*4+2)
+        tubes = tubes.view(n_tubes,-1, sample_duration*4+2)
+        tubes[:,:,1:-1] = clip_boxes(tubes[:,:,1:-1], im_info, tubes.size(0))
 
         for i in range(tubes.size(0)): # how many frames we have
             
@@ -80,7 +81,9 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             rois_overlaps = tube_overlaps(tubes_t,gt_rois_t)
             
             gt_max_overlaps_sgl, _ = torch.max(rois_overlaps, 0)
-            n_elems = gt_tubes_r[i,:,-1].ne(0).sum().item()
+
+            non_empty_indices =  gt_rois_t.ne(0).any(dim=1).nonzero().view(-1)
+            n_elems = non_empty_indices.nelement()            
 
             # 0.5
             gt_max_overlaps_sgl_ = torch.where(gt_max_overlaps_sgl > iou_thresh, gt_max_overlaps_sgl, torch.zeros_like(gt_max_overlaps_sgl).type_as(gt_max_overlaps_sgl))
@@ -104,6 +107,19 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     recall   = float(sgl_true_pos)  / (float(sgl_true_pos)  + float(sgl_false_neg))
     recall_4 = float(sgl_true_pos_4)  / (float(sgl_true_pos_4)  + float(sgl_false_neg_4))
     recall_3 = float(sgl_true_pos_3)  / (float(sgl_true_pos_3)  + float(sgl_false_neg_3))
+
+    f = open('recall.txt', 'a')
+    f.write('| Validation Epoch: {: >3} |\n'.format(epoch+1))
+    f.write('| Threshold : 0.5       |\n')
+    f.write('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
+        sgl_true_pos, sgl_false_neg, recall))
+    f.write('| Threshold : 0.4       |\n')
+    f.write('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
+        sgl_true_pos_4, sgl_false_neg_4, recall_4))
+    f.write('| Threshold : 0.3       |\n')
+    f.write('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
+        sgl_true_pos_3, sgl_false_neg_3, recall_3))
+    f.close()
 
     print(' -----------------------')
     print('| Validation Epoch: {: >3} | '.format(epoch+1))
