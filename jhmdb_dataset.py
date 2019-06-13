@@ -214,15 +214,18 @@ class video_names(data.Dataset):
         cls = self.data[index]['class']
         class_int = self.classes_idx[cls]
 
+
+
         
         # abs_path = os.path.join(self.dataset_folder, vid_name)
         w, h = 320, 240
         gt_bboxes = torch.from_numpy(boxes )
-        gt_bboxes = torch.cat([gt_bboxes, torch.ones(1,gt_bboxes.size(1),1).type_as(gt_bboxes) * class_int], dim=2)
+        # gt_bboxes = torch.cat([gt_bboxes, torch.ones(1,gt_bboxes.size(1),1).type_as(gt_bboxes) * class_int], dim=2)
         gt_bboxes[:, :,[0,2]] = gt_bboxes[:, :, [0,2]].clamp_(min=0,max=w)
         gt_bboxes[:, :,[1,3]] = gt_bboxes[:, :, [1,3]].clamp_(min=0,max=h)
         gt_bboxes = torch.round(gt_bboxes)
         gt_bboxes_r = resize_rpn(gt_bboxes, h,w,self.sample_size)
+        gt_bboxes_r = torch.cat([gt_bboxes_r, torch.ones(1,gt_bboxes.size(1),1).type_as(gt_bboxes_r) * class_int], dim=2)
 
         boxes_lst = gt_bboxes_r.tolist()
         rois_fr = [[z+[j] for j,z in enumerate(boxes_lst[i])] for i in range(len(boxes_lst))]
@@ -267,7 +270,7 @@ class video_names(data.Dataset):
         fr_tensor = np.expand_dims( np.expand_dims( np.arange(0,final_boxes.shape[-2]), axis=1), axis=0)
         fr_tensor = np.repeat(fr_tensor, final_boxes.shape[0], axis=0)
         final_boxes = np.concatenate((final_boxes, fr_tensor), axis=-1)
-        return vid_id, f_clips, final_boxes, n_frames_np, n_actions_np, h, w
+        return vid_id, f_clips, final_boxes, n_frames_np, n_actions_np, h, w, class_int
     
     def __len__(self):
 

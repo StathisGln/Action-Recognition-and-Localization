@@ -50,7 +50,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
-        if step == 50:
+        if step == 10:
             break
         print('step =>',step)
 
@@ -83,6 +83,21 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             box = box.view(-1,n_frames*4)
 
             overlaps = tube_overlaps(tubes.view(-1,n_frames*4).float(), box.float())
+
+            # max_overlaps, argmax_overlaps = torch.max(overlaps, 1)
+            # max_overlaps_ =  torch.where(max_overlaps > iou_thresh, max_overlaps, torch.zeros_like(max_overlaps).type_as(max_overlaps))
+            # non_zero = max_overlaps_.nonzero()
+            # offset = torch.arange(0,overlaps.size(0)) * n_actions[i].item()
+            # print('argmax_overlaps.shape :',argmax_overlaps.shape)
+            # print('argmax_overlaps.shape :',argmax_overlaps)
+            # print('offset :',offset)
+            # print('offset :',offset.shape)
+            # offset = offset + argmax_overlaps.type_as(offset)
+            # # print('non_zero :',non_zero)
+            # overlaps = overlaps.view(-1).contiguous()[offset]
+            # print('overlaps :',overlaps)
+            # print('overlaps :',overlaps.shape)
+            # exit(-1)
             gt_max_overlaps, argmax_gt_overlaps = torch.max(overlaps, 0)
 
             non_empty_indices =  box.ne(0).any(dim=1).nonzero().view(-1)

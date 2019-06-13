@@ -267,6 +267,11 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
 
             # if n_frames < 800:
             #     continue
+            # if n_frames > 100:
+            #     continue
+            # if n_actions < 2:
+            #     continue
+
             if n_actions > max_actions:
                 max_actions = n_actions
             # # pos 0 --> starting frame, pos 1 --> ending frame

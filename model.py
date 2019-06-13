@@ -65,11 +65,12 @@ class Model(nn.Module):
         # print('clips.shape :',clips.shape)
 
         clips = clips.squeeze(0)
+        ret_n_frames = clips.size(0)
         clips = clips[:num_frames]
-
-        print('num_frames :',num_frames)
-        print('clips.shape :',clips.shape)
-
+        
+        # print('num_frames :',num_frames)
+        # print('clips.shape :',clips.shape)
+        # exit(-1)
         if self.training:
             boxes = boxes.squeeze(0).permute(1,0,2).cpu()
             boxes = boxes[:num_frames,:num_actions]
@@ -80,7 +81,6 @@ class Model(nn.Module):
 
         num_images = 1
         rois_per_image = int(conf.TRAIN.BATCH_SIZE / num_images) if self.training else 150
-        print('rois_per_image :',rois_per_image)
 
         data = single_video(dataset_folder,h_,w_, vid_names, vid_id, frames_dur= self.sample_duration, sample_size =self.sample_size,
                             classes_idx=cls2idx, n_frames=num_frames)
@@ -142,8 +142,21 @@ class Model(nn.Module):
                                                             None,
                                                             box_,
                                                             start_fr)
+            # print('boxes :',boxes)
+            # print('tubes :',tubes)
+            # print('rois_label :',rois_label)
+            # exit(-1)
+            pooled_feat = pooled_feat.view(-1,rois_per_image,self.p_feat_size,self.sample_duration)
 
-            # pooled_feat = pooled_feat.view(-1,rois_per_image,self.p_feat_size,self.sample_duration)
+            # regression
+            n_tubes = len(tubes)
+            if not self.training:
+                tubes = tubes.view(-1, self.sample_duration*4+2)
+                tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
+                                               sgl_rois_bbox_pred.view(-1,self.sample_duration*4),(1.0,1.0,1.0,1.0))
+                tubes = tubes.view(n_tubes,rois_per_image, self.sample_duration*4+2)
+                tubes[:,:,1:-1] = clip_boxes(tubes[:,:,1:-1], im_info, tubes.size(0))
+
 
             indexes_ = (torch.arange(0, tubes.size(0))*int(self.sample_duration/2) + start_fr[0].cpu()).unsqueeze(1)
             indexes_ = indexes_.expand(tubes.size(0),tubes.size(1)).type_as(tubes)
@@ -225,14 +238,14 @@ class Model(nn.Module):
                 final_scores = torch.cat((final_scores, f_scores))
                 final_poss = torch.cat((final_poss, pos))
 
-                # # add new tubes
-                # pos= torch.cat((pos,zeros_t))
-                # pos[-rois_per_image:,0,0] = ones_t * i
-                # pos[-rois_per_image:,0,1] = offset
+                # add new tubes
+                pos= torch.cat((pos,zeros_t))
+                pos[-rois_per_image:,0,0] = ones_t * i
+                pos[-rois_per_image:,0,1] = offset
 
-                # pos_indices   = torch.cat((pos_indices,torch.zeros((rois_per_image)).type_as(pos_indices)))
-                # actioness_scr = torch.cat((actioness_scr, actioness_score[i]))
-                # overlaps_scr  = torch.cat((overlaps_scr, torch.zeros((rois_per_image)).type_as(overlaps_scr)))
+                pos_indices   = torch.cat((pos_indices,torch.zeros((rois_per_image)).type_as(pos_indices)))
+                actioness_scr = torch.cat((actioness_scr, actioness_score[i]))
+                overlaps_scr  = torch.cat((overlaps_scr, torch.zeros((rois_per_image)).type_as(overlaps_scr)))
 
 
         ## add only last layers
@@ -261,8 +274,9 @@ class Model(nn.Module):
 
 
         ## Now connect the tubes
-        print('final_poss.size(0) :',final_poss.size(0))
+        # print('final_poss.size(0) :',final_poss.size(0))
         final_tubes = torch.zeros(final_poss.size(0), num_frames, 4)
+
         f_tubes  = []
         for i in range(final_poss.size(0)):
             tub = []
@@ -296,6 +310,7 @@ class Model(nn.Module):
             overlaps = tube_overlaps(final_tubes.view(-1,num_frames*4), boxes_.type_as(final_tubes))
             max_overlaps,_ = torch.max(overlaps,1)
             max_overlaps = max_overlaps.clamp_(min=0)
+
             ## TODO change numbers
             bg_tubes_indices = max_overlaps.lt(0.3).nonzero()
             bg_tubes_indices_picked = (torch.rand(5)*bg_tubes_indices.size(0)).long()
@@ -303,15 +318,22 @@ class Model(nn.Module):
             bg_labels = torch.zeros(len(bg_tubes_list))
 
             gt_tubes_list = [[] for i in range(num_actions)]
-
+            # print('n_clips :',n_clips)
             for i in range(n_clips):
+                # print('i :',i)
+                # print('p_tubes.shape :',p_tubes.shape)
+                # print('f_gt_tubes.shape :',f_gt_tubes.shape)
+                # print('p_tubes.shape :',p_tubes[i])
+                # print('f_gt_tubes.shape :',f_gt_tubes[i])
+
                 overlaps = tube_overlaps(p_tubes[i], f_gt_tubes[i].type_as(p_tubes))
+                # print('overlaps :',overlaps)
                 max_overlaps, argmax_overlaps = torch.max(overlaps, 0)
                 
                 for j in range(num_actions):
                     if max_overlaps[j] == 1.0: 
                         gt_tubes_list[j].append((i,j))
-
+            # print('gt_tubes_list :',gt_tubes_list)
             ## concate fb, bg tubes
             f_tubes = gt_tubes_list + bg_tubes_list
             target_lbl = torch.cat([labels, bg_labels],dim=0)
@@ -327,17 +349,22 @@ class Model(nn.Module):
         max_seq = reduce(lambda x, y: y if len(y) > len(x) else x, f_tubes)
         max_length = len(max_seq)
 
+        # print('len(f_tubes) :',len(f_tubes))
+        # print('max_seq :',max_seq)
+        # print('max_length :',max_length)
         ## calculate input rois
         ## f_feats.shape : [#f_tubes, max_length, 512]
         final_video_tubes = torch.zeros(len(f_tubes),6).cuda()
         prob_out = torch.zeros(len(f_tubes), self.n_classes).cuda()
-
+        # print('rois_per_image :',rois_per_image)
+        # print('f_tubes :',f_tubes)
         for i in range(len(f_tubes)):
 
             seq = f_tubes[i]
+
             tmp_tube = torch.Tensor(len(seq),6)
             feats = torch.Tensor(len(seq),self.p_feat_size)
-            
+
             for j in range(len(seq)):
 
                 feats[j] = features[seq[j][0],seq[j][1]].mean(1)
@@ -362,9 +389,17 @@ class Model(nn.Module):
             cls_loss = F.cross_entropy(prob_out.cpu(), target_lbl.long()).cuda()
 
         if self.training:
-            return final_tubes, prob_out,  cls_loss, 
+            return None, prob_out,  cls_loss, 
         else:
-            return final_tubes, prob_out, None
+            # init padding tubes because of multi-GPU system
+            ret_tubes = torch.zeros(1,conf.UPDATE_THRESH, ret_n_frames,4).type_as(final_tubes).float() -1
+            ret_prob_out = torch.zeros(1,conf.UPDATE_THRESH,self.n_classes).type_as(final_tubes).float() - 1
+            ret_tubes[0,:final_tubes.size(0),:num_frames] = final_tubes
+            ret_prob_out[0,:final_tubes.size(0)] = prob_out
+            return ret_tubes, ret_prob_out, torch.Tensor([final_tubes.size(0)]).cuda()
+        
+            # return final_tubes, prob_out, None
+        
 
     def deactivate_action_net_grad(self):
 
