@@ -68,11 +68,11 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                        None)
         n_tubes = len(tubes)
 
-        tubes = tubes.view(-1, sample_duration*4+2)
-        tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
-                                           sgl_rois_bbox_pred.view(-1,sample_duration*4),(1.0,1.0,1.0,1.0))
+        # tubes = tubes.view(-1, sample_duration*4+2)
+        # tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
+        #                                    sgl_rois_bbox_pred.view(-1,sample_duration*4),(1.0,1.0,1.0,1.0))
         tubes = tubes.view(n_tubes,-1, sample_duration*4+2)
-        tubes[:,:,1:-1] = clip_boxes(tubes[:,:,1:-1], im_info, tubes.size(0))
+        # tubes[:,:,1:-1] = clip_boxes(tubes[:,:,1:-1], im_info, tubes.size(0))
 
         for i in range(tubes.size(0)): # how many frames we have
             
@@ -313,7 +313,7 @@ if __name__ == '__main__':
             lr *= lr_decay_gamma
 
 
-        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*4, 0, lr, mode=5)
+        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*4, 0, lr, mode=4)
 
         if ( epoch + 1 ) % 5 == 0:
             torch.save(act_model.state_dict(), "action_net_model_16frm_64_avgpool.pwf".format(epoch+1))

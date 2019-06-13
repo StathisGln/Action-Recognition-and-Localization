@@ -204,13 +204,18 @@ def prepare_samples (vid_names, vid_id, sample_duration, step, n_frames):
         'segment': [begin_t, end_t],
         'n_frames': n_frames,
     }
-    for i in range(1, (n_frames - sample_duration + 1), step):
-        sample_i = copy.deepcopy(sample)
-        sample_i['frame_indices'] = list(range(i, i + sample_duration))
-        sample_i['segment'] = torch.IntTensor([i, i + sample_duration - 1])
-        sample_i['start_fr'] = i-1
-        dataset.append(sample_i)
 
+    if n_frames < 17:
+        sample_i = copy.deepcopy(sample)
+        sample_i['frame_indices'] = list(range(1, min( sample_duration, n_frames)+1))
+        sample_i['start_fr'] = 0
+        dataset.append(sample_i)
+    else:
+        for i in range(1, (n_frames - sample_duration + 1), step):
+            sample_i = copy.deepcopy(sample)
+            sample_i['frame_indices'] = list(range(i, i + sample_duration))
+            sample_i['start_fr'] = i-1
+            dataset.append(sample_i)
     return dataset
 
 
@@ -346,8 +351,6 @@ class video_names(data.Dataset):
         # print('vid_name :', vid_name, ' n_frames :',n_frames_np)
         n_actions_np = np.array([n_actions], dtype=np.int64)
 
-        # clips = torch.load(os.path.join(self.dataset_folder,vid_name,'images.pt'))
-        # # print('clips.shape :',clips.shape)
         frame_indices= list(
             range( 1, n_frames+1))
         path = os.path.join(self.dataset_folder, vid_name)
@@ -356,8 +359,6 @@ class video_names(data.Dataset):
         clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
 
         f_clips = torch.zeros(self.max_frames,3,self.sample_size,self.sample_size)
-        # print('f_clips.shape :',f_clips.shape)
-        # print('n_frames :',n_frames )
         f_clips[:n_frames] = clip.permute(1,0,2,3)
 
         ## add frame to final_boxes
@@ -379,11 +380,9 @@ class single_video(data.Dataset):
         self.h = h
         self.w = w
         self.dataset_folder = dataset_folder
-        # self.json_file = 
         self.data = prepare_samples(
                     vid_names, vid_id, frames_dur, int(frames_dur/2), n_frames)
         vid_path = vid_names[vid_id]
-        # self.clips = torch.load(os.path.join(dataset_folder,vid_path,'images.pt'))
         self.temporal_transform = LoopPadding(frames_dur)
         self.sample_duration = frames_dur
         self.sample_size = sample_size
@@ -403,15 +402,10 @@ class single_video(data.Dataset):
         n_frames = self.data[index]['n_frames']
         frame_indices = self.data[index]['frame_indices']
         abs_path = os.path.join(self.dataset_folder, path)
-
         frame_indices = np.array(frame_indices) - 1
-        frame_indices = self.temporal_transform(frame_indices)
+        frame_indices = np.array(self.temporal_transform(frame_indices.tolist()))
 
-        # clip = self.clips.new(3,self.sample_duration,self.sample_size, self.sample_size)
-        # clip = self.clips[:,frame_indices]
-        # print('clip.shape :',clip.shape )
-
-        ## get bboxes and create gt tubes
+        
         im_info = np.array([self.sample_size,self.sample_size, self.sample_duration])
         # return clip, frame_indices, im_info, start_fr
         return frame_indices, im_info, start_fr

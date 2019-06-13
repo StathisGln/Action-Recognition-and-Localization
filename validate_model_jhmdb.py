@@ -1,0 +1,227 @@
+import os
+import numpy as np
+
+import torch
+import torch.nn as nn
+from torch.autograd import Variable
+from torch.utils.data import DataLoader
+
+from resnet_3D import resnet34
+from create_video_id import get_vid_dict
+from net_utils import adjust_learning_rate
+from spatial_transforms import (
+    Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
+from temporal_transforms import LoopPadding
+from model import Model
+from resize_rpn import resize_rpn, resize_tube
+from jhmdb_dataset import Video, video_names
+
+from box_functions import bbox_transform, tube_transform_inv, clip_boxes, tube_overlaps
+
+np.random.seed(42)
+
+def validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads):
+
+    iou_thresh = 0.5 # Intersection Over Union thresh
+    iou_thresh_4 = 0.4 # Intersection Over Union thresh
+    iou_thresh_3 = 0.3 # Intersection Over Union thresh
+
+    vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='test', classes_idx=cls2idx)
+    # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
+    #                                           shuffle=True)    # reset learning rate
+    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1, num_workers=8*n_devs, pin_memory=True,
+                                              shuffle=True)    # reset learning rate
+
+    model.eval()
+
+    true_pos = 0
+    false_neg = 0
+
+    true_pos_4 = 0
+    false_neg_4 = 0
+
+    true_pos_3 = 0
+    false_neg_3 = 0
+
+    correct_preds = torch.zeros(1).long().to(device)
+    n_preds = torch.zeros(1).long().to(device)
+    preds = torch.zeros(1).long().to(device)
+
+    ## 2 rois : 1450
+    tubes_sum = 0
+    for step, data  in enumerate(data_loader):
+
+        # if step == 15:
+        #     break
+        print('step =>',step)
+
+        vid_id, clips, boxes, n_frames, n_actions, h, w =data
+        vid_id = vid_id.int()
+        clips = clips.to(device)
+        boxes = boxes.to(device)
+        n_frames = n_frames.to(device)
+        n_actions = n_actions.int().to(device)
+
+        im_info = torch.cat([h,w,torch.ones(clips.size(0)).long()*clips.size(2)]).to(device)
+        mode = 'test'
+
+        tubes,  \
+        prob_out, _ =  model(n_devs, dataset_folder, \
+                                vid_names, clips, vid_id,  \
+                                None, \
+                                mode, cls2idx, None, n_frames, h, w)
+
+        # print('tubes.shape :',tubes.shape)
+        # print('tubes.shape :',tubes.dim())
+        # print('prob_out.shape :',prob_out.shape)
+        # print('clips.size(0) :',clips.size(0))
+        # print('clips.size(0) :',clips.shape)
+        # exit(-1)
+        if tubes.dim() == 1:
+        
+            for i in range(clips.size(0)):
+
+                box = boxes[i,:n_actions, :n_frames,:4].contiguous()
+                box = box.view(-1,n_frames*4)
+
+                non_empty_indices =  box.ne(0).any(dim=1).nonzero().view(-1)
+                n_elems = non_empty_indices.nelement()            
+                false_neg += n_elems
+                false_neg_4 += n_elems
+                false_neg_3 += n_elems 
+            continue
+        n_tubes = len(tubes)
+
+        # get predictions
+        _, cls_int = torch.max(prob_out,1)
+
+        for i in range(clips.size(0)):
+            box = boxes[i,:n_actions, :n_frames,:4].contiguous()
+            box = box.view(-1,n_frames*4).contiguous().type_as(tubes)
+            overlaps = tube_overlaps(tubes.view(-1,n_frames*4).float(), box.view(-1,n_frames*4).float())
+            gt_max_overlaps, argmax_gt_overlaps = torch.max(overlaps, 0)
+
+            non_empty_indices =  box.ne(0).any(dim=1).nonzero().view(-1)
+            n_elems = non_empty_indices.nelement()
+
+            print('gt_max_overlaps :',gt_max_overlaps)
+            # if gt_max_overlaps[0] > 0.5 :
+            #     print('argmax_gt_overlaps :',argmax_gt_overlaps, argmax_gt_overlaps.shape, gt_max_overlaps )
+            #     print('tubes_t[max_indices[0]] :',tubes[argmax_gt_overlaps[0]])
+            #     print('gt_rois_t[0] :',box[0])
+
+            # 0.5 thresh
+            gt_max_overlaps_ = torch.where(gt_max_overlaps > iou_thresh, gt_max_overlaps, torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
+            detected =  gt_max_overlaps_[non_empty_indices].ne(0).sum().item()
+            true_pos += detected
+            false_neg += n_elems - detected
+
+            # 0.4 thresh
+            gt_max_overlaps_ = torch.where(gt_max_overlaps > iou_thresh_4, gt_max_overlaps, torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
+            # print('gt_max_overlaps_ :',gt_max_overlaps_)
+            detected =  gt_max_overlaps_[non_empty_indices].ne(0).sum().item()
+            true_pos_4 += detected
+            false_neg_4 += n_elems - detected
+
+            # 0.3 thresh
+            gt_max_overlaps_ = torch.where(gt_max_overlaps > iou_thresh_3, gt_max_overlaps, torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
+            # print('gt_max_overlaps_ :',gt_max_overlaps_)
+            detected =  gt_max_overlaps_[non_empty_indices].ne(0).sum().item()
+            true_pos_3 += detected
+            false_neg_3 += n_elems - detected
+            
+
+        #     ### TODO add classification step
+        # for k in cls_int.cpu().tolist():
+        #     if k == target.data:
+        #         print('Found one')
+        #         correct_preds += 1
+        #     n_preds += 1
+
+    recall    = float(true_pos)     /  (true_pos    + false_neg)
+    recall_4  = float(true_pos_4)  / (true_pos_4  + false_neg_4)
+    recall_3  = float(true_pos_3)  / (true_pos_3  + false_neg_3)
+
+    print(' -----------------------')
+    print('| Validation Epoch: {: >3} | '.format(epoch+1))
+    print('|                       |')
+    print('| Proposed Action Tubes |')
+    print('|                       |')
+    print('| Single frame          |')
+    print('|                       |')
+    print('| In {: >6} steps    :  |'.format(step))
+    print('|                       |')
+    print('| Threshold : 0.5       |')
+    print('|                       |')
+    print('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        true_pos, false_neg, recall))
+    print('|                       |')
+    print('| Threshold : 0.4       |')
+    print('|                       |')
+    print('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        true_pos_4, false_neg_4, recall_4))
+    print('|                       |')
+    print('| Threshold : 0.3       |')
+    print('|                       |')
+    print('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        true_pos_3, false_neg_3, recall_3))
+
+
+    print(' -----------------------')
+        
+if __name__ == '__main__':
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print("Device being used:", device)
+
+    dataset_folder = '../JHMDB-act-detector-frames'
+    split_txt_path =  '../splits'
+    boxes_file = '../poses.json'
+
+
+    n_devs = torch.cuda.device_count()
+    sample_size = 112
+    sample_duration = 16  # len(images)
+
+    batch_size = 1
+    n_threads = 0
+
+    # # get mean
+    mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
+
+    # generate model
+
+    # generate model
+    actions = ['__background__','brush_hair', 'clap', 'golf', 'kick_ball', 'pour',
+               'push', 'shoot_ball', 'shoot_gun', 'stand', 'throw', 'wave',
+               'catch','climb_stairs', 'jump', 'pick', 'pullup', 'run', 'shoot_bow', 'sit',
+               'swing_baseball', 'walk' ]
+
+    cls2idx = {actions[i]: i for i in range(0, len(actions))}
+
+    ### get videos id
+    vid2idx,vid_names = get_vid_dict(dataset_folder)
+
+    spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
+                                 ToTensor(),
+                                 Normalize(mean, [1, 1, 1])])
+    temporal_transform = LoopPadding(sample_duration)
+
+    # Init action_net
+    action_model_path = './action_net_model_jhmdb_16frm_64.pwf'
+    
+    model = Model(actions, sample_duration, sample_size)
+    model.load_part_model(action_model_path=action_model_path)
+    if torch.cuda.device_count() > 1:
+        print('Using {} GPUs!'.format(torch.cuda.device_count()))
+        model.act_net = nn.DataParallel(model.act_net)
+    model.act_net.to(device)
+
+    # if torch.cuda.device_count() > 1:
+    #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
+    #     model = nn.DataParallel(model)
+    model.to(device)
+
+    model.eval()
+
+    validation(0, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, batch_size, n_threads)

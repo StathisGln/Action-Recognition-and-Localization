@@ -180,7 +180,7 @@ class _ProposalLayer(nn.Module):
         output = scores.new(batch_size, post_nms_topN, self.sample_duration*4+2).zero_()
         # print('output.shape :',output.shape)
         for i in range(batch_size):
-            if cfg_key == 'TESTfdefe':
+            if cfg_key == 'TEST':
                 # 3. remove predicted boxes with either height or width < threshold
                 # (NOTE: convert min_size to input image scale stored in im_info[2])
                 proposals_single = proposals_keep[i]

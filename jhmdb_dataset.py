@@ -8,6 +8,7 @@ import functools
 import copy
 import glob
 import json
+from itertools import groupby
 from create_tubes_from_boxes import create_tube
 from resize_rpn import resize_rpn, resize_tube
 
@@ -119,7 +120,6 @@ def create_tcn_dataset(split_txt_path,json_path, classes, mode):
                     'class_idx' : class_idx
                 }
                 dataset.append(sample)
-    print(len(dataset))
     return dataset
     
 def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
@@ -132,7 +132,7 @@ def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
     assert classes != (None), 'classes must not be None, Check dataset path'
     
     max_sim_actions = -1
-
+    max_frames = -1
     for idx, cls in enumerate(classes):
         
         class_path = os.path.join(dataset_path, cls)
@@ -153,11 +153,6 @@ def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
 
                 videos.append(vid_name)
 
-        # # for each video
-        # videos =  next(os.walk(class_path,True))[1]
-        max_frames = -1
-        # max_actions = -1
-
         for vid in videos:
 
             video_path = os.path.join(dataset_path, cls, vid)
@@ -176,7 +171,6 @@ def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
 
             # boxes = [boxes[i]+[cls] for i in range(len(boxes))]
             end_t = min(n_frames,len(boxes))
-
             video_sample = {
                 'video': vid,
                 'class': cls,
@@ -190,6 +184,165 @@ def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
     print(len(dataset))
     print('max_frames :', max_frames)
     return dataset, max_frames
+
+class video_names(data.Dataset):
+    def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader,
+                 sample_size=112,  classes_idx=None):
+
+        self.dataset_folder = dataset_folder
+        self.sample_size = sample_size
+        self.boxes_file = boxes_file
+        self.vid2idx = vid2idx
+        self.mode = mode
+        self.data, self.max_frames, self.max_actions = make_dataset_names( dataset_folder, spt_path, boxes_file, mode)
+        self.loader = get_loader()
+        self.classes_idx = classes_idx
+        # mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
+        mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
+        spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
+                                     ToTensor(),
+                                     Normalize(mean, [1, 1, 1])])
+        self.spatial_transform=spatial_transform
+        # self.loader = get_loader()
+        
+    def __getitem__(self, index):
+
+        vid_name = self.data[index]['video']
+        n_persons = self.data[index]['n_actions']
+        boxes = self.data[index]['boxes']
+        n_frames = self.data[index]['n_frames']
+        cls = self.data[index]['class']
+        class_int = self.classes_idx[cls]
+
+        
+        # abs_path = os.path.join(self.dataset_folder, vid_name)
+        w, h = 320, 240
+        gt_bboxes = torch.from_numpy(boxes )
+        gt_bboxes = torch.cat([gt_bboxes, torch.ones(1,gt_bboxes.size(1),1).type_as(gt_bboxes) * class_int], dim=2)
+        gt_bboxes[:, :,[0,2]] = gt_bboxes[:, :, [0,2]].clamp_(min=0,max=w)
+        gt_bboxes[:, :,[1,3]] = gt_bboxes[:, :, [1,3]].clamp_(min=0,max=h)
+        gt_bboxes = torch.round(gt_bboxes)
+        gt_bboxes_r = resize_rpn(gt_bboxes, h,w,self.sample_size)
+
+        boxes_lst = gt_bboxes_r.tolist()
+        rois_fr = [[z+[j] for j,z in enumerate(boxes_lst[i])] for i in range(len(boxes_lst))]
+
+        rois_gp =[[[list(g),i] for i,g in groupby(w, key=lambda x: x[:][4])] for w in rois_fr] # [person, [action, class]
+        new_rois = []
+        for i in rois_gp:
+            for k in i:
+                if k[1] != -1.0 : # not background
+                    tube_rois = np.zeros((n_frames,5))
+                    tube_rois[:,4] = -1 
+                    s_f = k[0][0][-1]
+                    e_f = k[0][-1][-1] + 1
+                    tube_rois[s_f : e_f] = np.array([k[0][i][:5] for i in range(len(k[0]))])
+                    new_rois.append(tube_rois.tolist())
+        new_rois_np = np.array(new_rois)
+        n_actions = new_rois_np.shape[0]
+
+        final_boxes = np.zeros((self.max_actions, self.max_frames, new_rois_np.shape[2]))
+        final_boxes[:n_actions,:n_frames, :] = new_rois_np
+
+        vid_id = np.array([self.vid2idx[vid_name]],dtype=np.int64)
+        n_frames_np = np.array([n_frames], dtype=np.int64)
+        n_actions_np = np.array([n_actions], dtype=np.int64)
+
+        # clips = torch.load(os.path.join(self.dataset_folder,vid_name,'images.pt'))
+        # # print('clips.shape :',clips.shape)
+        frame_indices= list(
+            range( 1, n_frames+1))
+        path = os.path.join(self.dataset_folder, vid_name)
+        clip = self.loader(path, frame_indices)
+        clip = [self.spatial_transform(img) for img in clip]
+        clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
+
+        f_clips = torch.zeros(self.max_frames,3,self.sample_size,self.sample_size)
+        # print('f_clips.shape :',f_clips.shape)
+        # print('n_frames :',n_frames )
+        f_clips[:n_frames] = clip.permute(1,0,2,3)
+
+        ## add frame to final_boxes
+        
+        fr_tensor = np.expand_dims( np.expand_dims( np.arange(0,final_boxes.shape[-2]), axis=1), axis=0)
+        fr_tensor = np.repeat(fr_tensor, final_boxes.shape[0], axis=0)
+        final_boxes = np.concatenate((final_boxes, fr_tensor), axis=-1)
+        return vid_id, f_clips, final_boxes, n_frames_np, n_actions_np, h, w
+    
+    def __len__(self):
+
+        return len(self.data)
+
+
+def make_dataset_names(dataset_path, spt_path, boxes_file, mode):
+
+    """
+    function preparing dataset containing all available videos
+    """
+    dataset = []
+
+    classes = next(os.walk(dataset_path, True))[1]
+
+    with open(boxes_file, 'r') as fp:
+        boxes_data = json.load(fp)
+
+    assert classes != (None), 'classes must not be None, Check dataset path'
+
+    max_frames = -1
+    max_actions = -1
+    for idx, cls in enumerate(classes):
+
+        videos = []
+        with open(os.path.join(spt_path,'{}_test_split1.txt'.format(cls)), 'r') as fp:
+            lines=fp.readlines()
+
+        for l in lines:
+            spl = l.split()
+            if spl[1] == '1' and mode == 'train' : # train video
+                vid_name = spl[0][:-4]
+                b_key =  os.path.join(cls,vid_name)
+                if b_key in boxes_data:
+                    videos.append(vid_name)
+                else:
+                    print ( '2', b_key)
+            elif spl[1] == '2' and (mode == 'test' or mode == 'val'): # train video
+                vid_name = spl[0][:-4]
+
+                videos.append(vid_name)
+
+
+        for vid in videos:
+
+            video_path = os.path.join(cls,vid)
+            n_frames = len(glob.glob(os.path.join(dataset_path,video_path+'/*.png')))
+
+
+            json_key = os.path.join(cls,vid)
+            boxes = boxes_data[json_key]
+
+            begin_t = 1
+            end_t = min(n_frames,len(boxes))
+
+            # if n_frames > 15:
+            #     continue
+            
+            if n_frames > max_frames:
+                max_frames = n_frames
+
+            n_actions = 1
+            rois = np.expand_dims(np.array(boxes), axis=0)
+            sample_i = {
+                'video': video_path,
+                'n_actions' : 1,
+                'boxes' : rois,
+                'class' : cls,
+                'n_frames' : n_frames,
+            }
+            dataset.append(sample_i)
+
+    print(len(dataset))
+    print('max_frames :',max_frames)
+    return dataset, max_frames, 1
 
 
 class Video(data.Dataset):
@@ -250,9 +403,6 @@ class Video(data.Dataset):
             clip = [self.spatial_transform(img) for img in clip]
         clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
 
-        # if n_frames < 17:
-        #     print('clip.shape :',clip.shape)
-
         # get bbox
         cls = self.data[index]['class']
         name = self.data[index]['video']
@@ -271,33 +421,6 @@ class Video(data.Dataset):
                                  .type_as(gt_bboxes_r)),dim=1).unsqueeze(0)
         im_info_tube = torch.Tensor([[w,h,]*gt_bboxes_r.size(0)])
         gt_tubes_seg = create_tube(gt_bboxes_r.unsqueeze(0), torch.Tensor([[self.sample_size,self.sample_size]]), self.sample_duration).squeeze(0)
-
-        # if self.mode == 'train' or self.mode == 'val':
-
-        #     if n_frames < 17:
-        #         indexes = [0]
-        #     else:
-        #         indexes = range(0, (n_frames -self.sample_duration  ), int(self.sample_duration/2))
-        #     gt_tubes = torch.zeros(len(indexes),7)
-
-        #     for i in indexes :
-        #         lim = min(i+self.sample_duration-1, (n_frames-1))
-        #         if (n_frames < i+self.sample_duration):
-        #             print('lim :',lim)
-        #         vid_indices = torch.arange(i,lim-1).long()
-        #         gt_rois_seg = gt_bboxes_r[:, vid_indices]
-                
-        #         gt_tubes_seg = create_tube(gt_rois_seg.unsqueeze(0), torch.Tensor([[self.sample_size,self.sample_size]]), self.sample_duration)                
-        #     gt_tubes_seg[:,:,2] = i
-        #     gt_tubes_seg[:,:,5] = i+self.sample_duration-1
-        #     gt_tubes[int(i/self.sample_duration*2)] = gt_tubes_seg
-
-                
-        #     gt_tubes = torch.round(gt_tubes)
-
-        # else:
-        #     gt_tubes =  create_tube(gt_bboxes_r.unsqueeze(0), torch.Tensor([[self.sample_size,self.sample_size]]), n_frames)                
-
         im_info = torch.Tensor([self.sample_size, self.sample_size, self.sample_duration])
 
         if self.mode == 'train':

@@ -26,22 +26,45 @@ extern "C" {
 	  j = index / K;
 	  z = index % K;
 
+	  // if (index == 0){
+	  //   printf("K %d, j %d z %d\n", K,j,z);
+	  // }
+
 	  idx_i = pos[j * N * 2 + pos_indices[j] * 2];
 	  idx_j = pos[j * N * 2 + pos_indices[j] * 2 + 1];
 
+	  // if (index == 0){
+	  //   printf("idx_i %d idx_j %d\n", idx_i, idx_j);
+	  // }
+	  
 	  new_score = actioness[j] + scores[z];
-	  new_overlap = overlaps_scr[j] + overlaps[idx_i * K * K + idx_j * K + z];
+	  new_overlap = overlaps_scr[j] + overlaps[idx_j *  K + z  ];
+
+	  // if (index == 0){
+	  //   printf("actioness[j] %f scores[z] %f new_score %f\n", actioness[j], scores[z], new_score);
+	  //   printf("overlaps_scr[j] %f overlaps[idx_i * K * K + idx_j * K + z] %f new_overlap %f\n", overlaps_scr[j], overlaps[idx_i * K * K + idx_j * K + z], new_overlap);
+	  // }
 
 	  m = pos_indices[j] + 1;
 
 	  tmp_sum = new_score / (m+1) +  new_overlap / m; // 0.8
 	  tmp_pos = j * K + z;
+
+	  // if (index == 0){
+	  //   printf("m %d tmp_sum %f tmp_pos %d, j %d, z %d, j*K+z %d\n", m, tmp_sum, tmp_pos, j, z, j * K + z);
+	  // }
 	  
 	  if (tmp_sum > thresh){
+	    
 	    next_pos_indices[tmp_pos] = pos_indices[j] + 1;
 	    next_actioness[tmp_pos] = new_score;
 	    next_overlaps_scr[tmp_pos] = new_overlap;
 	    f_scores[tmp_pos] = tmp_sum;
+	    // if (index == 0){
+	    //   printf("pos_indices[j] %d, next_pos_indices[tmp_pos] %d\n",pos_indices[j], next_pos_indices[tmp_pos]);
+	      
+	    // }
+
 
 	  }else{
 	    next_pos_indices[tmp_pos] = -1;
@@ -62,7 +85,7 @@ extern "C" {
 
         const int output_size = array_size * K;
         cudaError_t err;
-
+	// printf("output_size %d\n",output_size);
         Calculate_scores <<< (output_size + kThreadsPerBlock - 1) / kThreadsPerBlock, kThreadsPerBlock, 0, stream >>>(
           output_size, K, N, thresh, array_size, pos, pos_indices, actioness, overlaps_scr, scores, overlaps, indx,
 	  next_pos, next_pos_indices, next_actioness, next_overlaps_scr, f_scores);
