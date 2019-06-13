@@ -234,9 +234,31 @@ class Model(nn.Module):
                     pos_indices = pos_indices.unsqueeze(0)
                     actioness_scr = actioness_scr.unsqueeze(0)
                     overlaps_scr = overlaps_scr.unsqueeze(0)
+                if final_scores.dim() == 0:
+                    final_scores = final_scores.unsqueeze(0)
+                    final_poss = final_poss.unsqueeze(0)
 
-                final_scores = torch.cat((final_scores, f_scores))
-                final_poss = torch.cat((final_poss, pos))
+                try:
+                    final_scores = torch.cat((final_scores, f_scores))
+                except:
+                    print('final_scores :',final_scores)
+                    print('final_scores.shape :',final_scores.shape)
+                    print('final_scores.dim() :',final_scores.dim())
+                    print('f_scores :',f_scores)
+                    print('f_scores.shape :',f_scores.shape)
+                    print('f_scores.dim() :',f_scores.dim())
+                    exit(-1)
+                try:
+                    final_poss = torch.cat((final_poss, pos))                    
+                except:
+                    print('final_poss :',final_poss)
+                    print('final_poss.shape :',final_poss.shape)
+                    print('final_poss.dim() :',final_poss.dim())
+                    print('pos :',pos)
+                    print('pos.shape :',pos.shape)
+                    print('pos.dim() :',pos.dim())
+                    exit(-1)
+
 
                 # add new tubes
                 pos= torch.cat((pos,zeros_t))
@@ -313,10 +335,13 @@ class Model(nn.Module):
 
             ## TODO change numbers
             bg_tubes_indices = max_overlaps.lt(0.3).nonzero()
-            bg_tubes_indices_picked = (torch.rand(5)*bg_tubes_indices.size(0)).long()
-            bg_tubes_list = [f_tubes[i] for i in bg_tubes_indices[bg_tubes_indices_picked]]
-            bg_labels = torch.zeros(len(bg_tubes_list))
-
+            if bg_tubes_indices.nelement() > 0:
+                bg_tubes_indices_picked = (torch.rand(5)*bg_tubes_indices.size(0)).long()
+                bg_tubes_list = [f_tubes[i] for i in bg_tubes_indices[bg_tubes_indices_picked]]
+                bg_labels = torch.zeros(len(bg_tubes_list))
+            else:
+                bg_tubes_list = []
+                bg_labels = torch.Tensor([])
             gt_tubes_list = [[] for i in range(num_actions)]
             # print('n_clips :',n_clips)
             for i in range(n_clips):
@@ -335,8 +360,18 @@ class Model(nn.Module):
                         gt_tubes_list[j].append((i,j))
             # print('gt_tubes_list :',gt_tubes_list)
             ## concate fb, bg tubes
-            f_tubes = gt_tubes_list + bg_tubes_list
-            target_lbl = torch.cat([labels, bg_labels],dim=0)
+            if gt_tubes_list == [[]]:
+                print('overlaps :',overlaps)
+                print('max_overlaps :',max_overlaps)
+                print('p_tubes :',p_tubes)
+                print('f_gt_tubes :',f_gt_tubes)
+                exit(-1)
+            if bg_tubes_list != []:
+                f_tubes = gt_tubes_list + bg_tubes_list
+                target_lbl = torch.cat([labels, bg_labels],dim=0)
+            else:
+                f_tubes = gt_tubes_list
+                target_lbl = labels
 
         ##############################################
 

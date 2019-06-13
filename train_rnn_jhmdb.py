@@ -64,8 +64,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
-        if step == 1:
-            break
+        # if step == 1:
+        #     break
         print('step =>',step)
 
         vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
@@ -85,8 +85,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                     mode, cls2idx, None, n_frames, h, w)
 
         
-        print('tubes.shape :',tubes.shape)
-        print('tubes.shape :',tubes_size)
+
         # print('tubes.shape :',tubes.dim())
         # print('prob_out.shape :',prob_out.shape)
         # print('clips.size(0) :',clips.size(0))
@@ -105,11 +104,9 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                 false_neg_4 += n_elems
                 false_neg_3 += n_elems 
             continue
-        print('prob_out.shape :',prob_out.shape)
+
         prob_out = F.softmax(prob_out,2)
-        print('prob_out.shape :',prob_out.shape)
         _, predictions = torch.max(prob_out,dim=2)
-        print('predictions.shape :',predictions.shape)
 
         for i in range(clips.size(0)):
 
@@ -279,7 +276,7 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
 
         # if step == 2:
         #     break
-
+        print('step =>',step)
         # clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
         vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
         

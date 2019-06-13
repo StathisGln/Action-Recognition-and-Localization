@@ -31,7 +31,7 @@ __C.TRAIN.BBOX_NORMALIZE_STDS = (0.1, 0.1, 0.2, 0.2)
 __C.TRAIN.BBOX_INSIDE_WEIGHTS = (1.0, 1.0, 1.0, 1.0)
 
 ######
-__C.TRAIN.BATCH_SIZE = 3
+__C.TRAIN.BATCH_SIZE = 16
 __C.TRAIN.FG_FRACTION = 0.25
 
 # IOU >= thresh: positive example
@@ -56,7 +56,7 @@ __C.TRAIN.RPN_CLOBBER_POSITIVES = False
 
 
 # Overlap threshold for a ROI to be considered foreground (if >= FG_THRESH)
-__C.TRAIN.FG_THRESH = 0.8
+__C.TRAIN.FG_THRESH = 0.9
 
 # Overlap threshold for a ROI to be considered background (class = 0 if
 # overlap in [LO, HI))
