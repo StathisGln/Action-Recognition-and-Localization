@@ -7,10 +7,9 @@ from torch.autograd import Variable
 from config import cfg
 from proposal_layer import _ProposalLayer
 from anchor_target_layer_mine import _AnchorTargetLayer
-from reg_target import _Regression_TargetLayer
-# from roi_align.modules.roi_align  import RoIAlignAvg, RoIAlign
-from roi_align_3d.modules.roi_align  import RoIAlignAvg, RoIAlign
-# from proposal_target_layer_cascade_original import _ProposalTargetLayer as _Regression_TargetLayer
+# from reg_target import _Regression_TargetLayer
+from roi_align.modules.roi_align  import RoIAlignAvg, RoIAlign
+from proposal_target_layer_cascade_original import _ProposalTargetLayer as _Regression_TargetLayer
 from net_utils import _smooth_l1_loss, from_tubes_to_rois
 
 
@@ -28,8 +27,7 @@ class _Regression_Layer(nn.Module):
         self.pooling_size = 7
         self.spatial_scale = 1.0/16
 
-        self.Conv = nn.Conv3d(self.din, din, 1, stride=1, padding=0, bias=True)
-        # self.Conv = nn.Conv2d(self.din, din, 1, stride=1, padding=0, bias=True)
+        self.Conv = nn.Conv2d(self.din, din, 1, stride=1, padding=0, bias=True)
         self.head_to_tail_ = nn.Sequential(
             nn.Linear(64 *7*  7, 2048),
             nn.ReLU(True),
@@ -38,14 +36,14 @@ class _Regression_Layer(nn.Module):
             nn.ReLU(True)
             )
             
-        self.max_pool = nn.MaxPool3d((self.sample_duration,1, 1), stride=1)
-        self.bbox_pred = nn.Linear(512,4*self.sample_duration)
+        # self.avg_pool = nn.AvgPool2d((7, 7), stride=1)
+        self.bbox_pred = nn.Linear(512,4)
 
-        self.roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.sample_duration, self.spatial_scale, temp_scale=1)
+        self.roi_align = RoIAlign(self.pooling_size, self.pooling_size, self.spatial_scale)
 
-        self.reg_target = _Regression_TargetLayer(self.sample_duration)
+        self.reg_target = _Regression_TargetLayer()
 
-    def forward(self, base_feat, tubes, gt_rois, gt_tubes):
+    def forward(self, base_feat, tubes, gt_rois):
 
         batch_size = tubes.size(0)
         rois_per_image = tubes.size(1)
@@ -75,30 +73,29 @@ class _Regression_Layer(nn.Module):
                     print('r[[1,2,4,5] :',r)
                     print('rois_f.shape :',rois.shape)
                     raise ValueError('A very specific bad thing happened.')
-        # print('rois.shape :',rois.shape)
-        # rois = rois.permute(0,2,1,3).contiguous()
-        
+
+        rois = rois.permute(0,2,1,3).contiguous()
+
         ## modify tubes and rois_label
         if self.training:
 
-            rois, tubes, labels, \
+            rois, labels, \
             bbox_targets, bbox_inside_ws,\
-            bbox_outside_ws = self.reg_target(tubes, gt_rois, gt_tubes)
+            bbox_outside_ws = self.reg_target(rois, gt_rois.permute(0,2,1,3))
 
             labels = Variable(labels.view(-1).long())
             bbox_targets = Variable(bbox_targets.view(-1, bbox_targets.size(2)))
             bbox_inside_ws = Variable(bbox_inside_ws.view(-1, bbox_inside_ws.size(2)))
             bbox_outside_ws = Variable(bbox_outside_ws.view(-1, bbox_outside_ws.size(2)))
 
-
         ## modify feat
-        base_feat = self.roi_align(base_feat, tubes.view(-1,7))
+        base_feat = base_feat.permute(0,2,1,3,4).contiguous().view(-1,base_feat.size(1),base_feat.size(3),base_feat.size(4))
+        base_feat = self.roi_align(base_feat, rois.view(-1,5))
+
         conv1_feats = self.Conv(base_feat)
-        conv1_feats = self.max_pool(conv1_feats)
         conv1_feats = self.head_to_tail_(conv1_feats.view(conv1_feats.size(0),-1))
 
         bbox_pred = self.bbox_pred(conv1_feats) 
-
 
         if self.training:
 

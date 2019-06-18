@@ -14,10 +14,11 @@ import torch.nn as nn
 import numpy as np
 import math
 import yaml
-# from config import cfg
+
 from conf import conf
 from generate_3d_anchors import generate_anchors
 from bbox_transform import bbox_transform_inv, clip_boxes_3d, clip_boxes_batch, bbox_transform_inv_3d
+from nms_3D.nms_wrapper import nms
 
 import pdb
 
@@ -151,19 +152,35 @@ class _ProposalLayer(nn.Module):
             # # (NOTE: convert min_size to input image scale stored in im_info[2])
             proposals_single = proposals_keep[i]
             scores_single = scores_keep[i]
-            # print('scores_single.shape :',scores_single.shape)
+
             # # 4. sort all (proposal, score) pairs by score from highest to lowest
             # # 5. take top pre_nms_topN (e.g. 6000)
             order_single = order[i]
 
+            if pre_nms_topN > 0 and pre_nms_topN < scores_keep.numel():
+                order_single = order_single[:pre_nms_topN]
+
             proposals_single = proposals_single[order_single, :]
             scores_single = scores_single[order_single].view(-1,1)
-            proposals_single = proposals_single[:post_nms_topN, :]
-            scores_single = scores_single[:post_nms_topN]
+
+            # print('proposals_single.shape :',proposals_single.shape)
+            # print('scores_single.shape :',scores_single.shape)
+            # torch.set_printoptions(threshold=5000000)
+            # print('torch.cat((proposals_single, scores_single), 1) :',torch.cat((proposals_single, scores_single), 1)[:100])
+            # exit(-1)
+
+            keep_idx_i = nms(torch.cat((proposals_single, scores_single), 1), nms_thresh, force_cpu=not conf.USE_GPU_NMS)
+            keep_idx_i = keep_idx_i.long().view(-1)
+
+            if post_nms_topN > 0:
+                keep_idx_i = keep_idx_i[:post_nms_topN]
+                
+            proposals_single = proposals_single[keep_idx_i, :]
+            scores_single = scores_single[keep_idx_i, :]
             
             # adding score at the end.
             num_proposal = proposals_single.size(0)
-            output[i,:num_proposal,0] = i
+            output[i,:,0] = i
             output[i,:num_proposal,1:7] = proposals_single
             output[i,:num_proposal,7] = scores_single.squeeze()
 

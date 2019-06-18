@@ -13,6 +13,8 @@ __C = edict()
 #   from fast_rcnn_config import cfg
 conf = __C
 
+__C.USE_GPU_NMS = True
+
 __C.TRAIN = edict()
 
 
@@ -47,7 +49,7 @@ __C.TRAIN.BBOX_NORMALIZE_TARGETS_PRECOMPUTED = True
 # Number of top scoring boxes to keep before apply NMS to RPN proposals
 __C.TRAIN.RPN_PRE_NMS_TOP_N = 20000
 # Number of top scoring boxes to keep after applying NMS to RPN proposals
-__C.TRAIN.RPN_POST_NMS_TOP_N = 150
+__C.TRAIN.RPN_POST_NMS_TOP_N = 2000
 
 __C.TRAIN.RPN_NMS_THRESH = 0.7
 __C.TRAIN.RPN_MIN_SIZE = 8
@@ -63,7 +65,7 @@ __C.TEST.RPN_MIN_SIZE = 16
 __C.TEST.RPN_PRE_NMS_TOP_N = 20000
 
 ## Number of top scoring boxes to keep after applying NMS to RPN proposals
-__C.TEST.RPN_POST_NMS_TOP_N = 25
+__C.TEST.RPN_POST_NMS_TOP_N = 150
 
 # number of tubes after connection
 

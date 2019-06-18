@@ -15,6 +15,8 @@ from resnet_3D import resnet34
 from resnext import resnet101
 from region_net import _RPN 
 from human_reg import _Regression_Layer
+# from human_reg_2d import _Regression_Layer
+
 
 from proposal_target_layer_cascade import _ProposalTargetLayer
 from proposal_target_layer_cascade_single_frame import _ProposalTargetLayer as _ProposalTargetLayer_single
@@ -84,7 +86,7 @@ class ACT_net(nn.Module):
             rpn_loss_cls_16, rpn_loss_bbox_16 = self.act_rpn(base_feat, im_info, gt_tubes, None)
 
         n_rois = rois.size(1)
-        n_rois_16 = rois_16.size(1)
+        # n_rois_16 = rois_16.size(1)
 
         if self.training:
 
@@ -101,20 +103,21 @@ class ACT_net(nn.Module):
             rois_inside_ws = rois_inside_ws.view(-1, rois_inside_ws.size(2))
             rois_outside_ws = rois_outside_ws.view(-1, rois_outside_ws.size(2))
 
-            roi_data_16 = self.act_proposal_target_single(rois_16[..., [0,1,2,4,5,7]], gt_tubes[...,[0,1,3,4,6,7]])
+            # roi_data_16 = self.act_proposal_target_single(rois_16[..., [0,1,2,4,5,7]], gt_tubes[...,[0,1,3,4,6,7]])
           
-            rois_16, rois_label_16, rois_target_16, rois_inside_ws_16, rois_outside_ws_16 = roi_data_16
-            rois_16 = torch.cat((rois_16[:,:,[0,1,2]],torch.zeros((rois_16.size(0),rois_16.size(1),1)).type_as(rois_16),\
-                                 rois_16[:,:,[3,4]], (torch.ones((rois_16.size(0), rois_16.size(1),1))*(self.sample_duration-1)).type_as(rois_16), \
-                                 rois_16[:,:,[5]]), dim=-1)
-            rois_label_16 = rois_label_16.view(-1).long()
-            rois_target_16 = rois_target_16.view(-1, rois_target_16.size(2))
-            rois_inside_ws_16 = rois_inside_ws_16.view(-1, rois_inside_ws_16.size(2))
-            rois_outside_ws_16 = rois_outside_ws_16.view(-1, rois_outside_ws_16.size(2))
+            # rois_16, rois_label_16, rois_target_16, rois_inside_ws_16, rois_outside_ws_16 = roi_data_16
+            # rois_16 = torch.cat((rois_16[:,:,[0,1,2]],torch.zeros((rois_16.size(0),rois_16.size(1),1)).type_as(rois_16),\
+            #                      rois_16[:,:,[3,4]], (torch.ones((rois_16.size(0), rois_16.size(1),1))*(self.sample_duration-1)).type_as(rois_16), \
+            #                      rois_16[:,:,[5]]), dim=-1)
+            # rois_label_16 = rois_label_16.view(-1).long()
+            # rois_target_16 = rois_target_16.view(-1, rois_target_16.size(2))
+            # rois_inside_ws_16 = rois_inside_ws_16.view(-1, rois_inside_ws_16.size(2))
+            # rois_outside_ws_16 = rois_outside_ws_16.view(-1, rois_outside_ws_16.size(2))
 
         else:
 
-            f_n_rois = n_rois + n_rois_16        
+            # f_n_rois = n_rois + n_rois_16
+            f_n_rois = n_rois 
             rois_label = None
             rois_target = None
             rois_inside_ws = None
@@ -131,16 +134,15 @@ class ACT_net(nn.Module):
 
         # do roi align based on predicted rois
 
-        f_rois = torch.cat((rois,rois_16),dim=1)
+        # f_rois = torch.cat((rois,rois_16),dim=1)
+        f_rois = rois
         rois_s = f_rois[:,:,:7].contiguous()
-
 
         pooled_feat_ = self.act_roi_align(base_feat, rois_s.view(-1,7))        
         pooled_feat_ = self._head_to_tail(pooled_feat_)
 
         # ## regression
-
-        sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(base_feat_1,f_rois[:,:,:7], gt_rois)
+        sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(base_feat_1,rois_s, gt_rois, gt_tubes[:,:,:7].contiguous())
         # sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.reg_layer(pooled_feat_,f_rois[:,:,:7], gt_rois)
 
         if self.reg_layer.training:
@@ -155,11 +157,14 @@ class ACT_net(nn.Module):
         if self.training:
         
             rois_label = rois_label.view(batch_size, n_rois,-1)
-            rois_label_16 = rois_label_16.view(batch_size, n_rois, -1)
-            f_rois_label = torch.cat((rois_label, rois_label_16),dim=1)
+            # rois_label_16 = rois_label_16.view(batch_size, n_rois, -1)
+            # f_rois_label = torch.cat((rois_label, rois_label_16),dim=1)
+            f_rois_label = rois_label
+
 
         if self.training:
-          return f_rois,  pooled_feat_, \
+
+            return f_rois,  pooled_feat_, \
             rpn_loss_cls, rpn_loss_bbox, \
             rpn_loss_cls_16, rpn_loss_bbox_16, \
             f_rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss 
