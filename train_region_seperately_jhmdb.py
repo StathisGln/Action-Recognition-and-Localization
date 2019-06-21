@@ -6,7 +6,9 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-from ucf_dataset import Video_UCF, video_names
+# from ucf_dataset import Video_UCF, video_names
+from jhmdb_dataset import Video
+
 
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
@@ -162,10 +164,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
     iou_thresh = 0.5 # Intersection Over Union thresh
 
-    # data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
-    #                  temporal_transform=temporal_transform, json_file = boxes_file,
-    #                  split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
-    data = Video_UCF(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
+    data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                      temporal_transform=temporal_transform, json_file = boxes_file,
                      split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
 
@@ -202,35 +201,35 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                                      gt_tubes_r_, gt_rois_,
                                                      start_fr)
 
-        # tubes_rois = tubes[:,:,[1,2,4,5]].unsqueeze(2).expand(tubes.size(0),tubes.size(1),sample_duration, 4).permute(0,2,1,3).contiguous()
-        # tubes_rois = bbox_transform_inv(tubes_rois.view(-1, tubes_rois.size(2),4).contiguous(),
-        #                                 sgl_rois_bbox_pred.view(-1, tubes_rois.size(2),4).contiguous(),
-        #                                 tubes_rois.size(0)*tubes_rois.size(1))
+        tubes_rois = tubes[:,:,[1,2,4,5]].unsqueeze(2).expand(tubes.size(0),tubes.size(1),sample_duration, 4).permute(0,2,1,3).contiguous()
+        tubes_rois = bbox_transform_inv(tubes_rois.view(-1, tubes_rois.size(2),4).contiguous(),
+                                        sgl_rois_bbox_pred.view(-1, tubes_rois.size(2),4).contiguous(),
+                                        tubes_rois.size(0)*tubes_rois.size(1))
 
-        # tubes_rois = clip_boxes(tubes_rois,im_info.unsqueeze(1).expand(tubes.size(0),sample_duration,3).contiguous().view(-1,3), tubes_rois.size(0))
+        tubes_rois = clip_boxes(tubes_rois,im_info.unsqueeze(1).expand(tubes.size(0),sample_duration,3).contiguous().view(-1,3), tubes_rois.size(0))
         
-        # tubes_rois = tubes_rois.view(tubes.size(0), -1, tubes.size(1), 4).contiguous().permute(0,2,1,3)
+        tubes_rois = tubes_rois.view(tubes.size(0), -1, tubes.size(1), 4).contiguous().permute(0,2,1,3)
 
-        # rois = torch.zeros(tubes.size(0), tubes.size(1), sample_duration,4).type_as(tubes)
-
-        # for i in range(tubes.size(0)):
-
-        #     start_fr = tubes[i,:,3].round().int()
-        #     end_fr = tubes[i,:,6].round().int()
-        #     for j in range(tubes.size(1)):
-
-        #         rois[i,j,start_fr[j]:end_fr[j]+1] = tubes_rois[i,j,start_fr[j]:end_fr[j]+1]
+        rois = torch.zeros(tubes.size(0), tubes.size(1), sample_duration,4).type_as(tubes)
 
         for i in range(tubes.size(0)):
-            # # get overlaps in tubes
 
-            # overlaps_rois = rois_overlaps(rois[i], gt_rois_[i].type_as(rois))
-            # overlaps_max,_ =  torch.max(overlaps_rois, 0)
-            # overlaps_max = torch.where(overlaps_max > iou_thresh, overlaps_max, torch.zeros_like(overlaps_max).type_as(overlaps_max))
-            # detected = overlaps_max.ne(0).sum()
-            # n_elements = overlaps_max.nelement()
-            # sgl_true_pos += detected
-            # sgl_false_neg += n_elements - detected
+            start_fr = tubes[i,:,3].round().int()
+            end_fr = tubes[i,:,6].round().int()
+            for j in range(tubes.size(1)):
+
+                rois[i,j,start_fr[j]:end_fr[j]+1] = tubes_rois[i,j,start_fr[j]:end_fr[j]+1]
+
+        for i in range(tubes.size(0)):
+            # get overlaps in tubes
+
+            overlaps_rois = rois_overlaps(rois[i], gt_rois_[i].type_as(rois))
+            overlaps_max,_ =  torch.max(overlaps_rois, 0)
+            overlaps_max = torch.where(overlaps_max > iou_thresh, overlaps_max, torch.zeros_like(overlaps_max).type_as(overlaps_max))
+            detected = overlaps_max.ne(0).sum()
+            n_elements = overlaps_max.nelement()
+            sgl_true_pos += detected
+            sgl_false_neg += n_elements - detected
             
             # check one video each time
             overlaps = bbox_overlaps_batch_3d(tubes[i].squeeze(0), gt_tubes_r_[i,:n_actions[i]].unsqueeze(0).type_as(tubes))
@@ -242,20 +241,20 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             true_pos += detected
             false_neg += n_elements - detected
 
-            # tubes_over_ind = overlaps.view(overlaps.size(1)).gt(iou_thresh).nonzero().view(-1)
+            tubes_over_ind = overlaps.view(overlaps.size(1)).gt(iou_thresh).nonzero().view(-1)
 
-            # if tubes_over_ind.nelement() > 0:
-            #     overlaps_rois = overlaps_rois[tubes_over_ind]
-            #     overlaps_max,_ =  torch.max(overlaps_rois, 0)
-            #     overlaps_max = torch.where(overlaps_max > iou_thresh, overlaps_max, torch.zeros_like(overlaps_max).type_as(overlaps_max))
-            #     detected = overlaps_max.ne(0).sum()
-            #     n_elements = overlaps_max.nelement()
-            #     sgl_follow_tp += detected
-            #     sgl_follow_fn += n_elements - detected
-            
+            if tubes_over_ind.nelement() > 0:
+                overlaps_rois = overlaps_rois[tubes_over_ind]
+                overlaps_max,_ =  torch.max(overlaps_rois, 0)
+                overlaps_max = torch.where(overlaps_max > iou_thresh, overlaps_max, torch.zeros_like(overlaps_max).type_as(overlaps_max))
+                detected = overlaps_max.ne(0).sum()
+                n_elements = overlaps_max.nelement()
+                sgl_follow_tp += detected
+                sgl_follow_fn += n_elements - detected
+
     recall = true_pos.float() / (true_pos.float() + false_neg.float())
-    # sgl_recall = sgl_true_pos.float() / (sgl_true_pos.float() + sgl_false_neg.float())
-    # sgl_follow_recall = sgl_follow_tp.float() / (sgl_follow_tp.float() + sgl_follow_fn.float())
+    sgl_recall = sgl_true_pos.float() / (sgl_true_pos.float() + sgl_false_neg.float())
+    sgl_follow_recall = sgl_follow_tp.float() / (sgl_follow_tp.float() + sgl_follow_fn.float())
     print(' -----------------------')
     print('| Validation Epoch: {: >3} | '.format(epoch+1))
     print('|                       |')
@@ -263,20 +262,20 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     print('|                       |')
     print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
         step+1, true_pos.cpu().tolist()[0], false_neg.cpu().tolist()[0], recall.cpu().tolist()[0]))
-    # print('|                       |')
-    # print('| Single Rois           |')
-    # print('|                       |')
-    # print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
-    #     step+1, sgl_true_pos.cpu().tolist()[0], sgl_false_neg.cpu().tolist()[0], sgl_recall.cpu().tolist()[0]))
-    # print('|                       |')
-    # print('| Single Rois follow up |')
-    # print('|                       |')
-    # print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
-    #     step+1, sgl_follow_tp.cpu().tolist()[0], sgl_follow_fn.cpu().tolist()[0], sgl_follow_recall.cpu().tolist()[0]))
+    print('|                       |')
+    print('| Single Rois           |')
+    print('|                       |')
+    print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        step+1, sgl_true_pos.cpu().tolist()[0], sgl_false_neg.cpu().tolist()[0], sgl_recall.cpu().tolist()[0]))
+    print('|                       |')
+    print('| Single Rois follow up |')
+    print('|                       |')
+    print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        step+1, sgl_follow_tp.cpu().tolist()[0], sgl_follow_fn.cpu().tolist()[0], sgl_follow_recall.cpu().tolist()[0]))
 
     print(' -----------------------')
 
-    fp = open('validation_ucf.txt','a')
+    fp = open('validation_reg.txt','a')
     fp.write(' -----------------------\n')
     fp.write('| Validation Epoch: {: >3} |\n'.format(epoch+1))
     fp.write('|                       |\n')
@@ -284,29 +283,25 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     fp.write('|                       |\n')
     fp.write('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
         step+1, true_pos.cpu().tolist()[0], false_neg.cpu().tolist()[0],recall.cpu().tolist()[0]))
-    # fp.write('|                       |\n')
-    # fp.write('| Single Rois           |\n')
-    # fp.write('|                       |\n')
-    # fp.write('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
-    #     step+1, sgl_true_pos.cpu().tolist()[0], sgl_false_neg.cpu().tolist()[0], sgl_recall.cpu().tolist()[0]))
-    # fp.write('|                       |\n')
-    # fp.write('| Single Rois follow up |\n')
-    # fp.write('|                       |\n')
-    # fp.write('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
-    #     step+1, sgl_follow_tp.cpu().tolist()[0], sgl_follow_fn.cpu().tolist()[0], sgl_follow_recall.cpu().tolist()[0]))
+    fp.write('|                       |\n')
+    fp.write('| Single Rois           |\n')
+    fp.write('|                       |\n')
+    fp.write('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
+        step+1, sgl_true_pos.cpu().tolist()[0], sgl_false_neg.cpu().tolist()[0], sgl_recall.cpu().tolist()[0]))
+    fp.write('|                       |\n')
+    fp.write('| Single Rois follow up |\n')
+    fp.write('|                       |\n')
+    fp.write('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
+        step+1, sgl_follow_tp.cpu().tolist()[0], sgl_follow_fn.cpu().tolist()[0], sgl_follow_recall.cpu().tolist()[0]))
 
 
     fp.write(' -----------------------\n')
 
 def training(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads, lr, mode = 1):
 
-    # data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
-    #              temporal_transform=temporal_transform, json_file = boxes_file,
-    #              split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
-    data = Video_UCF(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
+    data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
                  split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
-
     data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*16,
                                               shuffle=True, num_workers=32, pin_memory=True)
     # data_loader = torch.utils.data.DataLoader(data, batch_size=2,
@@ -335,10 +330,9 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         rpn_loss_cls_16,\
         rpn_loss_bbox_16,  rois_label, \
         sgl_rois_bbox_pred, sgl_rois_bbox_loss,  = model(inputs, \
-        # actioness_score, actioness_loss
-                                                im_info_,
-                                                gt_tubes_r_, gt_rois_,
-                                                start_fr)
+                                                         im_info_,
+                                                         gt_tubes_r_, gt_rois_,
+                                                         start_fr)
         if mode == 1:
             loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + rpn_loss_cls_16.mean() \
                    + rpn_loss_bbox_16.mean() +  act_loss_bbox_16.mean() 
@@ -384,10 +378,9 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_folder = '../UCF-101-frames'
-    boxes_file = '../pyannot.pkl'
-    split_txt_path = '../UCF101_Action_detection_splits/'
-
+    dataset_folder = '../JHMDB-act-detector-frames'
+    split_txt_path =  '../splits'
+    boxes_file = '../poses.json'
 
     sample_size = 112
     sample_duration = 16  # len(images)
@@ -397,11 +390,10 @@ if __name__ == '__main__':
 
 
     # generate model
-    actions = ['__background__', 'Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
-               'Diving','Fencing','FloorGymnastics','GolfSwing','HorseRiding','IceDancing',
-               'LongJump','PoleVault','RopeClimbing','SalsaSpin','SkateBoarding','Skiing',
-               'Skijet','SoccerJuggling','Surfing','TennisSwing','TrampolineJumping',
-               'VolleyballSpiking','WalkingWithDog']
+    actions = ['__background__','brush_hair', 'clap', 'golf', 'kick_ball', 'pour',
+               'push', 'shoot_ball', 'shoot_gun', 'stand', 'throw', 'wave',
+               'catch','climb_stairs', 'jump', 'pick', 'pullup', 'run', 'shoot_bow', 'sit',
+               'swing_baseball', 'walk' ]
 
 
     cls2idx = {actions[i]: i for i in range(0, len(actions))}
@@ -417,8 +409,8 @@ if __name__ == '__main__':
     n_classes = len(actions)
 
 
-    #######################################################
-    #          Part 1-1 - train nTPN - without reg         #
+    # #######################################################
+    # #          Part 1-1 - train nTPN - without reg         #
     #######################################################
 
     print(' -----------------------------------------------------')
@@ -441,8 +433,7 @@ if __name__ == '__main__':
     
     params = []
 
-    # for p in act_model.module.reg_layer.parameters() : p.requires_grad=False
-
+    for p in act_model.module.reg_layer.parameters() : p.requires_grad=False
     for key, value in dict(act_model.named_parameters()).items():
         # print(key, value.requires_grad)
         if value.requires_grad:
@@ -459,10 +450,10 @@ if __name__ == '__main__':
     epochs = 40
     # epochs = 2
 
-    file = open('training_loss_ucf.txt','w')
+    file = open('training_loss.txt','w')
     n_devs = torch.cuda.device_count()
     for epoch in range(epochs):
-        # print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
+        print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
 
         if epoch % (lr_decay_step + 1) == 0:
             adjust_learning_rate(optimizer, lr_decay_gamma)
@@ -470,10 +461,58 @@ if __name__ == '__main__':
         act_model, loss = training(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*4, 0, lr, mode=4)
 
         file.write('epoch :'+str(epoch)+' loss :'+str(loss)+'\n')
+        # if (epoch + 1) % (5) == 0:
+        #     validation(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
+
+    #     if ( epoch + 1 ) % 5 == 0:
+    #         torch.save(act_model.state_dict(), "action_net_model_2scores_mIoU.pwf".format(epoch+1))
+    # torch.save(act_model.state_dict(), "action_net_model_2scores_mIoU.pwf")
+
+    #######################################################
+    #          Part 1-2 - train nTPN - without reg         #
+    #######################################################
+
+    print(' -----------------------------------------------------')
+    print('|          Part 1-2 - train TPN - without reg         |')
+    print(' -----------------------------------------------------')
+
+
+    lr = 0.1
+    lr_decay_step = 5
+    lr_decay_gamma = 0.1
+    
+    params = []
+
+    for p in act_model.module.parameters() : p.requires_grad=False
+    for p in act_model.module.reg_layer.parameters() : p.requires_grad=True
+    for key, value in dict(act_model.named_parameters()).items():
+        # print(key, value.requires_grad)
+        if value.requires_grad:
+            print('key :',key)
+            if 'bias' in key:
+                params += [{'params':[value],'lr':lr*(True + 1), \
+                            'weight_decay': False and 0.0005 or 0}]
+            else:
+                params += [{'params':[value],'lr':lr, 'weight_decay': 0.0005}]
+
+    lr = lr * 0.1
+    optimizer = torch.optim.Adam(params)
+
+    epochs = 20
+    file = open('training_loss_reg.txt','w')
+    n_devs = torch.cuda.device_count()
+    for epoch in range(epochs):
+        print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
+
+        if epoch % (lr_decay_step + 1) == 0:
+            adjust_learning_rate(optimizer, lr_decay_gamma)
+            lr *= lr_decay_gamma
+        act_model, loss = training(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*4, 0, lr, mode=3)
+
+        file.write('epoch :'+str(epoch)+' loss :'+str(loss)+'\n')
         if (epoch + 1) % (5) == 0:
             validation(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
 
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_ucf_2scores_mIoU.pwf".format(epoch+1))
-    torch.save(act_model.state_dict(), "action_net_ucf_2scores_mIoU.pwf")
-
+            torch.save(act_model.state_dict(), "action_net_model_3D_mIoU_sep.pwf".format(epoch+1))
+    torch.save(act_model.state_dict(), "action_net_model_3D_mIoU_sep.pwf")

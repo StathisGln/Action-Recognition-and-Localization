@@ -648,7 +648,6 @@ def bbox_overlaps_batch_3d(anchors, gt_boxes):
         N = anchors.size(0)
         K = gt_boxes.size(1)
 
-        # print('N {} K {}'.format(N,K))
         anchors = anchors.view(1,N,6).expand(batch_size, N, 6).contiguous()
         gt_boxes = gt_boxes[:, :, :6].contiguous()
 
@@ -656,20 +655,18 @@ def bbox_overlaps_batch_3d(anchors, gt_boxes):
         gt_boxes_y = (gt_boxes[:, :, 4] - gt_boxes[:, :, 1] + 1)
         gt_boxes_t  = (gt_boxes[:, :, 5] - gt_boxes[:, :, 2] + 1)
 
-        # print('gt_boxes_t.shape :',gt_boxes_t)
-        # print('gt_boxes_t.view(batch_size,1,K :',gt_boxes_t.view(batch_size,1,K))
+        gt_boxes_area = (gt_boxes_x * gt_boxes_y * gt_boxes_t)
+        gt_boxes_area = gt_boxes_area.view(batch_size, 1, K)
+        # gt_boxes_area_xy = (gt_boxes_x * gt_boxes_y )
+        # gt_boxes_area_xy = gt_boxes_area_xy.view(batch_size, 1, K)
 
-        gt_boxes_area_xy = (gt_boxes_x * gt_boxes_y )
-        gt_boxes_area_xy = gt_boxes_area_xy.view(batch_size, 1, K)
 
         anchors_boxes_x = (anchors[:, :, 3] - anchors[:, :, 0] + 1)
         anchors_boxes_y = (anchors[:, :, 4] - anchors[:, :, 1] + 1)
         anchors_boxes_t = (anchors[:, :, 5] - anchors[:, :, 2] + 1)
 
-        # print('anchors_boxes_t.shape :',anchors_boxes_t.shape)
-        # print('anchors_boxes_t.view(batch_size,1,K :',anchors_boxes_t.view(batch_size,N,1))
-
-        anchors_area_xy = (anchors_boxes_x * anchors_boxes_y ).view(batch_size, N, 1)  # for 1 frame
+        anchors_area = (anchors_boxes_x * anchors_boxes_y * anchors_boxes_t ).view(batch_size, N, 1)  # for 1 frame
+        # anchors_area_xy = (anchors_boxes_x * anchors_boxes_y ).view(batch_size, N, 1)  # for 1 frame
 
         gt_area_zero = (gt_boxes_x == 1) & (gt_boxes_y == 1) & (gt_boxes_t == 1)
         anchors_area_zero = (anchors_boxes_x == 1) & (anchors_boxes_y == 1) & (anchors_boxes_t == 1)
@@ -692,15 +689,17 @@ def bbox_overlaps_batch_3d(anchors, gt_boxes):
               torch.max(boxes[:, :, :, 2], query_boxes[:, :, :, 2]) + 1)
         it[it < 0] = 0
 
-        # print('it.shape :',it.shape)
-        ua_xy = anchors_area_xy + gt_boxes_area_xy - (iw * ih )
-        overlaps_xy = iw * ih / ua_xy
-
+        # # print('it.shape :',it.shape)
+        ua = anchors_area + gt_boxes_area - (iw * ih * it)
+        overlaps = iw * ih * it / ua
         
-        ua_t = anchors_boxes_t.view(batch_size,N,1) + gt_boxes_t.view(batch_size,1,K) - it
-        overlaps_t = it / ua_t
+        # ua_xy = anchors_area_xy + gt_boxes_area_xy - (iw * ih )
+        # overlaps_xy = iw * ih / ua_xy
+        
+        # ua_t = anchors_boxes_t.view(batch_size,N,1) + gt_boxes_t.view(batch_size,1,K) - it
+        # overlaps_t = it / ua_t
 
-        overlaps = overlaps_xy * overlaps_t
+        # overlaps = overlaps_xy * overlaps_t
 
         overlaps.masked_fill_(gt_area_zero.view(
             batch_size, 1, K).expand(batch_size, N, K), 0)
@@ -708,6 +707,7 @@ def bbox_overlaps_batch_3d(anchors, gt_boxes):
             batch_size, N, 1).expand(batch_size, N, K), -1)
 
     elif anchors.dim() == 3:
+
         N = anchors.size(1)
         K = gt_boxes.size(1)
 
@@ -722,23 +722,23 @@ def bbox_overlaps_batch_3d(anchors, gt_boxes):
 
         gt_boxes = gt_boxes[:, :, :6].contiguous()
 
-        # print('gt_boxes :',gt_boxes)
-        # print('anchors :',anchors)
-
         gt_boxes_x = (gt_boxes[:, :, 3] - gt_boxes[:, :, 0] + 1)
         gt_boxes_y = (gt_boxes[:, :, 4] - gt_boxes[:, :, 1] + 1)
         gt_boxes_t = (gt_boxes[:, :, 5] - gt_boxes[:, :, 2] + 1)
 
-        gt_boxes_area_xy = (gt_boxes_x * gt_boxes_y ).view(batch_size, 1, K)
+        gt_boxes_area_xy = (gt_boxes_x * gt_boxes_y * gt_boxes_t).view(batch_size, 1, K)
+        # gt_boxes_area_xy = (gt_boxes_x * gt_boxes_y ).view(batch_size, 1, K)
 
         anchors_boxes_x = (anchors[:, :, 3] - anchors[:, :, 0] + 1)
         anchors_boxes_y = (anchors[:, :, 4] - anchors[:, :, 1] + 1)
         anchors_boxes_t = (anchors[:, :, 5] - anchors[:, :, 2] + 1)
 
-        anchors_area_xy = (anchors_boxes_x *
-                        anchors_boxes_y ).view(batch_size, N, 1)
+        anchors_area = (anchors_boxes_x *
+                        anchors_boxes_y * anchors_boxes_t).view(batch_size, N, 1)
+        # anchors_area_xy = (anchors_boxes_x *
+        #                 anchors_boxes_y ).view(batch_size, N, 1)
 
-        # print('anchors_area.shape :',anchors_area.shape)
+
         gt_area_zero = (gt_boxes_x == 1) & (gt_boxes_y == 1) & (gt_boxes_t == 1)
         anchors_area_zero = (anchors_boxes_x == 1) & (anchors_boxes_y == 1) & (anchors_boxes_t == 1)
 
@@ -758,19 +758,18 @@ def bbox_overlaps_batch_3d(anchors, gt_boxes):
               torch.max(boxes[:, :, :, 2], query_boxes[:, :, :, 2]) + 1)
         it[it < 0] = 0
 
-        ua_xy = anchors_area_xy + gt_boxes_area_xy - (iw * ih )
-        overlaps_xy = iw * ih / ua_xy
+        ua = anchors_area_xy + gt_boxes_area_xy - (iw * ih * it)
+        overlaps = iw * ih * it/ ua
 
 
-        ua_t = anchors_boxes_t.view(batch_size,N,1) + gt_boxes_t.view(batch_size,1,K) - it
-        overlaps_t = it / ua_t
+        # ua_xy = anchors_area_xy + gt_boxes_area_xy - (iw * ih )
+        # overlaps_xy = iw * ih / ua_xy
 
-        overlaps = overlaps_xy * overlaps_t
-        # print('ua_xy :',ua_xy)
-        # print('anchors_area_xy:',anchors_area_xy)
-        # print('gt_boxes_area_xy :',gt_boxes_area_xy)
-        # print('overlaps_t :',overlaps_t)
-        # print('overlaps :',overlaps)
+        # ua_t = anchors_boxes_t.view(batch_size,N,1) + gt_boxes_t.view(batch_size,1,K) - it
+        # overlaps_t = it / ua_t
+
+        # overlaps = overlaps_xy * overlaps_t
+
         # mask the overlap here.
         overlaps.masked_fill_(gt_area_zero.view(
             batch_size, 1, K).expand(batch_size, N, K), 0)

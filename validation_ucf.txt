@@ -1,0 +1,40 @@
+ -----------------------
+| Validation Epoch:   5 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    228 steps    :  |
+| True_pos   -->    449 |
+| False_neg  -->    630 | 
+| Recall     --> 0.4161 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  10 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    228 steps    :  |
+| True_pos   -->    496 |
+| False_neg  -->    584 | 
+| Recall     --> 0.4593 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  15 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    228 steps    :  |
+| True_pos   -->    521 |
+| False_neg  -->    554 | 
+| Recall     --> 0.4847 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  20 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    228 steps    :  |
+| True_pos   -->    503 |
+| False_neg  -->    578 | 
+| Recall     --> 0.4653 |
+ -----------------------

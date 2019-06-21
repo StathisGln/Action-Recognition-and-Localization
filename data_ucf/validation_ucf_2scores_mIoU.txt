@@ -1,0 +1,80 @@
+ -----------------------
+| Validation Epoch:   5 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    228 steps    :  |
+| True_pos   -->    400 |
+| False_neg  -->    682 | 
+| Recall     --> 0.3697 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  10 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    228 steps    :  |
+| True_pos   -->    522 |
+| False_neg  -->    558 | 
+| Recall     --> 0.4833 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  15 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    228 steps    :  |
+| True_pos   -->    515 |
+| False_neg  -->    570 | 
+| Recall     --> 0.4747 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  20 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    228 steps    :  |
+| True_pos   -->    531 |
+| False_neg  -->    548 | 
+| Recall     --> 0.4921 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  25 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    228 steps    :  |
+| True_pos   -->    535 |
+| False_neg  -->    538 | 
+| Recall     --> 0.4986 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  30 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    228 steps    :  |
+| True_pos   -->    521 |
+| False_neg  -->    554 | 
+| Recall     --> 0.4847 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  35 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    228 steps    :  |
+| True_pos   -->    523 |
+| False_neg  -->    552 | 
+| Recall     --> 0.4865 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  40 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    228 steps    :  |
+| True_pos   -->    519 |
+| False_neg  -->    554 | 
+| Recall     --> 0.4837 |
+ -----------------------
