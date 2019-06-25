@@ -15,6 +15,7 @@ class Calculator(Function):
 
     def forward(self, N, K, array_size, pos, pos_indices, \
                 actioness, overlaps_scr, overlaps, scores, indx):
+        # print('self.thresh :',self.thresh)
         N = N.int().item()
         K = K.int().item()
         array_size = array_size.int().item()
@@ -65,7 +66,7 @@ class Calculator(Function):
         over_thresh_idx = next_pos_indices.gt(-1).nonzero().squeeze()
 
         if over_thresh_idx.nelement() == 0:
-            print('Empty this loop...')
+            print('Empty this loop..., self thresh: ', self.thresh, ' pos.shape :',pos.shape)
 
         next_pos = next_pos[over_thresh_idx]
         next_pos_indices =  next_pos_indices[over_thresh_idx]
@@ -79,7 +80,7 @@ class Calculator(Function):
     def update_scores(self, final_scores, final_poss, f_scores, pos, pos_indices, actioness, \
                       overlaps_scr):
 
-        print('Updating thresh')
+        # print('Updating thresh')
         ## first update next loop
 
         _, indices = torch.sort(f_scores,descending=True)

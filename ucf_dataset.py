@@ -293,6 +293,7 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
                 'n_actions' : n_actions,
                 'boxes' : rois,
                 'n_frames' : n_frames,
+                'class' : s_label
                 # 's_e_fr' : s_e_fr
             }
             dataset.append(sample_i)
@@ -302,7 +303,8 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
     return dataset, max_frames, max_actions
 
 class video_names(data.Dataset):
-    def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader, sample_size=112):
+    def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader,
+                 sample_size=112, classes_idx=None):
 
         self.dataset_folder = dataset_folder
         self.sample_size = sample_size
@@ -311,6 +313,7 @@ class video_names(data.Dataset):
         self.mode = mode
         self.data, self.max_frames, self.max_actions = make_dataset( dataset_folder, spt_path, boxes_file, mode)
         self.loader = get_loader()
+        self.classes_idx = classes_idx
         mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
         spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
                                      ToTensor(),
@@ -324,7 +327,7 @@ class video_names(data.Dataset):
         n_persons = self.data[index]['n_actions']
         boxes = self.data[index]['boxes']
         n_frames = self.data[index]['n_frames']
-        
+        cls = self.data[index]['class']
         # abs_path = os.path.join(self.dataset_folder, vid_name)
         w, h = 320, 240
 
@@ -371,7 +374,7 @@ class video_names(data.Dataset):
         fr_tensor = np.expand_dims( np.expand_dims( np.arange(0,final_boxes.shape[-2]), axis=1), axis=0)
         fr_tensor = np.repeat(fr_tensor, final_boxes.shape[0], axis=0)
         final_boxes = np.concatenate((final_boxes, fr_tensor), axis=-1)
-        return vid_id, f_clips, final_boxes, n_frames_np, n_actions_np, h, w
+        return vid_id, f_clips, final_boxes, n_frames_np, n_actions_np, h, w, cls
     
     def __len__(self):
 

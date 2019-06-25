@@ -3,8 +3,8 @@ import numpy as np
 
 if __name__ == '__main__':
 
-    # filename = './training.txt'
-    filename = './nohup.out'
+    filename = './training_rnn.txt'
+    # filename = './nohup.out'
 
     epoch = []
     loss = []

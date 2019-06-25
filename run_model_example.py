@@ -91,7 +91,7 @@ if __name__ == '__main__':
     #         exit(-1)
 
     # exit(-1)
-    vid_id, clips, boxes, n_frames, n_actions, h, w =vid_name_loader[14]
+    vid_id, clips, boxes, n_frames, n_actions, h, w, target =vid_name_loader[14]
     # vid_id, clips, boxes, n_frames, n_actions, h, w =vid_name_loader[209]
 
 

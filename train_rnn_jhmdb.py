@@ -212,7 +212,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     precision_3 = float(tp_3) / (tp_3 + fp_3) if tp_3 > 0 or fp_3 > 0 else 0
  
     print(' -----------------------')
-    print('| Validation Epoch: {: >3} | '.format(epoch+1))
+    print('| Validation Epoch: {: >3} |\n'.format(epoch+1))
     print('|                       |')
     print('| we have {: >6} tubes  |'.format(tubes_sum))
     print('|                       |')
@@ -258,7 +258,55 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
 
     print(' -----------------------')
-    exit(-1)
+    filep = open('validation.txt','a')
+    filep.write(' -----------------------\n')
+    filep.write('| Validation Epoch: {: >3} | '.format(epoch+1))
+    filep.write('|                       |\n')
+    filep.write('| we have {: >6} tubes  |\n'.format(tubes_sum))
+    filep.write('|                       |\n')
+    filep.write('| Proposed Action Tubes |\n')
+    filep.write('|                       |\n')
+    filep.write('| Single frame          |\n')
+    filep.write('|                       |\n')
+    filep.write('| In {: >6} steps    :  |\n'.format(step))
+    filep.write('|                       |\n')
+    filep.write('| Precision             |\n')
+    filep.write('|                       |\n')
+    filep.write('| Threshold : 0.5       |\n')
+    filep.write('|                       |\n')
+    filep.write('| True_pos   --> {: >6} |\n| False_pos  --> {: >6} |\n| False_neg  --> {: >6} | \n| Precision  --> {: >6.4f} |\n'.format(
+        int(tp), int(fp), int(fn), float(precision)))
+    filep.write('|                       |\n')
+    filep.write('| Threshold : 0.4       |\n')
+    filep.write('|                       |\n')
+    filep.write('| True_pos   --> {: >6} |\n| False_pos  --> {: >6} |\n| False_neg  --> {: >6} | \n| Precision  --> {: >6.4f} |\n'.format(
+        tp_4, fp_4, fn_4, float(precision_4)))
+    filep.write('|                       |\n')
+    filep.write('| Threshold : 0.3       |\n')
+    filep.write('|                       |\n')
+    filep.write('| True_pos   --> {: >6} |\n| False_pos  --> {: >6} |\n| False_neg  --> {: >6} | \n| Precision  --> {: >6.4f} |\n'.format(
+        tp_3, fp_3, fn_3, precision_3))
+    filep.write('|                       |\n')
+    filep.write('| Recall                |\n')
+    filep.write('|                       |\n')
+    filep.write('| Threshold : 0.5       |\n')
+    filep.write('|                       |\n')
+    filep.write('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
+        true_pos, false_neg, recall))
+    filep.write('|                       |\n')
+    filep.write('| Threshold : 0.4       |\n')
+    filep.write('|                       |\n')
+    filep.write('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
+        true_pos_4, false_neg_4, recall_4))
+    filep.write('|                       |\n')
+    filep.write('| Threshold : 0.3       |\n')
+    filep.write('|                       |\n')
+    filep.write('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
+        true_pos_3, false_neg_3, recall_3))
+
+
+    filep.write(' -----------------------\n')
+    filep.close()
         
 def training(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads, lr, mode = 1):
 
@@ -276,7 +324,6 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
 
         # if step == 2:
         #     break
-        print('step =>',step)
         # clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
         vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
         
@@ -311,7 +358,7 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-
+        exit(-1)
     print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
         epoch+1,loss_temp/(step+1), lr))
 
@@ -407,6 +454,7 @@ if __name__ == '__main__':
     epochs = 40
     # epochs = 5
 
+    file = open('train_loss.txt', 'w')
     n_devs = torch.cuda.device_count()
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
@@ -416,13 +464,13 @@ if __name__ == '__main__':
             lr *= lr_decay_gamma
 
         model, loss = training(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=4)
-
+        file.write('epoch :'+str(epoch)+' --> '+str(loss)+'\n')
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(model.state_dict(), "model.pwf".format(epoch+1))
-
-        if (epoch + 1) % (5) == 0:
+            torch.save(model.state_dict(), "model_linear_jhmdb.pwf".format(epoch+1))
+            
+        if (epoch + 1) % (2) == 0:
             print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
             validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
 
-    torch.save(model.act_rnn.state_dict(), "rnn_model.pwf")
-
+    torch.save(model.module.act_rnn.state_dict(), "linear_model_jhmdb.pwf")
+    file.close()
