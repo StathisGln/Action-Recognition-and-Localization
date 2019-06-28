@@ -65,8 +65,8 @@ class Calculator(Function):
 
         over_thresh_idx = next_pos_indices.gt(-1).nonzero().squeeze()
 
-        if over_thresh_idx.nelement() == 0:
-            print('Empty this loop..., self thresh: ', self.thresh, ' pos.shape :',pos.shape)
+        # if over_thresh_idx.nelement() == 0:
+        #     print('Empty this loop..., self thresh: ', self.thresh, ' pos.shape :',pos.shape)
 
         next_pos = next_pos[over_thresh_idx]
         next_pos_indices =  next_pos_indices[over_thresh_idx]

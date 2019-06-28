@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-from ucf_dataset import  video_names
+from jhmdb_dataset import  video_names, RNN_JHMDB
 
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
@@ -22,6 +22,7 @@ from action_net import ACT_net
 from resize_rpn import resize_boxes
 import argparse
 from box_functions import tube_overlaps, tube_transform_inv
+from act_rnn_wrapper import _RNN_wrapper
 
 np.random.seed(42)
 
@@ -31,8 +32,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     iou_thresh_4 = 0.4 # Intersection Over Union thresh
     iou_thresh_3 = 0.3 # Intersection Over Union thresh
 
-    vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='test')
-    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
+    vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='test', classes_idx= cls2idx)
+    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=2*n_devs, pin_memory=True,
                                               shuffle=True)    # reset learning rate
     # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1, num_workers=8*n_devs, pin_memory=True,
     #                                           shuffle=True)    # reset learning rate
@@ -46,7 +47,6 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
     true_pos_3 = 0
     false_neg_3 = 0
-
 
     # for precision
     preds = 0
@@ -64,11 +64,12 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
-        if step == 1:
-            break
+        # if step == 1:
+        #     break
         print('step =>',step)
 
         vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
+
         vid_id = vid_id.int()
         clips = clips.to(device)
         boxes = boxes.to(device)
@@ -110,7 +111,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
         for i in range(clips.size(0)):
 
-
+            targ = target[i].expand(n_actions[i])
+            
             tubes_ = tubes[i,:tubes_size[i].int().item(),:n_frames[i].int().item()]
             preds_ = predictions[i,:tubes_size[i].int().item()]
 
@@ -119,12 +121,9 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             overlaps = tube_overlaps(tubes_.view(-1,n_frames[i]*4).float(), box.view(-1,n_frames[i]*4).float())
             gt_max_overlaps, argmax_gt_overlaps = torch.max(overlaps, 0)
             max_overlaps, argmax_overlaps = torch.max(overlaps, 1)
-            
-            # offset = torch.arange(0,overlaps.size(0)) * n_actions[i].item()
-            # offset = offset + argmax_overlaps.type_as(offset)
-            # overlaps = overlaps.view(-1).contiguous()[offset]
-            # non_zero = non_zero.view(-1)
-
+            # print('max_overlaps :',max_overlaps.shape)
+            # print('gt_max_overlaps.shape :',gt_max_overlaps.shape)
+            # print('targ :',targ)
             non_empty_indices =  box.ne(0).any(dim=1).nonzero().view(-1)
             n_elems = non_empty_indices.nelement()
             preds += n_elems
@@ -141,16 +140,25 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             bg_idx = max_overlaps_.eq(0).nonzero().view(-1)
             fn += preds_[bg_idx].ne(0).sum().item() # add to false negative all non-background tubes with no gt tube overlaping
             predictions_ = preds_[non_zero] # overlaping predictions
+            # print('target :',target)
+            # print('target.shape :',target.shape)
+            # print('targ :',targ)
+            # print('predictions_.shape :',predictions_.shape)
+            # print('non_zero :',non_zero.cpu().numpy())
+            # print('non_zero.shape :',non_zero.shape)
+            # print('argmax_overlaps.shape :',argmax_overlaps.shape)
+            # print('argmax_overlaps :',argmax_overlaps.cpu().numpy())
+            # print('argmax_overlaps[non_zero].shape :',argmax_overlaps[non_zero].shape)
+            # print('argmax_overlaps[non_zero] :',argmax_overlaps[non_zero])
+            # print('targ :',targ)
+            fn += (predictions_== targ[argmax_overlaps[non_zero]]).eq(0).sum()
 
-            fn += (predictions_== target[argmax_overlaps[non_zero]]).eq(0).sum()
-
-            predictions_ = predictions_[(predictions_== target[argmax_overlaps[non_zero]]).ne(0).nonzero().view(-1)]
+            predictions_ = predictions_[(predictions_== targ[argmax_overlaps[non_zero]]).ne(0).nonzero().view(-1)]
             unique_labels =torch.unique(predictions_) # unique labels
             for i in unique_labels:
                 fp += predictions_.eq(i).sum().item() -1
                 tp += 1
 
-            
             # 0.4 thresh
             gt_max_overlaps_ = torch.where(gt_max_overlaps > iou_thresh_4, gt_max_overlaps, torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
             detected =  gt_max_overlaps_[non_empty_indices].ne(0).sum().item()
@@ -163,9 +171,9 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             fn_4 += preds_[bg_idx].ne(0).sum().item() # add to false negative all non-background tubes with no gt tube overlaping
             predictions_ = preds_[non_zero] # overlaping predictions
 
-            fn_4 += (predictions_== target[argmax_overlaps[non_zero]]).eq(0).sum()
+            fn_4 += (predictions_== targ[argmax_overlaps[non_zero]]).eq(0).sum()
 
-            predictions_ = predictions_[(predictions_== target[argmax_overlaps[non_zero]]).ne(0).nonzero().view(-1)]
+            predictions_ = predictions_[(predictions_== targ[argmax_overlaps[non_zero]]).ne(0).nonzero().view(-1)]
             unique_labels =torch.unique(predictions_) # unique labels
             for i in unique_labels:
                 fp_4 += predictions_.eq(i).sum().item() -1
@@ -184,28 +192,17 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             fn_3 += preds_[bg_idx].ne(0).sum().item() # add to false negative all non-background tubes with no gt tube overlaping
             predictions_ = preds_[non_zero] # overlaping predictions
 
-            fn_3 += (predictions_== target[argmax_overlaps[non_zero]]).eq(0).sum()
+            fn_3 += (predictions_== targ[argmax_overlaps[non_zero]]).eq(0).sum()
 
-            predictions_ = predictions_[(predictions_== target[argmax_overlaps[non_zero]]).ne(0).nonzero().view(-1)]
+            predictions_ = predictions_[(predictions_== targ[argmax_overlaps[non_zero]]).ne(0).nonzero().view(-1)]
             unique_labels =torch.unique(predictions_) # unique labels
             for i in unique_labels:
                 fp_3 += predictions_.eq(i).sum().item() -1
                 tp_3 += 1
 
-            # print('detected_ind :',detected_ind, ' detected :',detected, ' argmax_gt_overlaps[detected_ind] :',argmax_gt_overlaps[detected_ind],' tubes[argmax_gt_overlaps[detected_ind]] :',\
-            #       tubes[argmax_gt_overlaps[detected_ind]], ' prob_out[argmax_gt_overlaps[detected_ind]] :',predictions[argmax_gt_overlaps[detected_ind]], target[detected_ind])
-            # print(predictions[argmax_gt_overlaps[detected_ind]] == target[detected_ind])
-
-        #     ### TODO add classification step
-        # for k in cls_int.cpu().tolist():
-        #     if k == target.data:
-        #         print('Found one')
-        #         correct_preds += 1
-        #     n_preds += 1
-
-    recall    = float(true_pos)     /  (true_pos    + false_neg)
-    recall_4  = float(true_pos_4)  / (true_pos_4  + false_neg_4)
-    recall_3  = float(true_pos_3)  / (true_pos_3  + false_neg_3)
+    recall    = float(true_pos)     /  (true_pos    + false_neg)  if true_pos > 0 or false_neg > 0 else 0
+    recall_4  = float(true_pos_4)  / (true_pos_4  + false_neg_4)  if true_pos_4 > 0 or false_neg_4 > 0 else 0
+    recall_3  = float(true_pos_3)  / (true_pos_3  + false_neg_3)  if true_pos_3 > 0 or false_neg_3 > 0 else 0
 
     precision   = float(tp)   / (tp   + fp  ) if tp > 0 or fp > 0 else 0
     precision_4 = float(tp_4) / (tp_4 + fp_4) if tp_4 > 0 or fp_4 > 0 else 0
@@ -259,7 +256,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
     print(' -----------------------')
 
-    file_p = open('validation.txt', 'a')
+    file_p = open('validation_jhmdb_linear.txt', 'a')
     file_p.write(' -----------------------\n')
     file_p.write('| Validation Epoch: {: >3} | '.format(epoch+1))
     file_p.write('|                       |\n')
@@ -310,7 +307,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         
 def training(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads, lr, mode = 1):
 
-    vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='train')
+    vid_name_loader = RNN_JHMDB(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='train')
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
                                               shuffle=True, num_workers=32, pin_memory=True)
     # data_loader = torch.utils.data.DataLoader(data, batch_size=2,
@@ -324,34 +321,16 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
 
         # if step == 2:
         #     break
-        print('step =>',step)
-        # clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
-        vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
-        
-        vid_id = vid_id.to(device)
-        clips_ = clips.to(device)
-        boxes  = boxes.to(device)
-        n_frames = n_frames.to(device)
-        n_actions = n_actions.int().to(device)
-        im_info = torch.stack([h,w],dim=1).to(device)
+        # print('step =>',step)
 
-        # print('vid_id :',vid_id)
-        # print('clips_ :',clips_.shape)
-        # print('boxes.shape :',boxes.shape)
-        # print('n_frames :',n_frames)
-        # print('n_actions :',n_actions)
-        # print('im_info :',im_info)
+        f_features, n_tubes, target_lbl  = data        
 
-        inputs = Variable(clips_)
+        f_features = f_features.to(device)
+        n_tubes = n_tubes.to(device)
+        target_lbl = target_lbl.to(device)
 
-        tubes,  \
-        prob_out, cls_loss =  model(n_devs, dataset_folder, \
-                                vid_names, clips, vid_id,  \
-                                boxes, \
-                                mode, cls2idx, n_actions, n_frames, h, w)
+        cls_loss = model(f_features, n_tubes, target_lbl)
 
-        # print('prob_out.shape :',prob_out.shape)
-        
         loss = cls_loss.mean()
         loss_temp += loss.item()
 
@@ -378,22 +357,24 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_frames = '../UCF-101-frames'
-    boxes_file = '../pyannot.pkl'
-    split_txt_path = '../UCF101_Action_detection_splits/'
+    dataset_frames = '../JHMDB-act-detector-frames'
+    split_txt_path =  '../splits'
+    boxes_file = '../poses.json'
 
     sample_size = 112
     sample_duration = 16  # len(images)
 
+    n_devs = torch.cuda.device_count()
+
     # # get mean
-    mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
+    mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
+
 
     # generate model
-    actions = ['__background__', 'Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
-               'Diving','Fencing','FloorGymnastics','GolfSwing','HorseRiding','IceDancing',
-               'LongJump','PoleVault','RopeClimbing','SalsaSpin','SkateBoarding','Skiing',
-               'Skijet','SoccerJuggling','Surfing','TennisSwing','TrampolineJumping',
-               'VolleyballSpiking','WalkingWithDog']
+    actions = ['__background__','brush_hair', 'clap', 'golf', 'kick_ball', 'pour',
+               'push', 'shoot_ball', 'shoot_gun', 'stand', 'throw', 'wave',
+               'catch','climb_stairs', 'jump', 'pick', 'pullup', 'run', 'shoot_bow', 'sit',
+               'swing_baseball', 'walk' ]
 
     cls2idx = {actions[i]: i for i in range(0, len(actions))}
     ### get videos id
@@ -408,31 +389,71 @@ if __name__ == '__main__':
 
     n_classes = len(actions)
 
-    #######################################################
-    #          Part 1-1 - train nTPN - without reg         #
-    #######################################################
+    ###################################################
+    #          Part 1-1 - extract features -          #
+    ###################################################
+
+    # print(' ----------------------------------------')
+    # print('|          - extract features -          |')
+    # print(' ----------------------------------------')
+
+    # action_model_path = './action_net_model_jhmdb_16frm_64.pwf'
+
+    # # Init whole model
+    # model = Model(actions, sample_duration, sample_size)
+    # model.load_part_model(action_model_path=action_model_path)
+
+    # if torch.cuda.device_count() > 1:
+    #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
+    #     model = nn.DataParallel(model)
+    # model.to(device)
+
+    # batch_size = 1
+    # vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train', classes_idx=cls2idx)
+    # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
+    #                                           shuffle=True, num_workers=32, pin_memory=True)
+    # out_path = '../JHMDB-features-linear'
+    # mode = 'extract'
+    # for step, data  in enumerate(data_loader):
+
+    #     # if step == 2:
+    #     #     break
+    #     print('step =>',step)
+    #     # clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
+    #     vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
+
+    #     if not(os.path.exists(os.path.join(out_path, vid_names[vid_id]))):
+    #         os.makedirs(os.path.join(out_path, vid_names[vid_id]))
+
+    #     vid_id = vid_id.to(device)
+    #     clips_ = clips.to(device)
+    #     boxes  = boxes.to(device)
+    #     n_frames = n_frames.to(device)
+    #     n_actions = n_actions.int().to(device)
+    #     im_info = torch.stack([h,w],dim=1).to(device)
+
+    #     inputs = Variable(clips_)
+
+    #     feats, labels, tube_len =  model(n_devs, dataset_frames, \
+    #                                 vid_names, clips, vid_id,  \
+    #                                 boxes, \
+    #                                 mode, cls2idx, n_actions, n_frames, h, w)
+    #     print('feats.shape :',feats.shape)
+    #     print('labels :',labels)
+    #     print('tube_len :',tube_len)
+
+    #     torch.save(feats, os.path.join(out_path, vid_names[vid_id], 'feats.pt'))
+    #     torch.save(labels, os.path.join(out_path, vid_names[vid_id], 'labels.pt'))
+    #     torch.save(tube_len, os.path.join(out_path, vid_names[vid_id], 'tube_len.pt'))
+
 
     print(' ---------------------------------')
     print('|          - train RNN -          |')
     print(' ---------------------------------')
 
-    # # Init action_net
-    # action_model_path = './action_net_model_16frm_64.pwf'
-    action_model_path = './action_net_model_16frm_64_avgpool.pwf'
+    dataset_frames = '../JHMDB-act-detector-frames'
+    dataset_features = '../JHMDB-features-linear'
 
-    # Init whole model
-    model = Model(actions, sample_duration, sample_size)
-    model.load_part_model(action_model_path=action_model_path)
-    # if torch.cuda.device_count() > 1:
-    #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
-    #     model.act_net = nn.DataParallel(model.act_net)
-    # model.act_net.to(device)
-    # model to GPU
-
-    if torch.cuda.device_count() > 1:
-        print('Using {} GPUs!'.format(torch.cuda.device_count()))
-        model = nn.DataParallel(model)
-    model.to(device)
 
     lr = 0.1
     lr_decay_step = 10
@@ -440,8 +461,10 @@ if __name__ == '__main__':
     
     params = []
 
-    for p in model.module.act_net.parameters() : p.requires_grad=False
-
+    model =_RNN_wrapper(64*sample_duration,128,len(actions))
+    model = nn.DataParallel(model)
+    model = model.to(device)
+    
     for key, value in dict(model.named_parameters()).items():
         # print(key, value.requires_grad)
         if value.requires_grad:
@@ -458,7 +481,7 @@ if __name__ == '__main__':
     epochs = 40
     # epochs = 5
 
-    file = open('train_loss_ucf.txt', 'w')
+    file = open('train_loss_jhmdb_linear.txt', 'w')
 
     n_devs = torch.cuda.device_count()
     for epoch in range(epochs):
@@ -468,15 +491,26 @@ if __name__ == '__main__':
             adjust_learning_rate(optimizer, lr_decay_gamma)
             lr *= lr_decay_gamma
 
-        model, loss = training(epoch, device, model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=4)
+        model, loss = training(epoch, device, model, dataset_features, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=4)
         file.write('epoch :'+str(epoch)+' --> '+str(loss)+'\n')
 
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(model.state_dict(), "model_linear_ucf.pwf".format(epoch+1))
+            torch.save(model.module.act_rnn.state_dict(), "linear_jhmdb.pwf".format(epoch+1))
 
-        if (epoch + 1) % (5) == 0:
-            print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
-            validation(epoch, device, model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
 
-    torch.save(model.act_rnn.state_dict(), "linear_model_ucf.pwf")
+    print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
+    # # Init whole model
+    action_model_path = './action_net_model_jhmdb_16frm_64.pwf'
+    model = Model(actions, sample_duration, sample_size)
+    model.load_part_model(action_model_path=action_model_path, rnn_path= './linear_jhmdb.pwf')
+    
+    model = nn.DataParallel(model)
+    model = model.to(device)
+
+    
+    validation(epoch, device, model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
+
+
+    torch.save(model.module.act_rnn.state_dict(), "linear_jhmdb.pwf".format(epoch+1))
+
 

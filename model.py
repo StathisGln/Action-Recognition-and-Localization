@@ -7,7 +7,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-
 from conf import conf
 from action_net import ACT_net
 from act_rnn import Act_RNN
@@ -381,9 +380,8 @@ class Model(nn.Module):
                 overlaps = tube_overlaps(p_tubes[i], f_gt_tubes[i].type_as(p_tubes))
                 # print('overlaps :',overlaps)
                 max_overlaps, argmax_overlaps = torch.max(overlaps, 0)
-                
+
                 for j in range(num_actions):
-                    print('max_overlaps :',max_overlaps[j])
                     if max_overlaps[j] == 1.0: 
                         gt_tubes_list[j].append((i,j))
             gt_tubes_list = [i for i in gt_tubes_list if i != []]
@@ -426,8 +424,9 @@ class Model(nn.Module):
         # print('max_length :',max_length)
         ## calculate input rois
         ## f_feats.shape : [#f_tubes, max_length, 512]
-        final_video_tubes = torch.zeros(len(f_tubes),6).cuda()
+        # final_video_tubes = torch.zeros(len(f_tubes),6).cuda()
         prob_out = torch.zeros(len(f_tubes), self.n_classes).cuda()
+        final_feats = []
         # print('rois_per_image :',rois_per_image)
         # print('f_tubes :',f_tubes)
         for i in range(len(f_tubes)):
@@ -448,6 +447,8 @@ class Model(nn.Module):
             # prob_out[i] = self.act_rnn(feats.cuda())
 
             feats = torch.mean(feats, dim=0)
+            if mode == 'extract':
+                final_feats.append(feats)
 
             try:
                 prob_out[i] = self.act_rnn(feats.view(-1).cuda())
@@ -464,7 +465,13 @@ class Model(nn.Module):
                       ' \ntmp_tube :',tmp_tube, )
                 exit(-1)
 
-            
+        if mode == 'extract':
+            # now we use mean so we can have a tensor containing all features
+            final_feats = torch.stack(final_feats).cuda()
+            final_tubes = final_tubes.cuda()
+            target_lbl = target_lbl.cuda()
+            max_length = torch.Tensor([max_length]).cuda()
+            return final_feats, target_lbl, max_length
         # ##########################################
         # #           Time for Linear Loss         #
         # ##########################################
@@ -531,10 +538,23 @@ class Model(nn.Module):
         # load lstm
         if rnn_path != None:
 
-            act_rnn = Act_RNN(self.p_feat_size,int(self.p_feat_size/2),self.n_classes)
+            # act_rnn = Act_RNN(self.p_feat_size,int(self.p_feat_size/2),self.n_classes)
+            # act_rnn_data = torch.load(rnn_path)
+            # act_rnn.load(act_rnn_data)
 
+            act_rnn = nn.Sequential(
+                # nn.Linear(64*self.sample_duration, 256),
+                # nn.ReLU(True),
+                # nn.Dropout(0.8),
+                # nn.Linear(256,self.n_classes),
+                nn.Linear(64*self.sample_duration, self.n_classes),
+                # nn.ReLU(True),
+                # nn.Dropout(0.8),
+                # nn.Linear(256,self.n_classes),
+
+            )
             act_rnn_data = torch.load(rnn_path)
-            act_rnn.load(act_rnn_data)
+            act_rnn.load_state_dict(act_rnn_data)
             self.act_rnn = act_rnn
 
         else:
