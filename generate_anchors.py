@@ -122,7 +122,7 @@ def _scale_enum(anchor, scales):
     anchors = _mkanchors(ws, hs, x_ctr, y_ctr)
     return anchors
 
-def generate_anchors_single_pyramid(scales, ratios, dur, shape, feature_stride, anchor_stride):
+def generate_anchors_single_pyramid(scales, ratios,  shape, feature_stride, anchor_stride):
     """
     scales: 1D array of anchor sizes in pixels. Example: [32, 64, 128]
     ratios: 1D array of anchor ratios of width/height. Example: [0.5, 1, 2]
@@ -142,8 +142,8 @@ def generate_anchors_single_pyramid(scales, ratios, dur, shape, feature_stride, 
     widths = scales * np.sqrt(ratios)
 
     # Enumerate shifts in feature space
-    shifts_y = np.arange(0, shape[1], anchor_stride) * feature_stride
-    shifts_x = np.arange(0, shape[2], anchor_stride) * feature_stride
+    shifts_y = np.arange(0, shape[0], anchor_stride) * feature_stride
+    shifts_x = np.arange(0, shape[1], anchor_stride) * feature_stride
     shifts_x, shifts_y = np.meshgrid(shifts_x, shifts_y)
 
     # Enumerate combinations of shifts, widths, and heights
@@ -165,9 +165,10 @@ def generate_anchors_single_pyramid(scales, ratios, dur, shape, feature_stride, 
     boxes = np.concatenate([box_centers - 0.5 * box_sizes,
                             box_centers + 0.5 * box_sizes], axis=1)
 
+    # print('boxes.max(axis=0) :',boxes.max(axis=0))
     return boxes
 
-def generate_anchors_all_pyramids(scales, ratios, durs, feature_shapes, feature_strides,
+def generate_anchors_all_pyramids(scales, ratios, feature_shapes, feature_strides,
                              anchor_stride):
     """Generate anchors at different levels of a feature pyramid. Each scale
     is associated with a level of the pyramid, but each ratio is used in
@@ -183,15 +184,10 @@ def generate_anchors_all_pyramids(scales, ratios, durs, feature_shapes, feature_
 
     for i in range(len(scales)):
 
-        anchors.append(generate_anchors_single_pyramid_2d(scales[i], ratios, durs, feature_shapes[i],
+        anchors.append(generate_anchors_single_pyramid(scales[i], ratios,  feature_shapes[i],
                                         feature_strides[i], anchor_stride))
-
-    anchors = np.concatenate(anchors, axis=0)
-    num_anchors = anchors.shape[0]
-    
-    anchors = np.concatenate([anchors[:,:2], np.zeros((num_anchors,1)),anchors[:,2:], np.ones((num_anchors,1))*durs[0]-1],axis=1)
-    return anchors
-
+        
+    return  np.concatenate(anchors, axis=0)
 
 if __name__ == '__main__':
     import time

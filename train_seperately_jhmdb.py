@@ -148,6 +148,8 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
     ## 2 rois : 1450
     for step, data  in enumerate(data_loader):
 
+        print('step ==> ',step)
+
         # if step == 2:
         #     break
 

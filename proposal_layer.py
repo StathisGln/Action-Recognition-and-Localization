@@ -16,13 +16,14 @@ import math
 import yaml
 
 from conf import conf
-from generate_anchors import generate_anchors
-# from bbox_transform import bbox_transform_inv, clip_boxes_3d, clip_boxes_batch, bbox_transform_inv_3d
-from nms_3d.py_nms import py_cpu_nms_tubes as nms_cpu
-from nms_3d.nms_gpu import nms_gpu
+from generate_anchors import generate_anchors_all_pyramids
 
-# from nms_3d.nms_wrapper import nms
+from box_functions import bbox_transform_inv,clip_boxes
+from nms_3d.nms_wrapper import nms_gpu
 
+# # from bbox_transform import bbox_transform_inv, clip_boxes_3d, clip_boxes_batch, bbox_transform_inv_3d
+# from nms_3d.py_nms import py_cpu_nms_tubes as nms_cpu
+# from nms_3d.nms_gpu import nms_gpu
 
 from box_functions import bbox_transform_inv,clip_boxes
 import pdb
@@ -40,12 +41,10 @@ class _ProposalLayer(nn.Module):
 
         self.sample_duration = time_dim[0]
         self.time_dim = time_dim
-        self.scales = scales
-        self.ratios = ratios
-        self._feat_stride = feat_stride
-        self._anchors = torch.from_numpy(generate_anchors(scales=np.array(scales), 
-                                         ratios=np.array(ratios))).float()
-        self._num_anchors = num_anchors                                 
+        self._fpn_scales = scales
+        self._anchor_ratios = ratios
+        self._fpn_feature_strides = np.array([ 4, 8, 16, 32])
+        self._fpn_anchor_stride  = 1
         
 
     def forward(self, input):
@@ -67,11 +66,13 @@ class _ProposalLayer(nn.Module):
         # the first set of _num_anchors channels are bg probs
         # the second set are the fg probs
 
-        scores = input[0][:, self._num_anchors:, :, :]
+
+        scores =input[0][ :, :, :, 1]
         bbox_frame = input[1]
         im_info = input[2]
         cfg_key = input[3]
-
+        feat_shapes = input[4]
+        
         batch_size = bbox_frame.size(0)
 
 
@@ -85,23 +86,16 @@ class _ProposalLayer(nn.Module):
         # Create anchors #
         ##################
 
-        # print('batch_size :', batch_size)
-        feat_time = scores.size(2)
+        # print('scores.shape :',scores.shape)
+        # print('bbox_frame.shape :',bbox_frame.shape)
+        # print('im_info :',im_info)
 
-        feat_height,  feat_width= scores.size(3), scores.size(4) # (batch_size, 512/256, 7,7, 16/8)
+        anchors = torch.from_numpy(generate_anchors_all_pyramids(self._fpn_scales, self._anchor_ratios, 
+                feat_shapes, self._fpn_feature_strides, self._fpn_anchor_stride)).type_as(scores)
+        
+        num_anchors = anchors.size(0)
 
-        shift_x = np.arange(0, feat_width) * self._feat_stride
-        shift_y = np.arange(0, feat_height) * self._feat_stride
-        shift_x, shift_y = np.meshgrid(shift_x, shift_y)
-        shifts = torch.from_numpy(np.vstack((shift_x.ravel(), shift_y.ravel(),
-                                             shift_x.ravel(), shift_y.ravel(),)).transpose())
-        shifts = shifts.contiguous().type_as(scores).float()
-
-        A = self._anchors.size(0)
-        K = shifts.size(0)
-
-        anchors = self._anchors.view(1, A, 4).type_as(shifts) + shifts.view(K, 1, 4)
-        anchors = anchors.view(K * A, 4)
+        # print('anchors.shape :',anchors.shape)
 
         bboxes = [bbox_frame]
         anchors_all = []
@@ -116,7 +110,8 @@ class _ProposalLayer(nn.Module):
                 anc[ j:j+self.time_dim[i]] = anchors
                 anc = anc.permute(1,0,2)
 
-                t = bboxes[i][:,:,j].permute(0,2,3,1).contiguous().view(batch_size, anchors.size(0), self.time_dim[i],4)
+                t = bboxes[i][:,j].view(batch_size, anchors.size(0), self.time_dim[i], 4)
+ # .permute(0,2,1).contiguous().view(batch_size, anchors.size(0), self.time_dim[i],4)
                 bbox[:,:,j:j+self.time_dim[i],:] = t
                 anchors_all.append(anc)
                 bbox_frame_all.append(bbox)
@@ -128,6 +123,7 @@ class _ProposalLayer(nn.Module):
         anchors_all = anchors_all.expand(batch_size, anchors_all.size(1), self.sample_duration * 4)
         bbox_frame_all = bbox_frame_all.view(batch_size, -1, self.sample_duration * 4)
 
+
         # print('bbox_frame_all.shape :',bbox_frame_all.shape)
         # print('bbox_frame[0,3000] :',bbox_frame_all[0,17500:18000].cpu().numpy())
         # print('anchors_all.shape :',anchors_all.shape)
@@ -136,7 +132,6 @@ class _ProposalLayer(nn.Module):
 
         # # Same story for the scores:
 
-        scores = scores.permute(0, 2, 3, 4, 1).contiguous()
         scores = scores.view(batch_size, -1)
 
         scores_all = torch.cat([scores],1)
