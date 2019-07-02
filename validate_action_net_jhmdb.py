@@ -161,7 +161,10 @@ if __name__ == '__main__':
 
     # model_data = torch.load('./actio_net_model_both.pwf')
     # model_data = torch.load('./action_net_model_both_without_avg.pwf')
-    model_data = torch.load('./action_net_model_jhmdb_16frm_64.pwf')
+    model_data = torch.load('./action_net_model_both_jhmdb.pwf')
+    # model_data = torch.load('./action_net_model_jhmdb_only16.pwf')
+
+
     # 
     # model_data = torch.load('./action_net_model_part1_1_8frm.pwf')
     model.load_state_dict(model_data)

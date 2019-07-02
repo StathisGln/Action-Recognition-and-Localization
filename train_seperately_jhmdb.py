@@ -6,9 +6,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-# from ucf_dataset import Video_UCF, video_names
 from jhmdb_dataset import Video
-
 
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
@@ -22,9 +20,9 @@ from model import Model
 from action_net import ACT_net
 from resize_rpn import resize_boxes
 import argparse
-from box_functions import bbox_transform, bbox_transform_inv, clip_boxes, tube_overlaps
-np.random.seed(42)
+from box_functions import tube_overlaps, tube_transform_inv
 
+np.random.seed(42)
 
 def validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads):
 
@@ -57,8 +55,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
         clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
         clips_   = clips.to(device)
-        gt_tubes_r_ = gt_tubes_r.to(device)
-        gt_rois_ = gt_rois.to(device)
+        gt_tubes_r_ = gt_tubes_r.float().to(device)
+        gt_rois_ = gt_rois.float().to(device)
         n_actions_ = n_actions.to(device)
         im_info_ = im_info.to(device)
         start_fr = torch.zeros(clips_.size(0)).to(device)
@@ -68,24 +66,21 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                        im_info,
                                        None, None,
                                        None)
-        n_tubes = len(tubes)
+        batch_size = len(tubes)
 
-        # tubes = tubes.view(-1, sample_duration*4+2)
-        # tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
-        #                                    sgl_rois_bbox_pred.view(-1,sample_duration*4),(1.0,1.0,1.0,1.0))
-        tubes = tubes.view(n_tubes,-1, sample_duration*4+2)
-        # tubes[:,:,1:-1] = clip_boxes(tubes[:,:,1:-1], im_info, tubes.size(0))
+        tubes = tubes.view(-1, sample_duration*4+2)
+        tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
+                                           sgl_rois_bbox_pred.view(-1,sample_duration*4),(1.0,1.0,1.0,1.0))
+        tubes = tubes.view(batch_size,-1, sample_duration*4+2)
 
         for i in range(tubes.size(0)): # how many frames we have
             
             tubes_t = tubes[i,:,1:-1].contiguous()
             gt_rois_t = gt_rois_[i,:,:,:4].contiguous().view(-1,sample_duration*4)
-            rois_overlaps = tube_overlaps(tubes_t,gt_rois_t.type_as(tubes_t))
+            rois_overlaps = tube_overlaps(tubes_t,gt_rois_t)
             
             gt_max_overlaps_sgl, _ = torch.max(rois_overlaps, 0)
-
-            non_empty_indices =  gt_rois_t.ne(0).any(dim=1).nonzero().view(-1)
-            n_elems = non_empty_indices.nelement()            
+            n_elems = gt_tubes_r[i,:,-1].ne(0).sum().item()
 
             # 0.5
             gt_max_overlaps_sgl_ = torch.where(gt_max_overlaps_sgl > iou_thresh, gt_max_overlaps_sgl, torch.zeros_like(gt_max_overlaps_sgl).type_as(gt_max_overlaps_sgl))
@@ -109,19 +104,6 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     recall   = float(sgl_true_pos)  / (float(sgl_true_pos)  + float(sgl_false_neg))
     recall_4 = float(sgl_true_pos_4)  / (float(sgl_true_pos_4)  + float(sgl_false_neg_4))
     recall_3 = float(sgl_true_pos_3)  / (float(sgl_true_pos_3)  + float(sgl_false_neg_3))
-
-    f = open('recall.txt', 'a')
-    f.write('| Validation Epoch: {: >3} |\n'.format(epoch+1))
-    f.write('| Threshold : 0.5       |\n')
-    f.write('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
-        sgl_true_pos, sgl_false_neg, recall))
-    f.write('| Threshold : 0.4       |\n')
-    f.write('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
-        sgl_true_pos_4, sgl_false_neg_4, recall_4))
-    f.write('| Threshold : 0.3       |\n')
-    f.write('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
-        sgl_true_pos_3, sgl_false_neg_3, recall_3))
-    f.close()
 
     print(' -----------------------')
     print('| Validation Epoch: {: >3} | '.format(epoch+1))
@@ -149,7 +131,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
 
     print(' -----------------------')
-
+        
 def training(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads, lr, mode = 1):
 
     data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
@@ -178,35 +160,19 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         start_fr = torch.zeros(clips_.size(0)).to(device)
         
         inputs = Variable(clips_)
-        tubes,  _, \
+
+        tubes, _, \
         rpn_loss_cls,  rpn_loss_bbox, \
         rpn_loss_cls_16,\
         rpn_loss_bbox_16,  rois_label, \
         sgl_rois_bbox_pred, sgl_rois_bbox_loss,  = model(inputs, \
-        # actioness_score, actioness_loss
-                                                im_info_,
-                                                gt_tubes_r_, gt_rois_,
-                                                start_fr)
-        if mode == 1:
-            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() + act_loss_bbox.mean() + rpn_loss_cls_16.mean() \
-                   + rpn_loss_bbox_16.mean() +  act_loss_bbox_16.mean() 
-        # elif mode == 2:
-        #     loss = actioness_loss.mean()
-        elif mode == 3:
+                                                         im_info_,
+                                                         gt_tubes_r_, gt_rois_,
+                                                         start_fr)
+        if mode == 3:
             loss = sgl_rois_bbox_loss.mean()
-        # elif mode == 4:
-        #     loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean()  
-            # loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean()  + rpn_loss_cls_16.mean() \
-                   # + rpn_loss_bbox_16.mean()  
-
-
-
         elif mode == 4:
-            loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean()   \
-                   + sgl_rois_bbox_loss.mean()
-            # loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean()  + rpn_loss_cls_16.mean() \
-            #        + rpn_loss_bbox_16.mean()  + sgl_rois_bbox_loss.mean()
-
+            loss = rpn_loss_cls.mean() +  rpn_loss_bbox.mean() 
 
         loss_temp += loss.item()
 
@@ -224,7 +190,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Train action_net, regression layer and RNN')
 
-    parser.add_argument('--demo', '-d', help='Run just 2 steps for test if everything works fine', action='store_true')
+    # parser.add_argument('--demo', '-d', help='Run just 2 steps for test if everything works fine', action='store_true')
     # parser.add_argument('--n_1_1', help='Run only part 1.1, training action net only', action='store_true')
     # parser.add_argument('--n_1_2', help='Run only part 1.2, training only regression layer', action='store_true')
     # parser.add_argument('--n_2', help='Run only part 2, train only RNN', action='store_true')
@@ -241,8 +207,7 @@ if __name__ == '__main__':
     sample_duration = 16  # len(images)
 
     # # get mean
-    mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
-
+    mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
 
     # generate model
     actions = ['__background__','brush_hair', 'clap', 'golf', 'kick_ball', 'pour',
@@ -283,12 +248,12 @@ if __name__ == '__main__':
     act_model.to(device)
 
     lr = 0.1
-    lr_decay_step = 5
+    lr_decay_step = 10
     lr_decay_gamma = 0.1
     
     params = []
 
-    # for p in act_model.module.reg_layer.parameters() : p.requires_grad=False
+    for p in act_model.module.reg_layer.parameters() : p.requires_grad=False
 
     for key, value in dict(act_model.named_parameters()).items():
         # print(key, value.requires_grad)
@@ -304,9 +269,8 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(params)
 
     epochs = 40
-    # epochs = 2
+    # epochs = 5
 
-    file = open('training_loss.txt','w')
     n_devs = torch.cuda.device_count()
     for epoch in range(epochs):
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
@@ -314,13 +278,80 @@ if __name__ == '__main__':
         if epoch % (lr_decay_step + 1) == 0:
             adjust_learning_rate(optimizer, lr_decay_gamma)
             lr *= lr_decay_gamma
+
+
         act_model, loss = training(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*4, 0, lr, mode=4)
 
-        file.write('epoch :'+str(epoch)+' loss :'+str(loss)+'\n')
-        if (epoch + 1) % (5) == 0:
-            validation(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
+        # if ( epoch + 1 ) % 5 == 0:
+        #     torch.save(act_model.state_dict(), "action_net_model_part1_1_8frm.pwf".format(epoch+1))
+
+        # if (epoch + 1) % (5) == 0:
+        #     print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
+        #     validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
+
+    # #####################################################
+    # #          Part 1-2 - train TPN - only reg          #
+    # #####################################################
+
+    print(' --------------------------------------------------')
+    print('|          Part 1-2 - train TPN - only reg         |')
+    print(' --------------------------------------------------')
+
+    # # Init action_net
+    # act_model = ACT_net(actions, sample_duration)
+    # act_model.create_architecture()
+    # if torch.cuda.device_count() > 1:
+    #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
+
+    # act_model = nn.DataParallel(act_model)
+
+    # act_model.to(device)
+
+
+    # # model_data = torch.load('./action_net_model_part1_1.pwf')
+    # model_data = torch.load('./region_net.pwf')
+
+    # # act_model.load_state_dict(model_data)
+    # act_model.module.act_rpn.load_state_dict(model_data)
+    # # torch.save(act_model.module.act_rpn.state_dict(), 'region_net.pwf')
+    # # exit(-1)
+    lr = 0.1
+    lr_decay_step = 5
+    lr_decay_gamma = 0.1
+
+    params = []
+    for p in act_model.module.parameters() : p.requires_grad=False
+    for p in act_model.module.reg_layer.parameters() : p.requires_grad=True
+    for key, value in dict(act_model.named_parameters()).items():
+        # print(key, value.requires_grad)
+        if value.requires_grad:
+            print('key :',key)
+            if 'bias' in key:
+                params += [{'params':[value],'lr':lr*(True + 1), \
+                            'weight_decay': False and 0.0005 or 0}]
+            else:
+                params += [{'params':[value],'lr':lr, 'weight_decay': 0.0005}]
+
+    lr = lr * 0.1
+    optimizer = torch.optim.Adam(params)
+
+    epochs = 20
+    # epochs = 1
+
+    n_devs = torch.cuda.device_count()
+    for epoch in range(epochs):
+        print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
+
+        if epoch % (lr_decay_step + 1) == 0:
+            adjust_learning_rate(optimizer, lr_decay_gamma)
+            lr *= lr_decay_gamma
+        act_model.module.act_rpn.eval()
+        act_model, loss = training(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=3)
+
+        if (epoch + 1) % 5 == 0:
+            print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
+            validation(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*2, 0)
 
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_jhmdb_only16.pwf".format(epoch+1))
-    torch.save(act_model.state_dict(), "action_net_model_jhmdb_only16.pwf")
-
+            torch.save(act_model.state_dict(), "action_net_model_both_jhmdb.pwf".format(epoch+1))
+    torch.save(act_model.state_dict(), "action_net_model_both_jhmdb.pwf".format(epoch))

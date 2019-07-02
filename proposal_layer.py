@@ -68,15 +68,9 @@ class _ProposalLayer(nn.Module):
         # the second set are the fg probs
 
         scores = input[0][:, self._num_anchors:, :, :]
-        scores_3_4 = input[1][:, self._num_anchors:, :, :]
-        scores_2 = input[2][:, self._num_anchors:, :, :]
-        scores_4 = input[3][:, self._num_anchors:, :, :]
-        bbox_frame = input[4]
-        bbox_frame_3_4 = input[5]
-        bbox_frame_2 = input[6]
-        bbox_frame_4 = input[7]
-        im_info = input[8]
-        cfg_key = input[9]
+        bbox_frame = input[1]
+        im_info = input[2]
+        cfg_key = input[3]
 
         batch_size = bbox_frame.size(0)
 
@@ -93,9 +87,6 @@ class _ProposalLayer(nn.Module):
 
         # print('batch_size :', batch_size)
         feat_time = scores.size(2)
-        feat_time_3_4 = scores_3_4.size(2)
-        feat_time_2 = scores_2.size(2)
-        feat_time_4 = scores_4.size(2)
 
         feat_height,  feat_width= scores.size(3), scores.size(4) # (batch_size, 512/256, 7,7, 16/8)
 
@@ -112,7 +103,7 @@ class _ProposalLayer(nn.Module):
         anchors = self._anchors.view(1, A, 4).type_as(shifts) + shifts.view(K, 1, 4)
         anchors = anchors.view(K * A, 4)
 
-        bboxes = [bbox_frame, bbox_frame_3_4, bbox_frame_2, bbox_frame_4]
+        bboxes = [bbox_frame]
         anchors_all = []
         bbox_frame_all = []
 
@@ -148,15 +139,7 @@ class _ProposalLayer(nn.Module):
         scores = scores.permute(0, 2, 3, 4, 1).contiguous()
         scores = scores.view(batch_size, -1)
 
-        scores_3_4 = scores_3_4.permute(0, 2, 3, 4, 1).contiguous()
-        scores_3_4 = scores_3_4.view(batch_size, -1)
-
-        scores_2 = scores_2.permute(0, 2, 3, 4, 1).contiguous()
-        scores_2 = scores_2.view(batch_size, -1)
-
-        scores_4 = scores_4.permute(0, 2, 3, 4, 1).contiguous()
-        scores_4 = scores_4.view(batch_size, -1)
-        scores_all = torch.cat([scores, scores_3_4, scores_2, scores_4],1)
+        scores_all = torch.cat([scores],1)
         # print('anchors_all[0,:150,:4] :',anchors_all[0,:150,:4].cpu().numpy())
         # print('bbox_frame_all[0,:150,:4] :',bbox_frame_all[0,:150,:4].cpu().numpy())
         # Convert anchors into proposals via bbox transformations

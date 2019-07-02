@@ -204,7 +204,7 @@ if __name__ == '__main__':
     split_txt_path = '../UCF101_Action_detection_splits/'
 
     sample_size = 112
-    sample_duration = 8  # len(images)
+    sample_duration = 16  # len(images)
 
     # # get mean
     mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes

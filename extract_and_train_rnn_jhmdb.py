@@ -500,7 +500,7 @@ if __name__ == '__main__':
 
     print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
     # # Init whole model
-    action_model_path = './action_net_model_jhmdb_16frm_64.pwf'
+    action_model_path = './action_net_model_jhmdb_only16.pwf'
     model = Model(actions, sample_duration, sample_size)
     model.load_part_model(action_model_path=action_model_path, rnn_path= './linear_jhmdb.pwf')
     

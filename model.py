@@ -278,26 +278,6 @@ class Model(nn.Module):
                 actioness_scr, overlaps_scr,  f_scores = self.calc.update_scores(final_scores,final_poss, f_scores, pos, pos_indices, actioness_scr, overlaps_scr)
             print('Updating thresh...', final_scores.shape, final_poss.shape, pos.shape, f_scores.shape, pos_indices.shape)
 
-        # ########################################################
-        # #          Calculate overlaps and connections          #
-        # ########################################################
-
-        # print('Connection Algo ended...')
-
-        # for i in range(n_clips-1):
-        #     overlaps_scores[i] = tube_overlaps(p_tubes[i,:,int(self.sample_duration*4/2):],p_tubes[i+1,:,:int(self.sample_duration*4/2)])
-
-        # if n_clips > 1:
-        #     final_scores, final_poss = self.calc(overlaps_scores.cuda(), actioness_score.cuda(),
-        #                                          torch.Tensor([n_clips]),torch.Tensor([rois_per_image]))
-        # else:
-        #     offset = torch.arange(rois_per_image).float()
-        #     final_poss = torch.stack([torch.zeros((rois_per_image)),offset], dim=1).unsqueeze(1).long()
-
-
-        ## Now connect the tubes
-        # print('final_poss.size(0) :',final_poss.size(0))
-        
         final_tubes = torch.zeros(final_poss.size(0), num_frames, 4)
 
         f_tubes  = []

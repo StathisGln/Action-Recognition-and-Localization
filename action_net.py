@@ -167,8 +167,8 @@ class ACT_net(nn.Module):
         for p in self.act_base_1[1].parameters(): p.requires_grad=False
 
         fixed_blocks = 3
-        # if fixed_blocks >= 3:
-        #   for p in self.act_base_3[0].parameters(): p.requires_grad=False
+        if fixed_blocks >= 3:
+          for p in self.act_base_2[1].parameters(): p.requires_grad=False
         if fixed_blocks >= 2:
           for p in self.act_base_2[0].parameters(): p.requires_grad=False
         if fixed_blocks >= 1:

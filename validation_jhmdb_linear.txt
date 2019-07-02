@@ -50,4 +50,56 @@
 | True_pos   -->    239 |
 | False_neg  -->     29 | 
 | Recall     --> 0.8918 |
+ ----------------------- -----------------------
+| Validation Epoch:  40 | |                       |
+| we have    536 tubes  |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| Single frame          |
+|                       |
+| In    133 steps    :  |
+|                       |
+| Precision             |
+|                       |
+| Threshold : 0.5       |
+|                       |
+| True_pos   -->      4 |
+| False_pos  -->     31 |
+| False_neg  -->  15638 | 
+| Precision  --> 0.1143 |
+|                       |
+| Threshold : 0.4       |
+|                       |
+| True_pos   -->     13 |
+| False_pos  -->     96 |
+| False_neg  -->  19099 | 
+| Precision  --> 0.1193 |
+|                       |
+| Threshold : 0.3       |
+|                       |
+| True_pos   -->     28 |
+| False_pos  -->    312 |
+| False_neg  -->  26638 | 
+| Precision  --> 0.0824 |
+|                       |
+| Recall                |
+|                       |
+| Threshold : 0.5       |
+|                       |
+| True_pos   -->     75 |
+| False_neg  -->    193 | 
+| Recall     --> 0.2799 |
+|                       |
+| Threshold : 0.4       |
+|                       |
+| True_pos   -->    119 |
+| False_neg  -->    149 | 
+| Recall     --> 0.4440 |
+|                       |
+| Threshold : 0.3       |
+|                       |
+| True_pos   -->    178 |
+| False_neg  -->     90 | 
+| Recall     --> 0.6642 |
  -----------------------
