@@ -32,7 +32,7 @@ class _Regression_Layer(nn.Module):
         self.head_to_tail_list = []
         self.bbox_pred_list = []
         for i in range(sample_duration):
-            self.Conv_list.append(nn.Conv2d(self.din, din, 1, stride=1, padding=0, bias=True).cuda())
+            self.Conv_list.append(nn.Conv2d(self.din, din, 1, stride=1, padding=0, bias=True))
         
             self.head_to_tail_list.append(
                 nn.Sequential(
@@ -41,15 +41,21 @@ class _Regression_Layer(nn.Module):
                 nn.Dropout(0.8),
                 nn.Linear(2048,512),
                 nn.ReLU(True)
-                ).cuda())
+                ))
             
-            self.bbox_pred_list.append( nn.Linear(512,4).cuda())
+            self.bbox_pred_list.append( nn.Linear(512,4))
 
 
         self.roi_align = RoIAlign(self.pooling_size, self.pooling_size, self.spatial_scale)
         self.avg_pool = nn.AvgPool3d((int(sample_duration),1,1), stride=1)
         self.reg_target = _Regression_TargetLayer()
 
+    def reg_to_device(self, device):
+        for i in range(self.sample_duration):
+            self.Conv_list[i].to(device)
+            self.head_to_tail_list[i].to(device)
+            self.bbox_pred_list[i].to(device)
+            
     def forward(self, base_feat, rois, gt_rois):
         
         # base_feat.shape : [num_tubes, num_channels, sample_duration, width, height] : [32,512,16,4,4]

@@ -85,3 +85,548 @@ Train Epoch: 6 	Loss: 0.221205	 lr : 0.001000
 len(dataset) : 2284
 max_sim_actions : 9
 max_frames : 641
+Train Epoch: 7 	Loss: 0.242123	 lr : 0.001000
+ ============
+| Epoch 08/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 8 	Loss: 0.190138	 lr : 0.001000
+ ============
+| Epoch 09/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 9 	Loss: 0.195559	 lr : 0.001000
+ ============
+| Epoch 10/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 10 	Loss: 0.191173	 lr : 0.001000
+ ============
+| Epoch 11/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 11 	Loss: 0.184418	 lr : 0.001000
+ ============
+| Epoch 12/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 12 	Loss: 0.168160	 lr : 0.000100
+ ============
+| Epoch 13/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 13 	Loss: 0.152289	 lr : 0.000100
+ ============
+| Epoch 14/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 14 	Loss: 0.150571	 lr : 0.000100
+ ============
+| Epoch 15/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 15 	Loss: 0.142803	 lr : 0.000100
+ ============
+| Epoch 16/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 16 	Loss: 0.141606	 lr : 0.000100
+ ============
+| Epoch 17/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 17 	Loss: 0.141561	 lr : 0.000100
+ ============
+| Epoch 18/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 18 	Loss: 0.142815	 lr : 0.000100
+ ============
+| Epoch 19/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 19 	Loss: 0.136038	 lr : 0.000100
+ ============
+| Epoch 20/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 20 	Loss: 0.137420	 lr : 0.000100
+ ============
+| Epoch 21/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 21 	Loss: 0.136685	 lr : 0.000100
+ ============
+| Epoch 22/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 22 	Loss: 0.130375	 lr : 0.000100
+ ============
+| Epoch 23/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 23 	Loss: 0.127860	 lr : 0.000010
+ ============
+| Epoch 24/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 24 	Loss: 0.120826	 lr : 0.000010
+ ============
+| Epoch 25/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 25 	Loss: 0.118510	 lr : 0.000010
+ ============
+| Epoch 26/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 26 	Loss: 0.119393	 lr : 0.000010
+ ============
+| Epoch 27/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 27 	Loss: 0.112496	 lr : 0.000010
+ ============
+| Epoch 28/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 28 	Loss: 0.117181	 lr : 0.000010
+ ============
+| Epoch 29/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 29 	Loss: 0.114127	 lr : 0.000010
+ ============
+| Epoch 30/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 30 	Loss: 0.113014	 lr : 0.000010
+ ============
+| Epoch 31/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 31 	Loss: 0.114308	 lr : 0.000010
+ ============
+| Epoch 32/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 32 	Loss: 0.112027	 lr : 0.000010
+ ============
+| Epoch 33/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 33 	Loss: 0.108229	 lr : 0.000010
+ ============
+| Epoch 34/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 34 	Loss: 0.112005	 lr : 0.000001
+ ============
+| Epoch 35/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 35 	Loss: 0.105297	 lr : 0.000001
+ ============
+| Epoch 36/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 36 	Loss: 0.106114	 lr : 0.000001
+ ============
+| Epoch 37/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 37 	Loss: 0.107632	 lr : 0.000001
+ ============
+| Epoch 38/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 38 	Loss: 0.105969	 lr : 0.000001
+ ============
+| Epoch 39/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 39 	Loss: 0.102835	 lr : 0.000001
+ ============
+| Epoch 40/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 40 	Loss: 0.104405	 lr : 0.000001
+len(dataset) : 910
+max_sim_actions : 10
+max_frames : 900
+ -----------------------
+| Validation Epoch:  40 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| Single frame          |
+|                       |
+| In    227 steps    :  |
+|                       |
+| Threshold : 0.5       |
+|                       |
+| True_pos   -->    680 |
+| False_neg  -->    280 | 
+| Recall     --> 0.7083 |
+|                       |
+| Threshold : 0.4       |
+|                       |
+| True_pos   -->    771 |
+| False_neg  -->    189 | 
+| Recall     --> 0.8031 |
+|                       |
+| Threshold : 0.3       |
+|                       |
+| True_pos   -->    829 |
+| False_neg  -->    131 | 
+| Recall     --> 0.8635 |
+ -----------------------
+ --------------------------------------------------
+|          Part 1-2 - train TPN - only reg         |
+ --------------------------------------------------
+key : module.reg_layer.Conv.weight
+key : module.reg_layer.Conv.bias
+key : module.reg_layer.head_to_tail_.0.weight
+key : module.reg_layer.head_to_tail_.0.bias
+key : module.reg_layer.head_to_tail_.3.weight
+key : module.reg_layer.head_to_tail_.3.bias
+key : module.reg_layer.bbox_pred.weight
+key : module.reg_layer.bbox_pred.bias
+ ============
+| Epoch 01/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 1 	Loss: 129.731731	 lr : 0.001000
+ ============
+| Epoch 02/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 2 	Loss: 124.751446	 lr : 0.001000
+ ============
+| Epoch 03/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 3 	Loss: 127.010435	 lr : 0.001000
+ ============
+| Epoch 04/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 4 	Loss: 123.938912	 lr : 0.001000
+ ============
+| Epoch 05/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 5 	Loss: 135.179959	 lr : 0.001000
+ ============
+| Validation 05/20 |
+ ============
+len(dataset) : 910
+max_sim_actions : 10
+max_frames : 900
+ -----------------------
+| Validation Epoch:   5 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| Single frame          |
+|                       |
+| In    227 steps    :  |
+|                       |
+| Threshold : 0.5       |
+|                       |
+| True_pos   -->    664 |
+| False_neg  -->    295 | 
+| Recall     --> 0.6924 |
+|                       |
+| Threshold : 0.4       |
+|                       |
+| True_pos   -->    776 |
+| False_neg  -->    183 | 
+| Recall     --> 0.8092 |
+|                       |
+| Threshold : 0.3       |
+|                       |
+| True_pos   -->    837 |
+| False_neg  -->    122 | 
+| Recall     --> 0.8728 |
+ -----------------------
+ ============
+| Epoch 06/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 6 	Loss: 128.185620	 lr : 0.001000
+ ============
+| Epoch 07/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 7 	Loss: 121.721762	 lr : 0.000100
+ ============
+| Epoch 08/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 8 	Loss: 129.496748	 lr : 0.000100
+ ============
+| Epoch 09/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 9 	Loss: 125.273441	 lr : 0.000100
+ ============
+| Epoch 10/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 10 	Loss: 124.186838	 lr : 0.000100
+ ============
+| Validation 10/20 |
+ ============
+len(dataset) : 910
+max_sim_actions : 10
+max_frames : 900
+ -----------------------
+| Validation Epoch:  10 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| Single frame          |
+|                       |
+| In    227 steps    :  |
+|                       |
+| Threshold : 0.5       |
+|                       |
+| True_pos   -->    660 |
+| False_neg  -->    309 | 
+| Recall     --> 0.6811 |
+|                       |
+| Threshold : 0.4       |
+|                       |
+| True_pos   -->    750 |
+| False_neg  -->    219 | 
+| Recall     --> 0.7740 |
+|                       |
+| Threshold : 0.3       |
+|                       |
+| True_pos   -->    813 |
+| False_neg  -->    156 | 
+| Recall     --> 0.8390 |
+ -----------------------
+ ============
+| Epoch 11/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 11 	Loss: 127.837218	 lr : 0.000100
+ ============
+| Epoch 12/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 12 	Loss: 128.078172	 lr : 0.000100
+ ============
+| Epoch 13/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 13 	Loss: 119.610619	 lr : 0.000010
+ ============
+| Epoch 14/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 14 	Loss: 125.501282	 lr : 0.000010
+ ============
+| Epoch 15/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 15 	Loss: 125.465891	 lr : 0.000010
+ ============
+| Validation 15/20 |
+ ============
+len(dataset) : 910
+max_sim_actions : 10
+max_frames : 900
+ -----------------------
+| Validation Epoch:  15 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| Single frame          |
+|                       |
+| In    227 steps    :  |
+|                       |
+| Threshold : 0.5       |
+|                       |
+| True_pos   -->    671 |
+| False_neg  -->    294 | 
+| Recall     --> 0.6953 |
+|                       |
+| Threshold : 0.4       |
+|                       |
+| True_pos   -->    761 |
+| False_neg  -->    204 | 
+| Recall     --> 0.7886 |
+|                       |
+| Threshold : 0.3       |
+|                       |
+| True_pos   -->    825 |
+| False_neg  -->    140 | 
+| Recall     --> 0.8549 |
+ -----------------------
+ ============
+| Epoch 16/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 16 	Loss: 124.617080	 lr : 0.000010
+ ============
+| Epoch 17/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 17 	Loss: 129.008685	 lr : 0.000010
+ ============
+| Epoch 18/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 18 	Loss: 124.177855	 lr : 0.000010
+ ============
+| Epoch 19/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 19 	Loss: 122.961784	 lr : 0.000001
+ ============
+| Epoch 20/20 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 20 	Loss: 129.369724	 lr : 0.000001
+ ============
+| Validation 20/20 |
+ ============
+len(dataset) : 910
+max_sim_actions : 10
+max_frames : 900
+ -----------------------
+| Validation Epoch:  20 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| Single frame          |
+|                       |
+| In    227 steps    :  |
+|                       |
+| Threshold : 0.5       |
+|                       |
+| True_pos   -->    669 |
+| False_neg  -->    283 | 
+| Recall     --> 0.7027 |
+|                       |
+| Threshold : 0.4       |
+|                       |
+| True_pos   -->    758 |
+| False_neg  -->    194 | 
+| Recall     --> 0.7962 |
+|                       |
+| Threshold : 0.3       |
+|                       |
+| True_pos   -->    819 |
+| False_neg  -->    133 | 
+| Recall     --> 0.8603 |
+ -----------------------

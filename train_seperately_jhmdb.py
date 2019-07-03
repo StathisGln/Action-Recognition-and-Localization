@@ -288,7 +288,7 @@ if __name__ == '__main__':
 
     
     print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
-    validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
+    validation(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
 
     # #####################################################
     # #          Part 1-2 - train TPN - only reg          #
@@ -354,5 +354,5 @@ if __name__ == '__main__':
             validation(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*2, 0)
 
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_both_single_frm_jhmdb.pwf".format(epoch+1))
-    torch.save(act_model.state_dict(), "action_net_model_both_single_frm_jhmdb.pwf".format(epoch))
+            torch.save(act_model.state_dict(), "action_net_model_both_list_jhmdb.pwf".format(epoch+1))
+    torch.save(act_model.state_dict(), "action_net_model_both_list_jhmdb.pwf".format(epoch))

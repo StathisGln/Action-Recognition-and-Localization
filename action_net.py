@@ -14,8 +14,8 @@ from torch.autograd import Variable
 from resnet_3D import resnet34
 from region_net import _RPN 
 # from human_reg import _Regression_Layer
-# from human_reg_3d import _Regression_Layer
-from human_reg_2d import _Regression_Layer
+from human_reg_3d import _Regression_Layer
+# from human_reg_2d import _Regression_Layer
 
 
 from proposal_target_layer_cascade import _ProposalTargetLayer
@@ -134,10 +134,12 @@ class ACT_net(nn.Module):
         normal_init(self.act_rpn.RPN_Conv, 0, 0.01, truncated)
         normal_init(self.act_rpn.RPN_cls_score, 0, 0.01, truncated)
         normal_init(self.act_rpn.RPN_bbox_pred, 0, 0.01, truncated)
-        for i in range(self.sample_duration):
-            normal_init(self.reg_layer.Conv_list[i], 0, 0.01, truncated)
-            normal_init(self.reg_layer.bbox_pred_list[i], 0, 0.01, truncated)
+        # for i in range(self.sample_duration):
+        #     normal_init(self.reg_layer.Conv_list[i], 0, 0.01, truncated)
+        #     normal_init(self.reg_layer.bbox_pred_list[i], 0, 0.01, truncated)
 
+        normal_init(self.reg_layer.Conv, 0, 0.01, truncated)
+        normal_init(self.reg_layer.bbox_pred, 0, 0.01, truncated)
 
     def _init_modules(self):
 
