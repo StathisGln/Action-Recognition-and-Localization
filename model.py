@@ -419,16 +419,14 @@ class Model(nn.Module):
         max_seq = reduce(lambda x, y: y if len(y) > len(x) else x, f_tubes)
         max_length = len(max_seq)
 
-        # print('len(f_tubes) :',len(f_tubes))
-        # print('max_seq :',max_seq)
-        # print('max_length :',max_length)
         ## calculate input rois
         ## f_feats.shape : [#f_tubes, max_length, 512]
         # final_video_tubes = torch.zeros(len(f_tubes),6).cuda()
         prob_out = torch.zeros(len(f_tubes), self.n_classes).cuda()
-        final_feats = []
-        # print('rois_per_image :',rois_per_image)
-        # print('f_tubes :',f_tubes)
+        # final_feats = []
+        f_feats = torch.zeros(len(f_tubes),n_clips, 64, self.sample_duration).type_as(features) - 1
+        f_feats_len = torch.zeros(len(f_tubes)).type_as(features) - 1 
+
         for i in range(len(f_tubes)):
 
             seq = f_tubes[i]
@@ -444,34 +442,35 @@ class Model(nn.Module):
                 feats[j] = features[seq[j][0],seq[j][1]]
                 # tmp_tube[j] = p_tubes[seq[j]][1:7]
 
+            f_feats_len[i] = len(seq)
+            f_feats[i,:len(seq)] = feats
             # prob_out[i] = self.act_rnn(feats.cuda())
 
-            feats = torch.mean(feats, dim=0)
-            if mode == 'extract':
-                final_feats.append(feats)
-
-            try:
-                prob_out[i] = self.act_rnn(feats.view(-1).cuda())
-            except Exception as e:
-                print('feats.shape :',feats.shape)
-                print('seq :',seq)
-                for i in range(len(f_tubes)):
-                    print('seq[i] :',f_tubes[i])
+            # # feats = torch.mean(feats, dim=0)
+            # if mode == 'extract':
+            #     final_feats.append(feats)
+                
+            # try:
+            #     prob_out[i] = self.act_rnn(feats.view(-1).cuda())
+            # except Exception as e:
+            #     print('feats.shape :',feats.shape)
+            #     print('seq :',seq)
+            #     for i in range(len(f_tubes)):
+            #         print('seq[i] :',f_tubes[i])
                     
-                print('e :',e)
-                exit(-1)
-            if prob_out[i,0] != prob_out[i,0]:
-                print(' prob_out :', prob_out ,' feats :',feats.cpu().numpy(), ' numpy(), feats.shape  :,', feats.shape ,' target_lbl :',target_lbl, \
-                      ' \ntmp_tube :',tmp_tube, )
-                exit(-1)
+            #     print('e :',e)
+            #     exit(-1)
+            # if prob_out[i,0] != prob_out[i,0]:
+            #     print(' prob_out :', prob_out ,' feats :',feats.cpu().numpy(), ' numpy(), feats.shape  :,', feats.shape ,' target_lbl :',target_lbl, \
+            #           ' \ntmp_tube :',tmp_tube, )
+            #     exit(-1)
 
         if mode == 'extract':
             # now we use mean so we can have a tensor containing all features
-            final_feats = torch.stack(final_feats).cuda()
-            final_tubes = final_tubes.cuda()
+            # final_tubes = final_tubes.cuda()
             target_lbl = target_lbl.cuda()
-            max_length = torch.Tensor([max_length]).cuda()
-            return final_feats, target_lbl, max_length
+            # max_length = torch.Tensor([max_length]).cuda()
+            return f_feats, target_lbl, f_feats_len
         # ##########################################
         # #           Time for Linear Loss         #
         # ##########################################
@@ -538,9 +537,9 @@ class Model(nn.Module):
         # load lstm
         if rnn_path != None:
 
-            # act_rnn = Act_RNN(self.p_feat_size,int(self.p_feat_size/2),self.n_classes)
-            # act_rnn_data = torch.load(rnn_path)
-            # act_rnn.load(act_rnn_data)
+            act_rnn = Act_RNN(self.p_feat_size,int(self.p_feat_size/2),self.n_classes)
+            act_rnn_data = torch.load(rnn_path)
+            act_rnn.load_state_dict(act_rnn_data)
 
             act_rnn = nn.Sequential(
                 # nn.Linear(64*self.sample_duration, 256),

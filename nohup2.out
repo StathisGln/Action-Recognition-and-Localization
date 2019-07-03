@@ -1,0 +1,87 @@
+nohup: ignoring input
+Device being used: cuda:0
+ -----------------------------------------------------
+|          Part 1-1 - train TPN - without reg         |
+ -----------------------------------------------------
+Loading pretrained weights from ../resnet-34-kinetics.pth
+Using 2 GPUs!
+key : module.act_rpn.RPN_Conv.weight
+key : module.act_rpn.RPN_Conv.bias
+key : module.act_rpn.RPN_cls_score.weight
+key : module.act_rpn.RPN_cls_score.bias
+key : module.act_rpn.RPN_cls_score_3_4.weight
+key : module.act_rpn.RPN_cls_score_3_4.bias
+key : module.act_rpn.RPN_cls_score_2.weight
+key : module.act_rpn.RPN_cls_score_2.bias
+key : module.act_rpn.RPN_cls_score_4.weight
+key : module.act_rpn.RPN_cls_score_4.bias
+key : module.act_rpn.RPN_bbox_pred.weight
+key : module.act_rpn.RPN_bbox_pred.bias
+key : module.act_rpn.RPN_bbox_pred_3_4.weight
+key : module.act_rpn.RPN_bbox_pred_3_4.bias
+key : module.act_rpn.RPN_bbox_pred_2.weight
+key : module.act_rpn.RPN_bbox_pred_2.bias
+key : module.act_rpn.RPN_bbox_pred_4.weight
+key : module.act_rpn.RPN_bbox_pred_4.bias
+key : module.act_base_2.1.0.conv1.weight
+key : module.act_base_2.1.0.conv2.weight
+key : module.act_base_2.1.1.conv1.weight
+key : module.act_base_2.1.1.conv2.weight
+key : module.act_base_2.1.2.conv1.weight
+key : module.act_base_2.1.2.conv2.weight
+key : module.act_base_2.1.3.conv1.weight
+key : module.act_base_2.1.3.conv2.weight
+key : module.act_base_2.1.4.conv1.weight
+key : module.act_base_2.1.4.conv2.weight
+key : module.act_base_2.1.5.conv1.weight
+key : module.act_base_2.1.5.conv2.weight
+ ============
+| Epoch 01/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 1 	Loss: 0.630077	 lr : 0.001000
+ ============
+| Epoch 02/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+/home/sgal/miniconda3/envs/pytorch_0_4/lib/python3.7/site-packages/torch/nn/parallel/_functions.py:58: UserWarning: Was asked to gather along dimension 0, but all input tensors were scalars; will instead unsqueeze and return a vector.
+  warnings.warn('Was asked to gather along dimension 0, but all '
+Train Epoch: 2 	Loss: 0.286403	 lr : 0.001000
+ ============
+| Epoch 03/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 3 	Loss: 0.240481	 lr : 0.001000
+ ============
+| Epoch 04/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 4 	Loss: 0.225198	 lr : 0.001000
+ ============
+| Epoch 05/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 5 	Loss: 0.206863	 lr : 0.001000
+ ============
+| Epoch 06/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641
+Train Epoch: 6 	Loss: 0.221205	 lr : 0.001000
+ ============
+| Epoch 07/40 |
+ ============
+len(dataset) : 2284
+max_sim_actions : 9
+max_frames : 641

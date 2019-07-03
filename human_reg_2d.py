@@ -28,20 +28,22 @@ class _Regression_Layer(nn.Module):
         self.spatial_scale = 1.0/16
 
         # self.Conv = nn.Conv3d(self.din, din, 1, stride=1, padding=0, bias=True)
-        self.Conv = nn.Conv2d(self.din, din, 1, stride=1, padding=0, bias=True)
-
-
-        self.head_to_tail_ = nn.Sequential(
-            nn.Linear(din * 7 *  7, 2048),
-            nn.ReLU(True),
-            nn.Dropout(0.8),
-            nn.Linear(2048,512),
-            nn.ReLU(True)
-            )
+        self.Conv_list = []
+        self.head_to_tail_list = []
+        self.bbox_pred_list = []
+        for i in range(sample_duration):
+            self.Conv_list.append(nn.Conv2d(self.din, din, 1, stride=1, padding=0, bias=True).cuda())
+        
+            self.head_to_tail_list.append(
+                nn.Sequential(
+                nn.Linear(din * 7 *  7, 2048),
+                nn.ReLU(True),
+                nn.Dropout(0.8),
+                nn.Linear(2048,512),
+                nn.ReLU(True)
+                ).cuda())
             
-        # self.avg_pool = nn.AvgPool2d((7, 7), stride=1)
-        # self.bbox_pred = nn.Linear(512,self.sample_duration*4)
-        self.bbox_pred = nn.Linear(512,4)
+            self.bbox_pred_list.append( nn.Linear(512,4).cuda())
 
 
         self.roi_align = RoIAlign(self.pooling_size, self.pooling_size, self.spatial_scale)
@@ -81,9 +83,9 @@ class _Regression_Layer(nn.Module):
         bbox_pred = torch.zeros(base_feat.size(0),self.sample_duration,4).type_as(base_feat)
         for i in range(self.sample_duration):
             feat = base_feat[:,:,i]
-            feat = self.Conv(feat)
-            feat = self.head_to_tail_(feat.view(feat.size(0),-1))
-            bbox_pred[:,i] = self.bbox_pred(feat)
+            feat = self.Conv_list[i](feat)
+            feat = self.head_to_tail_list[i](feat.view(feat.size(0),-1))
+            bbox_pred[:,i] = self.bbox_pred_list[i](feat)
 
         bbox_pred = bbox_pred.view(bbox_pred.size(0),self.sample_duration*4).contiguous()
 
