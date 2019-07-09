@@ -7,8 +7,9 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from resnet_3D import resnet34
-from jhmdb_dataset import Video
+from ucf_dataset import  video_names
 
+from create_video_id import get_vid_dict
 from net_utils import adjust_learning_rate
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
@@ -17,6 +18,7 @@ from model import Model
 from resize_rpn import resize_rpn, resize_tube
 import pdb
 
+import json
 np.random.seed(42)
 
 def validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads):
@@ -25,7 +27,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     iou_thresh_4 = 0.4 # Intersection Over Union thresh
     iou_thresh_3 = 0.3 # Intersection Over Union thresh
 
-    vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='test')
+    vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='test')
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
                                               shuffle=True)    # reset learning rate
     model.eval()
@@ -40,29 +42,64 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
-        if step == 2:
+        if step == 1:
             break
         print('step :',step)
 
-        vid_id, clips, boxes, n_frames, n_actions, h, w =data
+        vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
 
-        vid_id = torch.Tensor(vid_id).int()
-        clips = clips.unsqueeze(0).to(device)
-        boxes = torch.from_numpy(boxes).to(device)
-        n_frames = torch.from_numpy(n_frames).to(device)
-        n_actions = torch.from_numpy(n_actions).int().to(device)
-        im_info = torch.Tensor([h,w,clips.size(2)]).unsqueeze(0).to(device)
+        vid_id = vid_id.int()
+        clips = clips.to(device)
+        boxes = boxes.to(device)
+        n_frames = n_frames.to(device)
+        n_actions = n_actions.int().to(device)
+        target = target.to(device)
+        im_info = torch.cat([h,w,torch.ones(clips.size(0)).long()*clips.size(2)]).to(device)
         mode = 'test'
 
         tubes,  \
-        prob_out, cls_loss =  model(n_devs, dataset_frames, \
+        prob_out, n_tubes =  model(n_devs, dataset_folder, \
                                 vid_names, clips, vid_id,  \
                                 None, \
                                 mode, cls2idx, None, n_frames, h, w)
 
 
         print('tubes.shape :',tubes.shape)
-        print('bbox_pred.shape :',bbox_pred.shape)
+        print('prob_out :',prob_out.shape)
+        print('n_tubes :',n_tubes)
+        print('n_frames :',n_frames)
+        print('boxes.shape :',boxes.shape)        
+        tubes = tubes[0,:n_tubes.long(), :n_frames.long()]
+        boxes = boxes[0,:n_actions, :n_frames, :4]
+        prob_out = prob_out[0,:n_tubes.long()]
+        
+        print('prob_out :',prob_out.shape)
+        print('tubes.shape :',tubes.shape)
+
+        _, cls_int = torch.max(prob_out,1)
+        print('cls_int.shape :',cls_int.shape)
+        
+        final_prob = torch.zeros(cls_int.size(0))
+        print('final_prob.shape :',final_prob.shape)
+        for i in range(cls_int.size(0)):
+            final_prob[i] = prob_out[i,cls_int[i]]
+
+        print('final_prob.contiguous().type_as(tubes).view(-1,1).shape :',final_prob.contiguous().type_as(tubes).view(-1,1).shape)
+        
+        final_tubes = torch.cat([cls_int.contiguous().view(-1,1).type_as(tubes), final_prob.contiguous().type_as(tubes).view(-1,1), \
+                                 tubes.contiguous().view(n_tubes.long(), n_frames*4)], dim=1)
+        final_boxes = torch.cat([target.expand(n_actions).contiguous().view(n_actions,1).type_as(boxes), \
+                                   boxes.contiguous().view(n_actions,n_frames*4)], dim=1)
+        print('tubes.shape :',tubes.shape)
+        print('boxes.shape :',boxes.shape)
+        print('final_tubes.shape :',final_tubes.shape)
+        print('final_boxes.shape :',final_boxes.shape)
+
+        with open('gt_boxes.json', 'w') as gt_file:
+            json.dump(final_boxes.cpu().tolist(), gt_file)
+        with open('dt_boxes.json', 'w') as dt_file:
+            json.dump(final_tubes.cpu().tolist(), dt_file)
+
         exit(-1)
         n_tubes = len(tubes)
 
@@ -151,21 +188,22 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_folder = '/gpu-data/sgal/JHMDB-act-detector-frames'
-    split_txt_path =  '/gpu-data/sgal/splits'
-    boxes_file = '../temporal_localization/poses.json'
+    dataset_folder = '../UCF-101-frames'
+    boxes_file = '../pyannot.pkl'
+    split_txt_path = '../UCF101_Action_detection_splits/'
+
+    n_devs = torch.cuda.device_count()
 
     sample_size = 112
     sample_duration = 16  # len(images)
 
     batch_size = 1
-    # batch_size = 1
     n_threads = 0
 
     # # get mean
     # mean =  [103.75581543 104.79421473  91.16894564] # jhmdb
-    mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
-    # mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
+    # mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
+    mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
     # generate model
 
     actions = ['__background__', 'Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
@@ -176,6 +214,7 @@ if __name__ == '__main__':
 
 
     cls2idx = {actions[i]: i for i in range(0, len(actions))}
+    vid2idx,vid_names = get_vid_dict(dataset_folder)
 
     spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
                                  ToTensor(),
@@ -183,11 +222,10 @@ if __name__ == '__main__':
     temporal_transform = LoopPadding(sample_duration)
 
     # Init action_net
-    model = Model(classes)
-    model.create_architecture()
-    model_data = torch.load('./action_net_model_25epoch.pwf')
+    model = Model(actions,sample_duration=16, sample_size=112)
 
-    model.load_state_dict(model_data)
+    action_model_path = './action_net_model_both.pwf'
+    model.load_part_model(action_model_path=action_model_path)
 
     model = nn.DataParallel(model)
     model.to(device)

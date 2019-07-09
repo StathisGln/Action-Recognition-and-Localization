@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
     model = ACT_net(actions, sample_duration)
     model.create_architecture()
-
+    model = nn.DataParallel(model)
     model.to(device)
 
     data = Video_UCF(dataset_frames, frames_dur=sample_duration, spatial_transform=spatial_transform,
@@ -108,12 +108,12 @@ if __name__ == '__main__':
     im_info_2 = im_info2.unsqueeze(0).to(device)
     start_fr_2 = torch.zeros((1,1)).to(device)
 
-    clips_ = torch.cat((clips_,clips_2))
-    gt_tubes_r_ = torch.cat((gt_tubes_r_, gt_tubes_r_2))
-    gt_rois_ = torch.cat((gt_rois_, gt_rois_2))
-    n_actions_ = torch.cat((n_actions_, n_actions_2))
-    start_fr = torch.cat((start_fr,start_fr_2))
-    im_info_ = torch.Tensor([[112,112,16],[112,112,16]]).to(device)
+    clips_ = torch.cat((clips_,clips_2,clips_,clips_2))
+    gt_tubes_r_ = torch.cat((gt_tubes_r_, gt_tubes_r_2,gt_tubes_r_, gt_tubes_r_2))
+    gt_rois_ = torch.cat((gt_rois_, gt_rois_2,gt_rois_, gt_rois_2))
+    n_actions_ = torch.cat((n_actions_, n_actions_2,n_actions_, n_actions_2))
+    start_fr = torch.cat((start_fr,start_fr_2,start_fr,start_fr_2))
+    im_info_ = torch.Tensor([[112,112,16],[112,112,16],[112,112,16],[112,112,16]]).to(device)
 
     # clips_ = torch.cat((clips_,clips_2,clips_,clips_2))
     # gt_tubes_r_ = torch.cat((gt_tubes_r_, gt_tubes_r_2,gt_tubes_r_, gt_tubes_r_2))

@@ -71,7 +71,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         tubes = tubes.view(n_tubes,-1, sample_duration*4+2)
         tubes[:,:,1:-1] = clip_boxes(tubes[:,:,1:-1], im_info, tubes.size(0))
 
-        # print('tubes[0]:',tubes[0])
+        
         # print('tubes[0]:',tubes.shape)
         # exit(-1)
         # print('tubes.cpu().numpy() :',tubes.cpu().numpy())
@@ -177,8 +177,8 @@ if __name__ == '__main__':
     # model_data = torch.load('./actio_net_model_both.pwf')
     # model_data = torch.load('./action_net_model_both_without_avg.pwf')
     # model_data = torch.load('./action_net_model_16frm_64.pwf')
+    # model_data = torch.load('./action_net_model_both_sgl_frm.pwf')
     model_data = torch.load('./action_net_model_both.pwf')
-
     # 
     # model_data = torch.load('./action_net_model_part1_1_8frm.pwf')
     model.load_state_dict(model_data)
