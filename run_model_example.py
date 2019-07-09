@@ -110,6 +110,7 @@ if __name__ == '__main__':
                                 boxes, \
                                 mode, cls2idx, n_actions,n_frames, h, w)
 
+
     # rois,  bbox_pred, cls_prob, \
     # rpn_loss_cls,  rpn_loss_bbox, \
     # act_loss_cls,  act_loss_bbox, rois_label = model(clips,
@@ -118,6 +119,9 @@ if __name__ == '__main__':
     #                                                  n_actions)
 
     print('**********VGIKE**********')
+    torch.set_printoptions(profile='full')
     print('rois.shape :',tubes.shape)
-    print('rois :',tubes)
+    # print('rois.shape :',tubes[:3])
+
+
 

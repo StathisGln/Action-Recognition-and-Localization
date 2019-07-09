@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import json
 
 import torch
 import torch.nn as nn
@@ -16,6 +17,7 @@ from model import Model
 from resize_rpn import resize_rpn, resize_tube
 from jhmdb_dataset import Video, video_names
 
+
 from box_functions import bbox_transform, tube_transform_inv, clip_boxes, tube_overlaps
 
 np.random.seed(42)
@@ -26,6 +28,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     iou_thresh_4 = 0.4 # Intersection Over Union thresh
     iou_thresh_3 = 0.3 # Intersection Over Union thresh
 
+    confidence_thresh = 0.25
     vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='test', classes_idx=cls2idx)
     # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
     #                                           shuffle=True)    # reset learning rate
@@ -51,32 +54,64 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
-        # if step == 15:
+        # if step == 2:
         #     break
         print('step =>',step)
 
-        vid_id, clips, boxes, n_frames, n_actions, h, w =data
+        vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
         vid_id = vid_id.int()
         clips = clips.to(device)
         boxes = boxes.to(device)
         n_frames = n_frames.to(device)
         n_actions = n_actions.int().to(device)
+        target = target.to(device)
+
+
+
+        # for i in range(batch_size):
+        #     f_boxes = torch.cat([target.type_as(boxes),boxes[i,:,:n_frames[i],:4].contiguous().view(n_frames[i]*4)]).unsqueeze(0)
+        #     class_name = vid_names[vid_id[i]].split('/')[0]
+        #     if not os.path.exists(os.path.join('outputs', 'detection', class_name)):
+        #         os.makedirs(os.path.join('outputs', 'detection', class_name))
+        #     with open(os.path.join('outputs','detection',vid_names[vid_id[i]]+'.json'), 'w') as f:
+        #         json.dump(f_boxes.cpu().tolist(), f)
 
         im_info = torch.cat([h,w,torch.ones(clips.size(0)).long()*clips.size(2)]).to(device)
         mode = 'test'
 
         tubes,  \
-        prob_out, _ =  model(n_devs, dataset_folder, \
+        prob_out, n_tubes =  model(n_devs, dataset_folder, \
                                 vid_names, clips, vid_id,  \
                                 None, \
                                 mode, cls2idx, None, n_frames, h, w)
+        # get predictions
+        for i in range(batch_size):
+            _, cls_int = torch.max(prob_out[i],1)
 
-        # print('tubes.shape :',tubes.shape)
-        # print('tubes.shape :',tubes.dim())
-        # print('prob_out.shape :',prob_out.shape)
-        # print('clips.size(0) :',clips.size(0))
-        # print('clips.size(0) :',clips.shape)
-        # exit(-1)
+            f_prob = torch.zeros(n_tubes[i].long()).type_as(prob_out)
+            for j in range(n_tubes[i].long()):
+                f_prob[j] = prob_out[i,j,cls_int[j]]
+            cls_int = cls_int[:n_tubes[i].long()]
+
+            keep_ = (f_prob[j].ge(confidence_thresh)) & cls_int.ne(0)
+
+            keep_indices = keep_.nonzero().view(-1)
+            f_tubes = torch.cat([cls_int.view(-1,1).type_as(tubes),f_prob.view(-1,1).type_as(tubes), \
+                                 tubes[i,:n_tubes[i].long(),:n_frames[i]].contiguous().view(-1,n_frames[i]*4)], dim=1)
+            f_tubes = f_tubes[keep_indices].contiguous()
+            f_boxes = torch.cat([target.type_as(boxes),boxes[i,:,:n_frames[i],:4].contiguous().view(n_frames[i]*4)]).unsqueeze(0)
+            v_name = vid_names[vid_id[i]].split('/')[1]
+
+            # if not os.path.exists(os.path.join('outputs', 'detection', class_name)):
+            #     os.makedirs(os.path.join('outputs', 'detection', class_name))
+            # if not os.path.exists(os.path.join('outputs', 'groundtruth', class_name)):
+            #     os.makedirs(os.path.join('outputs', 'groundtruth', class_name))
+            with open(os.path.join('outputs','detection',v_name+'.json'), 'w') as f:
+                json.dump(f_tubes.cpu().tolist(), f)
+            with open(os.path.join('outputs','groundtruth',v_name+'.json'), 'w') as f:
+                json.dump(f_boxes.cpu().tolist(), f)
+
+
         if tubes.dim() == 1:
         
             for i in range(clips.size(0)):
@@ -90,15 +125,18 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                 false_neg_4 += n_elems
                 false_neg_3 += n_elems 
             continue
-        n_tubes = len(tubes)
 
-        # get predictions
-        _, cls_int = torch.max(prob_out,1)
 
         for i in range(clips.size(0)):
-            box = boxes[i,:n_actions, :n_frames,:4].contiguous()
-            box = box.view(-1,n_frames*4).contiguous().type_as(tubes)
-            overlaps = tube_overlaps(tubes.view(-1,n_frames*4).float(), box.view(-1,n_frames*4).float())
+            print('boxes.shape:',boxes.shape)
+
+            box = boxes[i,:n_actions[i].long(), :n_frames[i].long(),:4].contiguous()
+            print('box.shape :',box.shape)
+            box = box.view(-1,n_frames[i]*4).contiguous().type_as(tubes)
+            print('box.shape :',box.shape)
+            print('n_frames :',n_frames)
+            print('n_tubes :',n_tubes)
+            overlaps = tube_overlaps(tubes[i,:n_tubes[i].long(),:n_frames[i].long()].view(-1,n_frames*4).float(), box.view(-1,n_frames[i]*4).float())
             gt_max_overlaps, argmax_gt_overlaps = torch.max(overlaps, 0)
 
             non_empty_indices =  box.ne(0).any(dim=1).nonzero().view(-1)

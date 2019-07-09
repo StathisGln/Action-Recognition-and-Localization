@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
+from nms_tubes.py_nms import py_cpu_nms_tubes
 from conf import conf
 from action_net import ACT_net
 from act_rnn import Act_RNN
@@ -467,7 +468,7 @@ class Model(nn.Module):
             cls_loss = F.cross_entropy(prob_out.cpu(), target_lbl.long()).cuda()
 
         if self.training:
-            return None, prob_out,  cls_loss, 
+            return None, prob_out,  cls_loss,
         else:
 
             # init padding tubes because of multi-GPU system
@@ -475,7 +476,15 @@ class Model(nn.Module):
                 _, indices = torch.sort(final_scores)
                 final_tubes = final_tubes[indices[:conf.UPDATE_THRESH]].contiguous()
                 prob_out = prob_out[indices[:conf.UPDATE_THRESH]].contiguous()
-            print('final_tubes.size(0) :',final_tubes.size(0))
+
+            max_prob_out, _ = torch.max(prob_out,1)
+
+            f_tubes = torch.cat([final_tubes.view(-1,num_frames*4), max_prob_out.view(-1,1).type_as(final_tubes)],dim=1)
+
+            keep = torch.Tensor(py_cpu_nms_tubes(f_tubes.float(),0.5)).long()
+            final_tubes = final_tubes[keep]
+            prob_out = prob_out[keep]
+
             ret_tubes = torch.zeros(1,conf.UPDATE_THRESH, ret_n_frames,4).type_as(final_tubes).float() -1
             ret_prob_out = torch.zeros(1,conf.UPDATE_THRESH,self.n_classes).type_as(final_tubes).float() - 1
             ret_tubes[0,:final_tubes.size(0),:num_frames] = final_tubes
