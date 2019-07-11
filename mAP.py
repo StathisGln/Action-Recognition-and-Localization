@@ -10,7 +10,7 @@ import torch
 
 import numpy as np
 
-min_overlap = 0.0
+min_overlap = 0.3
 iou_overlap = 0.5
 iou_overlap_4 = 0.4
 iou_overlap_3 = 0.3

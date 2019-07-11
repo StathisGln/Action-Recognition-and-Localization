@@ -19,7 +19,7 @@ from jhmdb_dataset import Video, video_names
 
 
 from box_functions import bbox_transform, tube_transform_inv, clip_boxes, tube_overlaps
-
+from mAP_function import calculate_mAP
 np.random.seed(42)
 
 def validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads):
@@ -52,10 +52,14 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
     ## 2 rois : 1450
     tubes_sum = 0
+
+    groundtruth_dic = {}
+    detection_dic = {}
+
     for step, data  in enumerate(data_loader):
 
-        # if step == 2:
-        #     break
+        if step == 3:
+            break
         print('step =>',step)
 
         vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
@@ -66,15 +70,6 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         n_actions = n_actions.int().to(device)
         target = target.to(device)
 
-
-
-        # for i in range(batch_size):
-        #     f_boxes = torch.cat([target.type_as(boxes),boxes[i,:,:n_frames[i],:4].contiguous().view(n_frames[i]*4)]).unsqueeze(0)
-        #     class_name = vid_names[vid_id[i]].split('/')[0]
-        #     if not os.path.exists(os.path.join('outputs', 'detection', class_name)):
-        #         os.makedirs(os.path.join('outputs', 'detection', class_name))
-        #     with open(os.path.join('outputs','detection',vid_names[vid_id[i]]+'.json'), 'w') as f:
-        #         json.dump(f_boxes.cpu().tolist(), f)
 
         im_info = torch.cat([h,w,torch.ones(clips.size(0)).long()*clips.size(2)]).to(device)
         mode = 'test'
@@ -102,14 +97,14 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             f_boxes = torch.cat([target.type_as(boxes),boxes[i,:,:n_frames[i],:4].contiguous().view(n_frames[i]*4)]).unsqueeze(0)
             v_name = vid_names[vid_id[i]].split('/')[1]
 
-            # if not os.path.exists(os.path.join('outputs', 'detection', class_name)):
-            #     os.makedirs(os.path.join('outputs', 'detection', class_name))
-            # if not os.path.exists(os.path.join('outputs', 'groundtruth', class_name)):
-            #     os.makedirs(os.path.join('outputs', 'groundtruth', class_name))
-            with open(os.path.join('outputs','detection',v_name+'.json'), 'w') as f:
-                json.dump(f_tubes.cpu().tolist(), f)
-            with open(os.path.join('outputs','groundtruth',v_name+'.json'), 'w') as f:
-                json.dump(f_boxes.cpu().tolist(), f)
+            
+
+            detection_dic[v_name] = f_tubes.float()
+            groundtruth_dic[v_name] = f_boxes.type_as(f_tubes)
+            # with open(os.path.join('outputs','detection',v_name+'.json'), 'w') as f:
+            #     json.dump(f_tubes.cpu().tolist(), f)
+            # with open(os.path.join('outputs','groundtruth',v_name+'.json'), 'w') as f:
+            #     json.dump(f_boxes.cpu().tolist(), f)
 
 
         if tubes.dim() == 1:
@@ -180,6 +175,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     recall_4  = float(true_pos_4)  / (true_pos_4  + false_neg_4)
     recall_3  = float(true_pos_3)  / (true_pos_3  + false_neg_3)
 
+
     print(' -----------------------')
     print('| Validation Epoch: {: >3} | '.format(epoch+1))
     print('|                       |')
@@ -207,6 +203,28 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
     print(' -----------------------')
         
+    print(' -----------------')
+    print('|                  |')
+    print('| mAP Thresh : 0.5 |')
+    print('|                  |')
+    print(' ------------------')
+    calculate_mAP(detection_dic, groundtruth_dic, iou_thresh)
+
+    print(' -------------------')
+    print('|                   |')
+    print('| mAP Thresh : 0.4  |')
+    print('|                   |')
+    print(' -------------------')
+    calculate_mAP(detection_dic, groundtruth_dic, iou_thresh_4)
+
+    print(' ------------------')
+    print('|                  |')
+    print('| mAP Thresh : 0.3 |')
+    print('|                  |')
+    print(' ------------------')
+    calculate_mAP(detection_dic, groundtruth_dic, iou_thresh_3)
+    
+    
 if __name__ == '__main__':
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -246,19 +264,28 @@ if __name__ == '__main__':
     temporal_transform = LoopPadding(sample_duration)
 
     # Init action_net
-    action_model_path = './action_net_model_jhmdb_16frm_64.pwf'
-    
+    # action_model_path = './action_net_model_jhmdb_16frm_64.pwf'
+    # linear_path = './linear_jhmdb.pwf'
     model = Model(actions, sample_duration, sample_size)
-    model.load_part_model(action_model_path=action_model_path)
-    if torch.cuda.device_count() > 1:
-        print('Using {} GPUs!'.format(torch.cuda.device_count()))
-        model.act_net = nn.DataParallel(model.act_net)
-    model.act_net.to(device)
+    model.load_part_model()
+    # model.load_part_model(action_model_path=action_model_path, rnn_path=linear_path)
+
+
 
     # if torch.cuda.device_count() > 1:
     #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
-    #     model = nn.DataParallel(model)
+    #     # model.act_net = nn.DataParallel(model.act_net)
+    # model.act_net.to(device)
+
+
+    if torch.cuda.device_count() > 1:
+        print('Using {} GPUs!'.format(torch.cuda.device_count()))
+        model = nn.DataParallel(model)
     model.to(device)
+
+    model_path = './model_linear_jhmdb.pwf'
+    model_data = torch.load(model_path)
+    model.load_state_dict(model_data)
 
     model.eval()
 

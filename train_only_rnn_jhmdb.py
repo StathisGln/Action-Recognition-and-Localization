@@ -358,7 +358,7 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-
+        exit(-1)
     print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
         epoch+1,loss_temp/(step+1), lr))
 
@@ -369,7 +369,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train action_net, regression layer and RNN')
 
     # parser.add_argument('--demo', '-d', help='Run just 2 steps for test if everything works fine', action='store_true')
-    # parser.add_argument('--n_1_1', help='Run only part 1.1, trainng aiction net only', action='store_true')
+    # parser.add_argument('--n_1_1', help='Run only part 1.1, training action net only', action='store_true')
     # parser.add_argument('--n_1_2', help='Run only part 1.2, training only regression layer', action='store_true')
     # parser.add_argument('--n_2', help='Run only part 2, train only RNN', action='store_true')
     args = parser.parse_args()
@@ -451,7 +451,7 @@ if __name__ == '__main__':
     lr = lr * 0.1
     optimizer = torch.optim.Adam(params)
 
-    epochs = 60
+    epochs = 40
     # epochs = 5
 
     file = open('train_loss.txt', 'w')

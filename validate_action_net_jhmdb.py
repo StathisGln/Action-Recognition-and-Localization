@@ -165,6 +165,7 @@ if __name__ == '__main__':
 
     # model_data = torch.load('./action_net_model_both_jhmdb.pwf')
     model_data = torch.load('./action_net_model_both_single_frm_jhmdb.pwf')
+    # action_model_path = './action_net_model_jhmdb_16frm_64.pwf'
 
     model.load_state_dict(model_data)
 

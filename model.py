@@ -530,9 +530,9 @@ class Model(nn.Module):
         # load lstm
         if rnn_path != None:
 
-            act_rnn = Act_RNN(self.p_feat_size,int(self.p_feat_size/2),self.n_classes)
-            act_rnn_data = torch.load(rnn_path)
-            act_rnn.load_state_dict(act_rnn_data)
+            # act_rnn = Act_RNN(self.p_feat_size,int(self.p_feat_size/2),self.n_classes)
+            # act_rnn_data = torch.load(rnn_path)
+            # act_rnn.load_state_dict(act_rnn_data)
 
             act_rnn = nn.Sequential(
                 # nn.Linear(64*self.sample_duration, 256),
