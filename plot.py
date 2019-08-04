@@ -1,5 +1,6 @@
 import os
 import sys
+import glob
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
@@ -8,7 +9,9 @@ import torch
 def plot(name):
 
     output_name = name[:-4]
-    file = open('data/validation_2scores_IoU.txt')
+    fig_lbl = output_name.split('/')[1]
+    output_name = output_name + '.jpg'
+    file = open(name)
     lines = file.readlines()
     epochs = []
     recall = []
@@ -17,20 +20,21 @@ def plot(name):
             epochs.append(int(lines[k].split()[3]))
             if k + 7 < len(lines):
                 recall.append(float(lines[k+7].split()[3]))
-
-    print('epochs :',epochs)
-    print('recall :',recall)
-    exit(-1)
-
+    file.close()
+    plt.figure()
+    plt.title(fig_lbl)
+    plt.plot( epochs, recall)
+    plt.savefig(output_name)
     
-
-
 
 
 if __name__ == '__main__':
 
-    name = 'data/validation_2scores_IoU.txt'
-    plot(name)
+    files = glob.glob('data/validation*.txt')
+    print(files)
+    for i in files:
+        print('i :',i)
+        plot(i)
     # output_name = name[:-4]
     # print('output_name:',output_name)
     # file = open('data/validation_2scores_IoU.txt')

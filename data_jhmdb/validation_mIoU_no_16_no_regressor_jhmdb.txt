@@ -1,0 +1,130 @@
+ -----------------------
+| Validation Epoch:   5 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    134 steps    :  |
+| True_pos   -->    126 |
+| False_neg  -->    142 | 
+| Recall     --> 0.4701 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  10 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    134 steps    :  |
+| True_pos   -->    190 |
+| False_neg  -->     78 | 
+| Recall     --> 0.7090 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  15 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    134 steps    :  |
+| True_pos   -->    182 |
+| False_neg  -->     86 | 
+| Recall     --> 0.6791 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  20 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    134 steps    :  |
+| True_pos   -->    193 |
+| False_neg  -->     75 | 
+| Recall     --> 0.7201 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  25 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    134 steps    :  |
+| True_pos   -->    185 |
+| False_neg  -->     83 | 
+| Recall     --> 0.6903 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  30 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    134 steps    :  |
+| True_pos   -->    189 |
+| False_neg  -->     79 | 
+| Recall     --> 0.7052 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  35 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    134 steps    :  |
+| True_pos   -->    180 |
+| False_neg  -->     88 | 
+| Recall     --> 0.6716 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  40 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    134 steps    :  |
+| True_pos   -->    180 |
+| False_neg  -->     88 | 
+| Recall     --> 0.6716 |
+ -----------------------
+ -----------------------
+| Validation Epoch:   5 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    134 steps    :  |
+| True_pos   -->     48 |
+| False_neg  -->    220 | 
+| Recall     --> 0.1791 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  10 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    134 steps    :  |
+| True_pos   -->     41 |
+| False_neg  -->    227 | 
+| Recall     --> 0.1530 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  15 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    134 steps    :  |
+| True_pos   -->     49 |
+| False_neg  -->    219 | 
+| Recall     --> 0.1828 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  20 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    134 steps    :  |
+| True_pos   -->     39 |
+| False_neg  -->    229 | 
+| Recall     --> 0.1455 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  25 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    134 steps    :  |
+| True_pos   -->     47 |
+| False_neg  -->    221 | 
+| Recall     --> 0.1754 |
+ -----------------------

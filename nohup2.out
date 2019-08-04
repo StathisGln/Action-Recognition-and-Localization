@@ -1,0 +1,472 @@
+nohup: ignoring input
+Device being used: cuda:0
+ -----------------------------------------------------
+|          Part 1-1 - train TPN - without reg         |
+ -----------------------------------------------------
+Loading pretrained weights from ../resnet-34-kinetics.pth
+key : module.act_rpn.RPN_Conv.weight
+key : module.act_rpn.RPN_Conv.bias
+key : module.act_rpn.RPN_cls_score.weight
+key : module.act_rpn.RPN_cls_score.bias
+key : module.act_rpn.RPN_cls_16.weight
+key : module.act_rpn.RPN_cls_16.bias
+key : module.act_rpn.RPN_bbox_pred.weight
+key : module.act_rpn.RPN_bbox_pred.bias
+key : module.act_rpn.RPN_bbox_only16.weight
+key : module.act_rpn.RPN_bbox_only16.bias
+key : module.reg_layer.Conv.weight
+key : module.reg_layer.Conv.bias
+key : module.reg_layer.head_to_tail_.0.weight
+key : module.reg_layer.head_to_tail_.0.bias
+key : module.reg_layer.head_to_tail_.3.weight
+key : module.reg_layer.head_to_tail_.3.bias
+key : module.reg_layer.bbox_pred.weight
+key : module.reg_layer.bbox_pred.bias
+ ============
+| Epoch 01/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 1 	Loss: 3.000585	 lr : 0.001000
+ ============
+| Epoch 02/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 2 	Loss: 2.838647	 lr : 0.001000
+ ============
+| Epoch 03/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 3 	Loss: 3.402536	 lr : 0.001000
+ ============
+| Epoch 04/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 4 	Loss: 4.384068	 lr : 0.001000
+ ============
+| Epoch 05/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 5 	Loss: 4.171763	 lr : 0.001000
+268
+max_frames : 40
+ -----------------------
+| Validation Epoch:   5 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->    228 |
+| False_neg  -->     40 | 
+| Recall     --> 0.8507 |
+|                       |
+| Single Rois           |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->    220 |
+| False_neg  -->     48 | 
+| Recall     --> 0.8209 |
+|                       |
+| Single Rois follow up |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->   2899 |
+| False_neg  -->   1484 | 
+| Recall     --> 0.6614 |
+ -----------------------
+ ============
+| Epoch 06/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 6 	Loss: 3.836757	 lr : 0.001000
+ ============
+| Epoch 07/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 7 	Loss: 3.855046	 lr : 0.000100
+ ============
+| Epoch 08/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 8 	Loss: 3.426314	 lr : 0.000100
+ ============
+| Epoch 09/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 9 	Loss: 2.299704	 lr : 0.000100
+ ============
+| Epoch 10/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 10 	Loss: 3.034322	 lr : 0.000100
+268
+max_frames : 40
+ -----------------------
+| Validation Epoch:  10 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->    233 |
+| False_neg  -->     35 | 
+| Recall     --> 0.8694 |
+|                       |
+| Single Rois           |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->    220 |
+| False_neg  -->     48 | 
+| Recall     --> 0.8209 |
+|                       |
+| Single Rois follow up |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->   3273 |
+| False_neg  -->   1273 | 
+| Recall     --> 0.7200 |
+ -----------------------
+ ============
+| Epoch 11/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 11 	Loss: 2.828662	 lr : 0.000100
+ ============
+| Epoch 12/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 12 	Loss: 2.584557	 lr : 0.000100
+ ============
+| Epoch 13/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 13 	Loss: 2.623009	 lr : 0.000010
+ ============
+| Epoch 14/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 14 	Loss: 2.441974	 lr : 0.000010
+ ============
+| Epoch 15/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 15 	Loss: 2.780744	 lr : 0.000010
+268
+max_frames : 40
+ -----------------------
+| Validation Epoch:  15 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->    235 |
+| False_neg  -->     33 | 
+| Recall     --> 0.8769 |
+|                       |
+| Single Rois           |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->    222 |
+| False_neg  -->     46 | 
+| Recall     --> 0.8284 |
+|                       |
+| Single Rois follow up |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->   2938 |
+| False_neg  -->   1342 | 
+| Recall     --> 0.6864 |
+ -----------------------
+ ============
+| Epoch 16/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 16 	Loss: 2.693003	 lr : 0.000010
+ ============
+| Epoch 17/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 17 	Loss: 2.815616	 lr : 0.000010
+ ============
+| Epoch 18/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 18 	Loss: 2.081282	 lr : 0.000010
+ ============
+| Epoch 19/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 19 	Loss: 2.442833	 lr : 0.000001
+ ============
+| Epoch 20/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 20 	Loss: 2.563031	 lr : 0.000001
+268
+max_frames : 40
+ -----------------------
+| Validation Epoch:  20 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->    236 |
+| False_neg  -->     32 | 
+| Recall     --> 0.8806 |
+|                       |
+| Single Rois           |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->    222 |
+| False_neg  -->     46 | 
+| Recall     --> 0.8284 |
+|                       |
+| Single Rois follow up |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->   3081 |
+| False_neg  -->   1249 | 
+| Recall     --> 0.7115 |
+ -----------------------
+ ============
+| Epoch 21/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 21 	Loss: 2.429827	 lr : 0.000001
+ ============
+| Epoch 22/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 22 	Loss: 2.807824	 lr : 0.000001
+ ============
+| Epoch 23/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 23 	Loss: 2.970718	 lr : 0.000001
+ ============
+| Epoch 24/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 24 	Loss: 2.726217	 lr : 0.000001
+ ============
+| Epoch 25/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 25 	Loss: 2.878576	 lr : 0.000000
+268
+max_frames : 40
+ -----------------------
+| Validation Epoch:  25 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->    232 |
+| False_neg  -->     36 | 
+| Recall     --> 0.8657 |
+|                       |
+| Single Rois           |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->    221 |
+| False_neg  -->     47 | 
+| Recall     --> 0.8246 |
+|                       |
+| Single Rois follow up |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->   3185 |
+| False_neg  -->   1347 | 
+| Recall     --> 0.7028 |
+ -----------------------
+ ============
+| Epoch 26/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 26 	Loss: 2.603084	 lr : 0.000000
+ ============
+| Epoch 27/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 27 	Loss: 2.774814	 lr : 0.000000
+ ============
+| Epoch 28/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 28 	Loss: 2.747649	 lr : 0.000000
+ ============
+| Epoch 29/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 29 	Loss: 2.454123	 lr : 0.000000
+ ============
+| Epoch 30/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 30 	Loss: 2.396036	 lr : 0.000000
+268
+max_frames : 40
+ -----------------------
+| Validation Epoch:  30 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->    232 |
+| False_neg  -->     36 | 
+| Recall     --> 0.8657 |
+|                       |
+| Single Rois           |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->    214 |
+| False_neg  -->     54 | 
+| Recall     --> 0.7985 |
+|                       |
+| Single Rois follow up |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->   3169 |
+| False_neg  -->   1281 | 
+| Recall     --> 0.7121 |
+ -----------------------
+ ============
+| Epoch 31/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 31 	Loss: 2.734360	 lr : 0.000000
+ ============
+| Epoch 32/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 32 	Loss: 2.665425	 lr : 0.000000
+ ============
+| Epoch 33/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 33 	Loss: 2.631527	 lr : 0.000000
+ ============
+| Epoch 34/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 34 	Loss: 2.801777	 lr : 0.000000
+ ============
+| Epoch 35/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 35 	Loss: 2.444965	 lr : 0.000000
+268
+max_frames : 40
+ -----------------------
+| Validation Epoch:  35 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->    231 |
+| False_neg  -->     37 | 
+| Recall     --> 0.8619 |
+|                       |
+| Single Rois           |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->    221 |
+| False_neg  -->     47 | 
+| Recall     --> 0.8246 |
+|                       |
+| Single Rois follow up |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->   2945 |
+| False_neg  -->   1359 | 
+| Recall     --> 0.6842 |
+ -----------------------
+ ============
+| Epoch 36/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 36 	Loss: 2.860125	 lr : 0.000000
+ ============
+| Epoch 37/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 37 	Loss: 2.910668	 lr : 0.000000
+ ============
+| Epoch 38/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 38 	Loss: 2.700216	 lr : 0.000000
+ ============
+| Epoch 39/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 39 	Loss: 2.853946	 lr : 0.000000
+ ============
+| Epoch 40/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 40 	Loss: 2.557288	 lr : 0.000000
+268
+max_frames : 40
+ -----------------------
+| Validation Epoch:  40 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->    237 |
+| False_neg  -->     31 | 
+| Recall     --> 0.8843 |
+|                       |
+| Single Rois           |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->    223 |
+| False_neg  -->     45 | 
+| Recall     --> 0.8321 |
+|                       |
+| Single Rois follow up |
+|                       |
+| In    268 steps    :  |
+| True_pos   -->   3067 |
+| False_neg  -->   1208 | 
+| Recall     --> 0.7174 |
+ -----------------------

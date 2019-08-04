@@ -1,0 +1,100 @@
+ -----------------------
+| Validation Epoch:  35 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    455 steps    :  |
+| True_pos   -->    508 |
+| False_neg  -->    576 | 
+| Recall     --> 0.4686 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  40 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    455 steps    :  |
+| True_pos   -->    529 |
+| False_neg  -->    554 | 
+| Recall     --> 0.4885 |
+ -----------------------
+ -----------------------
+| Validation Epoch:   5 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    455 steps    :  |
+| True_pos   -->    531 |
+| False_neg  -->    548 | 
+| Recall     --> 0.4921 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  10 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    455 steps    :  |
+| True_pos   -->    459 |
+| False_neg  -->    615 | 
+| Recall     --> 0.4274 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  15 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    455 steps    :  |
+| True_pos   -->    525 |
+| False_neg  -->    553 | 
+| Recall     --> 0.4870 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  20 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    455 steps    :  |
+| True_pos   -->    507 |
+| False_neg  -->    568 | 
+| Recall     --> 0.4716 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  25 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    455 steps    :  |
+| True_pos   -->    517 |
+| False_neg  -->    563 | 
+| Recall     --> 0.4787 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  30 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    455 steps    :  |
+| True_pos   -->    530 |
+| False_neg  -->    539 | 
+| Recall     --> 0.4958 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  35 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    455 steps    :  |
+| True_pos   -->    506 |
+| False_neg  -->    569 | 
+| Recall     --> 0.4707 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  40 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In    455 steps    :  |
+| True_pos   -->    496 |
+| False_neg  -->    577 | 
+| Recall     --> 0.4623 |
+ -----------------------

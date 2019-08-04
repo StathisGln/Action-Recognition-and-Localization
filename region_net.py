@@ -41,13 +41,14 @@ class _RPN(nn.Module):
 
         self.RPN_cls_score = nn.Conv3d(512, self.nc_score_out, 1, 1, 0)
         self.RPN_cls_16 = nn.Conv2d(512, self.nc_score_16, 1, 1, 0)
-
+        # self.RPN_cls_16 = nn.Conv3d(512, self.nc_score_16, (self.sample_duration,1,1), 1, 0)
         # define anchor box offset prediction layer
         # 6(coords:x1,y1,t1) * 9 (anchors)  * 2 (duration)
         self.nc_bbox_out = len(self.anchor_scales) * len(self.anchor_ratios) * len(self.anchor_duration) * 6
         # # 4(coords:x1,y1) * 9 (anchors)  
         self.bbox_16 = len(self.anchor_scales) * len(self.anchor_ratios) * 4
         self.RPN_bbox_pred = nn.Conv3d(512, self.nc_bbox_out, 1, 1, 0) # for regression
+        # self.RPN_bbox_only16 = nn.Conv3d(512, self.bbox_16, (self.sample_duration,1,1), 1, 0) # for regression
         self.RPN_bbox_only16 = nn.Conv2d(512, self.bbox_16, 1, 1, 0) # for regression
         ## temporal regression
         # define proposal layer
@@ -94,11 +95,12 @@ class _RPN(nn.Module):
         rpn_conv1 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
 
         # ## get classification score for all anchors
+
         rpn_cls_score = self.RPN_cls_score(rpn_conv1)  # classification layer
         rpn_bbox_pred = self.RPN_bbox_pred(rpn_conv1)  # regression layer
 
         rpn_conv1 = rpn_conv1.permute(0,1,3,4,2).mean(4)
-        rpn_cls_16    = self.RPN_cls_16(rpn_conv1)  # classification layer
+        rpn_cls_16    = self.RPN_cls_16(rpn_conv1)     # classification layer
         rpn_bbox_16   = self.RPN_bbox_only16(rpn_conv1)
 
         rpn_cls_score_reshape = self.reshape(rpn_cls_score, 2)
@@ -176,7 +178,6 @@ class _RPN(nn.Module):
 
             self.rpn_loss_box_16 =  _smooth_l1_loss(rpn_bbox_16, rpn_bbox_targets_16, rpn_bbox_inside_weights_16,
                                                                rpn_bbox_outside_weights_16, sigma=3, dim=[1,2,3])
-
         return rois, rois_16, self.rpn_loss_cls, self.rpn_loss_box, self.rpn_loss_cls_16, self.rpn_loss_box_16
 
         # return rois, None, self.rpn_loss_cls, self.rpn_loss_box, None, None

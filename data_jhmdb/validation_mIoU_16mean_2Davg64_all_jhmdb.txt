@@ -1,0 +1,192 @@
+ -----------------------
+| Validation Epoch:   5 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->    110 |
+| False_neg  -->    158 | 
+| Recall     --> 0.4104 |
+|                       |
+| Single Rois           |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->      0 |
+| False_neg  -->    268 | 
+| Recall     --> 0.0000 |
+|                       |
+| Single Rois follow up |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->      0 |
+| False_neg  -->   3353 | 
+| Recall     --> 0.0000 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  10 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->    195 |
+| False_neg  -->     73 | 
+| Recall     --> 0.7276 |
+|                       |
+| Single Rois           |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->    145 |
+| False_neg  -->    123 | 
+| Recall     --> 0.5410 |
+|                       |
+| Single Rois follow up |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->   2618 |
+| False_neg  -->   1067 | 
+| Recall     --> 0.7104 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  15 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->    184 |
+| False_neg  -->     84 | 
+| Recall     --> 0.6866 |
+|                       |
+| Single Rois           |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->    128 |
+| False_neg  -->    140 | 
+| Recall     --> 0.4776 |
+|                       |
+| Single Rois follow up |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->   2723 |
+| False_neg  -->   1128 | 
+| Recall     --> 0.7071 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  20 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->    188 |
+| False_neg  -->     80 | 
+| Recall     --> 0.7015 |
+|                       |
+| Single Rois           |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->    140 |
+| False_neg  -->    128 | 
+| Recall     --> 0.5224 |
+|                       |
+| Single Rois follow up |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->   2582 |
+| False_neg  -->    949 | 
+| Recall     --> 0.7312 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  25 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->    182 |
+| False_neg  -->     86 | 
+| Recall     --> 0.6791 |
+|                       |
+| Single Rois           |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->    142 |
+| False_neg  -->    126 | 
+| Recall     --> 0.5299 |
+|                       |
+| Single Rois follow up |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->   2731 |
+| False_neg  -->    863 | 
+| Recall     --> 0.7599 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  30 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->    182 |
+| False_neg  -->     86 | 
+| Recall     --> 0.6791 |
+|                       |
+| Single Rois           |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->    138 |
+| False_neg  -->    130 | 
+| Recall     --> 0.5149 |
+|                       |
+| Single Rois follow up |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->   2634 |
+| False_neg  -->    974 | 
+| Recall     --> 0.7300 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  35 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->    181 |
+| False_neg  -->     87 | 
+| Recall     --> 0.6754 |
+|                       |
+| Single Rois           |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->    137 |
+| False_neg  -->    131 | 
+| Recall     --> 0.5112 |
+|                       |
+| Single Rois follow up |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->   2670 |
+| False_neg  -->    978 | 
+| Recall     --> 0.7319 |
+ -----------------------
+ -----------------------
+| Validation Epoch:  40 |
+|                       |
+| Proposed Action Tubes |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->    183 |
+| False_neg  -->     85 | 
+| Recall     --> 0.6828 |
+|                       |
+| Single Rois           |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->    137 |
+| False_neg  -->    131 | 
+| Recall     --> 0.5112 |
+|                       |
+| Single Rois follow up |
+|                       |
+| In     67 steps    :  |
+| True_pos   -->   2697 |
+| False_neg  -->    847 | 
+| Recall     --> 0.7610 |
+ -----------------------

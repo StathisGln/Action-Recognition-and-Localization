@@ -204,35 +204,35 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                                      gt_tubes_r_, gt_rois_,
                                                      start_fr)
 
-        # tubes_rois = tubes[:,:,[1,2,4,5]].unsqueeze(2).expand(tubes.size(0),tubes.size(1),sample_duration, 4).permute(0,2,1,3).contiguous()
-        # tubes_rois = bbox_transform_inv(tubes_rois.view(-1, tubes_rois.size(2),4).contiguous(),
-        #                                 sgl_rois_bbox_pred.view(-1, tubes_rois.size(2),4).contiguous(),
-        #                                 tubes_rois.size(0)*tubes_rois.size(1))
+        tubes_rois = tubes[:,:,[1,2,4,5]].unsqueeze(2).expand(tubes.size(0),tubes.size(1),sample_duration, 4).permute(0,2,1,3).contiguous()
+        tubes_rois = bbox_transform_inv(tubes_rois.view(-1, tubes_rois.size(2),4).contiguous(),
+                                        sgl_rois_bbox_pred.view(-1, tubes_rois.size(2),4).contiguous(),
+                                        tubes_rois.size(0)*tubes_rois.size(1))
 
-        # tubes_rois = clip_boxes(tubes_rois,im_info.unsqueeze(1).expand(tubes.size(0),sample_duration,3).contiguous().view(-1,3), tubes_rois.size(0))
+        tubes_rois = clip_boxes(tubes_rois,im_info.unsqueeze(1).expand(tubes.size(0),sample_duration,3).contiguous().view(-1,3), tubes_rois.size(0))
         
-        # tubes_rois = tubes_rois.view(tubes.size(0), -1, tubes.size(1), 4).contiguous().permute(0,2,1,3)
+        tubes_rois = tubes_rois.view(tubes.size(0), -1, tubes.size(1), 4).contiguous().permute(0,2,1,3)
 
-        # rois = torch.zeros(tubes.size(0), tubes.size(1), sample_duration,4).type_as(tubes)
+        rois = torch.zeros(tubes.size(0), tubes.size(1), sample_duration,4).type_as(tubes)
 
-        # for i in range(tubes.size(0)):
+        for i in range(tubes.size(0)):
 
-        #     start_fr = tubes[i,:,3].round().int()
-        #     end_fr = tubes[i,:,6].round().int()
-        #     for j in range(tubes.size(1)):
+            start_fr = tubes[i,:,3].round().int()
+            end_fr = tubes[i,:,6].round().int()
+            for j in range(tubes.size(1)):
 
-        #         rois[i,j,start_fr[j]:end_fr[j]+1] = tubes_rois[i,j,start_fr[j]:end_fr[j]+1]
+                rois[i,j,start_fr[j]:end_fr[j]+1] = tubes_rois[i,j,start_fr[j]:end_fr[j]+1]
 
         for i in range(tubes.size(0)):
             # # get overlaps in tubes
 
-            # overlaps_rois = rois_overlaps(rois[i], gt_rois_[i].type_as(rois))
-            # overlaps_max,_ =  torch.max(overlaps_rois, 0)
-            # overlaps_max = torch.where(overlaps_max > iou_thresh, overlaps_max, torch.zeros_like(overlaps_max).type_as(overlaps_max))
-            # detected = overlaps_max.ne(0).sum()
-            # n_elements = overlaps_max.nelement()
-            # sgl_true_pos += detected
-            # sgl_false_neg += n_elements - detected
+            overlaps_rois = rois_overlaps(rois[i], gt_rois_[i].type_as(rois))
+            overlaps_max,_ =  torch.max(overlaps_rois, 0)
+            overlaps_max = torch.where(overlaps_max > iou_thresh, overlaps_max, torch.zeros_like(overlaps_max).type_as(overlaps_max))
+            detected = overlaps_max.ne(0).sum()
+            n_elements = overlaps_max.nelement()
+            sgl_true_pos += detected
+            sgl_false_neg += n_elements - detected
             
             # check one video each time
             overlaps = bbox_overlaps_batch_3d(tubes[i].squeeze(0), gt_tubes_r_[i,:n_actions[i]].unsqueeze(0).type_as(tubes))
@@ -244,20 +244,24 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             true_pos += detected
             false_neg += n_elements - detected
 
-            # tubes_over_ind = overlaps.view(overlaps.size(1)).gt(iou_thresh).nonzero().view(-1)
+            tubes_over_ind = overlaps.view(overlaps.size(1)).gt(iou_thresh).nonzero().view(-1)
 
-            # if tubes_over_ind.nelement() > 0:
-            #     overlaps_rois = overlaps_rois[tubes_over_ind]
-            #     overlaps_max,_ =  torch.max(overlaps_rois, 0)
-            #     overlaps_max = torch.where(overlaps_max > iou_thresh, overlaps_max, torch.zeros_like(overlaps_max).type_as(overlaps_max))
-            #     detected = overlaps_max.ne(0).sum()
-            #     n_elements = overlaps_max.nelement()
-            #     sgl_follow_tp += detected
-            #     sgl_follow_fn += n_elements - detected
+            if tubes_over_ind.nelement() > 0:
+
+                overlaps_rois = overlaps_rois[tubes_over_ind]
+                n_elements = overlaps_rois.nelement()
+                
+                overlaps_max,_ =  torch.max(overlaps_rois, 1)
+                overlaps_max = torch.where(overlaps_max > iou_thresh, overlaps_max, torch.zeros_like(overlaps_max).type_as(overlaps_max))
+
+                detected = overlaps_max.ne(0).sum()
+
+                sgl_follow_tp += detected
+                sgl_follow_fn += n_elements - detected
 
     recall = true_pos.float() / (true_pos.float() + false_neg.float())
-    # sgl_recall = sgl_true_pos.float() / (sgl_true_pos.float() + sgl_false_neg.float())
-    # sgl_follow_recall = sgl_follow_tp.float() / (sgl_follow_tp.float() + sgl_follow_fn.float())
+    sgl_recall = sgl_true_pos.float() / (sgl_true_pos.float() + sgl_false_neg.float())
+    sgl_follow_recall = sgl_follow_tp.float() / (sgl_follow_tp.float() + sgl_follow_fn.float())
     print(' -----------------------')
     print('| Validation Epoch: {: >3} | '.format(epoch+1))
     print('|                       |')
@@ -265,16 +269,16 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     print('|                       |')
     print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
         step+1, true_pos.cpu().tolist()[0], false_neg.cpu().tolist()[0], recall.cpu().tolist()[0]))
-    # print('|                       |')
-    # print('| Single Rois           |')
-    # print('|                       |')
-    # print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
-    #     step+1, sgl_true_pos.cpu().tolist()[0], sgl_false_neg.cpu().tolist()[0], sgl_recall.cpu().tolist()[0]))
-    # print('|                       |')
-    # print('| Single Rois follow up |')
-    # print('|                       |')
-    # print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
-    #     step+1, sgl_follow_tp.cpu().tolist()[0], sgl_follow_fn.cpu().tolist()[0], sgl_follow_recall.cpu().tolist()[0]))
+    print('|                       |')
+    print('| Single Rois           |')
+    print('|                       |')
+    print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        step+1, sgl_true_pos.cpu().tolist()[0], sgl_false_neg.cpu().tolist()[0], sgl_recall.cpu().tolist()[0]))
+    print('|                       |')
+    print('| Single Rois follow up |')
+    print('|                       |')
+    print('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        step+1, sgl_follow_tp.cpu().tolist()[0], sgl_follow_fn.cpu().tolist()[0], sgl_follow_recall.cpu().tolist()[0]))
 
     print(' -----------------------')
 
@@ -286,16 +290,16 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     fp.write('|                       |\n')
     fp.write('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
         step+1, true_pos.cpu().tolist()[0], false_neg.cpu().tolist()[0],recall.cpu().tolist()[0]))
-    # fp.write('|                       |\n')
-    # fp.write('| Single Rois           |\n')
-    # fp.write('|                       |\n')
-    # fp.write('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
-    #     step+1, sgl_true_pos.cpu().tolist()[0], sgl_false_neg.cpu().tolist()[0], sgl_recall.cpu().tolist()[0]))
-    # fp.write('|                       |\n')
-    # fp.write('| Single Rois follow up |\n')
-    # fp.write('|                       |\n')
-    # fp.write('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
-    #     step+1, sgl_follow_tp.cpu().tolist()[0], sgl_follow_fn.cpu().tolist()[0], sgl_follow_recall.cpu().tolist()[0]))
+    fp.write('|                       |\n')
+    fp.write('| Single Rois           |\n')
+    fp.write('|                       |\n')
+    fp.write('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
+        step+1, sgl_true_pos.cpu().tolist()[0], sgl_false_neg.cpu().tolist()[0], sgl_recall.cpu().tolist()[0]))
+    fp.write('|                       |\n')
+    fp.write('| Single Rois follow up |\n')
+    fp.write('|                       |\n')
+    fp.write('| In {: >6} steps    :  |\n| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
+        step+1, sgl_follow_tp.cpu().tolist()[0], sgl_follow_fn.cpu().tolist()[0], sgl_follow_recall.cpu().tolist()[0]))
 
 
     fp.write(' -----------------------\n')
@@ -344,15 +348,18 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         #     loss = actioness_loss.mean()
         elif mode == 3:
             loss = sgl_rois_bbox_loss.mean()
+        # elif mode == 4:
+        #     loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean() 
         elif mode == 4:
             loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean()  + rpn_loss_cls_16.mean() \
-                   + rpn_loss_bbox_16.mean()  
+                   + rpn_loss_bbox_16.mean()  +  sgl_rois_bbox_loss.mean()
+
 
 
 
         # elif mode == 4:
         #     loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean()   \
-        #            + sgl_rois_bbox_loss.mean()
+
             # loss = rpn_loss_cls.mean() + rpn_loss_bbox.mean()  + rpn_loss_cls_16.mean() \
             #        + rpn_loss_bbox_16.mean()  + sgl_rois_bbox_loss.mean()
 

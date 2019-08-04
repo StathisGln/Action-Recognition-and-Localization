@@ -28,17 +28,22 @@ class _Regression_Layer(nn.Module):
         self.pooling_size = 7
         self.spatial_scale = 1.0/16
 
-        self.Conv = nn.Conv3d(self.din, din, 1, stride=1, padding=0, bias=True)
-        # self.Conv = nn.Conv2d(self.din, din, 1, stride=1, padding=0, bias=True)
+        # self.Conv = nn.Conv3d(self.din, din, 1, stride=1, padding=0, bias=True)
+        self.Conv = nn.Conv2d(self.din, din, 1, stride=1, padding=0, bias=True)
+
         self.head_to_tail_ = nn.Sequential(
-            nn.Linear(64 *7*  7, 2048),
+            # nn.Linear(64 * 7 * 7, 2048),
+            # nn.Linear(128 * 7 * 7, 2048),
+            nn.Linear(256 * 7 * 7, 2048),
             nn.ReLU(True),
             nn.Dropout(0.8),
             nn.Linear(2048,512),
             nn.ReLU(True)
             )
             
+        self.avg_pool = nn.AvgPool3d((self.sample_duration,1, 1), stride=1)
         self.max_pool = nn.MaxPool3d((self.sample_duration,1, 1), stride=1)
+
         self.bbox_pred = nn.Linear(512,4*self.sample_duration)
 
         self.roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.sample_duration, self.spatial_scale, temp_scale=1)
@@ -93,19 +98,22 @@ class _Regression_Layer(nn.Module):
 
         ## modify feat
         base_feat = self.roi_align(base_feat, tubes.view(-1,7))
+
+        base_feat = self.avg_pool(base_feat).squeeze()
+        # base_feat = self.max_pool(base_feat).squeeze()
         conv1_feats = self.Conv(base_feat)
-        conv1_feats = self.max_pool(conv1_feats)
-        conv1_feats = self.head_to_tail_(conv1_feats.view(conv1_feats.size(0),-1))
+        # conv1_feats = self.avg_pool(conv1_feats).squeeze()
 
+        # conv1_feats = self.max_pool(conv1_feats).squeeze(0)
+        conv1_feats = self.head_to_tail_(conv1_feats.view(conv1_feats.size(0),-1).contiguous())
         bbox_pred = self.bbox_pred(conv1_feats) 
-
 
         if self.training:
 
             rois_loss_bbox = _smooth_l1_loss(bbox_pred, bbox_targets, bbox_inside_ws, bbox_outside_ws)
-            return bbox_pred, rois_loss_bbox
+            return bbox_pred, rois_loss_bbox, base_feat
 
-        return bbox_pred, None
+        return bbox_pred, None, base_feat
 
     
 if __name__ == '__main__':
