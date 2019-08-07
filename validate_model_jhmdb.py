@@ -28,7 +28,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     iou_thresh_4 = 0.4 # Intersection Over Union thresh
     iou_thresh_3 = 0.3 # Intersection Over Union thresh
 
-    confidence_thresh = 0.25
+    confidence_thresh = 0.2
     vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='test', classes_idx=cls2idx)
     # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
     #                                           shuffle=True)    # reset learning rate
@@ -58,8 +58,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
     for step, data  in enumerate(data_loader):
 
-        if step == 3:
-            break
+        # if step == 3:
+        #     break
         print('step =>',step)
 
         vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
@@ -264,11 +264,11 @@ if __name__ == '__main__':
     temporal_transform = LoopPadding(sample_duration)
 
     # Init action_net
-    # action_model_path = './action_net_model_jhmdb_16frm_64.pwf'
-    # linear_path = './linear_jhmdb.pwf'
+    action_model_path = './action_net_model_both_single_frm_jhmdb.pwf'
+    linear_path = './linear_jhmdb_40.pwf'
     model = Model(actions, sample_duration, sample_size)
-    model.load_part_model()
-    # model.load_part_model(action_model_path=action_model_path, rnn_path=linear_path)
+    # model.load_part_model()
+    model.load_part_model(action_model_path=action_model_path, rnn_path=linear_path)
 
 
 
@@ -283,9 +283,9 @@ if __name__ == '__main__':
         model = nn.DataParallel(model)
     model.to(device)
 
-    model_path = './model_linear_jhmdb.pwf'
-    model_data = torch.load(model_path)
-    model.load_state_dict(model_data)
+
+    # model_data = torch.load(model_path)
+    # model.load_state_dict(model_data)
 
     model.eval()
 

@@ -174,4 +174,5 @@ if __name__ == '__main__':
 
     model.eval()
 
+
     validation(0, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, 4, n_threads)

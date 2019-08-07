@@ -440,7 +440,7 @@ class Video(data.Dataset):
 class RNN_JHMDB(data.Dataset):
 
     def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader, \
-                 max_n_tubes = 19, max_len_tubes = 73):
+                 max_n_tubes = 25, max_len_tubes = 73):
 
         self.dataset_folder = dataset_folder
         self.max_n_tubes = max_n_tubes
@@ -470,6 +470,7 @@ class RNN_JHMDB(data.Dataset):
         # f_target_lbl = np.zeros((self.max_n_tubes)) - 1
 
         features    = torch.load(os.path.join(self.dataset_folder,path, 'feats.pt'),map_location='cpu')
+        features = features.mean(1)
         target_lbl  = torch.load(os.path.join(self.dataset_folder,path, 'labels.pt'),map_location='cpu')
         n_tubes = features.size(0)
         # for b in range(features.size(0)):
@@ -477,6 +478,12 @@ class RNN_JHMDB(data.Dataset):
         for b in range(features.size(0)):
 
             # f_features[b,:feat_len] = features[b]
+            # print('f_features.shape :',f_features.shape)
+            # print('features.shape :',features.shape)
+            # print('f_features[b].shape :',f_features[b].shape)
+            # print('features[b].shape :',features[b].shape)
+            # exit(-1)
+
             f_features[b] = features[b]
             f_target_lbl[b] = target_lbl[b]
             # for j in range(features.size(1)):
