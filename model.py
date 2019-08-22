@@ -125,11 +125,11 @@ class Model(nn.Module):
 
             # if step == 1:
             #     break
-            # print('\tstep :',step)
+            print('\tstep :',step)
 
             frame_indices, im_info, start_fr = dt
             clips_ = clips[frame_indices].cuda()
-
+            print('frame_indices.shape :',frame_indices.shape)
             if self.training:
                 boxes_ = boxes[frame_indices].cuda()
                 box_ = boxes_.permute(0,2,1,3).float().contiguous()[:,:,:,:-1]
@@ -399,23 +399,13 @@ class Model(nn.Module):
         max_seq = reduce(lambda x, y: y if len(y) > len(x) else x, f_tubes)
         max_length = len(max_seq)
 
-        # print('len(f_tubes) :',len(f_tubes))
-        # print('max_seq :',max_seq)
-        # print('max_length :',max_length)
         ## calculate input rois
-        ## f_feats.shape : [#f_tubes, max_length, 512]
-        # final_video_tubes = torch.zeros(len(f_tubes),6).cuda()
         prob_out = torch.zeros(len(f_tubes), self.n_classes).cuda()
         final_feats = []
-        # print('rois_per_image :',rois_per_image)
-        # print('f_tubes :',f_tubes)
+
         for i in range(len(f_tubes)):
 
             seq = f_tubes[i]
-
-            # tmp_tube = torch.Tensor(len(seq),6)
-
-            # feats = torch.Tensor(len(seq),self.p_feat_size)
             feats = torch.Tensor(len(seq),self.p_feat_size,self.sample_duration)
 
             for j in range(len(seq)):
@@ -464,8 +454,9 @@ class Model(nn.Module):
             cls_loss = F.cross_entropy(prob_out.cpu(), target_lbl.long()).cuda()
 
         if self.training:
-            return None, prob_out,  cls_loss, 
+            return None, None,  cls_loss, 
         else:
+            prob_out = F.softmax(prob_out)
 
             # init padding tubes because of multi-GPU system
             if final_tubes.size(0) > conf.UPDATE_THRESH:
@@ -522,22 +513,25 @@ class Model(nn.Module):
             # act_rnn_data = torch.load(rnn_path)
             # act_rnn.load(act_rnn_data)
 
+
             act_rnn = nn.Sequential(
                 # nn.Linear(64*self.sample_duration, 256),
                 # nn.ReLU(True),
                 # nn.Dropout(0.8),
                 # nn.Linear(256,self.n_classes),
                 nn.Linear(64*self.sample_duration, self.n_classes),
-                # nn.ReLU(True),
-                # nn.Dropout(0.8),
-                # nn.Linear(256,self.n_classes),
+                # # nn.ReLU(True),
+                # # nn.Dropout(0.8),
+                # # nn.Linear(256,self.n_classes),
 
             )
             act_rnn_data = torch.load(rnn_path)
+            print('act_rnn_data :',act_rnn_data.keys())
             act_rnn.load_state_dict(act_rnn_data)
             self.act_rnn = act_rnn
 
         else:
+
             # self.act_rnn =Act_RNN(self.p_feat_size,int(self.p_feat_size/2),self.n_classes)
             self.act_rnn = nn.Sequential(
                 # nn.Linear(64*self.sample_duration, 256),
@@ -545,9 +539,9 @@ class Model(nn.Module):
                 # nn.Dropout(0.8),
                 # nn.Linear(256,self.n_classes),
                 nn.Linear(64*self.sample_duration, self.n_classes),
-                # nn.ReLU(True),
-                # nn.Dropout(0.8),
-                # nn.Linear(256,self.n_classes),
+                # # nn.ReLU(True),
+                # # nn.Dropout(0.8),
+                # # nn.Linear(256,self.n_classes),
 
             )
             for m in self.act_rnn.modules():

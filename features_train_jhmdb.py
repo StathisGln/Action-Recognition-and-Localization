@@ -389,76 +389,16 @@ if __name__ == '__main__':
 
     n_classes = len(actions)
 
-    ###################################################
-    #          Part 1-1 - extract features -          #
-    ###################################################
-
-    print(' ----------------------------------------')
-    print('|          - extract features -          |')
-    print(' ----------------------------------------')
-
-    # action_model_path = './action_net_model_both_single_frm_jhmdb.pwf'
-    action_model_path = './action_net_model_both_jhmdb.pwf'
-
-    # Init whole model
-    model = Model(actions, sample_duration, sample_size)
-    model.load_part_model(action_model_path=action_model_path)
-
-    if torch.cuda.device_count() > 1:
-        print('Using {} GPUs!'.format(torch.cuda.device_count()))
-        model = nn.DataParallel(model)
-
-    model.to(device)
-
-    batch_size = 1
-    vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train', classes_idx=cls2idx)
-    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
-                                              shuffle=True, num_workers=32, pin_memory=True)
-    out_path = 'JHMDB-features-linear'
-    mode = 'extract'
-    for step, data  in enumerate(data_loader):
-
-        # if step == 2:
-        #     break
-        print('step =>',step)
-        # clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
-        vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
-
-        if not(os.path.exists(os.path.join(out_path, vid_names[vid_id]))):
-            os.makedirs(os.path.join(out_path, vid_names[vid_id]))
-
-        vid_id = vid_id.to(device)
-        clips_ = clips.to(device)
-        boxes  = boxes.to(device)
-        n_frames = n_frames.to(device)
-        n_actions = n_actions.int().to(device)
-        im_info = torch.stack([h,w],dim=1).to(device)
-
-        inputs = Variable(clips_)
-
-        feats, labels, tube_len =  model(n_devs, dataset_frames, \
-                                    vid_names, clips_, vid_id,  \
-                                    boxes, \
-                                    mode, cls2idx, n_actions, n_frames, h, w)
-        print('feats.shape :',feats.shape)
-        print('labels :',labels)
-        print('tube_len :',tube_len)
-
-        torch.save(feats, os.path.join(out_path, vid_names[vid_id], 'feats.pt'))
-        torch.save(labels, os.path.join(out_path, vid_names[vid_id], 'labels.pt'))
-        torch.save(tube_len, os.path.join(out_path, vid_names[vid_id], 'tube_len.pt'))
-
 
     print(' ---------------------------------')
     print('|          - train RNN -          |')
     print(' ---------------------------------')
 
-    dataset_frames = '../JHMDB-act-detector-frames'
+    dataset_frames   = '../JHMDB-act-detector-frames'
     dataset_features = 'JHMDB-features-linear'
 
-
     lr = 0.1
-    lr_decay_step = 50
+    lr_decay_step = 25
     lr_decay_gamma = 0.1
     
     params = []
@@ -497,8 +437,8 @@ if __name__ == '__main__':
         file.write('epoch :'+str(epoch)+' --> '+str(loss)+'\n')
 
         if ( epoch + 1 ) % 20 == 0:
-            torch.save(model.module.act_rnn.state_dict(), "linear_jhmdb_{}.pwf".format(epoch+1))
-
+            # torch.save(model.module.act_rnn.state_dict(), "linear_jhmdb_{}.pwf".format(epoch+1))
+            torch.save(model.module.act_rnn.state_dict(), "linear_jhmdb.pwf".format(epoch+1))
 
     # print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
     # # # Init whole model
@@ -514,9 +454,5 @@ if __name__ == '__main__':
 
 
     torch.save(model.state_dict(), "model_with_linear_jhmdb.pwf".format(epoch+1))
-
-
-
-
 
 

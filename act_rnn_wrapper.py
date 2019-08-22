@@ -9,14 +9,15 @@ class _RNN_wrapper(nn.Module):
     """ region proposal network """
     def __init__(self,  n_inputs, n_neurons, n_outputs):
         super(_RNN_wrapper, self).__init__()
-
+        self.sample_duration = 16
+        self.n_classes = 22
         # self.act_rnn =  Act_RNN(n_inputs, n_neurons, n_outputs)
         self.act_rnn = nn.Sequential(
-                # nn.Linear(64*self.sample_duration, 256),
-                # nn.ReLU(True),
-                # nn.Dropout(0.8),
-                # nn.Linear(256,self.n_classes),
-                nn.Linear(n_inputs, n_outputs),
+                nn.Linear(64*self.sample_duration, 256),
+                nn.ReLU(True),
+                nn.Dropout(0.8),
+                nn.Linear(256,self.n_classes),
+                # nn.Linear(n_inputs, n_outputs),
                 # nn.ReLU(True),
                 # nn.Dropout(0.8),
                 # nn.Linear(256,self.n_classes),

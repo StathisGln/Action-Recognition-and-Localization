@@ -14,7 +14,7 @@ from temporal_transforms import LoopPadding
 from net_utils import adjust_learning_rate
 
 from create_video_id import get_vid_dict
-from ucf_dataset import Video_UCF, video_names
+from jhmdb_dataset import  video_names, RNN_JHMDB
 
 from model import Model
 from resize_rpn import resize_tube
@@ -86,29 +86,29 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_folder = '../UCF-101-frames'
-    boxes_file = '../pyannot.pkl'
-    spt_path = '../UCF101_Action_detection_splits/'
+    dataset_frames = '../JHMDB-act-detector-frames'
+    split_txt_path =  '../splits'
+    boxes_file = '../poses.json'
 
     sample_size = 112
     sample_duration = 16  # len(images)
 
     batch_size = 1
 
-    # # get mean
-    mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
+    # # # get mean
+    mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
+    # mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
 
     # generate model
-    actions = ['__background__', 'Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
-               'Diving','Fencing','FloorGymnastics','GolfSwing','HorseRiding','IceDancing',
-               'LongJump','PoleVault','RopeClimbing','SalsaSpin','SkateBoarding','Skiing',
-               'Skijet','SoccerJuggling','Surfing','TennisSwing','TrampolineJumping',
-               'VolleyballSpiking','WalkingWithDog']
+    actions = ['__background__','brush_hair', 'clap', 'golf', 'kick_ball', 'pour',
+               'push', 'shoot_ball', 'shoot_gun', 'stand', 'throw', 'wave',
+               'catch','climb_stairs', 'jump', 'pick', 'pullup', 'run', 'shoot_bow', 'sit',
+               'swing_baseball', 'walk' ]
 
     cls2idx = {actions[i]: i for i in range(0, len(actions))}
 
     ### get videos id
-    vid2idx,vid_names = get_vid_dict(dataset_folder)
+    vid2idx,vid_names = get_vid_dict(dataset_frames)
 
     spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
                                  ToTensor(),
@@ -157,20 +157,20 @@ if __name__ == '__main__':
     #          Train starts here          #
     #######################################
 
-    vid_name_loader = video_names(dataset_folder, spt_path, boxes_file, vid2idx, mode='train')
+    vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
                                               shuffle=True)
 
-    # epochs = 40
-    epochs = 5
+    epochs = 60
+    # epochs = 5
 
     n_devs = torch.cuda.device_count()
     if torch.cuda.device_count() > 1:
 
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
-        model.act_net = nn.DataParallel(model.act_net)
+        # model.act_net = nn.DataParallel(model.act_net)
+        model = nn.DataParallel(model)
 
-    model.act_net.to(device)
     model.to(device)
 
     for ep in range(epochs):
@@ -191,25 +191,27 @@ if __name__ == '__main__':
             # if step == 2:
             #     break
 
-            print('step :',step)
-            vid_id, clips, boxes, n_frames, n_actions, h, w =data            
+            # print('step :',step)
+            vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
             ###################################
             #          Function here          #
             ###################################
 
             mode = 'train'
             # boxes_ = boxes.to(device)
-            vid_id_ = vid_id.to(device)
-            n_frames_ = n_frames.to(device)
-            n_actions_ = n_actions.to(device)
-            h_ = h.to(device)
-            w_ = w.to(device)
+            vid_id = vid_id.int()
+            clips = clips.to(device)
+            boxes = boxes.to(device)
+            n_frames = n_frames.to(device)
+            n_actions = n_actions.to(device)
+            h = h.to(device)
+            w = w.to(device)
 
             tubes,   \
-            prob_out, cls_loss =  model(n_devs, dataset_folder, \
-                                        vid_names, clips, vid_id_, \
+            prob_out, cls_loss =  model(n_devs, dataset_frames, \
+                                        vid_names, clips, vid_id, \
                                         boxes, \
-                                        mode, cls2idx, n_actions_,n_frames_, h_, w_)
+                                        mode, cls2idx, n_actions,n_frames, h, w)
 
             loss =  cls_loss.mean()
 
@@ -224,14 +226,14 @@ if __name__ == '__main__':
         ep+1,loss_temp/step, lr))
         
 
-        if ( ep + 1 ) % 5 == 0: # validation time
-            val_name_loader = video_names(dataset_folder, spt_path, boxes_file, vid2idx, mode='test')
-            val_loader = torch.utils.data.DataLoader(val_name_loader, batch_size=batch_size,
-                                              shuffle=True)
+        # if ( ep + 1 ) % 5 == 0: # validation time
+        #     val_name_loader = video_names(dataset_frames, spt_path, boxes_file, vid2idx, mode='test')
+        #     val_loader = torch.utils.data.DataLoader(val_name_loader, batch_size=batch_size,
+        #                                       shuffle=True)
 
-            validate_model(model, val_name_loader, val_loader)
+        #     validate_model(model, val_name_loader, val_loader)
         # if ( ep + 1 ) % 5 == 0:
-        torch.save(model.state_dict(), "model.pwf")
+        torch.save(model.state_dict(), "model_linear.pwf")
     # torch.save(model.state_dict(), "model.pwf")
 
 

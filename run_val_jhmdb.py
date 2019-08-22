@@ -36,7 +36,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                               shuffle=True)    # reset learning rate
 
     model.eval()
-    
+
     true_pos = 0
     false_neg = 0
 
@@ -58,8 +58,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
     for step, data  in enumerate(data_loader):
 
-        if step == 5:
-            break
+        # if step == 3:
+        #     break
         print('step =>',step)
 
         vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
@@ -69,7 +69,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         n_frames = n_frames.to(device)
         n_actions = n_actions.int().to(device)
         target = target.to(device)
-        print('target :',target)
+
 
         im_info = torch.cat([h,w,torch.ones(clips.size(0)).long()*clips.size(2)]).to(device)
         mode = 'test'
@@ -80,11 +80,11 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                 None, \
                                 mode, cls2idx, None, n_frames, h, w)
 
+        print('tubes.shape :',tubes.shape)
+        print('prob_out.shape :',prob_out.shape)
         # get predictions
         for i in range(batch_size):
 
-            print('target :',target)
-            
             _, cls_int = torch.max(prob_out[i],1)
             f_prob = torch.zeros(n_tubes[i].long()).type_as(prob_out)
 
@@ -101,20 +101,21 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             f_tubes = f_tubes[keep_indices].contiguous()
 
             if f_tubes.nelement() != 0 :
+                print('non_empty_indices :',keep_indices)
                 _, best_tube = torch.max(f_tubes[:,1],dim=0)
                 f_tubes= f_tubes[best_tube].unsqueeze(0)
 
             f_boxes = torch.cat([target.type_as(boxes),boxes[i,:,:n_frames[i],:4].contiguous().view(n_frames[i]*4)]).unsqueeze(0)
             v_name = vid_names[vid_id[i]].split('/')[1]
-            print('f_tubes :',f_tubes.cpu().detach().numpy())
-            print('f_boxes :',f_boxes.cpu().detach().numpy())
+
             detection_dic[v_name] = f_tubes.float()
             groundtruth_dic[v_name] = f_boxes.type_as(f_tubes)
             # with open(os.path.join('outputs','detection',v_name+'.json'), 'w') as f:
             #     json.dump(f_tubes.cpu().tolist(), f)
             # with open(os.path.join('outputs','groundtruth',v_name+'.json'), 'w') as f:
             #     json.dump(f_boxes.cpu().tolist(), f)
-
+        if step == 4:
+            exit(2)
 
         if tubes.dim() == 1:
         
@@ -122,7 +123,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
                 box = boxes[i,:n_actions, :n_frames,:4].contiguous()
                 box = box.view(-1,n_frames*4)
- 
+
                 non_empty_indices =  box.ne(0).any(dim=1).nonzero().view(-1)
                 n_elems = non_empty_indices.nelement()            
                 false_neg += n_elems
@@ -133,7 +134,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
         for i in range(clips.size(0)):
             print('boxes.shape:',boxes.shape)
-            print('tubes.shape :',tubes.shape)
+
             box = boxes[i,:n_actions[i].long(), :n_frames[i].long(),:4].contiguous()
             box = box.view(-1,n_frames[i]*4).contiguous().type_as(tubes)
 
@@ -278,12 +279,13 @@ if __name__ == '__main__':
 
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
-    model = nn.DataParallel(model)
+        model = nn.DataParallel(model)
     model.to(device)
 
-    model_path = './model_linear.pwf'
+    model_path = './model.pwf'
     model_data = torch.load(model_path)
     model.load_state_dict(model_data)
+
 
     model.eval()
 

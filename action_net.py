@@ -155,7 +155,16 @@ class ACT_net(nn.Module):
         print("Loading pretrained weights from %s" %(self.model_path))
         model_data = torch.load(self.model_path)
 
+
+
+        # new_state_dict = OrderedDict()
+        # for k, v in model_data['state_dict'].items():
+        #   name = k[7:] # remove `module.`
+        #   new_state_dict[name] = v
+        # model.load_state_dict(new_state_dict)
+
         model.load_state_dict(model_data['state_dict'])
+
 
         # Build resnet.
         self.act_base_1 = nn.Sequential(model.module.conv1, model.module.bn1, model.module.relu,
