@@ -24,15 +24,17 @@ class _Regression_Layer(nn.Module):
         super(_Regression_Layer, self).__init__()
         self.din = din
         self.sample_duration = sample_duration
-        self.pooling_size = 7
-        self.spatial_scale = 1.0/16
+        self.pooling_size = 14
+        # self.pooling_size = 7
+        # self.spatial_scale = 1.0/4
+        self.spatial_scale = 1.0/8
+        # self.spatial_scale = 1.0/16
 
         # self.Conv = nn.Conv3d(self.din, din, 1, stride=1, padding=0, bias=True)
         self.Conv = nn.Conv2d(self.din, din, 1, stride=1, padding=0, bias=True)
 
-
         self.head_to_tail_ = nn.Sequential(
-            nn.Linear(din * 7 *  7, 2048),
+            nn.Linear(din * self.pooling_size *  self.pooling_size, 2048),
             nn.ReLU(True),
             nn.Dropout(0.8),
             nn.Linear(2048,512),
@@ -66,12 +68,11 @@ class _Regression_Layer(nn.Module):
 
         rois = rois.view(batch_size,rois_per_image,self.sample_duration, 4)
         rois = torch.cat((offset,rois),dim=3)
-        
         rois = rois.permute(0,2,1,3).contiguous()
 
         base_feat = base_feat.permute(0,2,1,3,4).contiguous().view(-1,base_feat.size(1),base_feat.size(3),base_feat.size(4))
 
-        base_feat = self.roi_align(base_feat, rois.view(-1,5))
+        base_feat = self.roi_align(base_feat, rois.view(-1,5).contiguous())
         base_feat = base_feat.view(batch_size, self.sample_duration, rois_per_image,base_feat.size(1),base_feat.size(2),base_feat.size(3)).\
                     contiguous()
 

@@ -40,7 +40,8 @@ class ACT_net(nn.Module):
 
         # cfg.POOLING_SIZE
         self.pooling_size = 7
-        self.spatial_scale = 1.0/16
+        # self.spatial_scale = 1.0/16
+        self.spatial_scale = 1.0/4
     
         # define rpn
         self.act_rpn = _RPN(256, sample_duration).cuda()
@@ -109,7 +110,12 @@ class ACT_net(nn.Module):
         sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(batch_size,-1, self.sample_duration*4)
         feats = feats.view(batch_size,-1, feats.size(1), feats.size(2), feats.size(3), feats.size(4))
 
+        # # TODO remove after adding reg_layer
+        # if self.training:
+        #     return rois,  None, rpn_loss_cls, rpn_loss_bbox, None,None, \
+        #         None, None, None
 
+        # # TODO remove after adding reg_layer
         # return rois, None, None, None, None, None, \
         #     None, None, None,
 
@@ -138,8 +144,8 @@ class ACT_net(nn.Module):
         #     normal_init(self.reg_layer.Conv_list[i], 0, 0.01, truncated)
         #     normal_init(self.reg_layer.bbox_pred_list[i], 0, 0.01, truncated)
 
-        normal_init(self.reg_layer.Conv, 0, 0.01, truncated)
-        normal_init(self.reg_layer.bbox_pred, 0, 0.01, truncated)
+        # normal_init(self.reg_layer.Conv, 0, 0.01, truncated)
+        # normal_init(self.reg_layer.bbox_pred, 0, 0.01, truncated)
 
     def _init_modules(self):
 
@@ -165,7 +171,8 @@ class ACT_net(nn.Module):
 
         # Build resnet.
         self.act_base_1 = nn.Sequential(model.module.conv1, model.module.bn1, model.module.relu,
-          model.module.maxpool,model.module.layer1)
+                                        model.module.maxpool,model.module.layer1
+                                        )
         self.act_base_2 = nn.Sequential(model.module.layer2,model.module.layer3)
 
         # Fix blocks
@@ -186,6 +193,6 @@ class ACT_net(nn.Module):
             for p in m.parameters(): p.requires_grad=False
     
         self.act_base_1.apply(set_bn_fix)
-        self.act_base_2.apply(set_bn_fix)
+        # self.act_base_2.apply(set_bn_fix)
         # self.act_base_3.apply(set_bn_fix)
 

@@ -25,7 +25,8 @@ class _Regression_Layer(nn.Module):
         self.din = din
         self.sample_duration = sample_duration
         self.pooling_size = 7
-        self.spatial_scale = 1.0/16
+        self.spatial_scale = 1.0/4
+        # self.spatial_scale = 1.0/16
 
         self.Conv = nn.Conv3d(self.din, din, 1, stride=1, padding=0, bias=True)
         self.head_to_tail_ = nn.Sequential(
@@ -61,6 +62,8 @@ class _Regression_Layer(nn.Module):
 
         base_feat = F.normalize(base_feat, p=2, dim=1)
 
+        print('rois.shape :',rois.shape)
+        exit(-1)
         offset = torch.arange(0,self.sample_duration).type_as(rois).unsqueeze(0).expand(batch_size,self.sample_duration)
         offset_batch = torch.arange(0,batch_size).type_as(rois) * self.sample_duration
         offset_batch = offset_batch.view(-1,1).expand(batch_size,self.sample_duration)

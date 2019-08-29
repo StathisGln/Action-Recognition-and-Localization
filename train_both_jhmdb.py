@@ -29,6 +29,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     iou_thresh = 0.5 # Intersection Over Union thresh
     iou_thresh_4 = 0.4 # Intersection Over Union thresh
     iou_thresh_3 = 0.3 # Intersection Over Union thresh
+
     data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
                  split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
@@ -79,17 +80,16 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             
             tubes_t = tubes[i,:,1:-1].contiguous()
             gt_rois_t = gt_rois_[i,:,:,:4].contiguous().view(-1,sample_duration*4)
-            rois_overlaps = tube_overlaps(tubes_t,gt_rois_t)
-            
-            gt_max_overlaps_sgl, _ = torch.max(rois_overlaps, 0)
 
+            rois_overlaps = tube_overlaps(tubes_t,gt_rois_t)
+            gt_max_overlaps_sgl, _ = torch.max(rois_overlaps, 0)
             non_empty_indices =  gt_rois_t.ne(0).any(dim=1).nonzero().view(-1)
             n_elems = non_empty_indices.nelement()            
 
             # 0.5
             gt_max_overlaps_sgl_ = torch.where(gt_max_overlaps_sgl > iou_thresh, gt_max_overlaps_sgl, torch.zeros_like(gt_max_overlaps_sgl).type_as(gt_max_overlaps_sgl))
 
-            sgl_detected =  gt_max_overlaps_sgl_.ne(0).sum()
+            sgl_detected =  gt_max_overlaps_sgl_[non_empty_indices].ne(0).sum()
             sgl_true_pos += sgl_detected
             sgl_false_neg += n_elems - sgl_detected
 
@@ -155,8 +155,11 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
     data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
                  split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
-    data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*16,
+    # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*16,
+    #                                           shuffle=True, num_workers=32, pin_memory=True)
+    data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*8,
                                               shuffle=True, num_workers=32, pin_memory=True)
+
     # data_loader = torch.utils.data.DataLoader(data, batch_size=2,
     #                                           shuffle=True, num_workers=0, pin_memory=True)
 
@@ -312,15 +315,15 @@ if __name__ == '__main__':
             adjust_learning_rate(optimizer, lr_decay_gamma)
             lr *= lr_decay_gamma
 
-
+        # act_model, loss = training(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*4, 0, lr, mode=4)
         act_model, loss = training(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*4, 0, lr, mode=5)
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_jhmdb_16frm_64.pwf".format(epoch+1))
+            torch.save(act_model.state_dict(), "action_net_model_16frm_avg_jhmdb.pwf".format(epoch+1))
 
         if (epoch + 1) % (5) == 0:
 
             print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
             validation(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
 
-    torch.save(act_model.state_dict(), "action_net_model_jhmdb_16frm_64.pwf")
+    torch.save(act_model.state_dict(), "action_net_model_16frm_avg_jhmdb.pwf")
 

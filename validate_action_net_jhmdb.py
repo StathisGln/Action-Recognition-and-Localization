@@ -28,7 +28,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     # iou_thresh = 0.1 # Intersection Over Union thresh
     data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
-                 split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
+                 split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(data, batch_size=16,
                                               shuffle=True, num_workers=0, pin_memory=True)
     # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*4,
@@ -65,12 +65,11 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         tubes_ = tubes.contiguous()
         n_tubes = len(tubes)
 
-        tubes = tubes.view(-1, sample_duration*4+2)
-
-        tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
-                                           sgl_rois_bbox_pred.view(-1,sample_duration*4),(1.0,1.0,1.0,1.0))
-        tubes = tubes.view(n_tubes,-1, sample_duration*4+2)
-        tubes[:,:,1:-1] = clip_boxes(tubes[:,:,1:-1], im_info, tubes.size(0))
+        # tubes = tubes.view(-1, sample_duration*4+2)
+        # tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
+        #                                    sgl_rois_bbox_pred.view(-1,sample_duration*4),(1.0,1.0,1.0,1.0))
+        # tubes = tubes.view(n_tubes,-1, sample_duration*4+2)
+        # tubes[:,:,1:-1] = clip_boxes(tubes[:,:,1:-1], im_info, tubes.size(0))
 
         # print('tubes[0]:',tubes[0])
         # print('tubes[0]:',tubes.shape)
@@ -85,15 +84,13 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             gt_rois_t = gt_rois_[i,:,:,:4].contiguous().view(-1,sample_duration*4)
 
             rois_overlaps = tube_overlaps(tubes_t,gt_rois_t)
-
             gt_max_overlaps_sgl, max_indices = torch.max(rois_overlaps, 0)
-
             non_empty_indices =  gt_rois_t.ne(0).any(dim=1).nonzero().view(-1)
             n_elems = non_empty_indices.nelement()            
 
-            gt_max_overlaps_sgl = torch.where(gt_max_overlaps_sgl > iou_thresh, gt_max_overlaps_sgl, torch.zeros_like(gt_max_overlaps_sgl).type_as(gt_max_overlaps_sgl))
+            gt_max_overlaps_sgl_ = torch.where(gt_max_overlaps_sgl > iou_thresh, gt_max_overlaps_sgl, torch.zeros_like(gt_max_overlaps_sgl).type_as(gt_max_overlaps_sgl))
 
-            sgl_detected =  gt_max_overlaps_sgl[non_empty_indices].ne(0).sum()
+            sgl_detected =  gt_max_overlaps_sgl_[non_empty_indices].ne(0).sum()
 
             sgl_true_pos += sgl_detected
             sgl_false_neg += n_elems - sgl_detected
@@ -164,7 +161,7 @@ if __name__ == '__main__':
     # model_data = torch.load('./action_net_model_jhmdb_16frm_64.pwf')
 
     # model_data = torch.load('./action_net_model_both_jhmdb.pwf')
-    model_data = torch.load('./action_net_model_both_single_frm_jhmdb.pwf')
+    model_data = torch.load('./action_net_model_16frm_avg_jhmdb.pwf')
     # action_model_path = './action_net_model_jhmdb_16frm_64.pwf'
 
     model.load_state_dict(model_data)
