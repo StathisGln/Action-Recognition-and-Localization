@@ -50,11 +50,11 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
-        if step == 10:
-            break
+        # if step == 10:
+        #     break
         print('step =>',step)
 
-        vid_id, clips, boxes, n_frames, n_actions, h, w =data
+        vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
         vid_id = vid_id.int()
         clips = clips.to(device)
         boxes = boxes.to(device)
@@ -65,60 +65,45 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         mode = 'test'
 
         tubes,  \
-        prob_out, _ =  model(n_devs, dataset_frames, \
+        prob_out, n_tubes =  model(n_devs, dataset_frames, \
                                 vid_names, clips, vid_id,  \
                                 None, \
                                 mode, cls2idx, None, n_frames, h, w)
 
+        print('n_frames :',n_frames)
         print('tubes.shape :',tubes.shape)
         print('prob_out.shape :',prob_out.shape)
-
-        n_tubes = len(tubes)
+        print('n_tubes :',n_tubes)
 
         # get predictions
         _, cls_int = torch.max(prob_out,1)
 
         for i in range(clips.size(0)):
-            box = boxes[i,:n_actions, :n_frames,:4].contiguous()
-            box = box.view(-1,n_frames*4)
+            
+            box = boxes[i,:n_actions, :n_frames[i].int(),:4].contiguous()
+            box = box.view(-1,n_frames[i].int()*4)
+            print('box.shape :',box.shape)
+            print('tubes.shape :',tubes.shape)
+            tubes_t = tubes[i,:n_tubes[i].long(),:n_frames[i].long()]
+            tubes_t = tubes_t.view(-1, n_frames[i].int()*4)
+            print('tubes_t.shape :',tubes_t.shape)
+            overlaps = tube_overlaps(tubes_t.float(), box.float())
 
-            overlaps = tube_overlaps(tubes.view(-1,n_frames*4).float(), box.float())
-
-            # max_overlaps, argmax_overlaps = torch.max(overlaps, 1)
-            # max_overlaps_ =  torch.where(max_overlaps > iou_thresh, max_overlaps, torch.zeros_like(max_overlaps).type_as(max_overlaps))
-            # non_zero = max_overlaps_.nonzero()
-            # offset = torch.arange(0,overlaps.size(0)) * n_actions[i].item()
-            # print('argmax_overlaps.shape :',argmax_overlaps.shape)
-            # print('argmax_overlaps.shape :',argmax_overlaps)
-            # print('offset :',offset)
-            # print('offset :',offset.shape)
-            # offset = offset + argmax_overlaps.type_as(offset)
-            # # print('non_zero :',non_zero)
-            # overlaps = overlaps.view(-1).contiguous()[offset]
-            # print('overlaps :',overlaps)
-            # print('overlaps :',overlaps.shape)
-            # exit(-1)
             gt_max_overlaps, argmax_gt_overlaps = torch.max(overlaps, 0)
 
             non_empty_indices =  box.ne(0).any(dim=1).nonzero().view(-1)
             n_elems = non_empty_indices.nelement()            
 
             print('gt_max_overlaps :',gt_max_overlaps)
-            if gt_max_overlaps[0] > 0.5 :
-                print('argmax_gt_overlaps :',argmax_gt_overlaps, argmax_gt_overlaps.shape, gt_max_overlaps )
-                print('tubes_t[max_indices[0]] :',tubes[argmax_gt_overlaps[0]])
-                print('gt_rois_t[0] :',box[0])
 
             # 0.5 thresh
             gt_max_overlaps_ = torch.where(gt_max_overlaps > iou_thresh, gt_max_overlaps, torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
-            print('gt_max_overlaps_ :',gt_max_overlaps_)
             detected =  gt_max_overlaps_[non_empty_indices].ne(0).sum()
             true_pos += detected
             false_neg += n_elems - detected
 
             # 0.4 thresh
             gt_max_overlaps_ = torch.where(gt_max_overlaps > iou_thresh_4, gt_max_overlaps, torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
-            print('gt_max_overlaps_ :',gt_max_overlaps_)
             detected =  gt_max_overlaps_[non_empty_indices].ne(0).sum()
             true_pos_4 += detected
             false_neg_4 += n_elems - detected
@@ -180,7 +165,8 @@ if __name__ == '__main__':
 
     n_devs = torch.cuda.device_count()
     sample_size = 112
-    sample_duration = 16  # len(images)
+    # sample_duration = 16  # len(images)
+    sample_duration = 8  # len(images)
 
 
     batch_size = 1
@@ -210,7 +196,8 @@ if __name__ == '__main__':
     temporal_transform = LoopPadding(sample_duration)
 
     # Init action_net
-    action_model_path = './action_net_model_both_max_pooling.pwf'
+
+    action_model_path = './action_net_model_8frm_conf_ucf.pwf'
     
     model = Model(actions, sample_duration, sample_size)
     model.load_part_model(action_model_path=action_model_path)

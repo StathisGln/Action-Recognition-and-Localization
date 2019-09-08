@@ -13,7 +13,9 @@ from torch.autograd import Variable
 
 from resnet_3D import resnet34
 from region_net import _RPN 
-from human_reg import _Regression_Layer
+# from human_reg import _Regression_Layer
+from human_reg_newedw import _Regression_Layer
+
 
 from proposal_target_layer_cascade import _ProposalTargetLayer
 from proposal_target_layer_cascade_single_frame import _ProposalTargetLayer as _ProposalTargetLayer_single
@@ -37,7 +39,6 @@ class ACT_net(nn.Module):
 
         # cfg.POOLING_SIZE
         self.pooling_size = 7
-        self.spatial_scale = 1.0/16
     
         # define rpn
         self.act_rpn = _RPN(256, sample_duration).cuda()

@@ -29,7 +29,7 @@ class Model(nn.Module):
     -ACT_net : a network for proposing action tubes for 16 frames
     -TCN net : a dilation network which classifies the input tubes
     """
-    def __init__(self, actions, sample_duration, sample_size):
+    def __init__(self, actions, sample_duration, sample_size, ):
         super(Model, self).__init__()
 
         self.classes = actions
@@ -40,9 +40,17 @@ class Model(nn.Module):
         ## general options
         self.sample_duration = sample_duration
         self.sample_size = sample_size
-        self.step = int(self.sample_duration/2)
+        # self.step = int(self.sample_duration/2)
+        # self.step = int(self.sample_duration*3/4)
+        # self.step = int(self.sample_duration*7/8)
+
+        # self.step = int(15)
+        # self.step = int(12)
+
+        # self.step = int(2)
+        self.step = sample_duration
         self.p_feat_size = 64 # 128 # 256 # 512
-        
+        self.POOLING_SIZE = 7
         # For connection 
         self.max_num_tubes = conf.MAX_NUMBER_TUBES
         self.connection_thresh = conf.CONNECTION_THRESH
@@ -56,32 +64,19 @@ class Model(nn.Module):
         TODO describe procedure
         '''
 
-        # print('boxes.shape :',boxes.shape)
-
-        ## define a dataloader for the whole video
-        # print('----------Inside----------')
-        # print('num_frames :',num_frames)
-        # print('clips.shape :',clips.shape)
-
         clips = clips.squeeze(0)
         ret_n_frames = clips.size(0)
         clips = clips[:num_frames]
         
-        # print('num_frames :',num_frames)
-        # print('clips.shape :',clips.shape)
-        # exit(-1)
         if self.training:
             boxes = boxes.squeeze(0).permute(1,0,2).cpu()
             boxes = boxes[:num_frames,:num_actions].clamp_(min=0)
 
         batch_size = 4 # 
-        # batch_size = 2 # 
-        # batch_size = 16 # 
-
         num_images = 1
         rois_per_image = int(conf.TRAIN.BATCH_SIZE / num_images) if self.training else 150
 
-        data = single_video(dataset_folder,h_,w_, vid_names, vid_id, frames_dur= self.sample_duration, sample_size =self.sample_size,
+        data = single_video(dataset_folder,h_,w_, vid_names, vid_id, frames_dur= self.sample_duration, sample_size =self.sample_size,step=self.step,
                             classes_idx=cls2idx, n_frames=num_frames)
 
         data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size, pin_memory=False,# num_workers=num_workers, pin_memory=True,
@@ -90,7 +85,7 @@ class Model(nn.Module):
 
         n_clips = data.__len__()
 
-        features = torch.zeros(n_clips, rois_per_image, self.p_feat_size, self.sample_duration).type_as(clips)
+        features = torch.zeros(n_clips, rois_per_image, self.p_feat_size, self.sample_duration,self.POOLING_SIZE, self.POOLING_SIZE).type_as(clips)
         p_tubes = torch.zeros(n_clips, rois_per_image,  self.sample_duration*4).type_as(clips) # all the proposed tube-rois
         actioness_score = torch.zeros(n_clips, rois_per_image).type_as(clips)
         overlaps_scores = torch.zeros(n_clips, rois_per_image, rois_per_image).type_as(clips)
@@ -125,11 +120,12 @@ class Model(nn.Module):
 
             # if step == 1:
             #     break
-            print('\tstep :',step)
+            # print('\tstep :',step)
 
             frame_indices, im_info, start_fr = dt
+            # print('frame_indices :',frame_indices)
             clips_ = clips[frame_indices].cuda()
-            print('frame_indices.shape :',frame_indices.shape)
+            # print('frame_indices.shape :',frame_indices.shape)
             if self.training:
                 boxes_ = boxes[frame_indices].cuda()
                 box_ = boxes_.permute(0,2,1,3).float().contiguous()[:,:,:,:-1]
@@ -148,9 +144,9 @@ class Model(nn.Module):
                                                             None,
                                                             box_,
                                                             start_fr)
-            pooled_feat = pooled_feat.view(-1,rois_per_image,self.p_feat_size,self.sample_duration)
+            pooled_feat = pooled_feat.view(-1,rois_per_image,self.p_feat_size,self.sample_duration, self.POOLING_SIZE, self.POOLING_SIZE)
 
-            # regression
+            # # regression
             n_tubes = len(tubes)
             if not self.training:
                 tubes = tubes.view(-1, self.sample_duration*4+2)
@@ -165,7 +161,9 @@ class Model(nn.Module):
             idx_s = step * batch_size 
             idx_e = min(step * batch_size + batch_size, n_clips)
 
+            # TODO uncomment
             features[idx_s:idx_e] = pooled_feat
+
             p_tubes[idx_s:idx_e,] = tubes[:,:,1:-1]
             actioness_score[idx_s:idx_e] = tubes[:,:,-1]
 
@@ -194,34 +192,26 @@ class Model(nn.Module):
                     final_scores = torch.Tensor().float().cuda()                    # final scores
                     final_poss   = torch.Tensor().int().cuda()                      # final tubes
 
+                    f_scores = final_scores
                     continue
-                # print('p_tubes :',p_tubes[i-1].cpu().numpy())
-                # print('p_tubes :',p_tubes[i].cpu().numpy())
-                overlaps_ = tube_overlaps(p_tubes[i-1,:,int(self.sample_duration*4/2):],p_tubes[i,:,:int(self.sample_duration*4/2)]).type_as(p_tubes)
-                # print('overlaps_.cpu().numpy() :',overlaps_.cpu().numpy())
-                # print('overlaps_scr.cpu().numpy():',overlaps_scr.cpu().numpy())
-                # print('actioness_score[i].cpu().numpy() :',actioness_score[i].cpu().numpy())
-                # print('pos :',pos )
-                # print('pos_indices :',pos_indices)
+
+                # calculate overlaps
+                # overlaps_ = tube_overlaps(p_tubes[i-1,:,6*4:],p_tubes[i,:,:2*4]).type_as(p_tubes)  #
+                overlaps_ = tube_overlaps(p_tubes[i-1,:,-1*4:],p_tubes[i,:,:1*4]).type_as(p_tubes)  #
+
+                # connect tubes
+                # print('pos.shape :',pos.shape)
                 pos, pos_indices, \
                 f_scores, actioness_scr, \
                 overlaps_scr = self.calc(torch.Tensor([n_clips]),torch.Tensor([rois_per_image]),torch.Tensor([pos.size(0)]),
                                          pos, pos_indices, actioness_scr, overlaps_scr,
                                          overlaps_, actioness_score[i], torch.Tensor([i]))
-                
-                # if self.training:
-                #     non_gt_tubes_ind = f_scores.ne(2).nonzero().view(-1)
-                #     if non_gt_tubes_ind.nelement() != 0:
-                #         pos = pos[non_gt_tubes_ind]
-                #         pos_indices = pos_indices[non_gt_tubes_ind]
-                #         f_scores = f_scores[non_gt_tubes_ind]
-                #         actioness_scr = actioness_scr[non_gt_tubes_ind]
-                #         overlaps_scr = overlaps_scr[non_gt_tubes_ind]
-
+               
                 if pos.size(0) > self.update_thresh:
-
+                    # print('Updating... with pos.shape :',pos.shape)
                     final_scores, final_poss, pos , pos_indices, \
                     actioness_scr, overlaps_scr,  f_scores = self.calc.update_scores(final_scores,final_poss, f_scores, pos, pos_indices, actioness_scr, overlaps_scr)
+                    # print('New thresh :', self.calc.thresh, ' with new pos :', pos.shape)
                     
                 if f_scores.dim() == 0:
                     f_scores = f_scores.unsqueeze(0)
@@ -229,6 +219,7 @@ class Model(nn.Module):
                     pos_indices = pos_indices.unsqueeze(0)
                     actioness_scr = actioness_scr.unsqueeze(0)
                     overlaps_scr = overlaps_scr.unsqueeze(0)
+
                 if final_scores.dim() == 0:
                     final_scores = final_scores.unsqueeze(0)
                     final_poss = final_poss.unsqueeze(0)
@@ -243,6 +234,7 @@ class Model(nn.Module):
                     print('f_scores.shape :',f_scores.shape)
                     print('f_scores.dim() :',f_scores.dim())
                     exit(-1)
+
                 try:
                     final_poss = torch.cat((final_poss, pos))                    
                 except:
@@ -254,8 +246,7 @@ class Model(nn.Module):
                     print('pos.dim() :',pos.dim())
                     exit(-1)
 
-
-                # add new tubes
+                # # add new tubes
                 pos= torch.cat((pos,zeros_t))
                 pos[-rois_per_image:,0,0] = ones_t * i
                 pos[-rois_per_image:,0,1] = offset
@@ -265,18 +256,18 @@ class Model(nn.Module):
                 overlaps_scr  = torch.cat((overlaps_scr, torch.zeros((rois_per_image)).type_as(overlaps_scr)))
 
         ## add only last layers
-        ## TODO check again
         indices = actioness_score[-1].ge(self.calc.thresh).nonzero().view(-1)
+
         if indices.nelement() > 0:
             zeros_t[:,0,0] = idx_e-1
             zeros_t[:,0,1] = offset
             final_poss = torch.cat([final_poss, zeros_t[indices]])
 
         if pos.size(0) > self.update_thresh:
-            print('Updating thresh...', final_scores.shape, final_poss.shape, pos.shape, f_scores.shape, pos_indices.shape)
+            # print('Updating thresh...', final_scores.shape, final_poss.shape, pos.shape, f_scores.shape, pos_indices.shape)
             final_scores, final_poss, pos , pos_indices, \
                 actioness_scr, overlaps_scr,  f_scores = self.calc.update_scores(final_scores,final_poss, f_scores, pos, pos_indices, actioness_scr, overlaps_scr)
-            print('Updating thresh...', final_scores.shape, final_poss.shape, pos.shape, f_scores.shape, pos_indices.shape)
+            # print('Updating thresh...', final_scores.shape, final_poss.shape, pos.shape, f_scores.shape, pos_indices.shape)
 
         final_tubes = torch.zeros(final_poss.size(0), num_frames, 4)
 
@@ -321,13 +312,7 @@ class Model(nn.Module):
                 print('self.calc.thresh:',self.calc.thresh)
                 print('final_scores :',final_scores.shape)
                 print('final_pos.shape :',final_poss.shape)
-            #     exit(-1)
-            # if boxes_.nelement() == 0:
-            #     print('problem boxes_')
-            #     print('boxes_ :',boxes_)
-            #     print('boxes_.shape :',boxes_.shape)
-            #     print('final_tubes :',final_tubes)
-            #     exit(-1)
+
             if final_tubes.nelement() > 0:
                 overlaps = tube_overlaps(final_tubes.view(-1,num_frames*4), boxes_.type_as(final_tubes))
                 max_overlaps,_ = torch.max(overlaps,1)
@@ -402,23 +387,22 @@ class Model(nn.Module):
         ## calculate input rois
         prob_out = torch.zeros(len(f_tubes), self.n_classes).cuda()
         final_feats = []
-
+        # feats = torch.zeros(29,self.p_feat_size, self.sample_duration)
         for i in range(len(f_tubes)):
 
             seq = f_tubes[i]
-            feats = torch.Tensor(len(seq),self.p_feat_size,self.sample_duration)
-
+            feats = torch.Tensor(len(seq),self.p_feat_size,self.sample_duration, self.POOLING_SIZE,self.POOLING_SIZE)
+            
             for j in range(len(seq)):
-
-                # feats[j] = features[seq[j][0],seq[j][1]].mean(1)
                 feats[j] = features[seq[j][0],seq[j][1]]
-                # tmp_tube[j] = p_tubes[seq[j]][1:7]
+
 
             # prob_out[i] = self.act_rnn(feats.cuda())
 
-            feats = torch.mean(feats, dim=0)
             if mode == 'extract':
-                final_feats.append(feats)
+                final_feats.append(torch.mean(feats,dim=0))
+
+            feats = torch.mean(feats, dim=0)
 
             try:
                 prob_out[i] = self.act_rnn(feats.view(-1).cuda())
@@ -450,6 +434,7 @@ class Model(nn.Module):
 
         final_tubes = final_tubes.type_as(final_poss)
         # # classification probability
+
         if self.training:
             cls_loss = F.cross_entropy(prob_out.cpu(), target_lbl.long()).cuda()
 
@@ -513,16 +498,17 @@ class Model(nn.Module):
             # act_rnn_data = torch.load(rnn_path)
             # act_rnn.load(act_rnn_data)
 
-
+            
             act_rnn = nn.Sequential(
-                # nn.Linear(64*self.sample_duration, 256),
+                # nn.Linear(self.p_feat_size*self.sample_duration*self.POOLING_SIZE*self.POOLING_SIZE, 256),
                 # nn.ReLU(True),
                 # nn.Dropout(0.8),
                 # nn.Linear(256,self.n_classes),
-                nn.Linear(64*self.sample_duration, self.n_classes),
+                # # nn.Linear(64*self.sample_duration, self.n_classes),
                 # # nn.ReLU(True),
                 # # nn.Dropout(0.8),
                 # # nn.Linear(256,self.n_classes),
+                nn.Linear(self.p_feat_size*self.sample_duration*self.POOLING_SIZE*self.POOLING_SIZE, self.n_classes),
 
             )
             act_rnn_data = torch.load(rnn_path)
@@ -534,15 +520,16 @@ class Model(nn.Module):
 
             # self.act_rnn =Act_RNN(self.p_feat_size,int(self.p_feat_size/2),self.n_classes)
             self.act_rnn = nn.Sequential(
-                # nn.Linear(64*self.sample_duration, 256),
+                # nn.Linear(self.p_feat_size*self.sample_duration*self.POOLING_SIZE*self.POOLING_SIZE, 256),
                 # nn.ReLU(True),
                 # nn.Dropout(0.8),
                 # nn.Linear(256,self.n_classes),
-                nn.Linear(64*self.sample_duration, self.n_classes),
+
+                # nn.Linear(64*self.sample_duration, self.n_classes),
                 # # nn.ReLU(True),
                 # # nn.Dropout(0.8),
                 # # nn.Linear(256,self.n_classes),
-
+                nn.Linear(self.p_feat_size*self.sample_duration*self.POOLING_SIZE*self.POOLING_SIZE, self.n_classes),
             )
             for m in self.act_rnn.modules():
                 if m == nn.Linear:

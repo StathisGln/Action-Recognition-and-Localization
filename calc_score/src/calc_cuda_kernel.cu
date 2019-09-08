@@ -47,6 +47,7 @@ extern "C" {
 
 	  m = pos_indices[j] + 1;
 
+	  // tmp_sum =   new_overlap / m; // 0.8
 	  tmp_sum = new_score / (m+1) +  new_overlap / m; // 0.8
 	  tmp_pos = j * K + z;
 
@@ -55,10 +56,12 @@ extern "C" {
 	  // }
 	  
 	  if (tmp_sum > thresh){
+	  // if (tmp_sum > 0.5){
 	    
 	    next_pos_indices[tmp_pos] = pos_indices[j] + 1;
 	    next_actioness[tmp_pos] = new_score;
 	    next_overlaps_scr[tmp_pos] = new_overlap;
+	    // f_scores[tmp_pos] = new_score / (m+1);
 	    f_scores[tmp_pos] = tmp_sum;
 	    // if (index == 0){
 	    //   printf("pos_indices[j] %d, next_pos_indices[tmp_pos] %d\n",pos_indices[j], next_pos_indices[tmp_pos]);

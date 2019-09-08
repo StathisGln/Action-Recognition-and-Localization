@@ -28,7 +28,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     # iou_thresh = 0.1 # Intersection Over Union thresh
     data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
-                 split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
+                 split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(data, batch_size=16,
                                               shuffle=True, num_workers=0, pin_memory=True)
     # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*4,
@@ -64,7 +64,9 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
         tubes_ = tubes.contiguous()
         n_tubes = len(tubes)
-
+        # print('sgl_rois_bbox_pred.shape :',sgl_rois_bbox_pred.shape)
+        # print('tubes.shape :',tubes.shape)
+        # exit(-1)
         tubes = tubes.view(-1, sample_duration*4+2)
 
         tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
@@ -130,8 +132,9 @@ if __name__ == '__main__':
     boxes_file = '../poses.json'
 
     sample_size = 112
+    # sample_duration = 16 # len(images)
     # sample_duration = 8 # len(images)
-    sample_duration = 16 # len(images)
+    sample_duration = 4 # len(images)
 
     batch_size = 1
     n_threads = 0
@@ -159,11 +162,8 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    # model_data = torch.load('./actio_net_model_both.pwf')
-    # model_data = torch.load('./action_net_model_both_without_avg.pwf')
-    model_data = torch.load('./action_net_model_both_jhmdb.pwf')
-    # model_data = torch.load('./action_net_model_jhmdb_only16.pwf')
-
+    model_data = torch.load('./action_net_model_4frm_max_jhmdb.pwf')
+    # action_model_path = './action_net_model_4frm_max_jhmdb.pwf'
 
     # 
     # model_data = torch.load('./action_net_model_part1_1_8frm.pwf')

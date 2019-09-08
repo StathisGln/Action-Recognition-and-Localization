@@ -187,7 +187,7 @@ def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
 
 class video_names(data.Dataset):
     def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader,
-                 sample_size=112,  classes_idx=None):
+                 sample_size=112,  classes_idx=None, plot=False):
 
         self.dataset_folder = dataset_folder
         self.sample_size = sample_size
@@ -197,12 +197,17 @@ class video_names(data.Dataset):
         self.data, self.max_frames, self.max_actions = make_dataset_names( dataset_folder, spt_path, boxes_file, mode)
         self.loader = get_loader()
         self.classes_idx = classes_idx
+        self.plot = plot
         # mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
         mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
         spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
                                      ToTensor(),
                                      Normalize(mean, [1, 1, 1])])
+        plot_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
+                                     ToTensor()])
+
         self.spatial_transform=spatial_transform
+        self.plot_transform = plot_transform
         # self.loader = get_loader()
         
     def __getitem__(self, index):
@@ -213,8 +218,6 @@ class video_names(data.Dataset):
         n_frames = self.data[index]['n_frames']
         cls = self.data[index]['class']
         class_int = self.classes_idx[cls]
-
-
 
         
         # abs_path = os.path.join(self.dataset_folder, vid_name)
@@ -256,20 +259,32 @@ class video_names(data.Dataset):
         frame_indices= list(
             range( 1, n_frames+1))
         path = os.path.join(self.dataset_folder, vid_name)
+
         clip = self.loader(path, frame_indices)
+
+        if self.plot:
+
+            clip_plot = [self.plot_transform(img) for img in clip]
+            clip_plot = torch.stack(clip_plot, 0).permute(1, 0, 2, 3)
+
         clip = [self.spatial_transform(img) for img in clip]
         clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
 
         f_clips = torch.zeros(self.max_frames,3,self.sample_size,self.sample_size)
-        # print('f_clips.shape :',f_clips.shape)
-        # print('n_frames :',n_frames )
         f_clips[:n_frames] = clip.permute(1,0,2,3)
 
+        if self.plot:
+            f_clips_plot = torch.zeros(self.max_frames,3,self.sample_size,self.sample_size)
+            f_clips_plot[:n_frames] = clip_plot.permute(1,0,2,3)
         ## add frame to final_boxes
         
         fr_tensor = np.expand_dims( np.expand_dims( np.arange(0,final_boxes.shape[-2]), axis=1), axis=0)
         fr_tensor = np.repeat(fr_tensor, final_boxes.shape[0], axis=0)
         final_boxes = np.concatenate((final_boxes, fr_tensor), axis=-1)
+
+        if self.plot:
+            return vid_id, f_clips, final_boxes, n_frames_np, n_actions_np, h, w, class_int, f_clips_plot
+
         return vid_id, f_clips, final_boxes, n_frames_np, n_actions_np, h, w, class_int
     
     def __len__(self):
@@ -294,7 +309,8 @@ def make_dataset_names(dataset_path, spt_path, boxes_file, mode):
     max_frames = -1
     max_actions = -1
     for idx, cls in enumerate(classes):
-
+        # if cls != 'swing_baseball':
+        #     continue
         videos = []
         with open(os.path.join(spt_path,'{}_test_split1.txt'.format(cls)), 'r') as fp:
             lines=fp.readlines()
@@ -316,6 +332,8 @@ def make_dataset_names(dataset_path, spt_path, boxes_file, mode):
 
         for vid in videos:
 
+            # if vid != 'hittingofftee2_swing_baseball_f_nm_np1_fr_med_8':
+            #     continue
             video_path = os.path.join(cls,vid)
             n_frames = len(glob.glob(os.path.join(dataset_path,video_path+'/*.png')))
 
@@ -378,7 +396,7 @@ class Video(data.Dataset):
         boxes = self.data[index]['boxes']
 
         n_frames = self.data[index]['end_t']
-        if n_frames < 17:
+        if n_frames < self.sample_duration+1:
             time_index = 1
             frame_indices = list(range(time_index, min(n_frames, time_index + self.sample_duration)))  # get the corresponding frames
         else:
@@ -395,8 +413,6 @@ class Video(data.Dataset):
         if self.temporal_transform is not None:
             frame_indices = self.temporal_transform(frame_indices)
 
-        # if n_frames < 17:
-        #     print('frame_indices :',frame_indices)
         clip = self.loader(path, frame_indices)
 
         # # get original height and width
@@ -440,8 +456,10 @@ class Video(data.Dataset):
 class RNN_JHMDB(data.Dataset):
 
     def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader, \
-                 max_n_tubes = 19, max_len_tubes = 73):
+                 max_n_tubes = 19, max_len_tubes = 73, sample_duration=16):
 
+        self.sample_duration = sample_duration
+        self.POOLING_SIZE = 7
         self.dataset_folder = dataset_folder
         self.max_n_tubes = max_n_tubes
         self.max_len_tubes = max_len_tubes
@@ -461,7 +479,7 @@ class RNN_JHMDB(data.Dataset):
         path = self.data[index]['video']   # video path
 
         # f_features = torch.zeros(self.max_n_tubes,self.max_len_tubes, 64, 16) - 1 
-        f_features = torch.zeros(self.max_n_tubes, 64, 16) - 1 
+        f_features = torch.zeros(self.max_n_tubes, 64, self.sample_duration, self.POOLING_SIZE, self.POOLING_SIZE) - 1 
         len_tubes = torch.zeros(self.max_n_tubes) 
         f_target_lbl = torch.zeros(self.max_n_tubes) - 1
 

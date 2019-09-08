@@ -236,8 +236,10 @@ if __name__ == '__main__':
     boxes_file = '../poses.json'
 
     sample_size = 112
-    # sample_duration = 8  # len(images)
     sample_duration = 16  # len(images)
+    # sample_duration = 8  # len(images)
+    # sample_duration = 4  # len(images)
+
 
     # # get mean
     mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png

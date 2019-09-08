@@ -19,12 +19,8 @@ from jhmdb_dataset import  video_names, RNN_JHMDB
 from model import Model
 from resize_rpn import resize_tube
 
-# torch.backends.cudnn.benchnark=True 
-
-
 def validate_model(model,  val_data, val_data_loader):
 
-    ###
     max_dim = 1
 
     correct = 0
@@ -97,7 +93,6 @@ if __name__ == '__main__':
 
     # # # get mean
     mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
-    # mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
 
     # generate model
     actions = ['__background__','brush_hair', 'clap', 'golf', 'kick_ball', 'pour',
@@ -125,14 +120,6 @@ if __name__ == '__main__':
     model = Model(actions, sample_duration, sample_size)
     model.load_part_model()
     model.deactivate_action_net_grad()
-
-    # if torch.cuda.device_count() > 1:
-
-    #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
-    #     model.act_net = nn.DataParallel(model.act_net)
-
-    # model.to(device)
-    # model.act_net.to(device)
 
     lr = 0.1
     lr_decay_step = 5
@@ -188,17 +175,10 @@ if __name__ == '__main__':
         print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(ep+1, epochs))
         for step, data  in enumerate(data_loader):
 
-            # if step == 2:
-            #     break
-
-            # print('step :',step)
             vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
-            ###################################
-            #          Function here          #
-            ###################################
 
             mode = 'train'
-            # boxes_ = boxes.to(device)
+
             vid_id = vid_id.int()
             clips = clips.to(device)
             boxes = boxes.to(device)
@@ -225,15 +205,6 @@ if __name__ == '__main__':
         print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
         ep+1,loss_temp/step, lr))
         
-
-        # if ( ep + 1 ) % 5 == 0: # validation time
-        #     val_name_loader = video_names(dataset_frames, spt_path, boxes_file, vid2idx, mode='test')
-        #     val_loader = torch.utils.data.DataLoader(val_name_loader, batch_size=batch_size,
-        #                                       shuffle=True)
-
-        #     validate_model(model, val_name_loader, val_loader)
-        # if ( ep + 1 ) % 5 == 0:
-        torch.save(model.state_dict(), "model_linear.pwf")
-    # torch.save(model.state_dict(), "model.pwf")
+        torch.save(model.state_dict(), "model_linear_nomean.pwf")
 
 

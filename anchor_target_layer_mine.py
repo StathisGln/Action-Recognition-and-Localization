@@ -61,14 +61,20 @@ class _AnchorTargetLayer(nn.Module):
         # filter out-of-image anchors
 
         rpn_cls_score = input[0] ## rpn classification score
-        gt_tubes = input[1]      ## gt tube
-        im_info = input[2]       ## im_info
-        gt_rois = input[3][:,:,:,:4].contiguous()       ## gt rois for each frame
+        rpn_cls_score_3_4 = input[1]
+        rpn_cls_score_2 = input[2]
+        rpn_cls_score_4 = input[3]
+        gt_tubes = input[4]      ## gt tube
+        im_info = input[5]       ## im_info
+        gt_rois = input[6][:,:,:,:4].contiguous()       ## gt rois for each frame
         
         ### Not sure about that
         batch_size = rpn_cls_score.size(0)
         height, width  = rpn_cls_score.size(3), rpn_cls_score.size(4)
         time = rpn_cls_score.size(2)
+        time_3_4 = rpn_cls_score_3_4.size(2)
+        time_2 = rpn_cls_score_2.size(2)
+        time_4 = rpn_cls_score_4.size(2)
         feat_height, feat_width,  =  rpn_cls_score.size(3), rpn_cls_score.size(4)
 
         shift_x = np.arange(0, feat_width) * self._feat_stride
@@ -204,39 +210,117 @@ class _AnchorTargetLayer(nn.Module):
 
         outputs = []
 
-        # ## break targets
-        # time_bdry = K*A*time
-        # time_3_4_bdry = K*A*time_3_4 + time_bdry
-        # time_2_bdry =  K*A*time_2 + time_3_4_bdry
-        # time_4_bdry =  K*A*time_4 + time_2_bdry
+        ## break targets
+        time_bdry = K*A*time
+        time_3_4_bdry = K*A*time_3_4 + time_bdry
+        time_2_bdry =  K*A*time_2 + time_3_4_bdry
+        time_4_bdry =  K*A*time_4 + time_2_bdry
 
-        labels = labels.view(batch_size,time, height, width, A).permute(0,4,1,2,3).contiguous()
-        labels = labels.view(batch_size, 1, A * time * height, width)
+        labels_ = labels[:,:time_bdry].view(batch_size,time, height, width, A).permute(0,4,1,2,3).contiguous()
+        labels_ = labels_.view(batch_size, 1, A * time * height, width)
 
-        outputs.append(labels)
+        labels_3_4 = labels[:,time_bdry:time_3_4_bdry].view(batch_size,time_3_4, height, width, A).permute(0,4,1,2,3).contiguous()
+        labels_3_4 = labels_3_4.view(batch_size, 1, A * time_3_4 * height, width)
 
-        bbox_targets = bbox_targets.view(batch_size, time, height,width, A * self.time_dim[0] * 4). \
+        labels_2 = labels[:,time_3_4_bdry: time_2_bdry].view(batch_size,time_2, height, width, A).permute(0,4,1,2,3).contiguous()
+        labels_2 = labels_2.view(batch_size, 1, A * time_2 * height, width)
+
+        labels_4 = labels[:,time_2_bdry: time_4_bdry].view(batch_size,time_4, height, width, A).permute(0,4,1,2,3).contiguous()
+        labels_4 = labels_4.view(batch_size, 1, A * time_4 * height, width)
+
+        outputs.append(labels_)
+        outputs.append(labels_3_4)
+        outputs.append(labels_2)
+        outputs.append(labels_4)
+        
+        bbox_targets_list= []
+        time_limits = [0, time_bdry,time_3_4_bdry,time_2_bdry]
+
+        for i in range(len(self.time_dim)):
+            for j in range(0,self.sample_duration-self.time_dim[i]+1):
+                # print('i :',i, ' j :',j, '(time_limits[i]+j*K*A) :', \
+                #       (time_limits[i]+j*K*A), ' (time_limits[i]+(j+1)*K*A) :',(time_limits[i]+(j+1)*K*A), \
+                #       ' distance :',(time_limits[i]+(j+1)*K*A)-(time_limits[i]+j*K*A))
+                # print('bbox_targets[:,(time_limits[i]+j*K*A):(time_limits[i]+(j+1)*K*A),j*4:(j+self.time_dim[i])*4].shape :',\
+                #       bbox_targets[:,(time_limits[i]+j*K*A):(time_limits[i]+(j+1)*K*A),j*4:(j+self.time_dim[i])*4].shape)
+                bbox_targets_list.append(bbox_targets[:,(time_limits[i]+j*K*A):(time_limits[i]+(j+1)*K*A),j*4:(j+self.time_dim[i])*4])
+
+        bbox_targets_ = torch.stack(bbox_targets_list[:time],dim=1).view(batch_size, time, height,width, A * self.time_dim[0] * 4). \
                         permute(0,4,1,2,3).contiguous()
-        outputs.append(bbox_targets)
+        bbox_targets_3_4 = torch.stack(bbox_targets_list[time:time_3_4+time],dim=1).\
+                           view(batch_size, time_3_4, height,width, A * self.time_dim[1] * 4). \
+                           permute(0,4,1,2,3).contiguous()
+        bbox_targets_2 = torch.stack(bbox_targets_list[time_3_4+time:time_2+time_3_4+time],dim=1).\
+                         view(batch_size, time_2, height,width, A * self.time_dim[2] * 4). \
+                         permute(0,4,1,2,3).contiguous()
+        bbox_targets_4 = torch.stack(bbox_targets_list[time_2+time_3_4+time:],dim=1).\
+                         view(batch_size, time_4, height,width, A * self.time_dim[3] * 4). \
+                         permute(0,4,1,2,3).contiguous()
+
+
+        outputs.append(bbox_targets_)
+        outputs.append(bbox_targets_3_4)
+        outputs.append(bbox_targets_2)
+        outputs.append(bbox_targets_4)
 
         anchors_count = bbox_inside_weights.size(1)
+
         bbox_inside_weights = bbox_inside_weights.view(batch_size,anchors_count,1)
-        bbox_inside_weights = bbox_inside_weights.\
-                               expand(batch_size, anchors_count, 4* self.time_dim[0])
-        bbox_inside_weights = bbox_inside_weights.contiguous().view(batch_size, time, height, width, A * 4 * self.time_dim[0]).\
+
+        bbox_inside_weights_ = bbox_inside_weights[:,:time_bdry].\
+                               expand(batch_size, time_bdry, 4* self.time_dim[0])
+        bbox_inside_weights_3_4 = bbox_inside_weights[:,time_bdry:time_3_4_bdry].\
+                                  expand(batch_size,time_3_4_bdry-time_bdry, 4 * self.time_dim[1])
+        bbox_inside_weights_2 = bbox_inside_weights[:,time_3_4_bdry:time_2_bdry].\
+                                expand(batch_size, time_2_bdry-time_3_4_bdry, 4 * self.time_dim[2])
+        bbox_inside_weights_4 = bbox_inside_weights[:,time_2_bdry:time_4_bdry].\
+                                expand(batch_size, time_4_bdry-time_2_bdry, 4 * self.time_dim[3])
+
+
+        bbox_inside_weights_ = bbox_inside_weights_.contiguous().view(batch_size, time, height, width, A * 4 * self.time_dim[0]).\
                                permute(0,4,1,2,3).contiguous()
-        outputs.append(bbox_inside_weights)
+        bbox_inside_weights_3_4 = bbox_inside_weights_3_4.contiguous().view(batch_size, time_3_4, height, width, A * 4 * self.time_dim[1]).\
+                               permute(0,4,1,2,3).contiguous()
+        bbox_inside_weights_2 = bbox_inside_weights_2.contiguous().view(batch_size, time_2, height, width, A * 4 * self.time_dim[2]).\
+                               permute(0,4,1,2,3).contiguous()
+        bbox_inside_weights_4 = bbox_inside_weights_4.contiguous().view(batch_size, time_4, height, width, A * 4 * self.time_dim[3]).\
+                               permute(0,4,1,2,3).contiguous()
+
+
+        outputs.append(bbox_inside_weights_)
+        outputs.append(bbox_inside_weights_3_4)
+        outputs.append(bbox_inside_weights_2)
+        outputs.append(bbox_inside_weights_4)
+
 
         anchors_count = bbox_outside_weights.size(1)
 
         bbox_outside_weights = bbox_outside_weights.view(batch_size,anchors_count,1)
 
-        bbox_outside_weights = bbox_outside_weights.\
-                               expand(batch_size, anchors_count, 4* self.time_dim[0])
-        bbox_outside_weights = bbox_outside_weights.contiguous().view(batch_size, time, height, width, A * 4 * self.time_dim[0]).\
+        bbox_outside_weights_ = bbox_outside_weights[:,:time_bdry].\
+                               expand(batch_size, time_bdry, 4* self.time_dim[0])
+        bbox_outside_weights_3_4 = bbox_outside_weights[:,time_bdry:time_3_4_bdry].\
+                                  expand(batch_size,time_3_4_bdry-time_bdry, 4 * self.time_dim[1])
+        bbox_outside_weights_2 = bbox_outside_weights[:,time_3_4_bdry:time_2_bdry].\
+                                expand(batch_size, time_2_bdry-time_3_4_bdry, 4 * self.time_dim[2])
+        bbox_outside_weights_4 = bbox_outside_weights[:,time_2_bdry:time_4_bdry].\
+                                expand(batch_size, time_4_bdry-time_2_bdry, 4 * self.time_dim[3])
+
+
+        bbox_outside_weights_ = bbox_outside_weights_.contiguous().view(batch_size, time, height, width, A * 4 * self.time_dim[0]).\
+                               permute(0,4,1,2,3).contiguous()
+        bbox_outside_weights_3_4 = bbox_outside_weights_3_4.contiguous().view(batch_size, time_3_4, height, width, A * 4 * self.time_dim[1]).\
+                               permute(0,4,1,2,3).contiguous()
+        bbox_outside_weights_2 = bbox_outside_weights_2.contiguous().view(batch_size, time_2, height, width, A * 4 * self.time_dim[2]).\
+                               permute(0,4,1,2,3).contiguous()
+        bbox_outside_weights_4 = bbox_outside_weights_4.contiguous().view(batch_size, time_4, height, width, A * 4 * self.time_dim[3]).\
                                permute(0,4,1,2,3).contiguous()
 
-        outputs.append(bbox_outside_weights)
+
+        outputs.append(bbox_outside_weights_)
+        outputs.append(bbox_outside_weights_3_4)
+        outputs.append(bbox_outside_weights_2)
+        outputs.append(bbox_outside_weights_4)
 
         return outputs
 
