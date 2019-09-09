@@ -58,8 +58,9 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
     for step, data  in enumerate(data_loader):
 
-        # if step == 3:
-        #     break
+        if step == 1:
+            exit(-1)
+            break
         print('step =>',step)
 
         vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
@@ -82,6 +83,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
         print('tubes.shape :',tubes.shape)
         print('prob_out.shape :',prob_out.shape)
+        exit(-1)
         # get predictions
         for i in range(batch_size):
 
@@ -265,14 +267,15 @@ if __name__ == '__main__':
     temporal_transform = LoopPadding(sample_duration)
 
     # Init action_net
-    action_model_path = './action_net_model_both_jhmdb.pwf'
-    linear_path = './linear_jhmdb.pwf'
-    linear_path = './linear_jhmdb_200.pwf'
-    # linear_path = None
+    # action_model_path = './action_net_model_both_jhmdb.pwf'
+    action_model_path = './test.pwf'
+    # linear_path = './linear_jhmdb.pwf'
+    # linear_path = './linear_jhmdb_200.pwf'
+    linear_path = None
 
     model = Model(actions, sample_duration, sample_size)
-    model.load_part_model()
-    # model.load_part_model(action_model_path=action_model_path, rnn_path=linear_path)
+    # model.load_part_model()
+    model.load_part_model(action_model_path=action_model_path, rnn_path=linear_path)
 
 
     # model.act_net = nn.DataParallel(model.act_net, device_ids=None)
@@ -282,9 +285,9 @@ if __name__ == '__main__':
         model = nn.DataParallel(model)
     model.to(device)
 
-    model_path = './model.pwf'
-    model_data = torch.load(model_path)
-    model.load_state_dict(model_data)
+    # model_path = './model.pwf'
+    # model_data = torch.load(model_path)
+    # model.load_state_dict(model_data)
 
 
     model.eval()

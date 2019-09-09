@@ -28,7 +28,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     # iou_thresh = 0.1 # Intersection Over Union thresh
     data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
-                 split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
+                 split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(data, batch_size=16,
                                               shuffle=True, num_workers=0, pin_memory=True)
     # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*4,
@@ -39,6 +39,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     sgl_true_pos = 0
     sgl_false_neg = 0
 
+    corr_pred = 0
+    all_pred  = 0
     ## 2 rois : 1450
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
@@ -47,20 +49,20 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         #     break
         print('step :',step)
 
-        clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
+        clips, h, w, gt_tubes_r, gt_rois, target, n_frames, im_info = data
         clips_   = clips.to(device)
         gt_tubes_r_ = gt_tubes_r.to(device)
         gt_rois_ = gt_rois.float().to(device)
-        n_actions_ = n_actions.to(device)
+        target_ = target.to(device)
         im_info_ = im_info.to(device)
         start_fr = torch.zeros(clips_.size(0)).to(device)
         # for i in range(2):
         #     print('gt_rois :',gt_rois[i,:n_actions[i]])
-        tubes, _, _, _, _, _, _, \
+        tubes, _, _, _, _, _, cls_score, _, _, \
         sgl_rois_bbox_pred, _  = model(clips,
                                        im_info,
                                        None, None,
-                                       None)
+                                       None, None)
 
         tubes_ = tubes.contiguous()
         n_tubes = len(tubes)
@@ -86,10 +88,18 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
             rois_overlaps = tube_overlaps(tubes_t,gt_rois_t)
 
-            gt_max_overlaps_sgl, max_indices = torch.max(rois_overlaps, 0)
+            # gt_max_overlaps_sgl, max_indices = torch.max(rois_overlaps, 0)
+            gt_max_overlaps_sgl, max_overlap_idx = torch.max(rois_overlaps, 0)
 
             non_empty_indices =  gt_rois_t.ne(0).any(dim=1).nonzero().view(-1)
             n_elems = non_empty_indices.nelement()            
+
+            if gt_max_overlaps_sgl > 0.5 :
+                
+                predc = torch.argmax(cls_score[i,max_overlap_idx])
+                if (predc.item() == target[i].item()):
+                    corr_pred += 1
+                all_pred += 1
 
             gt_max_overlaps_sgl = torch.where(gt_max_overlaps_sgl > iou_thresh, gt_max_overlaps_sgl, torch.zeros_like(gt_max_overlaps_sgl).type_as(gt_max_overlaps_sgl))
 
@@ -105,10 +115,20 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
     recall = float(sgl_true_pos)  / (float(sgl_true_pos)  + float(sgl_false_neg))
 
+    if all_pred != 0:
+        precision = float(corr_pred ) / float(all_pred)
+    else:
+        precision = -1
+
     print(' -----------------------')
     print('| Validation Epoch: {: >3} | '.format(epoch+1))
     print('|                       |')
     print('| Proposed Action Tubes |')
+    print('|                       |')
+    print('| Precision :    {: >6} |'.format(precision))
+    print('|                       |')
+    print('| Correct    --> {: >6} |'.format(corr_pred))
+    print('| All preds  --> {: >6} |'.format(all_pred))
     print('|                       |')
     print('| Single frame          |')
     print('|                       |')
@@ -161,7 +181,8 @@ if __name__ == '__main__':
 
     # model_data = torch.load('./actio_net_model_both.pwf')
     # model_data = torch.load('./action_net_model_both_without_avg.pwf')
-    model_data = torch.load('./action_net_model_both_jhmdb.pwf')
+    model_data = torch.load('./action_net_model_jhmdb_16frm_64_cls.pwf')
+    # model_data = torch.load('./action_net_model_both_jhmdb.pwf')
     # model_data = torch.load('./action_net_model_jhmdb_only16.pwf')
 
 

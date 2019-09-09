@@ -63,10 +63,17 @@ if __name__ == '__main__':
     # Init action_net
     model = ACT_net(actions, sample_duration)
     model.create_architecture()
+
+
+    model = nn.DataParallel(model)
     model.to(device)
 
+    # model_path = './action_net_model_8frm_2_avg_jhmdb.pwf'
+    # model_data = torch.load(model_path)
+    # model.load_state_dict(model_data)
 
-    clips, h, w, gt_tubes, gt_rois, target, n_frames, im_info = data[24]
+    # clips, h, w, gt_tubes, gt_rois, target, n_frames, im_info = data[24]
+    clips, h, w, gt_tubes, gt_rois, target, n_frames, im_info, rate = data[24]
 
     clips_t = clips.unsqueeze(0).to(device)
     target_t = torch.Tensor([target]).unsqueeze(0).to(device)
@@ -76,6 +83,7 @@ if __name__ == '__main__':
     n_frames_t = torch.Tensor([n_frames]).long().unsqueeze(0).to(device)
     num_boxes = torch.Tensor([[1],[1],[1]]).unsqueeze(0).to(device)
     start_fr = torch.zeros((1,1)).to(device)
+    rate_ = torch.Tensor([rate]).unsqueeze(1).to(device)
 
     print('clips_t.shape :',clips_t.shape)
     print('gt_rois_t.shape :',gt_rois_t.shape)
@@ -88,7 +96,7 @@ if __name__ == '__main__':
     ret = model(clips_t, \
                 im_info_t, \
                 gt_tubes_t, gt_rois_t, \
-                start_fr)
+                start_fr, rate_)
 
     print('**********VGIKE**********')
     # print('rois.shape :',rois.shape)

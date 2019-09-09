@@ -1,0 +1,333 @@
+nohup: ignoring input
+Device being used: cuda:0
+Loading pretrained weights from ../resnet-34-kinetics.pth
+Using 2 GPUs!
+268
+max_frames : 40
+/gpu-data/sgal/jhmdb_with_svm/model.py:483: UserWarning: Implicit dimension choice for softmax has been deprecated. Change the call to include dim=X as an argument.
+  prob_out = F.softmax(prob_out)
+step => 0
+step => 1
+step => 2
+step => 3
+step => 4
+step => 5
+step => 6
+step => 7
+step => 8
+step => 9
+step => 10
+step => 11
+step => 12
+step => 13
+step => 14
+step => 15
+step => 16
+step => 17
+step => 18
+step => 19
+step => 20
+step => 21
+Updating thresh... torch.Size([496]) torch.Size([497, 4, 2]) torch.Size([552, 4, 2]) torch.Size([402]) torch.Size([552])
+Updating thresh... torch.Size([418]) torch.Size([418, 4, 2]) torch.Size([100, 4, 2]) torch.Size([100]) torch.Size([100])
+step => 22
+step => 23
+step => 24
+step => 25
+step => 26
+step => 27
+step => 28
+step => 29
+step => 30
+step => 31
+step => 32
+step => 33
+Updating thresh... torch.Size([575]) torch.Size([576, 4, 2]) torch.Size([616, 4, 2]) torch.Size([466]) torch.Size([616])
+Updating thresh... torch.Size([575]) torch.Size([575, 4, 2]) torch.Size([100, 4, 2]) torch.Size([100]) torch.Size([100])
+step => 34
+step => 35
+step => 36
+step => 37
+step => 38
+step => 39
+step => 40
+step => 41
+step => 42
+step => 43
+step => 44
+step => 45
+step => 46
+step => 47
+step => 48
+step => 49
+step => 50
+step => 51
+step => 52
+step => 53
+Updating thresh... torch.Size([488]) torch.Size([489, 4, 2]) torch.Size([546, 4, 2]) torch.Size([396]) torch.Size([546])
+Updating thresh... torch.Size([77]) torch.Size([77, 4, 2]) torch.Size([100, 4, 2]) torch.Size([100]) torch.Size([100])
+step => 54
+step => 55
+step => 56
+step => 57
+step => 58
+step => 59
+step => 60
+step => 61
+step => 62
+step => 63
+step => 64
+step => 65
+step => 66
+step => 67
+step => 68
+step => 69
+step => 70
+step => 71
+step => 72
+step => 73
+step => 74
+step => 75
+step => 76
+step => 77
+step => 78
+step => 79
+step => 80
+step => 81
+step => 82
+step => 83
+step => 84
+step => 85
+step => 86
+Updating thresh... torch.Size([459]) torch.Size([460, 4, 2]) torch.Size([519, 4, 2]) torch.Size([369]) torch.Size([519])
+Updating thresh... torch.Size([302]) torch.Size([302, 4, 2]) torch.Size([100, 4, 2]) torch.Size([100]) torch.Size([100])
+step => 87
+step => 88
+step => 89
+step => 90
+step => 91
+step => 92
+step => 93
+Updating thresh... torch.Size([478]) torch.Size([479, 4, 2]) torch.Size([544, 4, 2]) torch.Size([394]) torch.Size([544])
+Updating thresh... torch.Size([411]) torch.Size([411, 4, 2]) torch.Size([100, 4, 2]) torch.Size([100]) torch.Size([100])
+step => 94
+step => 95
+step => 96
+step => 97
+step => 98
+step => 99
+step => 100
+step => 101
+step => 102
+step => 103
+Updating thresh... torch.Size([542]) torch.Size([543, 4, 2]) torch.Size([599, 4, 2]) torch.Size([449]) torch.Size([599])
+Updating thresh... torch.Size([537]) torch.Size([537, 4, 2]) torch.Size([100, 4, 2]) torch.Size([100]) torch.Size([100])
+step => 104
+step => 105
+step => 106
+step => 107
+step => 108
+step => 109
+step => 110
+step => 111
+step => 112
+step => 113
+step => 114
+step => 115
+step => 116
+step => 117
+step => 118
+step => 119
+step => 120
+step => 121
+step => 122
+step => 123
+step => 124
+step => 125
+step => 126
+step => 127
+step => 128
+step => 129
+step => 130
+step => 131
+Updating thresh... torch.Size([589]) torch.Size([590, 4, 2]) torch.Size([635, 4, 2]) torch.Size([485]) torch.Size([635])
+Updating thresh... torch.Size([381]) torch.Size([381, 4, 2]) torch.Size([100, 4, 2]) torch.Size([100]) torch.Size([100])
+step => 132
+step => 133
+step => 134
+step => 135
+step => 136
+step => 137
+Updating thresh... torch.Size([466]) torch.Size([467, 4, 2]) torch.Size([520, 4, 2]) torch.Size([370]) torch.Size([520])
+Updating thresh... torch.Size([120]) torch.Size([120, 4, 2]) torch.Size([100, 4, 2]) torch.Size([100]) torch.Size([100])
+step => 138
+step => 139
+step => 140
+step => 141
+step => 142
+step => 143
+step => 144
+step => 145
+step => 146
+step => 147
+step => 148
+step => 149
+step => 150
+Updating thresh... torch.Size([443]) torch.Size([444, 4, 2]) torch.Size([504, 4, 2]) torch.Size([354]) torch.Size([504])
+Updating thresh... torch.Size([264]) torch.Size([264, 4, 2]) torch.Size([100, 4, 2]) torch.Size([100]) torch.Size([100])
+step => 151
+step => 152
+step => 153
+Updating thresh... torch.Size([513]) torch.Size([514, 4, 2]) torch.Size([558, 4, 2]) torch.Size([408]) torch.Size([558])
+Updating thresh... torch.Size([449]) torch.Size([449, 4, 2]) torch.Size([100, 4, 2]) torch.Size([100]) torch.Size([100])
+step => 154
+step => 155
+step => 156
+step => 157
+step => 158
+step => 159
+step => 160
+step => 161
+Updating thresh... torch.Size([469]) torch.Size([470, 4, 2]) torch.Size([533, 4, 2]) torch.Size([383]) torch.Size([533])
+Updating thresh... torch.Size([412]) torch.Size([412, 4, 2]) torch.Size([100, 4, 2]) torch.Size([100]) torch.Size([100])
+step => 162
+Updating thresh... torch.Size([617]) torch.Size([618, 4, 2]) torch.Size([642, 4, 2]) torch.Size([492]) torch.Size([642])
+Updating thresh... torch.Size([54]) torch.Size([54, 4, 2]) torch.Size([100, 4, 2]) torch.Size([100]) torch.Size([100])
+step => 163
+step => 164
+step => 165
+step => 166
+step => 167
+step => 168
+step => 169
+step => 170
+step => 171
+step => 172
+step => 173
+step => 174
+step => 175
+step => 176
+step => 177
+step => 178
+step => 179
+step => 180
+step => 181
+step => 182
+step => 183
+step => 184
+step => 185
+step => 186
+step => 187
+step => 188
+step => 189
+step => 190
+step => 191
+step => 192
+step => 193
+step => 194
+step => 195
+step => 196
+step => 197
+Updating thresh... torch.Size([547]) torch.Size([548, 4, 2]) torch.Size([612, 4, 2]) torch.Size([462]) torch.Size([612])
+Updating thresh... torch.Size([427]) torch.Size([427, 4, 2]) torch.Size([100, 4, 2]) torch.Size([100]) torch.Size([100])
+step => 198
+step => 199
+step => 200
+step => 201
+step => 202
+step => 203
+step => 204
+step => 205
+step => 206
+step => 207
+step => 208
+step => 209
+step => 210
+step => 211
+step => 212
+step => 213
+step => 214
+step => 215
+step => 216
+step => 217
+step => 218
+step => 219
+step => 220
+step => 221
+step => 222
+step => 223
+step => 224
+step => 225
+step => 226
+step => 227
+step => 228
+step => 229
+step => 230
+step => 231
+step => 232
+step => 233
+step => 234
+step => 235
+step => 236
+step => 237
+step => 238
+step => 239
+step => 240
+step => 241
+step => 242
+step => 243
+step => 244
+step => 245
+step => 246
+step => 247
+step => 248
+Updating thresh... torch.Size([541]) torch.Size([542, 4, 2]) torch.Size([577, 4, 2]) torch.Size([427]) torch.Size([577])
+Updating thresh... torch.Size([79]) torch.Size([79, 4, 2]) torch.Size([100, 4, 2]) torch.Size([100]) torch.Size([100])
+step => 249
+step => 250
+step => 251
+step => 252
+step => 253
+step => 254
+step => 255
+step => 256
+step => 257
+step => 258
+step => 259
+step => 260
+step => 261
+step => 262
+Updating thresh... torch.Size([528]) torch.Size([529, 4, 2]) torch.Size([580, 4, 2]) torch.Size([430]) torch.Size([580])
+Updating thresh... torch.Size([407]) torch.Size([407, 4, 2]) torch.Size([100, 4, 2]) torch.Size([100]) torch.Size([100])
+step => 263
+step => 264
+step => 265
+step => 266
+step => 267
+ -----------------------
+| Validation Epoch:   1 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| Single frame          |
+|                       |
+| In    267 steps    :  |
+|                       |
+| Threshold : 0.5       |
+|                       |
+| True_pos   -->     26 |
+| False_neg  -->    242 | 
+| Recall     --> 0.0970 |
+|                       |
+| Threshold : 0.4       |
+|                       |
+| True_pos   -->     51 |
+| False_neg  -->    217 | 
+| Recall     --> 0.1903 |
+|                       |
+| Threshold : 0.3       |
+|                       |
+| True_pos   -->    107 |
+| False_neg  -->    161 | 
+| Recall     --> 0.3993 |
+ -----------------------

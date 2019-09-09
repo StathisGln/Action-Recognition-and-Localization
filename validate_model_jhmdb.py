@@ -58,8 +58,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
     for step, data  in enumerate(data_loader):
 
-        if step == 5:
-            break
+        # if step == 1:
+        #     break
         print('step =>',step)
 
         vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
@@ -69,51 +69,51 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         n_frames = n_frames.to(device)
         n_actions = n_actions.int().to(device)
         target = target.to(device)
-        print('target :',target)
 
         im_info = torch.cat([h,w,torch.ones(clips.size(0)).long()*clips.size(2)]).to(device)
         mode = 'test'
 
-        tubes,  \
-        prob_out, n_tubes =  model(n_devs, dataset_folder, \
-                                vid_names, clips, vid_id,  \
-                                None, \
-                                mode, cls2idx, None, n_frames, h, w)
+        print('target :',target)
+        
+        with torch.no_grad():
+            tubes,  \
+            prob_out, n_tubes =  model(n_devs, dataset_folder, \
+                                       vid_names, clips, vid_id,  \
+                                       None, \
+                                       mode, cls2idx, None, n_frames, h, w)
+        print('tubes.shape :',tubes.shape)
+        # # get predictions
+        # for i in range(batch_size):
 
-        # get predictions
-        for i in range(batch_size):
+        #     _, cls_int = torch.max(prob_out[i],1)
+        #     f_prob = torch.zeros(n_tubes[i].long()).type_as(prob_out)
 
-            print('target :',target)
-            
-            _, cls_int = torch.max(prob_out[i],1)
-            f_prob = torch.zeros(n_tubes[i].long()).type_as(prob_out)
+        #     for j in range(n_tubes[i].long()):
+        #         f_prob[j] = prob_out[i,j,cls_int[j]]
 
-            for j in range(n_tubes[i].long()):
-                f_prob[j] = prob_out[i,j,cls_int[j]]
+        #     cls_int = cls_int[:n_tubes[i].long()]
 
-            cls_int = cls_int[:n_tubes[i].long()]
+        #     keep_ = (f_prob.ge(confidence_thresh)) & cls_int.ne(0)
+        #     keep_indices = keep_.nonzero().view(-1)
 
-            keep_ = (f_prob.ge(confidence_thresh)) & cls_int.ne(0)
-            keep_indices = keep_.nonzero().view(-1)
+        #     f_tubes = torch.cat([cls_int.view(-1,1).type_as(tubes),f_prob.view(-1,1).type_as(tubes), \
+        #                          tubes[i,:n_tubes[i].long(),:n_frames[i]].contiguous().view(-1,n_frames[i]*4)], dim=1)
+        #     f_tubes = f_tubes[keep_indices].contiguous()
 
-            f_tubes = torch.cat([cls_int.view(-1,1).type_as(tubes),f_prob.view(-1,1).type_as(tubes), \
-                                 tubes[i,:n_tubes[i].long(),:n_frames[i]].contiguous().view(-1,n_frames[i]*4)], dim=1)
-            f_tubes = f_tubes[keep_indices].contiguous()
+        #     if f_tubes.nelement() != 0 :
+        #         _, best_tube = torch.max(f_tubes[:,1],dim=0)
+        #         f_tubes= f_tubes[best_tube].unsqueeze(0)
 
-            if f_tubes.nelement() != 0 :
-                _, best_tube = torch.max(f_tubes[:,1],dim=0)
-                f_tubes= f_tubes[best_tube].unsqueeze(0)
-
-            f_boxes = torch.cat([target.type_as(boxes),boxes[i,:,:n_frames[i],:4].contiguous().view(n_frames[i]*4)]).unsqueeze(0)
-            v_name = vid_names[vid_id[i]].split('/')[1]
-            print('f_tubes :',f_tubes.cpu().detach().numpy())
-            print('f_boxes :',f_boxes.cpu().detach().numpy())
-            detection_dic[v_name] = f_tubes.float()
-            groundtruth_dic[v_name] = f_boxes.type_as(f_tubes)
-            # with open(os.path.join('outputs','detection',v_name+'.json'), 'w') as f:
-            #     json.dump(f_tubes.cpu().tolist(), f)
-            # with open(os.path.join('outputs','groundtruth',v_name+'.json'), 'w') as f:
-            #     json.dump(f_boxes.cpu().tolist(), f)
+        #     f_boxes = torch.cat([target.type_as(boxes),boxes[i,:,:n_frames[i],:4].contiguous().view(n_frames[i]*4)]).unsqueeze(0)
+        #     v_name = vid_names[vid_id[i]].split('/')[1]
+        #     # print('f_tubes :',f_tubes.cpu().detach().numpy())
+        #     # print('f_boxes :',f_boxes.cpu().detach().numpy())
+        #     detection_dic[v_name] = f_tubes.float()
+        #     groundtruth_dic[v_name] = f_boxes.type_as(f_tubes)
+        #     # with open(os.path.join('outputs','detection',v_name+'.json'), 'w') as f:
+        #     #     json.dump(f_tubes.cpu().tolist(), f)
+        #     # with open(os.path.join('outputs','groundtruth',v_name+'.json'), 'w') as f:
+        #     #     json.dump(f_boxes.cpu().tolist(), f)
 
 
         if tubes.dim() == 1:
@@ -132,15 +132,25 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
 
         for i in range(clips.size(0)):
-            print('boxes.shape:',boxes.shape)
-            print('tubes.shape :',tubes.shape)
+            # print('boxes.shape:',boxes.shape)
+            # print('tubes.shape :',tubes.shape)
+            # print('n_frames[i] :',n_frames[i])
+            # print('n_actions[i] :',n_actions[i])
             box = boxes[i,:n_actions[i].long(), :n_frames[i].long(),:4].contiguous()
             box = box.view(-1,n_frames[i]*4).contiguous().type_as(tubes)
 
-            overlaps = tube_overlaps(tubes[i,:n_tubes[i].long(),:n_frames[i].long()].view(-1,n_frames*4).float(),\
-                                     box.view(-1,n_frames[i]*4).float())
-            gt_max_overlaps, argmax_gt_overlaps = torch.max(overlaps, 0)
+            # tubes_t = tubes[i, target,:n_tubes[i].long(),:n_frames[i].long()].view(-1,n_frames*4).float()
+            tubes_t = tubes[i, target,:,:n_frames[i].long()]
+            tubes_t = tubes_t.view(-1,n_frames*4).float()
 
+            overlaps = tube_overlaps(tubes_t,\
+                                     box.view(-1,n_frames[i]*4).float())
+            # overlaps = tube_overlaps(tubes[i,:n_tubes[i].long(),:n_frames[i].long()].view(-1,n_frames*4).float(),\
+            #                          box.view(-1,n_frames[i]*4).float())
+
+
+            gt_max_overlaps, argmax_gt_overlaps = torch.max(overlaps, 0)
+            print('gt_max_overlaps :',gt_max_overlaps)
             non_empty_indices =  box.ne(0).any(dim=1).nonzero().view(-1)
             n_elems = non_empty_indices.nelement()
 
@@ -203,26 +213,26 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
     print(' -----------------------')
         
-    print(' -----------------')
-    print('|                  |')
-    print('| mAP Thresh : 0.5 |')
-    print('|                  |')
-    print(' ------------------')
-    calculate_mAP(detection_dic, groundtruth_dic, iou_thresh)
+    # print(' -----------------')
+    # print('|                  |')
+    # print('| mAP Thresh : 0.5 |')
+    # print('|                  |')
+    # print(' ------------------')
+    # calculate_mAP(detection_dic, groundtruth_dic, iou_thresh)
 
-    print(' -------------------')
-    print('|                   |')
-    print('| mAP Thresh : 0.4  |')
-    print('|                   |')
-    print(' -------------------')
-    calculate_mAP(detection_dic, groundtruth_dic, iou_thresh_4)
+    # print(' -------------------')
+    # print('|                   |')
+    # print('| mAP Thresh : 0.4  |')
+    # print('|                   |')
+    # print(' -------------------')
+    # calculate_mAP(detection_dic, groundtruth_dic, iou_thresh_4)
 
-    print(' ------------------')
-    print('|                  |')
-    print('| mAP Thresh : 0.3 |')
-    print('|                  |')
-    print(' ------------------')
-    calculate_mAP(detection_dic, groundtruth_dic, iou_thresh_3)
+    # print(' ------------------')
+    # print('|                  |')
+    # print('| mAP Thresh : 0.3 |')
+    # print('|                  |')
+    # print(' ------------------')
+    # calculate_mAP(detection_dic, groundtruth_dic, iou_thresh_3)
     
     
 if __name__ == '__main__':
@@ -237,7 +247,8 @@ if __name__ == '__main__':
 
     n_devs = torch.cuda.device_count()
     sample_size = 112
-    sample_duration = 16  # len(images)
+    # sample_duration = 16  # len(images)
+    sample_duration = 8 # len(images)
 
     batch_size = 1
     n_threads = 0
@@ -264,14 +275,16 @@ if __name__ == '__main__':
     temporal_transform = LoopPadding(sample_duration)
 
     # Init action_net
-    action_model_path = './action_net_model_both_jhmdb.pwf'
-    linear_path = './linear_jhmdb.pwf'
-    linear_path = './linear_jhmdb_200.pwf'
-    # linear_path = None
+    # action_model_path = './action_net_model_both_jhmdb.pwf'
+    # action_model_path = './action_net_model_jhmdb_16frm_64_cls_sep_2.pwf'
+    action_model_path = './action_prog_model_jhmdb_8frm_64_cls.pwf'
+    # linear_path = './linear_jhmdb.pwf'
+    # linear_path = './linear_jhmdb_200.pwf'
+    linear_path = None
 
     model = Model(actions, sample_duration, sample_size)
-    model.load_part_model()
-    # model.load_part_model(action_model_path=action_model_path, rnn_path=linear_path)
+    # model.load_part_model()
+    model.load_part_model(action_model_path=action_model_path, rnn_path=linear_path)
 
 
     # model.act_net = nn.DataParallel(model.act_net, device_ids=None)
@@ -281,9 +294,9 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    model_path = './model_linear.pwf'
-    model_data = torch.load(model_path)
-    model.load_state_dict(model_data)
+    # model_path = './model_linear.pwf'
+    # model_data = torch.load(model_path)
+    # model.load_state_dict(model_data)
 
     model.eval()
 

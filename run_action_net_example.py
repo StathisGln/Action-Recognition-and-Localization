@@ -138,7 +138,7 @@ if __name__ == '__main__':
     sgl_rois_bbox_pred, sgl_rois_bbox_loss,  = model(inputs, \
                                                 im_info_,
                                                 gt_tubes_r_, gt_rois_,
-                                                start_fr)
+                                                     start_fr,torch.Tensor([[0],[0]]))
 
     print('**********VGIKE**********')
     print('feats.shape :',feats.shape)

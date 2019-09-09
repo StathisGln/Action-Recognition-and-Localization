@@ -91,8 +91,10 @@ if __name__ == '__main__':
     #         exit(-1)
 
     # exit(-1)
-    vid_id, clips, boxes, n_frames, n_actions, h, w, target =vid_name_loader[14]
-    # vid_id, clips, boxes, n_frames, n_actions, h, w =vid_name_loader[209]
+    # vid_id, clips, boxes, n_frames, n_actions, h, w, target =vid_name_loader[14]
+    # vid_id, clips, boxes, n_frames, n_actions, h, w, target =vid_name_loader[209]
+    # vid_id, clips, boxes, n_frames, n_actions, h, w, target =vid_name_loader[400]
+    vid_id, clips, boxes, n_frames, n_actions, h, w, target =vid_name_loader[999]
 
 
     vid_id = torch.Tensor(vid_id).int()
@@ -102,6 +104,7 @@ if __name__ == '__main__':
     n_actions = torch.from_numpy(n_actions).int().to(device)
     im_info = torch.Tensor([h,w,clips.size(2)]).unsqueeze(0).to(device)
     mode = 'train'
+    print('target :',target)
     print('**********Starts**********')
 
     tubes,  \
@@ -119,5 +122,6 @@ if __name__ == '__main__':
 
     print('**********VGIKE**********')
     print('rois.shape :',tubes.shape)
-    print('rois :',tubes)
+    # print('rois :',tubes)
+    # print('rois :',tubes[0,0].cpu().nump)
 

@@ -386,19 +386,20 @@ class video_names(data.Dataset):
 
 
 class single_video(data.Dataset):
-    def __init__(self, dataset_folder, h, w, vid_names, vid_id,frames_dur=16, sample_size=112, 
+    def __init__(self, dataset_folder, h, w, vid_names, vid_id,frames_dur=16, sample_size=112, step=8,
                  classes_idx=None, n_frames=-1, json_file=None):
 
         self.h = h
         self.w = w
         self.dataset_folder = dataset_folder
         self.data = prepare_samples(
-                    vid_names, vid_id, frames_dur, int(frames_dur/2), n_frames)
+                    vid_names, vid_id, frames_dur, step, n_frames)
         vid_path = vid_names[vid_id]
         self.temporal_transform = LoopPadding_still(frames_dur)
         self.sample_duration = frames_dur
         self.sample_size = sample_size
         self.classes_idx = classes_idx
+        self.step = step
 
         self.tensor_dim = len(range(0, n_frames-self.sample_duration, int(self.sample_duration/2)))
     def __getitem__(self, index):

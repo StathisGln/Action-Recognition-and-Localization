@@ -24,10 +24,13 @@ class _ProposalTargetLayer(nn.Module):
     classification labels and bounding-box regression targets.
     """
 
-    def __init__(self,  sample_duration):
+    def __init__(self,  sample_duration, n_classes):
 
         super(_ProposalTargetLayer, self).__init__()
+
         self.sample_duration = sample_duration
+        self.n_classes = n_classes
+
         self.BBOX_NORMALIZE_MEANS = torch.FloatTensor(conf.TRAIN.BBOX_NORMALIZE_MEANS).repeat(sample_duration)
         self.BBOX_NORMALIZE_STDS = torch.FloatTensor(conf.TRAIN.BBOX_NORMALIZE_STDS).repeat(sample_duration)
         self.BBOX_INSIDE_WEIGHTS = torch.FloatTensor(conf.TRAIN.BBOX_INSIDE_WEIGHTS).repeat(sample_duration)
@@ -40,7 +43,7 @@ class _ProposalTargetLayer(nn.Module):
         # print('self.BBOX_INSIDE_WEIGHTS.shape :',self.BBOX_INSIDE_WEIGHTS)
         
         # exit(-1)
-    def forward(self, all_rois, gt_boxes):
+    def forward(self, all_rois, gt_boxes, rate):
 
         self.BBOX_NORMALIZE_MEANS = self.BBOX_NORMALIZE_MEANS.type_as(gt_boxes)
         self.BBOX_NORMALIZE_STDS  = self.BBOX_NORMALIZE_STDS.type_as(gt_boxes)
@@ -73,12 +76,13 @@ class _ProposalTargetLayer(nn.Module):
         rois_per_image = int(conf.TRAIN.BATCH_SIZE / num_images)
         fg_rois_per_image = int(np.round(conf.TRAIN.FG_FRACTION * rois_per_image))
         fg_rois_per_image = 1 if fg_rois_per_image == 0 else fg_rois_per_image
-        labels, rois, bbox_targets, bbox_inside_weights = self._sample_rois_pytorch(
+        labels, rois_rate, rois_progress,rois, bbox_targets, bbox_inside_weights = self._sample_rois_pytorch(
             all_rois, gt_boxes, fg_rois_per_image,
-            rois_per_image, num_rois_pre)
+            rois_per_image, num_rois_pre, rate)
 
         bbox_outside_weights = (bbox_inside_weights > 0).float()
-        return rois, labels, bbox_targets, bbox_inside_weights, bbox_outside_weights
+
+        return rois, labels, rois_rate, rois_progress, bbox_targets, bbox_inside_weights, bbox_outside_weights
 
     def backward(self, top, propagate_down, bottom):
         """This layer does not propagate gradients."""
@@ -140,13 +144,12 @@ class _ProposalTargetLayer(nn.Module):
         return targets
 
 
-    def _sample_rois_pytorch(self, all_rois, gt_boxes, fg_rois_per_image, rois_per_image, num_rois_pre):
+    def _sample_rois_pytorch(self, all_rois, gt_boxes, fg_rois_per_image, rois_per_image, num_rois_pre, rate):
         """Generate a random sample of RoIs comprising foreground and background
         examples.
         """
         # overlaps: (rois x gt_boxes)
 
-        # print('all_rois :',all_rois.shape)
         # print('all_rois[:, :,1:-1].shape :',all_rois[:, :,1:-1].shape)
         # print('gt_boxes.shape :',gt_boxes.shape)
         # print('gt_rois.shape :',gt_boxes.view(-1,self.sample_duration*4).shape)
@@ -172,14 +175,17 @@ class _ProposalTargetLayer(nn.Module):
 
         offset = torch.arange(0, batch_size)*gt_boxes.size(1)
         offset = offset.view(-1, 1).type_as(gt_assignment) + gt_assignment
+
         labels = gt_boxes[:,:,-1].contiguous().view(-1)[(offset.view(-1),)].view(batch_size, -1)
+        rois_rate = rate.view(-1)[(offset.view(-1),)].view(batch_size, -1)
 
         n_last_dim = all_rois.size(2)
         labels_batch = labels.new(batch_size, rois_per_image).zero_()
         rois_batch  = all_rois.new(batch_size, rois_per_image, n_last_dim).zero_()
 
         gt_rois_batch = torch.zeros(batch_size, rois_per_image, n_last_dim).to(rois_batch.device)
-
+        rois_rate     = torch.zeros(batch_size, rois_per_image, self.n_classes).to(rois_batch.device)
+        rois_progress = torch.zeros(batch_size, rois_per_image, self.n_classes).to(rois_batch.device)
         # Guard against the case when an image has fewer than max_fg_rois_per_image
         # foreground RoIs
 
@@ -195,6 +201,12 @@ class _ProposalTargetLayer(nn.Module):
 
             fg_inds = torch.nonzero(max_overlaps_single >= conf.TRAIN.FG_THRESH).view(-1)
             fg_num_rois = fg_inds.numel()
+
+            # # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
+            # bg_inds = torch.nonzero((max_overlaps_single < conf.TRAIN.BG_THRESH_HI) &
+            #                         (max_overlaps_single >= conf.TRAIN.BG_THRESH_LO)).view(-1)
+            # bg_num_rois = bg_inds.numel()
+
 
             # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
             bg_inds = torch.nonzero((max_overlaps_single < conf.TRAIN.BG_THRESH_HI) &
@@ -244,15 +256,22 @@ class _ProposalTargetLayer(nn.Module):
 
             # The indices that we're selecting (both fg and bg)
             keep_inds = torch.cat([fg_inds, bg_inds], 0)
+
             # Select sampled values from various arrays:
             labels_batch[i].copy_(labels[i][keep_inds])
 
             # Clamp labels for the background RoIs to 0
             if fg_rois_per_this_image < rois_per_image:
                 labels_batch[i][fg_rois_per_this_image:] = 0
+
+            for j in range(rois_per_image):
+                if labels_batch[i,j] != 0:
+                    rois_rate[i,j,labels_batch[i,j].long()] = rate[i,gt_assignment[i,keep_inds[j]].long()]
+                    rois_progress[i,j,labels_batch[i,j].long()] = 1.
+
             rois_batch[i] = all_rois[i,keep_inds]
             rois_batch[i,:,0] = i
-            
+
             gt_rois_batch[i,:,1:] = gt_boxes[i][gt_assignment[i][keep_inds]]
 
 
@@ -262,4 +281,4 @@ class _ProposalTargetLayer(nn.Module):
         bbox_targets, bbox_inside_weights = \
                 self._get_bbox_regression_labels_pytorch(bbox_target_data, labels_batch)
 
-        return labels_batch, rois_batch, bbox_targets, bbox_inside_weights
+        return labels_batch, rois_rate, rois_progress, rois_batch, bbox_targets, bbox_inside_weights

@@ -34,6 +34,9 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                  split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(data, batch_size=4,
                                               shuffle=True, num_workers=0, pin_memory=True)
+    # data_loader = torch.utils.data.DataLoader(data, batch_size=1,
+    #                                           shuffle=True, num_workers=0, pin_memory=True)
+
     model.eval()
 
     sgl_true_pos = 0
@@ -45,28 +48,31 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     sgl_true_pos_3 = 0
     sgl_false_neg_3 = 0
 
+    corr_pred = 0
+    all_pred = 0
     ## 2 rois : 1450
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
         # if step == 1:
+        #     exit(-1)
         #     break
         # print('step :',step)
 
-        clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
+        clips, h, w, gt_tubes_r, gt_rois, target, n_frames, im_info = data
 
         clips_   = clips.to(device)
         gt_tubes_r_ = gt_tubes_r.to(device)
         gt_rois_ = gt_rois.float().to(device)
-        n_actions_ = n_actions.to(device)
+        target_ = target.to(device)
         im_info_ = im_info.to(device)
         start_fr = torch.zeros(clips_.size(0)).to(device)
 
-        tubes, _, _, _, _, _, _, \
+        tubes, _, _, _, _, _,r_prog, _,  _, \
         sgl_rois_bbox_pred, _  = model(clips,
                                        im_info,
                                        None, None,
-                                       None)
+                                       None, None)
         n_tubes = len(tubes)
 
         tubes = tubes.view(-1, sample_duration*4+2)
@@ -81,7 +87,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             gt_rois_t = gt_rois_[i,:,:,:4].contiguous().view(-1,sample_duration*4)
             rois_overlaps = tube_overlaps(tubes_t,gt_rois_t)
             
-            gt_max_overlaps_sgl, _ = torch.max(rois_overlaps, 0)
+            gt_max_overlaps_sgl, max_overlap_idx = torch.max(rois_overlaps, 0)
 
             non_empty_indices =  gt_rois_t.ne(0).any(dim=1).nonzero().view(-1)
             n_elems = non_empty_indices.nelement()            
@@ -108,7 +114,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     recall   = float(sgl_true_pos)  / (float(sgl_true_pos)  + float(sgl_false_neg))
     recall_4 = float(sgl_true_pos_4)  / (float(sgl_true_pos_4)  + float(sgl_false_neg_4))
     recall_3 = float(sgl_true_pos_3)  / (float(sgl_true_pos_3)  + float(sgl_false_neg_3))
-
+        
     f = open('recall_jhmdb.txt', 'a')
     f.write('| Validation Epoch: {: >3} |\n'.format(epoch+1))
     f.write('| Threshold : 0.5       |\n')
@@ -170,30 +176,37 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         #     exit(-1)
         #     break
 
-        clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
+        clips, h, w, gt_tubes_r, gt_rois, target, n_frames, im_info, rate = data
+
         clips_ = clips.to(device)
         gt_tubes_r_ = gt_tubes_r.to(device)
         gt_rois_ = gt_rois.float().to(device)
-        n_actions_ = n_actions.to(device)
+        target_ = target.unsqueeze(1).to(device)
         im_info_ = im_info.to(device)
         start_fr = torch.zeros(clips_.size(0)).to(device)
-        
+        rate_ = rate.unsqueeze(1).to(device)
+
         inputs = Variable(clips_)
 
         tubes, _, \
         rpn_loss_cls,  rpn_loss_bbox, \
-        rpn_loss_cls_16,\
-        rpn_loss_bbox_16,  rois_label, \
+        rois_rate,\
+        rois_rate_loss, rois_prog, rois_prog_loss,\
+        rois_label, \
         sgl_rois_bbox_pred, sgl_rois_bbox_loss,  = model(inputs, \
                                                          im_info_,
                                                          gt_tubes_r_, gt_rois_,
-                                                         start_fr)
+                                                         start_fr, rate_)
         if mode == 3:
             loss = sgl_rois_bbox_loss.mean()
         elif mode == 4:
             loss = rpn_loss_cls.mean() +  rpn_loss_bbox.mean() 
         elif mode == 5:
             loss = rpn_loss_cls.mean() +  rpn_loss_bbox.mean() + sgl_rois_bbox_loss.mean()
+        elif mode == 6:
+            loss = rpn_loss_cls.mean() +  rpn_loss_bbox.mean() + sgl_rois_bbox_loss.mean() + rois_rate_loss.mean() + cls_loss.mean() + rois_prog_loss.mean()
+        elif mode == 7:
+            loss =  rois_rate_loss.mean() + rois_prog_loss.mean()
 
 
         loss_temp += loss.item()
@@ -287,6 +300,7 @@ if __name__ == '__main__':
     params = []
 
     # for p in act_model.module.reg_layer.parameters() : p.requires_grad=False
+    # for p in act_model.module.prg_rt.parameters() : p.requires_grad=False
 
     for key, value in dict(act_model.named_parameters()).items():
         # print(key, value.requires_grad)
@@ -315,12 +329,10 @@ if __name__ == '__main__':
 
         act_model, loss = training(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*4, 0, lr, mode=5)
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_jhmdb_16frm_64.pwf".format(epoch+1))
+            torch.save(act_model.state_dict(), "action_prog_model_jhmdb_8frm_64_cls.pwf".format(epoch+1))
 
         if (epoch + 1) % (5) == 0:
 
             print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
             validation(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
-
-    torch.save(act_model.state_dict(), "action_net_model_jhmdb_16frm_64.pwf")
 

@@ -376,11 +376,12 @@ class Video(data.Dataset):
         begin_t = self.data[index]['begin_t']
         end_t = self.data[index]['end_t']
         boxes = self.data[index]['boxes']
-
         n_frames = self.data[index]['end_t']
+
         if n_frames < 17:
             time_index = 1
             frame_indices = list(range(time_index, min(n_frames, time_index + self.sample_duration)))  # get the corresponding frames
+            rate = 1
         else:
             try:
                 time_index = np.random.randint(0, n_frames - self.sample_duration ) + 1
@@ -390,6 +391,12 @@ class Video(data.Dataset):
                 raise
             frame_indices = list(
             range(time_index, time_index + self.sample_duration))  # get the corresponding frames
+            rate = (time_index + self.sample_duration) * 1.0 / n_frames
+            if rate > 1.0:
+                print('time_index  :',time_index )
+                print('time_index + self.sample_duration) :',time_index + self.sample_duration)
+                print('rate :',rate)
+                exit(-1)
 
         # print(frame_indices)
         if self.temporal_transform is not None:
@@ -412,6 +419,7 @@ class Video(data.Dataset):
         json_key = os.path.join(cls, name)
 
         class_int = self.classes_idx[cls]
+
         gt_bboxes = torch.from_numpy(boxes )
         gt_bboxes[:,[0,2]] = gt_bboxes[:,[0,2]].clamp_(min=0,max=w)
         gt_bboxes[:,[1,3]] = gt_bboxes[:,[1,3]].clamp_(min=0,max=h)
@@ -427,9 +435,9 @@ class Video(data.Dataset):
         im_info = torch.Tensor([self.sample_size, self.sample_size, self.sample_duration])
 
         if self.mode == 'train':
-            return clip, h, w, gt_tubes_seg, gt_bboxes_r, class_int, n_frames, im_info
+            return clip, h, w, gt_tubes_seg, gt_bboxes_r, class_int, n_frames, im_info, rate
         elif self.mode == 'val':
-            return clip, h, w, gt_tubes_seg, gt_bboxes_r, class_int, n_frames, im_info
+            return clip, h, w, gt_tubes_seg, gt_bboxes_r, class_int, n_frames, im_info, rate
         else:
             return clip, h, w, gt_tubes_seg, gt_bboxes_r, class_int, n_frames, im_info
         

@@ -82,8 +82,12 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             box = boxes[i,:n_actions, :n_frames,:4].contiguous()
             box = box.view(-1,n_frames*4)
 
-            overlaps = tube_overlaps(tubes.view(-1,n_frames*4).float(), box.float())
+            tubes_t = tubes[i,:n_tubes[i].long(),:n_frames[i].long()]
+            tubes_t = tubes_t.view(-1, n_frames[i].int()*4)
 
+            overlaps = tube_overlaps(tubes.view(-1,n_frames*4).float(), box.float())
+            print('overlaps.shape :',overlaps.shape)
+            exit(-1)
             # max_overlaps, argmax_overlaps = torch.max(overlaps, 1)
             # max_overlaps_ =  torch.where(max_overlaps > iou_thresh, max_overlaps, torch.zeros_like(max_overlaps).type_as(max_overlaps))
             # non_zero = max_overlaps_.nonzero()
@@ -180,7 +184,8 @@ if __name__ == '__main__':
 
     n_devs = torch.cuda.device_count()
     sample_size = 112
-    sample_duration = 16  # len(images)
+    # sample_duration = 16  # len(images)
+    sample_duration = 8  # len(images)
 
 
     batch_size = 1
@@ -210,7 +215,7 @@ if __name__ == '__main__':
     temporal_transform = LoopPadding(sample_duration)
 
     # Init action_net
-    action_model_path = './action_net_model_both_max_pooling.pwf'
+    action_model_path = 'action_prog_model_jhmdb_8frm_64_cls.pwf'
     
     model = Model(actions, sample_duration, sample_size)
     model.load_part_model(action_model_path=action_model_path)
