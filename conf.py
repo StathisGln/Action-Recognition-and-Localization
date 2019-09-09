@@ -90,7 +90,7 @@ __C.TEST.RPN_PRE_NMS_TOP_N = 6000
 
 ## Number of top scoring boxes to keep after applying NMS to RPN proposals
 # __C.TEST.RPN_POST_NMS_TOP_N = 150
-__C.TEST.RPN_POST_NMS_TOP_N = 25
+__C.TEST.RPN_POST_NMS_TOP_N = 30
 
 
 # number of tubes after connection

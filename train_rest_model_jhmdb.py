@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
+from mAP_function import calculate_mAP
 
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
@@ -16,63 +17,101 @@ from net_utils import adjust_learning_rate
 from create_video_id import get_vid_dict
 from jhmdb_dataset import  video_names, RNN_JHMDB
 
-from model import Model
+from model_all import Model
 from resize_rpn import resize_tube
 
-def validate_model(model,  val_data, val_data_loader):
+def validate_model(model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path,\
+                   cls2idx,):
 
-    max_dim = 1
+    iou_thresh = 0.5 # Intersection Over Union thresh
+    iou_thresh_4 = 0.4 # Intersection Over Union thresh
+    iou_thresh_3 = 0.3 # Intersection Over Union thresh
 
-    correct = 0
+    confidence_thresh = 0.5
 
-    true_pos = torch.zeros(1).long().cuda()
-    false_neg = torch.zeros(1).long().cuda()
-
-    true_pos_xy = torch.zeros(1).long().cuda()
-    false_neg_xy = torch.zeros(1).long().cuda()
-
-    true_pos_t = torch.zeros(1).long().cuda()
-    false_neg_t = torch.zeros(1).long().cuda()
-
-    n_preds = torch.zeros(1).long().to(device)
-    preds = torch.zeros(1).long().to(device)
+    vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='test', classes_idx=cls2idx, plot=True)
+    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1, num_workers=8*n_devs, pin_memory=True,
+                                              shuffle=True)    # reset learning rate
+    model.eval()
     ## 2 rois : 1450
 
-    for step, data  in enumerate(val_data_loader):
+    groundtruth_dic = {}
+    detection_dic = {}
 
-        if step == 2:
+    for step, data  in enumerate(data_loader):
+
+        # if step == 25:
+        if step == 1:
             break
         
-        vid_id, clips, boxes, n_frames, n_actions, h, w =data
-        
+        vid_id, clips, boxes, n_frames, n_actions, h, w, target, clips_plot =data
+        vid_id = vid_id.int()
+
         mode = 'test'
-        boxes_ = boxes.cuda()
-        vid_id_ = vid_id.cuda()
-        n_frames_ = n_frames.cuda()
-        n_actions_ = n_actions.cuda()
+        clips = clips.to(device)
+        boxes = boxes.to(device)
+        n_frames = n_frames.to(device)
+        n_actions = n_actions.int().to(device)
+        target = target.to(device)
+        im_info = torch.cat([h,w,torch.ones(clips.size(0)).long()*clips.size(2)]).to(device)
 
-        ## create video tube
-        video_tubes = create_video_tube(boxes.type_as(clips_))
-        video_tubes_r =  resize_tube(video_tubes.unsqueeze(0), h_,w_,self.sample_size)
+        with torch.no_grad():
+            tubes,  \
+            prob_out, n_tubes =  model(n_devs, dataset_folder, \
+                                    vid_names, clips, vid_id,  \
+                                    None, \
+                                    mode, cls2idx, None, n_frames, h, w)
 
-        tubes,  bbox_pred, \
-        prob_out, rpn_loss_cls, \
-        rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(n_devs, dataset_folder, \
-                                                         vid_names, vid_id_, spatial_transform, \
-                                                         temporal_transform, boxes_, \
-                                                         mode, cls2idx, n_actions_,n_frames_)
+        for i in range(batch_size):
+
+            _, cls_int = torch.max(prob_out[i],1)
+            f_prob = torch.zeros(n_tubes[i].long()).type_as(prob_out)
+
+            for j in range(n_tubes[i].long()):
+                f_prob[j] = prob_out[i,j,cls_int[j]]
+            
+            cls_int = cls_int[:n_tubes[i].long()]
+
+            keep_ = (f_prob.ge(confidence_thresh)) & cls_int.ne(0)
+            keep_indices = keep_.nonzero().view(-1)
+
+            f_tubes = torch.cat([cls_int.view(-1,1).type_as(tubes),f_prob.view(-1,1).type_as(tubes), \
+                                 tubes[i,:n_tubes[i].long(),:n_frames[i]].contiguous().view(-1,n_frames[i]*4)], dim=1)
+
+            f_tubes = f_tubes[keep_indices].contiguous()
+
+            if f_tubes.nelement() != 0 :
+                _, best_tube = torch.max(f_tubes[:,1],dim=0)
+                f_tubes= f_tubes[best_tube].unsqueeze(0)
+            # print('f_tubes.shape :',f_tubes.shape)
+            # print('f_tubes.shape :',f_tubes[:, :2])
 
 
-        # _, cls = torch.max(prob_out,1)
+            f_boxes = torch.cat([target.type_as(boxes),boxes[i,:,:n_frames[i],:4].contiguous().view(n_frames[i]*4)]).unsqueeze(0)
+            v_name = vid_names[vid_id[i]].split('/')[1]
+            detection_dic[v_name] = f_tubes.float()
+            groundtruth_dic[v_name] = f_boxes.type_as(f_tubes)
 
-        # if cls == target :
-        #     correct += 1
+    print(' -----------------')
+    print('|                  |')
+    print('| mAP Thresh : 0.5 |')
+    print('|                  |')
+    print(' ------------------')
+    calculate_mAP(detection_dic, groundtruth_dic, iou_thresh)
 
-    print(' ------------------- ')
-    print('|  In {: >6} steps  |'.format(step))
+    print(' -------------------')
     print('|                   |')
-    print('|  Correct : {: >6} |'.format(correct))
-    print(' ------------------- ')
+    print('| mAP Thresh : 0.4  |')
+    print('|                   |')
+    print(' -------------------')
+    calculate_mAP(detection_dic, groundtruth_dic, iou_thresh_4)
+
+    print(' ------------------')
+    print('|                  |')
+    print('| mAP Thresh : 0.3 |')
+    print('|                  |')
+    print(' ------------------')
+    calculate_mAP(detection_dic, groundtruth_dic, iou_thresh_3)
 
 if __name__ == '__main__':
     
@@ -122,7 +161,7 @@ if __name__ == '__main__':
     model.deactivate_action_net_grad()
 
     lr = 0.1
-    lr_decay_step = 5
+    lr_decay_step = 10
     lr_decay_gamma = 0.1
 
     params = []
@@ -204,7 +243,14 @@ if __name__ == '__main__':
 
         print('Train Epoch: {} \tLoss: {:.6f}\t lr : {:.6f}'.format(
         ep+1,loss_temp/step, lr))
-        
-        torch.save(model.state_dict(), "model_linear_nomean.pwf")
+    
+        if ( ep + 1 ) % 5 == 0:
+            torch.save(model.state_dict(), "model_linear_mean_{}epoch.pwf".format(ep+1))
+        if (ep + 1) % (5) == 0:
+            print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(ep+1, epochs))
+            validate_model( model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file,\
+                            split_txt_path, cls2idx)
+
+    torch.save(model.state_dict(), "model_linear_mean.pwf")
 
 

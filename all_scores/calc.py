@@ -27,10 +27,14 @@ class Calculator(Function):
         c.calc_test_cuda(K, N, array_size, \
                          actioness_scr, overlaps_scr, tube_scores)
 
-        top_tubes_score,top_tubes_idx = torch.topk(tube_scores, self.n_ret_tubes)
-        ret_pos = actioness_scr.new(500,N,2).int()
+        if array_size < self.n_ret_tubes:
+            top_tubes_score,top_tubes_idx = torch.topk(tube_scores, array_size)
+        else:
+            top_tubes_score,top_tubes_idx = torch.topk(tube_scores, self.n_ret_tubes)
 
-        for i in range(self.n_ret_tubes):
+        ret_pos = actioness_scr.new(self.n_ret_tubes,N,2).int().zero_()
+
+        for i in range(top_tubes_idx.size(0)):
 
             tmp_K = 1
 

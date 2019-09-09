@@ -59,8 +59,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
     for step, data  in enumerate(data_loader):
 
-        if step == 3:
-            break
+        # if step == 3:
+        #     break
         print('step =>',step)
 
         # vid_id, clips, boxes, n_frames, n_actions, h, w, target =data

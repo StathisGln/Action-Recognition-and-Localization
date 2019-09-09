@@ -1,12 +1,4 @@
-0.00% = 13.0 AP 
- Precision: []
- Recall :[]
-
-0.00% = 2.0 AP 
- Precision: []
- Recall :[]
-
-0.00% = 6.0 AP 
+0.00% = 5.0 AP 
  Precision: []
  Recall :[]
 
@@ -15,11 +7,6 @@
 mAP = 0.00%
 
 # Number of ground-truth objects per class
-13.0: 1
-2.0: 1
-6.0: 1
+5.0: 1
 
 # Number of detected objects per class
-1.0: 1 (tp:0, fp:1)
-18.0: 1 (tp:0, fp:1)
-21.0: 1 (tp:0, fp:1)

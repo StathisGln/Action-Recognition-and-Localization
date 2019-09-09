@@ -230,7 +230,7 @@ class Model(nn.Module):
                                                              final_tubes[i,start_fr:end_fr].type_as(curr_frames))
 
             f_tubes.append(tub)
-        
+
         ###################################################
         #          Choose gth Tubes for RCNN\TCN          #
         ###################################################
@@ -251,6 +251,7 @@ class Model(nn.Module):
 
 
             if final_tubes.nelement() > 0:
+
                 overlaps = tube_overlaps(final_tubes.view(-1,num_frames*4), boxes_.type_as(final_tubes))
                 max_overlaps,_ = torch.max(overlaps,1)
                 max_overlaps = max_overlaps.clamp_(min=0)
@@ -270,7 +271,6 @@ class Model(nn.Module):
 
             gt_tubes_list = [[] for i in range(num_actions)]
 
-            # print('n_clips :',n_clips)
 
             for i in range(n_clips):
 
@@ -278,14 +278,16 @@ class Model(nn.Module):
                 max_overlaps, argmax_overlaps = torch.max(overlaps, 0)
 
                 for j in range(num_actions):
-                    if max_overlaps[j] == 1.0: 
+                    if max_overlaps[j] > 0.9: 
                         gt_tubes_list[j].append((i,j))
             gt_tubes_list = [i for i in gt_tubes_list if i != []]
+
             if len(gt_tubes_list) != num_actions:
                 print('len(gt_tubes_list :', len(gt_tubes_list))
                 print('num_actions :',num_actions)
                 print('boxes.cpu().numpy() :',boxes.cpu().numpy())
                 
+
             # print('gt_tubes_list :',gt_tubes_list)
             ## concate fb, bg tubes
             if gt_tubes_list == [[]]:
@@ -327,17 +329,17 @@ class Model(nn.Module):
             for j in range(len(seq)):
                 feats[j] = features[seq[j][0],seq[j][1]]
 
-
-            # prob_out[i] = self.act_rnn(feats.cuda())
-
             if mode == 'extract':
                 final_feats.append(torch.mean(feats,dim=0))
 
             feats = torch.mean(feats, dim=0)
 
             try:
+
                 prob_out[i] = self.act_rnn(feats.view(-1).cuda())
+
             except Exception as e:
+
                 print('feats.shape :',feats.shape)
                 print('seq :',seq)
                 for i in range(len(f_tubes)):
@@ -357,6 +359,7 @@ class Model(nn.Module):
             target_lbl = target_lbl.cuda()
             max_length = torch.Tensor([max_length]).cuda()
             return final_feats, target_lbl, max_length
+
         # ##########################################
         # #           Time for Linear Loss         #
         # ##########################################
@@ -367,10 +370,10 @@ class Model(nn.Module):
         # # classification probability
 
         if self.training:
-            cls_loss = F.cross_entropy(prob_out.cpu(), target_lbl.long()).cuda()
 
-        if self.training:
+            cls_loss = F.cross_entropy(prob_out.cpu(), target_lbl.long()).cuda()
             return None, None,  cls_loss, 
+
         else:
             prob_out = F.softmax(prob_out)
 

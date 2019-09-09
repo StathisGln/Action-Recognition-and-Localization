@@ -76,13 +76,19 @@ if __name__ == '__main__':
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
                                               shuffle=True)
 
-    # for i in range(50):
+    # for i in range(200):
+        
     #     vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[i]
     #     print('i :',i, ' n_frames :',n_frames)
+    #     if n_frames == 15:
+    #         break
     # exit(-1)
-    # vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[7]
-    # vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[14]
-    vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[0]
+
+    # vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[7]   ## 40 frames
+    # vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[14] 
+    # vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[0]     ## 25 frames
+    # vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[272]     ## 16 frames
+    vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[50]     ## 16 frames
 
 
     vid_id = torch.Tensor(vid_id).int()
@@ -93,6 +99,7 @@ if __name__ == '__main__':
     im_info = torch.Tensor([h,w,clips.size(2)]).unsqueeze(0).to(device)
     mode = 'train'
 
+    print('n_frames:',n_frames)
     print('**********Starts**********')
 
     tubes,  \
