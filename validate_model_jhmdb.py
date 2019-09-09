@@ -17,9 +17,9 @@ from model import Model
 from resize_rpn import resize_rpn, resize_tube
 from jhmdb_dataset import Video, video_names
 
-
 from box_functions import bbox_transform, tube_transform_inv, clip_boxes, tube_overlaps
 from mAP_function import calculate_mAP
+
 np.random.seed(42)
 
 def validation(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads):

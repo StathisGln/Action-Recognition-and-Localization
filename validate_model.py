@@ -28,8 +28,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='test')
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
                                               shuffle=True)    # reset learning rate
-    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1, num_workers=8*n_devs, pin_memory=True,
-                                              shuffle=True)    # reset learning rate
+    # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1, num_workers=8*n_devs, pin_memory=True,
+    #                                           shuffle=True)    # reset learning rate
 
     model.eval()
 

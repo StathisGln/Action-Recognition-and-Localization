@@ -7,6 +7,7 @@
 # Written by Ross Girshick
 # --------------------------------------------------------
 
+## TODO create db for all tubes containing boxes
 """
 Train post-hoc SVMs using the algorithm and hyper-parameters from
 traditional R-CNN.
@@ -16,6 +17,9 @@ import os
 from sklearn import svm
 import torch
 import numpy as np
+import glob
+from imdetect import im_detect, DummyNet, create_tubedb
+
 
 class SVMTrainer(object):
     """
@@ -23,15 +27,15 @@ class SVMTrainer(object):
     and hyper-parameters of traditional R-CNN.
     """
 
-    def __init__(self, num_classes, #imdb, im_detect, svmWeightsPath, svmBiassPath, svmFeatScalePath,
-                 svm_C=0.001, svm_B=10.0, svm_nrEpochs=2, svm_retrainLimit=2000, svm_evictThreshold=-1.1, svm_posWeight="balanced",
+    def __init__(self, net, tube_db, num_classes, files_path,  im_detect=im_detect, #svmWeightsPath, svmBiassPath, svmFeatScalePath,
+                 svm_C=0.001, svm_B=10.0, svm_nrEpochs=2, svm_retrainLimit=500, svm_evictThreshold=-1.1, svm_posWeight="balanced",
                  svm_targetNorm=20.0, svm_penality='l2', svm_loss='l1', svm_rngSeed=3):
 
-        # self.params = {
-        #     "cls_score": [  EasyDict({'data': np.zeros((num_classes, dim), np.float32) }),
-        #                     EasyDict({'data': np.zeros((num_classes, 1), np.float32) })],
-        #     "trainers" : None,
-        # }
+        self.net = net
+        self.tube_db = tube_db
+        self.num_classes = num_classes
+        self.files_path = files_path
+        self.im_detect = im_detect
 
         self.svm_nrEpochs = svm_nrEpochs # number of training iterations
         self.svm_targetNorm = svm_targetNorm # magic value from traditional R-CNN (helps with convergence)
@@ -42,35 +46,31 @@ class SVMTrainer(object):
 
         self.hard_thresh = -1.0001
         self.neg_iou_thresh = 0.3
-        dim = 64 * 16
+        dim = net.params['cls_score'][0].data.shape[1]
+        # dim = 64 * 16
         self.feature_scale = self._get_feature_scale()
-        # print('Feature dim: {}'.format(dim))
-        # print('Feature scale: {:.3f}'.format(self.feature_scale))
+        print('Feature dim: {}'.format(dim))
+        print('Feature scale: {:.3f}'.format(self.feature_scale))
         self.trainers = [SVMClassTrainer(cls, dim, self.feature_scale, svm_C, svm_B, svm_posWeight, svm_penality, svm_loss,
-                                         svm_rngSeed, svm_retrainLimit, svm_evictThreshold) for cls in range(1,num_classes+1)]
-        # self.trainers = [SVMClassTrainer(cls, dim, 1, svm_C, svm_B, svm_posWeight, svm_penality, svm_loss,
-        #                                  svm_rngSeed, svm_retrainLimit, svm_evictThreshold) for cls in range(1,num_classes+1)]
-
+                                         svm_rngSeed, svm_retrainLimit, svm_evictThreshold) for cls in range(num_classes)]
 
     def _get_feature_scale(self, num_images=100):
-        _t = Timer()
-        roidb = self.imdb.roidb
+
         total_norm = 0.0
         total_sum = 0.0
         count = 0.0
-        num_images = min(num_images, self.imdb.num_images)
-        inds = np.random.choice(range(self.imdb.num_images), size=num_images, replace=False)
+
+        num_images = 100
+        total_n_images = len(self.files_path)
+        num_images = min(num_images, total_n_images)
+        inds = np.random.choice(range(total_n_images), size=num_images, replace=False)
 
         for i_, i in enumerate(inds):
-            #im = cv2.imread(self.imdb.image_path_at(i))
-            #if roidb[i]['flipped']:
-            #    im = im[:, ::-1, :]
-            #im = self.imdb.image_path_at(i)
-            _t.tic()
-            scores, boxes, feat = self.im_detect(self.net, i, roidb[i]['boxes'], boReturnClassifierScore = False) #,t_mode= "train")
-            _t.toc()
-            #feat = self.net.blobs[self.layer].data
-            total_norm += np.sqrt((feat ** 2).sum(axis=1)).sum()
+
+            path = self.files_path[i]
+            scores, boxes, feat = self.im_detect(net, path, None, boReturnClassifierScore = False) #,t_mode= "train")
+
+            total_norm += torch.sqrt((feat ** 2).sum(dim=1)).sum()
             total_sum += 1.0 * sum(sum(feat)) / len(feat)
             count += feat.shape[0]
             print('{}/{}: avg feature norm: {:.3f}, average value: {:.3f}'.format(i_ + 1, num_images,
@@ -85,76 +85,83 @@ class SVMTrainer(object):
 
 
     def _get_pos_counts(self):
-        counts = np.zeros((len(self.imdb.classes)), dtype=np.int)
-        roidb = self.imdb.roidb
-        for i in range(len(roidb)):
-            for j in range(1, self.imdb.num_classes):
-                I = np.where(roidb[i]['gt_classes'] == j)[0]
-                countsn[j] += len(I)
 
-        for j in range(1, self.imdb.num_classes):
-            print('class {:s} has {:d} positives'.
-                  format(self.imdb.classes[j], counts[j]))
+        counts = torch.zeros(self.num_classes).int()
+        tubedb = self.tube_db
 
+        for i in range(len(tubedb)):
+            for j in range(1, self.num_classes):
+
+                lbl = tubedb[i]['labels'].eq(j).nonzero()
+                # print('tubedb[i][\'labels\']:',tubedb[i]['labels'])
+                # print('lbl :',lbl, ' j :',j)
+                # lbl = lbl.eq(j).nonzero()
+                # print('lbl :',lbl, ' j :',j, lbl.nelement())
+                # I = np.where(roidb[i]['gt_classes'] == j)[0]
+                counts[j] += lbl.nelement()
+                
+        for j in range(1, self.num_classes):
+            print('class {} has {} positives'.
+                  format(j, counts[j]))
         return counts
 
     def get_pos_examples(self):
+
         counts = self._get_pos_counts()
+
         for i in range(len(counts)):
             self.trainers[i].alloc_pos(counts[i])
 
-        _t = Timer()
-        roidb = self.imdb.roidb
-        num_images = len(roidb)
-        for i in range(num_images):
-            gt_inds = np.where(roidb[i]['gt_classes'] > 0)[0]
-            gt_boxes = roidb[i]['boxes'][gt_inds]
-            _t.tic()
-            scores, boxes, feat = self.im_detect(self.net, i, gt_boxes, self.feature_scale, gt_inds, boReturnClassifierScore = False)
-            _t.toc()
-            #feat = self.net.blobs[self.layer].data
-            for j in range(1, self.imdb.num_classes):
-                cls_inds = np.where(roidb[i]['gt_classes'][gt_inds] == j)[0]
-                if len(cls_inds) > 0:
+        tube_db = self.tube_db
+        num_videos = len(tube_db)
+
+        for i in range(num_videos):
+
+            gt_inds = tube_db[i]['labels'].gt(0).nonzero().view(-1)
+
+            scores, boxes, feat = self.im_detect(self.net, tube_db[i]['path'], None, self.feature_scale, gt_inds, boReturnClassifierScore = False)
+            # scores, boxes, feat = self.im_detect(self.net, i, gt_boxes, self.feature_scale, gt_inds, boReturnClassifierScore = False)
+
+            for j in range(1, self.num_classes):
+                cls_inds = tube_db[i]['labels'].eq(j).nonzero().view(-1)
+                if cls_inds.nelement() > 0:
                     cls_feat = feat[cls_inds, :]
                     self.trainers[j].append_pos(cls_feat)
 
-        #     if i % 50 == 0:
-        #         print('get_pos_examples: {:d}/{:d} {:.3f}s' \
-        #               .format(i + 1, len(roidb), _t.average_time))
-        # print("\n OUT OF FOR")
-
     def update_net(self, cls_ind, w, b):
+
         self.net.params['cls_score'][0].data[cls_ind, :] = w
         self.net.params['cls_score'][1].data[cls_ind] = b
 
     def train_with_hard_negatives(self):
-        _t = Timer()
-        roidb = self.imdb.roidb
-        num_images = len(roidb)
+
+        tubes_db = self.tube_db
+        num_videos = len(tubes_db)
 
         for epoch in range(0,self.svm_nrEpochs):
 
             # num_images = 100
-            for i in range(num_images):
-                print("*** EPOCH = %d, IMAGE = %d *** " % (epoch, i))
-                #im = cv2.imread(self.imdb.image_path_at(i))
-                #if roidb[i]['flipped']:
-                #    im = im[:, ::-1, :]
-                #im = self.imdb.image_path_at(i)
-                _t.tic()
-                scores, boxes, feat = self.im_detect(self.net, i, roidb[i]['boxes'], self.feature_scale)
-                _t.toc()
-                #feat = self.net.blobs[self.layer].data
-                for j in range(1, self.imdb.num_classes):
-                    hard_inds = \
-                        np.where((scores[:, j] > self.hard_thresh) &
-                                 (roidb[i]['gt_overlaps'][:, j].toarray().ravel() <
-                                  self.neg_iou_thresh))[0]
+            for i in range(num_videos):
+                print("*** EPOCH = %d, VIDEO = %d *** " % (epoch, i))
+
+                scores, boxes, feat = self.im_detect(self.net, tube_db[i]['path'], tube_db[i]['labels'], self.feature_scale)
+
+                for j in range(1, self.num_classes):
+
+                    ## TODO change overlaps because now use only background rois
+                    hard_inds = (scores[:,j].gt(self.hard_thresh) & tube_db[i]['labels'].eq(0)).nonzero().view(-1)
+                    # hard_inds = \
+                    #     np.where((scores[:, j] > self.hard_thresh) &
+                    #              (roidb[i]['gt_overlaps'][:, j].toarray().ravel() <
+                    #               self.neg_iou_thresh))[0]
+
                     if len(hard_inds) > 0:
-                        hard_feat = feat[hard_inds, :].copy()
+                        
+                        hard_feat = feat[hard_inds, :].contiguous()
+
                         new_w_b = \
                             self.trainers[j].append_neg_and_retrain(feat=hard_feat)
+
                         if new_w_b is not None:
                             self.update_net(j, new_w_b[0], new_w_b[1])
                             np.savetxt(self.svmWeightsPath[:-4]   + "_epoch" + str(epoch) + ".txt", self.net.params['cls_score'][0].data)
@@ -162,8 +169,8 @@ class SVMTrainer(object):
                             np.savetxt(self.svmFeatScalePath[:-4] + "_epoch" + str(epoch) + ".txt", [self.feature_scale])
 
             print(('train_with_hard_negatives: '
-                   '{:d}/{:d} {:.3f}s').format(i + 1, len(roidb),
-                                               _t.average_time))
+                   '{:d}/{:d} ').format(i + 1, len(tube_db)),
+                                               )
 
     def train(self):
 
@@ -177,7 +184,7 @@ class SVMTrainer(object):
 
         self.train_with_hard_negatives()
 
-        for j in range(1, self.imdb.num_classes):
+        for j in range(1, self.num_classes):
             new_w_b = self.trainers[j].append_neg_and_retrain(force=True)
             self.update_net(j, new_w_b[0], new_w_b[1])
 
@@ -192,14 +199,14 @@ class SVMClassTrainer(object):
 
     def __init__(self, cls, dim, feature_scale,
                  C, B, pos_weight, svm_penality, svm_loss, svm_rngSeed, svm_retrainLimit, svm_evictThreshold):
-        self.pos = np.zeros((0, dim), dtype=np.float32)
-        self.neg = np.zeros((0, dim), dtype=np.float32)
+        self.pos = torch.zeros((0, dim))
+        self.neg = torch.zeros((0, dim))
         self.B = B
         self.C = C
-        self.cls = cls
-        self.pos_weight = pos_weight
-        self.dim = dim
-        self.feature_scale = feature_scale
+        self.cls = cls  # class of this svm
+        self.pos_weight = pos_weight  # balanced
+        self.dim = dim  # 64*8*7*7
+        self.feature_scale = feature_scale 
         if type(pos_weight) == str:  #e.g. pos_weight == 'auto'
             class_weight = pos_weight
         else:
@@ -218,10 +225,11 @@ class SVMClassTrainer(object):
 
     def alloc_pos(self, count):
         self.pos_cur = 0
-        self.pos = np.zeros((count, self.dim), dtype=np.float32)
+        self.pos = torch.zeros([count, self.dim])
 
     def append_pos(self, feat):
         num = feat.shape[0]
+
         self.pos[self.pos_cur:self.pos_cur + num, :] = feat
         self.pos_cur += num
 
@@ -259,20 +267,25 @@ class SVMClassTrainer(object):
                    '     obj val: {:.3f} = {:.3f}  (posUnscaled) + {:.3f} (neg) + {:.3f} (reg)').format(i, *losses))
 
         # Sanity check
-
-        scores_ret = (
-                         X * 1.0 / self.feature_scale).dot(w.T * self.feature_scale) + b
-        assert np.allclose(scores, scores_ret[:, 0], atol=1e-5), \
-                "Scores from returned model don't match decision function"
+        ### TODO check
+        # scores_ret = (
+        #                  X * 1.0 / self.feature_scale).dot(w.T * self.feature_scale) + b
+        # assert np.allclose(scores, scores_ret[:, 0], atol=1e-5), \
+        #         "Scores from returned model don't match decision function"
 
         return ((w * self.feature_scale, b), pos_scores, neg_scores)
 
     def append_neg_and_retrain(self, feat=None, force=False):
+
         if feat is not None:
+
             num = feat.shape[0]
-            self.neg = np.vstack((self.neg, feat))
+            self.neg = torch.cat([self.neg.type_as(feat), feat],dim=0)
             self.num_neg_added += num
+
+        # print('self.cls :',self.cls)
         if self.num_neg_added > self.retrain_limit or force:
+            
             self.num_neg_added = 0
             new_w_b, pos_scores, neg_scores = self.train()
             # scores = np.dot(self.neg, new_w_b[0].T) + new_w_b[1]
@@ -294,4 +307,10 @@ class SVMClassTrainer(object):
 
 if __name__ == '__main__':
 
-    SVMTrainer(24)
+    files = glob.glob('./JHMDB-features-linear/*/*')
+    print('len(files) :',len(files))
+    n_classes = 21+1
+    net = DummyNet(25088,n_classes)
+    tube_db = create_tubedb(files)
+    svm = SVMTrainer(net, tube_db, n_classes, files_path=files)
+    svm.train()

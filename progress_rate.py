@@ -18,7 +18,7 @@ class Progress_Rate(nn.Module):
         self.n_classes = n_classes
         
         self.POOLING_SIZE = 7
-
+        self.ACTIONESS_THRESH = 0.5
         # self.prg_rt = nn.Linear(self.din*self.sample_duration*self.POOLING_SIZE*self.POOLING_SIZE, self.n_classes)
         # self.prg    = nn.Linear(self.din*self.sample_duration*self.POOLING_SIZE*self.POOLING_SIZE, self.n_classes)
 
@@ -32,9 +32,7 @@ class Progress_Rate(nn.Module):
         self.avg_pool =nn.MaxPool3d((self.sample_duration,1,1), stride=1)
         self.max_num_tubes = 2
 
-    def forward(self, feats, rate, progress, labels):
-
-
+    def forward(self, feats, rate, progress, labels, scores):
 
         if self.training:
 
@@ -46,15 +44,24 @@ class Progress_Rate(nn.Module):
             feats_ = torch.zeros(batch_size, self.max_num_tubes, self.din,self.sample_duration,self.POOLING_SIZE,self.POOLING_SIZE).type_as(feats)
             labels_ = torch.zeros(batch_size,self.max_num_tubes).type_as(feats)
 
+            print('labels.shape :',labels.shape)
             labels = labels.view(batch_size,-1)
             feats = feats.view(batch_size, rois_per_image, self.din,self.sample_duration,self.POOLING_SIZE,self.POOLING_SIZE)
 
             for i in range(batch_size):
 
+
                 fg_inds = labels[i].ne(0).nonzero().view(-1)
                 fg_num_rois = fg_inds.numel()
+
                 bg_inds = labels[i].eq(0).nonzero().view(-1)
                 bg_num_rois = bg_inds.numel()
+
+                both_ind = (labels[i].eq(0) & scores[i].ge(0.5)).nonzero().view(-1)
+
+                if both_ind.nelement() != 0:
+                    for j in both_ind:
+                        progress[i,j,0] = 1
 
                 if fg_num_rois > 0 and bg_num_rois > 0:
 

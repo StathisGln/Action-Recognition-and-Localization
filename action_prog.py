@@ -31,8 +31,11 @@ class Act_Prog(nn.Module):
         rois_progress, rois_label, \
         sgl_rois_bbox_pred, sgl_rois_bbox_loss = self.act_net(im_data, im_info, gt_tubes,\
                                                                   gt_rois,  start_fr, rate)
-        
-        r_rate, rate_loss, r_prog, prog_loss, = self.prg_rt(feats, rois_rate, rois_progress, rois_label)
+
+
+        rois_scores = rois[...,-1]
+
+        r_rate, rate_loss, r_prog, prog_loss, = self.prg_rt(feats, rois_rate, rois_progress, rois_label, rois_scores)
 
         feats = feats.view(batch_size,-1, feats.size(1), feats.size(2), feats.size(3), feats.size(4))
 
