@@ -80,8 +80,10 @@ if __name__ == '__main__':
     #     vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[i]
     #     print('i :',i, ' n_frames :',n_frames)
     # exit(-1)
-    vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[7]
+    # vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[7]
     # vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[14]
+    vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[0]
+
 
     vid_id = torch.Tensor(vid_id).int()
     clips = clips.unsqueeze(0).to(device)

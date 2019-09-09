@@ -23,7 +23,7 @@ class Calculator(Function):
         tube_scores = actioness_scr.new(array_size).zero_()
         overlaps_scr = overlaps_scr.view(-1).contiguous()
         actioness_scr = actioness_scr.view(-1).contiguous()
-        
+
         c.calc_test_cuda(K, N, array_size, \
                          actioness_scr, overlaps_scr, tube_scores)
 

@@ -79,7 +79,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         im_info = torch.cat([h,w,torch.ones(clips.size(0)).long()*clips.size(2)]).to(device)
         mode = 'test'
         # print('target :',target)
-        # print('n_frames :',n_frames)
+        print('n_frames :',n_frames)
         # print('vid_id :',vid_id)
         # print('vid_names[vid_id] :',vid_names[vid_id])
         with torch.no_grad():

@@ -49,43 +49,45 @@ extern "C" {
 		
 	    for (int i=0; i<max_n_clips; i++){
 
-	      if ( i >= max_n_clips )
+	      // if (index==0)
+	      // 	printf("i :%d\n",i);
+	      if ( i >= N )
 		break;
 	      
 	      if ( i == 0 ){
 
-		idx_i = 0;
-		idx_j = pos[i];
+	      	idx_i = 0;
+	      	idx_j = pos[i];
 
-		// if (index == 1){
-		//   printf("mpike...\n");
-		//   printf("idx_i :%d, idx_j :%d \n",idx_i, idx_j);
-		//   printf("actioness_scr[idx_i*K+idx_j] %f \n", actioness_scr[idx_i*K+idx_j]);
-		// }
-		tmp_actioness_scr = actioness_scr[idx_i*K+idx_j];
+	      	// if (index == 1){
+	      	//   printf("mpike...\n");
+	      	//   printf("idx_i :%d, idx_j :%d \n",idx_i, idx_j);
+	      	//   printf("actioness_scr[idx_i*K+idx_j] %f \n", actioness_scr[idx_i*K+idx_j]);
+	      	// }
+	      	tmp_actioness_scr = actioness_scr[idx_i*K+idx_j];
 	      }
 	      else{
 
-		pre_idx_i = idx_i;
-		pre_idx_j = idx_j;
+	      	pre_idx_i = idx_i;
+	      	pre_idx_j = idx_j;
 
-		idx_i = i;
-		idx_j = pos[i];
+	      	idx_i = i;
+	      	idx_j = pos[i];
 		  
-		// if (index == 0){
-		//   printf("pre_idx_i :%d, pre_idx_j :%d \n",pre_idx_i, pre_idx_j);
-		//   printf("idx_i :%d, idx_j :%d \n",idx_i, idx_j);
-		//   printf("pred_idx_i*K*N*K :%d \n",pre_idx_i*K*K);
-		//   printf("pre_idx_i*K*N*K + pre_idx_j*K :%d\n",pre_idx_i*K*K + pre_idx_j*K);
-		//   printf("pre_idx_i*K*N*K + pre_idx_j*K + idx_j :%d\n",pre_idx_i*K*K + pre_idx_j*K+idx_j);
-		// }
+	      	// if (index == 0){
+	      	//   printf("pre_idx_i :%d, pre_idx_j :%d \n",pre_idx_i, pre_idx_j);
+	      	//   printf("idx_i :%d, idx_j :%d \n",idx_i, idx_j);
+	      	//   printf("pred_idx_i*K*N*K :%d \n",pre_idx_i*K*K);
+	      	//   printf("pre_idx_i*K*N*K + pre_idx_j*K :%d\n",pre_idx_i*K*K + pre_idx_j*K);
+	      	//   printf("pre_idx_i*K*N*K + pre_idx_j*K + idx_j :%d\n",pre_idx_i*K*K + pre_idx_j*K+idx_j);
+	      	// }
 
-		tmp_actioness_scr += actioness_scr[idx_i*K+idx_j];
-		tmp_overlaps_scr  += overlaps_scr[pre_idx_i*K*K + pre_idx_j*K + idx_j];
+	      	tmp_actioness_scr += actioness_scr[idx_i*K+idx_j];
+	      	tmp_overlaps_scr  += overlaps_scr[pre_idx_i*K*K + pre_idx_j*K + idx_j];
 
-		// if (index == 1){
-		//   printf("overlaps_scr[pre_idx_i*K*N*K + pre_idx_j*K + idx_j]; :%f \n",overlaps_scr[pre_idx_i*K*K + pre_idx_j*K + idx_j]);
-		// }
+	      	// if (index == 1){
+	      	//   printf("overlaps_scr[pre_idx_i*K*N*K + pre_idx_j*K + idx_j]; :%f \n",overlaps_scr[pre_idx_i*K*K + pre_idx_j*K + idx_j]);
+	      	// }
 	      }
 	    }
 	    if (N > 1){
