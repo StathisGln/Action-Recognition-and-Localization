@@ -67,7 +67,7 @@ class Model(nn.Module):
 
         batch_size = 4 # 
         num_images = 1
-        rois_per_image = int(conf.TRAIN.BATCH_SIZE / num_images) if self.training else 150
+        rois_per_image = int(conf.TRAIN.BATCH_SIZE / num_images) if self.training else conf.TEST.RPN_POST_NMS_TOP_N
 
         data = single_video(dataset_folder,h_,w_, vid_names, vid_id, frames_dur= self.sample_duration, sample_size =self.sample_size,step=self.step,
                             classes_idx=cls2idx, n_frames=num_frames)
@@ -177,9 +177,9 @@ class Model(nn.Module):
             for i in range(idx_s, idx_e):
                 if i == 0:
 
-                    pos = torch.zeros(rois_per_image,2).type_as(clips).int()
-                    offset = torch.arange(0,rois_per_image).int()
-                    pos[:,1] =offset
+                    # pos = torch.zeros(rois_per_image,2).int()
+                    # offset = torch.arange(0,rois_per_image).int()
+                    # pos[:,1] =offset
 
                     continue
 
@@ -188,20 +188,24 @@ class Model(nn.Module):
                 overlaps_ = tube_overlaps(p_tubes[i-1,:,-1*4:],p_tubes[i,:,:1*4]).type_as(p_tubes)  #
                 overlaps_scores[i-1] = overlaps_
 
-                pos = pos.unsqueeze(-2).expand(pos.size(0),rois_per_image,i*2)
+                # pos = pos.unsqueeze(-2).expand(pos.size(0),rois_per_image,i*2)
 
-                new_pos = pos.new(rois_per_image,2).zero_()
-                new_pos[:,0] = i
-                new_pos[:,1] = offset
-                new_pos = new_pos.unsqueeze(0).expand(pos.size(0),rois_per_image,2)
+                # new_pos = pos.new(rois_per_image,2).zero_()
+                # new_pos[:,0] = i
+                # new_pos[:,1] = offset
+                # new_pos = new_pos.unsqueeze(0).expand(pos.size(0),rois_per_image,2)
 
-                pos = torch.cat((pos,new_pos), dim=-1)
-                pos = pos.view(-1, (i+1)*2)
+                # pos = torch.cat((pos,new_pos), dim=-1)
+                # pos = pos.view(-1, (i+1)*2)
 
         # after passing all video clips, calculate scores
-        pos = pos.contiguous().view(pos_shape)
+        # pos = pos.contiguous().view(pos_shape)
+        # print('pos.shape :',pos.shape)
+        # print('pos.view(-1,rois_per_image*2)[134] :',pos.view(-1,n_clips*2).shape)
+        
         pos, scores = self.calc(torch.Tensor([n_clips]),torch.Tensor([rois_per_image]),
-                                pos, actioness_score, overlaps_scores)
+                                actioness_score, overlaps_scores)
+        
         pos = pos.view(-1,n_clips,2)
 
         final_tubes = torch.zeros(pos.size(0), num_frames, 4)

@@ -95,12 +95,10 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         for i in range(batch_size):
 
             _, cls_int = torch.max(prob_out[i],1)
-            print('prob_out[i] :',prob_out[i].cpu().numpy())
             f_prob = torch.zeros(n_tubes[i].long()).type_as(prob_out)
 
             for j in range(n_tubes[i].long()):
                 f_prob[j] = prob_out[i,j,cls_int[j]]
-            print('f_prob :',f_prob)
             
             cls_int = cls_int[:n_tubes[i].long()]
 

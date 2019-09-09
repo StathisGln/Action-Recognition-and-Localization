@@ -14,11 +14,10 @@ extern THCState *state;
 /* 		   THCudaIntTensor * next_pos, THCudaIntTensor * next_pos_indices, THCudaFloatTensor * next_actioness, */
 /* 		   THCudaFloatTensor * next_overlaps_scr, THCudaFloatTensor * f_scores) */
 
-int calc_test_cuda(int K, int N, int array_size, THCudaIntTensor *pos, THCudaTensor * actioness_scr,
+int calc_test_cuda(int K, int N, int array_size, THCudaTensor * actioness_scr,
 		   THCudaTensor * overlaps_scr, THCudaTensor * tube_scores)
 
 {
-  int   * pos_data               = THCudaIntTensor_data(state, pos);
 
   float * actioness_scr_data     = THCudaTensor_data(state, actioness_scr);
   float * overlaps_scr_data      = THCudaTensor_data(state, overlaps_scr);
@@ -26,7 +25,7 @@ int calc_test_cuda(int K, int N, int array_size, THCudaIntTensor *pos, THCudaTen
   
   cudaStream_t stream = THCState_getCurrentStream(state);
 
-  CalculationLaucher(K, N, array_size, pos_data, actioness_scr_data,
+  CalculationLaucher(K, N, array_size, actioness_scr_data,
 		     overlaps_scr_data, tube_scores_data, stream);
 
   return 1;

@@ -2,7 +2,7 @@
 /* 		   THCudaTensor * overlaps_scr, THCudaTensor * scores, THCudaTensor * overlaps, int idx,  /\* return arrays *\/ */
 /* 		   THCudaIntTensor * next_pos, THCudaIntTensor * next_pos_indices, THCudaTensor * next_actioness, */
 /* 		   THCudaTensor * next_overlaps_scr, THCudaTensor * f_scores); */
-int calc_test_cuda(int K, int N, int array_size, THCudaIntTensor *pos, THCudaTensor * actioness_scr,
+int calc_test_cuda(int K, int N, int array_size, THCudaTensor * actioness_scr,
 		   THCudaTensor * overlaps_scr, THCudaTensor * tube_scores);
 
 
