@@ -84,11 +84,11 @@ if __name__ == '__main__':
     #         break
     # exit(-1)
 
-    # vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[7]   ## 40 frames
+    vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[7]   ## 40 frames
     # vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[14] 
     # vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[0]     ## 25 frames
     # vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[272]     ## 16 frames
-    vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[50]     ## 16 frames
+    # vid_id, clips, boxes, n_frames, n_actions, h, w, target = vid_name_loader[50]     ## 15 frames
 
 
     vid_id = torch.Tensor(vid_id).int()

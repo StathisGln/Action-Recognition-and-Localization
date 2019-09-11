@@ -5,1551 +5,969 @@ Loading pretrained weights from ../resnet-34-kinetics.pth
 268
 max_frames : 40
 step => 0
-vid_id : tensor([[372]], dtype=torch.int32)
-vid_name_loader[vid_id] : walk/Panic_in_the_Streets_walk_u_nm_np1_fr_med_4
-n_frames : tensor([[38]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7127])
-step => 1
-vid_id : tensor([[506]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Drink_@18_-_Apple_martini_pour_u_nm_np1_fr_goo_2
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7537])
-step => 2
-vid_id : tensor([[177]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/Torwarttraining_catch_u_cm_np1_ri_med_1
-n_frames : tensor([[27]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7681])
-step => 3
-vid_id : tensor([[257]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/6arrowswithin30seconds_shoot_bow_f_nm_np1_fr_med_3
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7580])
-step => 4
-vid_id : tensor([[196]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/Torwarttraining_catch_u_cm_np1_fr_bad_4
-n_frames : tensor([[19]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4629])
-step => 5
-vid_id : tensor([[310]], dtype=torch.int32)
-vid_name_loader[vid_id] : run/RATRACE_run_f_nm_np1_ri_med_7
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5035])
-step => 6
-vid_id : tensor([[238]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/erikafrontcompound6feb09_shoot_bow_f_nm_np1_fr_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6197])
-step => 7
-vid_id : tensor([[199]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/Torwarttraining_catch_u_cm_np1_ri_med_2
-n_frames : tensor([[20]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.8395])
-step => 8
-vid_id : tensor([[234]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/Shootingarecurve_shoot_bow_u_nm_np1_fr_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7497])
-step => 9
-vid_id : tensor([[923]], dtype=torch.int32)
-vid_name_loader[vid_id] : brush_hair/Brushing_my_hair_-_December_2008_brush_hair_u_cm_np1_ba_goo_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7831])
-step => 10
-vid_id : tensor([[338]], dtype=torch.int32)
-vid_name_loader[vid_id] : kick_ball/Wayne_Rooney_At_Home_Funny_Must_See_kick_ball_f_cm_np1_le_bad_5
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6073])
-step => 11
-vid_id : tensor([[828]], dtype=torch.int32)
-vid_name_loader[vid_id] : swing_baseball/Tannerafterwecorrected_swing_baseball_f_cm_np1_fr_bad_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6850])
-step => 12
-vid_id : tensor([[697]], dtype=torch.int32)
-vid_name_loader[vid_id] : golf/Eric_Axley_golf_f_cm_np1_le_goo_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3404])
-step => 13
-vid_id : tensor([[630]], dtype=torch.int32)
-vid_name_loader[vid_id] : push/Pushing_Music_Table_push_f_cm_np1_ri_bad_7
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3119])
-step => 14
-vid_id : tensor([[645]], dtype=torch.int32)
-vid_name_loader[vid_id] : jump/Learn_Freerunning_and_Parkour__-_Diving_Kong_jump_f_cm_np1_le_bad_3
-n_frames : tensor([[25]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.2254])
-step => 15
-vid_id : tensor([[904]], dtype=torch.int32)
-vid_name_loader[vid_id] : pick/Magic_Boys-_Der_Portmonai_Trick_pick_l_nm_np1_ri_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5429])
-step => 16
-vid_id : tensor([[796]], dtype=torch.int32)
-vid_name_loader[vid_id] : pullup/Super_Training_Pull_Ups_pullup_f_cm_np1_ba_med_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7342])
-step => 17
-vid_id : tensor([[820]], dtype=torch.int32)
-vid_name_loader[vid_id] : swing_baseball/hittingofftee2_swing_baseball_f_nm_np1_fr_med_5
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7751])
-step => 18
-vid_id : tensor([[856]], dtype=torch.int32)
-vid_name_loader[vid_id] : swing_baseball/hittingofftee2_swing_baseball_f_nm_np1_fr_med_11
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7179])
-step => 19
-vid_id : tensor([[869]], dtype=torch.int32)
-vid_name_loader[vid_id] : swing_baseball/Tannerafterwecorrected_swing_baseball_f_cm_np1_fr_bad_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7418])
-step => 20
-vid_id : tensor([[317]], dtype=torch.int32)
-vid_name_loader[vid_id] : kick_ball/FOOT_2009_(REMI_GAILLARD)_kick_ball_f_cm_np1_ba_bad_1
-n_frames : tensor([[29]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6552])
-step => 21
-vid_id : tensor([[443]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_gun/FirearmsTraining_shoot_gun_u_cm_np1_ri_med_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6680])
-step => 22
-vid_id : tensor([[741]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_ball/PlayingBasketballGotWater_shoot_ball_f_nm_np1_ba_med_4
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4822])
-step => 23
-vid_id : tensor([[909]], dtype=torch.int32)
-vid_name_loader[vid_id] : pick/NH_gun_owners_react_to_detention_with_armed_litter_pickup_pick_u_cm_np1_ba_med_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6034])
-step => 24
-vid_id : tensor([[103]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/103_years_old_japanese_woman__Nao_is_clapping_with_piano_music_by_beethoven_clap_u_nm_np1_fr_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7497])
-step => 25
-vid_id : tensor([[9]], dtype=torch.int32)
-vid_name_loader[vid_id] : wave/Chris_Benoit_waving_goodbye_wave_u_nm_np1_fr_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6571])
-step => 26
-vid_id : tensor([[8]], dtype=torch.int32)
-vid_name_loader[vid_id] : wave/BIG_FISH_wave_u_nm_np1_fr_bad_4
-n_frames : tensor([[32]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.8296])
-step => 27
-vid_id : tensor([[692]], dtype=torch.int32)
-vid_name_loader[vid_id] : golf/Golfswing_golf_f_cm_np1_ri_goo_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6289])
-step => 28
-vid_id : tensor([[434]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/I_DO_NOT_Run_Up_Stairs_Like_A_GIRL_climb_stairs_l_cm_np1_ba_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4220])
-step => 29
-vid_id : tensor([[882]], dtype=torch.int32)
-vid_name_loader[vid_id] : pick/Fishing_For_People_pick_f_cm_np1_ri_med_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4481])
-step => 30
-vid_id : tensor([[466]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_gun/FirearmsTraining_shoot_gun_u_nm_np1_ri_goo_9
-n_frames : tensor([[25]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7323])
-step => 31
-vid_id : tensor([[456]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_gun/Fastestguninthewest_shoot_gun_f_nm_np1_ri_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.2598])
-step => 32
-vid_id : tensor([[578]], dtype=torch.int32)
-vid_name_loader[vid_id] : throw/Veoh_Alpha_Dog_1_throw_u_nm_np1_ri_med_25
-n_frames : tensor([[19]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5538])
-step => 33
-vid_id : tensor([[273]], dtype=torch.int32)
-vid_name_loader[vid_id] : run/TrumanShow_run_f_nm_np1_le_med_11
-n_frames : tensor([[18]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4808])
-step => 34
-vid_id : tensor([[723]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_ball/PlayingBasketballGotWater_shoot_ball_f_nm_np1_ba_med_6
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4711])
-step => 35
-vid_id : tensor([[400]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/Walking_up_the_stairs_climb_stairs_l_cm_np1_ba_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3549])
-step => 36
-vid_id : tensor([[928]], dtype=torch.int32)
-vid_name_loader[vid_id] : brush_hair/Brushing_Hair_with_Beth_brush_hair_u_nm_np1_fr_goo_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6930])
-step => 37
-vid_id : tensor([[896]], dtype=torch.int32)
-vid_name_loader[vid_id] : pick/Fishing_For_People_pick_f_cm_np1_fr_med_3
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7635])
-step => 38
-vid_id : tensor([[517]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/How_To_Pour_Ice_Tea_pour_u_nm_np1_fr_med_2
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.8114])
-step => 39
-vid_id : tensor([[751]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_ball/ReggieMillerTakesonThreeAverageGuysinaShootout_shoot_ball_u_nm_np1_ba_med_3
-n_frames : tensor([[20]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4322])
-step => 40
-vid_id : tensor([[763]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_ball/ReggieMillerTakesonThreeAverageGuysinaShootout_shoot_ball_u_nm_np1_ba_med_9
-n_frames : tensor([[20]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5083])
-step => 41
-vid_id : tensor([[352]], dtype=torch.int32)
-vid_name_loader[vid_id] : kick_ball/FIFA_11_Gamescom-Trailer_kick_ball_f_cm_np1_ba_med_4
-n_frames : tensor([[20]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5072])
-step => 42
-vid_id : tensor([[399]], dtype=torch.int32)
-vid_name_loader[vid_id] : walk/Panic_in_the_Streets_walk_u_cm_np1_ba_med_5
-n_frames : tensor([[16]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3305])
-step => 43
-vid_id : tensor([[583]], dtype=torch.int32)
-vid_name_loader[vid_id] : throw/Knifethrowing4knivestogethernospin_throw_f_nm_np1_ri_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6539])
-step => 44
-vid_id : tensor([[710]], dtype=torch.int32)
-vid_name_loader[vid_id] : golf/Jeff_Ritter_-_Power_Drill_golf_f_nm_np1_ri_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6572])
-step => 45
-vid_id : tensor([[261]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/Shootingarecurve_shoot_bow_u_nm_np1_fr_med_3
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7209])
-step => 46
-vid_id : tensor([[10]], dtype=torch.int32)
-vid_name_loader[vid_id] : wave/Maya_beim_Winken_wave_f_cm_np1_fr_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4882])
-step => 47
-vid_id : tensor([[614]], dtype=torch.int32)
-vid_name_loader[vid_id] : push/pushing_box_around_house_push_f_cm_np1_fr_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4484])
-step => 48
-vid_id : tensor([[830]], dtype=torch.int32)
-vid_name_loader[vid_id] : swing_baseball/hittingofftee2_swing_baseball_f_nm_np1_fr_med_10
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7710])
-step => 49
-vid_id : tensor([[144]], dtype=torch.int32)
-vid_name_loader[vid_id] : stand/likebeckam_stand_f_nm_np1_fr_med_7
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6376])
-step => 50
-vid_id : tensor([[662]], dtype=torch.int32)
-vid_name_loader[vid_id] : jump/prelinger_ControlY1950_jump_f_nm_np1_fr_bad_13
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5570])
-step => 51
-vid_id : tensor([[263]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/6arrowswithin30seconds_shoot_bow_f_nm_np1_fr_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7529])
-step => 52
-vid_id : tensor([[0]], dtype=torch.int32)
-vid_name_loader[vid_id] : wave/Maya_beim_Winken_wave_f_cm_np1_fr_med_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4307])
-step => 53
-vid_id : tensor([[620]], dtype=torch.int32)
-vid_name_loader[vid_id] : push/Pushing_Music_Table_push_f_cm_np1_ri_bad_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5783])
-step => 54
-vid_id : tensor([[368]], dtype=torch.int32)
-vid_name_loader[vid_id] : walk/Veoh_Alpha_Dog_2_walk_f_cm_np2_ri_med_10
-n_frames : tensor([[23]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4735])
-step => 55
-vid_id : tensor([[779]], dtype=torch.int32)
-vid_name_loader[vid_id] : pullup/32_Pull-ups_at_193IBS_pullup_f_cm_np1_ba_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7499])
-step => 56
-vid_id : tensor([[16]], dtype=torch.int32)
-vid_name_loader[vid_id] : wave/BIG_FISH_wave_u_nm_np1_fr_goo_9
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7045])
-step => 57
-vid_id : tensor([[334]], dtype=torch.int32)
-vid_name_loader[vid_id] : kick_ball/funny_soccer_commercial_kick_ball_f_cm_np1_fr_med_0
-n_frames : tensor([[31]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5650])
-step => 58
-vid_id : tensor([[672]], dtype=torch.int32)
-vid_name_loader[vid_id] : jump/Learn_Freerunning_and_Parkour__-_Diving_Kong_jump_f_cm_np1_le_bad_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.2616])
-step => 59
-vid_id : tensor([[115]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/103_years_old_japanese_woman__Nao_is_clapping_with_piano_music_by_beethoven_clap_u_cm_np1_fr_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.8107])
-step => 60
-vid_id : tensor([[647]], dtype=torch.int32)
-vid_name_loader[vid_id] : jump/KUNG_FU_HUSTLE_jump_f_cm_np1_fr_bad_55
-n_frames : tensor([[34]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.1155])
-step => 61
-vid_id : tensor([[436]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/Stairway_to_fitness_climb_stairs_f_nm_np1_fr_med_1
-n_frames : tensor([[35]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7180])
-step => 62
-vid_id : tensor([[734]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_ball/PlayingBasketballGotWater_shoot_ball_f_nm_np1_ba_med_8
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5145])
-step => 63
-vid_id : tensor([[534]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Bartender_School_Students_Practice_pour_u_cm_np1_fr_med_1
-n_frames : tensor([[29]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3768])
-step => 64
-vid_id : tensor([[6]], dtype=torch.int32)
-vid_name_loader[vid_id] : wave/American_History_X_wave_u_nm_np1_fr_med_16
+vid_id : tensor([[254]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_bow/Shootingarecurve_shoot_bow_u_cm_np1_fr_med_5
 n_frames : tensor([[26]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6793])
-step => 65
-vid_id : tensor([[138]], dtype=torch.int32)
-vid_name_loader[vid_id] : stand/A_Beautiful_Mind_6_stand_u_cm_np1_fr_med_3
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7065])
-step => 66
-vid_id : tensor([[860]], dtype=torch.int32)
-vid_name_loader[vid_id] : swing_baseball/Tannerafterwecorrected_swing_baseball_f_cm_np1_fr_bad_1
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7364])
-step => 67
-vid_id : tensor([[676]], dtype=torch.int32)
-vid_name_loader[vid_id] : jump/Sommerland_Syd_sprung_in_den_tod_jump_f_cm_np1_fr_bad_0
-n_frames : tensor([[17]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.0889])
-step => 68
-vid_id : tensor([[606]], dtype=torch.int32)
-vid_name_loader[vid_id] : push/Joel_Pushing_Box_push_f_cm_np1_ri_bad_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7715])
-step => 69
-vid_id : tensor([[385]], dtype=torch.int32)
-vid_name_loader[vid_id] : walk/LONGESTYARD_walk_f_nm_np1_fr_med_6
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6275])
-step => 70
-vid_id : tensor([[932]], dtype=torch.int32)
-vid_name_loader[vid_id] : brush_hair/Ella_brushing_her_amazing_long_hair_brush_hair_u_cm_np1_ba_goo_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6796])
-step => 71
-vid_id : tensor([[516]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Bartender_of_America_Bartending_School_pour_u_cm_np1_fr_med_0
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6439])
-step => 72
-vid_id : tensor([[231]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/Shootingarecurve_shoot_bow_u_nm_np1_fr_med_0
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7365])
-step => 73
-vid_id : tensor([[437]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/Walking_up_the_stairs_climb_stairs_l_cm_np1_ba_med_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3565])
-step => 74
-vid_id : tensor([[902]], dtype=torch.int32)
-vid_name_loader[vid_id] : pick/NH_gun_owners_react_to_detention_with_armed_litter_pickup_pick_f_cm_np1_ba_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6187])
-step => 75
-vid_id : tensor([[648]], dtype=torch.int32)
-vid_name_loader[vid_id] : jump/KUNG_FU_HUSTLE_jump_f_cm_np1_fr_bad_16
-n_frames : tensor([[39]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4277])
-step => 76
-vid_id : tensor([[84]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/Budam_-_Clap_Hands_clap_u_nm_np1_fr_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7366])
-step => 77
-vid_id : tensor([[915]], dtype=torch.int32)
-vid_name_loader[vid_id] : brush_hair/Brushing_my_hair_-_December_2008_brush_hair_u_cm_np1_ba_goo_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7568])
-step => 78
-vid_id : tensor([[584]], dtype=torch.int32)
-vid_name_loader[vid_id] : throw/KnifeThrowing_throw_f_nm_np1_le_med_4
+ gt_max_overlaps : tensor([0.7017])
+step => 1
+vid_id : tensor([[270]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_bow/Shootingarecurve_shoot_bow_u_nm_np1_fr_med_2
 n_frames : tensor([[38]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7203])
-step => 79
-vid_id : tensor([[618]], dtype=torch.int32)
-vid_name_loader[vid_id] : push/pushing_box_around_house_push_u_cm_np1_fr_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5356])
-step => 80
+ gt_max_overlaps : tensor([0.6747])
+step => 2
 vid_id : tensor([[483]], dtype=torch.int32)
 vid_name_loader[vid_id] : shoot_gun/deserteagle_shoot_gun_u_cm_np1_ri_goo_0
 n_frames : tensor([[30]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
  gt_max_overlaps : tensor([0.6993])
-step => 81
-vid_id : tensor([[430]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/I_DO_NOT_Run_Up_Stairs_Like_A_GIRL_climb_stairs_l_cm_np1_ba_med_2
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.2344])
-step => 82
-vid_id : tensor([[885]], dtype=torch.int32)
-vid_name_loader[vid_id] : pick/GardenWiseB256kb_pick_f_nm_np1_le_med_0
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.8023])
-step => 83
-vid_id : tensor([[370]], dtype=torch.int32)
-vid_name_loader[vid_id] : walk/THE_PROTECTOR_walk_f_cm_np1_ba_med_27
-n_frames : tensor([[17]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4978])
-step => 84
-vid_id : tensor([[585]], dtype=torch.int32)
-vid_name_loader[vid_id] : throw/Veoh_Alpha_Dog_1_throw_f_cm_np1_le_med_5
-n_frames : tensor([[39]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5427])
-step => 85
-vid_id : tensor([[300]], dtype=torch.int32)
-vid_name_loader[vid_id] : run/IamLegend_run_f_nm_np1_le_med_3
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.2871])
-step => 86
-vid_id : tensor([[543]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Bartender_of_America_Bartending_School_pour_u_cm_np1_fr_med_1
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6268])
-step => 87
-vid_id : tensor([[759]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_ball/PlayingBasketballGotWater_shoot_ball_f_nm_np1_ri_med_1
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3153])
-step => 88
-vid_id : tensor([[49]], dtype=torch.int32)
-vid_name_loader[vid_id] : sit/AmericanGangster_sit_f_cm_np1_fr_med_70
-n_frames : tensor([[39]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5710])
-step => 89
-vid_id : tensor([[675]], dtype=torch.int32)
-vid_name_loader[vid_id] : jump/Learn_Freerunning_and_Parkour__-_Diving_Kong_jump_f_cm_np1_le_bad_5
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3060])
-step => 90
-vid_id : tensor([[192]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/Frisbee_catch_f_cm_np1_ri_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6661])
-step => 91
-vid_id : tensor([[935]], dtype=torch.int32)
-vid_name_loader[vid_id] : brush_hair/Brushing_Hair_with_Beth_brush_hair_u_nm_np1_fr_goo_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6781])
-step => 92
-vid_id : tensor([[254]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/Shootingarecurve_shoot_bow_u_cm_np1_fr_med_5
-n_frames : tensor([[26]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7778])
-step => 93
-vid_id : tensor([[403]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/GuardiansOfO256kb_climb_stairs_f_cm_np1_ba_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5316])
-step => 94
-vid_id : tensor([[117]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/The_Slow_Clap_clap_u_nm_np1_fr_bad_20
-n_frames : tensor([[25]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7568])
-step => 95
-vid_id : tensor([[937]], dtype=torch.int32)
-vid_name_loader[vid_id] : brush_hair/April_09_brush_hair_u_nm_np1_ba_goo_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.8166])
-step => 96
-vid_id : tensor([[461]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_gun/MeShootin2_shoot_gun_u_nm_np1_ri_med_1
-n_frames : tensor([[33]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6759])
-step => 97
-vid_id : tensor([[313]], dtype=torch.int32)
-vid_name_loader[vid_id] : run/TrumanShow_run_f_nm_np1_ba_med_21
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5912])
-step => 98
-vid_id : tensor([[128]], dtype=torch.int32)
-vid_name_loader[vid_id] : stand/prelinger_ControlY1950_stand_u_cm_np1_fr_med_0
-n_frames : tensor([[20]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6461])
-step => 99
-vid_id : tensor([[287]], dtype=torch.int32)
-vid_name_loader[vid_id] : run/American_History_X_run_f_cm_np1_le_med_17
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6150])
-step => 100
-vid_id : tensor([[47]], dtype=torch.int32)
-vid_name_loader[vid_id] : sit/AllThePresidentMen_sit_f_nm_np1_ri_med_7
-n_frames : tensor([[27]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6905])
-step => 101
-vid_id : tensor([[182]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/LearnToShootFromTheMaster_catch_f_cm_np1_ba_med_6
-n_frames : tensor([[17]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6810])
-step => 102
-vid_id : tensor([[34]], dtype=torch.int32)
-vid_name_loader[vid_id] : wave/Chris_Benoit_waving_goodbye_wave_u_nm_np1_fr_med_1
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7063])
-step => 103
-vid_id : tensor([[114]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/The_Slow_Clap_clap_u_cm_np1_fr_med_4
-n_frames : tensor([[33]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6491])
-step => 104
-vid_id : tensor([[857]], dtype=torch.int32)
-vid_name_loader[vid_id] : swing_baseball/hittingofftee2_swing_baseball_f_nm_np1_fr_med_6
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7430])
-step => 105
-vid_id : tensor([[43]], dtype=torch.int32)
-vid_name_loader[vid_id] : sit/CharlieAndTheChocolateFactory_sit_f_nm_np1_fr_med_3
-n_frames : tensor([[34]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7396])
-step => 106
-vid_id : tensor([[899]], dtype=torch.int32)
-vid_name_loader[vid_id] : pick/Collecting_litter_on_the_woodland_ground_surface_pick_f_nm_np1_fr_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4549])
-step => 107
-vid_id : tensor([[600]], dtype=torch.int32)
-vid_name_loader[vid_id] : push/Pushing_Music_Table_push_f_cm_np1_le_bad_5
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7490])
-step => 108
-vid_id : tensor([[25]], dtype=torch.int32)
-vid_name_loader[vid_id] : wave/50_FIRST_DATES_wave_u_cm_np1_fr_goo_30
+step => 3
+vid_id : tensor([[371]], dtype=torch.int32)
+vid_name_loader[vid_id] : walk/50_FIRST_DATES_walk_f_cm_np1_le_med_33
 n_frames : tensor([[36]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7832])
-step => 109
-vid_id : tensor([[151]], dtype=torch.int32)
-vid_name_loader[vid_id] : stand/BATMAN_BEGINS_stand_f_cm_np1_fr_med_8
-n_frames : tensor([[21]], device='cuda:0')
+ gt_max_overlaps : tensor([0.6873])
+step => 4
+vid_id : tensor([[196]], dtype=torch.int32)
+vid_name_loader[vid_id] : catch/Torwarttraining_catch_u_cm_np1_fr_bad_4
+n_frames : tensor([[19]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5779])
-step => 110
-vid_id : tensor([[423]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/Stairway_to_fitness_climb_stairs_f_nm_np1_fr_med_0
+ gt_max_overlaps : tensor([0.4481])
+step => 5
+vid_id : tensor([[869]], dtype=torch.int32)
+vid_name_loader[vid_id] : swing_baseball/Tannerafterwecorrected_swing_baseball_f_cm_np1_fr_bad_0
 n_frames : tensor([[40]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6553])
-step => 111
-vid_id : tensor([[355]], dtype=torch.int32)
-vid_name_loader[vid_id] : kick_ball/Wayne_Rooney_At_Home_Funny_Must_See_kick_ball_f_cm_np1_ba_med_6
-n_frames : tensor([[32]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6054])
-step => 112
-vid_id : tensor([[44]], dtype=torch.int32)
-vid_name_loader[vid_id] : sit/Prelinger_HabitPat1954_sit_u_cm_np1_le_med_8
-n_frames : tensor([[25]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4095])
-step => 113
-vid_id : tensor([[685]], dtype=torch.int32)
-vid_name_loader[vid_id] : golf/Cobra_Golf_-_Camilo_Villegas_golf_f_cm_np1_ri_goo_1
+ gt_max_overlaps : tensor([0.7418])
+step => 6
+vid_id : tensor([[470]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_gun/FirearmsTraining_shoot_gun_u_cm_np1_ba_med_5
 n_frames : tensor([[40]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7292])
-step => 114
-vid_id : tensor([[18]], dtype=torch.int32)
-vid_name_loader[vid_id] : wave/20060723sfjffbartsinger_wave_f_cm_np1_ba_med_0
-n_frames : tensor([[31]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5756])
-step => 115
-vid_id : tensor([[720]], dtype=torch.int32)
-vid_name_loader[vid_id] : golf/golf_golf_f_nm_np1_ri_goo_0
+ gt_max_overlaps : tensor([0.7350])
+step => 7
+vid_id : tensor([[902]], dtype=torch.int32)
+vid_name_loader[vid_id] : pick/NH_gun_owners_react_to_detention_with_armed_litter_pickup_pick_f_cm_np1_ba_med_0
 n_frames : tensor([[40]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3851])
-step => 116
-vid_id : tensor([[244]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/6arrowswithin30seconds_shoot_bow_f_nm_np1_fr_med_5
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7516])
-step => 117
-vid_id : tensor([[349]], dtype=torch.int32)
-vid_name_loader[vid_id] : kick_ball/pepsi_banned_soccer_commercial_kick_ball_f_cm_np1_fr_bad_0
-n_frames : tensor([[20]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6084])
-step => 118
+ gt_max_overlaps : tensor([0.6032])
+step => 8
 vid_id : tensor([[12]], dtype=torch.int32)
 vid_name_loader[vid_id] : wave/WeddingCrashers_wave_u_nm_np1_fr_goo_0
 n_frames : tensor([[28]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7872])
-step => 119
-vid_id : tensor([[59]], dtype=torch.int32)
-vid_name_loader[vid_id] : sit/CharlieAndTheChocolateFactory_sit_f_nm_np1_le_med_7
-n_frames : tensor([[21]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6679])
-step => 120
-vid_id : tensor([[703]], dtype=torch.int32)
-vid_name_loader[vid_id] : golf/golf_golf_f_nm_np1_ri_goo_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6757])
-step => 121
-vid_id : tensor([[274]], dtype=torch.int32)
-vid_name_loader[vid_id] : run/Faith_Rewarded_run_f_cm_np1_le_med_16
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6400])
-step => 122
-vid_id : tensor([[99]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/Applauding_Abby_clap_u_nm_np1_fr_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7101])
-step => 123
-vid_id : tensor([[391]], dtype=torch.int32)
-vid_name_loader[vid_id] : walk/Veoh_Alpha_Dog_2_walk_u_nm_np1_le_med_29
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3921])
-step => 124
-vid_id : tensor([[572]], dtype=torch.int32)
-vid_name_loader[vid_id] : throw/amazingballthrowingtricks_throw_f_nm_np1_ri_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3389])
-step => 125
-vid_id : tensor([[137]], dtype=torch.int32)
-vid_name_loader[vid_id] : stand/SoundAndTheStory_stand_f_cm_np1_ri_med_0
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6106])
-step => 126
-vid_id : tensor([[589]], dtype=torch.int32)
-vid_name_loader[vid_id] : throw/amazingballthrowingtricks_throw_f_cm_np1_ri_med_5
-n_frames : tensor([[33]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.2687])
-step => 127
-vid_id : tensor([[107]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/Flamenco_Dance_Steps_-_Flamenco_Dance_Soft_Claps_clap_u_cm_np1_fr_goo_1
-n_frames : tensor([[39]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6632])
-step => 128
-vid_id : tensor([[669]], dtype=torch.int32)
-vid_name_loader[vid_id] : jump/prelinger_ControlY1950_jump_f_nm_np1_fr_bad_6
-n_frames : tensor([[32]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3436])
-step => 129
-vid_id : tensor([[778]], dtype=torch.int32)
-vid_name_loader[vid_id] : pullup/Random_Pull_Up_Exercises_pullup_f_nm_np1_ba_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7152])
-step => 130
-vid_id : tensor([[168]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/Torwarttraining_catch_f_cm_np1_le_bad_5
-n_frames : tensor([[21]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3149])
-step => 131
-vid_id : tensor([[905]], dtype=torch.int32)
-vid_name_loader[vid_id] : pick/Pilzesuchen_pick_f_cm_np1_fr_med_0
-n_frames : tensor([[20]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6563])
-step => 132
-vid_id : tensor([[694]], dtype=torch.int32)
-vid_name_loader[vid_id] : golf/Morgan_Pressel_golf_f_cm_np1_ri_goo_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7367])
-step => 133
-vid_id : tensor([[871]], dtype=torch.int32)
-vid_name_loader[vid_id] : swing_baseball/hittingofftee2_swing_baseball_f_nm_np1_fr_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7817])
-step => 134
-vid_id : tensor([[198]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/LearnToShootFromTheMaster_catch_f_nm_np1_ba_med_1
-n_frames : tensor([[15]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3933])
-step => 135
-vid_id : tensor([[920]], dtype=torch.int32)
-vid_name_loader[vid_id] : brush_hair/brush_my_hair_without_wearing_the_glasses_brush_hair_u_nm_np1_fr_goo_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5591])
-step => 136
-vid_id : tensor([[545]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Basic_Vodka_Recipes_-_How_to_Make_a_Shirley_Temple_pour_u_cm_np1_fr_med_1
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7720])
-step => 137
-vid_id : tensor([[696]], dtype=torch.int32)
-vid_name_loader[vid_id] : golf/Anna_Rawson_Driver_Practice_golf_f_nm_np1_ri_bad_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6156])
-step => 138
-vid_id : tensor([[319]], dtype=torch.int32)
-vid_name_loader[vid_id] : kick_ball/FIFA_11_Gamescom-Trailer_kick_ball_f_cm_np1_ba_bad_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5721])
-step => 139
+ gt_max_overlaps : tensor([0.5423])
+step => 9
 vid_id : tensor([[54]], dtype=torch.int32)
 vid_name_loader[vid_id] : sit/AllThePresidentMen_sit_f_nm_np1_fr_goo_3
 n_frames : tensor([[20]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6061])
-step => 140
-vid_id : tensor([[232]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/Hannahfront23may08_shoot_bow_u_nm_np1_fr_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7464])
-step => 141
-vid_id : tensor([[242]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/Shootingarecurve_shoot_bow_u_nm_np1_fr_med_4
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.8177])
-step => 142
-vid_id : tensor([[156]], dtype=torch.int32)
-vid_name_loader[vid_id] : stand/SweeneyTodd_stand_f_cm_np1_le_med_10
-n_frames : tensor([[36]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6607])
-step => 143
-vid_id : tensor([[712]], dtype=torch.int32)
-vid_name_loader[vid_id] : golf/Cobra_Golf_-_Camilo_Villegas_golf_f_cm_np1_ri_goo_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7121])
-step => 144
-vid_id : tensor([[111]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/Budam_-_Clap_Hands_clap_u_nm_np1_fr_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7726])
-step => 145
-vid_id : tensor([[394]], dtype=torch.int32)
-vid_name_loader[vid_id] : walk/Prelinger_LetYours1940_walk_f_nm_np1_ba_med_5
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7363])
-step => 146
-vid_id : tensor([[925]], dtype=torch.int32)
-vid_name_loader[vid_id] : brush_hair/Brushing_my_hair_-_December_2008_brush_hair_u_nm_np1_ba_goo_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7493])
-step => 147
-vid_id : tensor([[740]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_ball/PlayingBasketball_shoot_ball_f_nm_np1_ba_med_6
-n_frames : tensor([[20]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5676])
-step => 148
-vid_id : tensor([[264]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/6arrowswithin30seconds_shoot_bow_f_nm_np1_fr_med_4
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7689])
-step => 149
-vid_id : tensor([[554]], dtype=torch.int32)
-vid_name_loader[vid_id] : throw/KnifeThrowing_throw_f_nm_np1_le_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7308])
-step => 150
-vid_id : tensor([[497]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Bier_richtig_einschenken_pour_u_cm_np1_fr_med_1
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5821])
-step => 151
-vid_id : tensor([[528]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Kamikaze_Martini_Coctail_pour_u_nm_np1_fr_med_2
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5600])
-step => 152
-vid_id : tensor([[392]], dtype=torch.int32)
-vid_name_loader[vid_id] : walk/AmericanGangster_walk_f_nm_np1_fr_med_38
-n_frames : tensor([[24]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7633])
-step => 153
-vid_id : tensor([[916]], dtype=torch.int32)
-vid_name_loader[vid_id] : brush_hair/Brushing_Hair_with_Beth_brush_hair_h_nm_np1_le_goo_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6299])
-step => 154
-vid_id : tensor([[161]], dtype=torch.int32)
-vid_name_loader[vid_id] : stand/prelinger_ControlY1950_stand_f_cm_np1_fr_med_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6595])
-step => 155
-vid_id : tensor([[106]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/Applauding_Abby_clap_u_nm_np1_fr_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7095])
-step => 156
-vid_id : tensor([[496]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Kamikaze_Martini_Coctail_pour_u_nm_np1_fr_med_1
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6746])
-step => 157
-vid_id : tensor([[922]], dtype=torch.int32)
-vid_name_loader[vid_id] : brush_hair/April_09_brush_hair_u_nm_np1_ba_goo_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.8279])
-step => 158
-vid_id : tensor([[280]], dtype=torch.int32)
-vid_name_loader[vid_id] : run/TrumanShow_run_f_nm_np1_ba_med_19
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7323])
-step => 159
-vid_id : tensor([[465]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_gun/MeShootin2_shoot_gun_u_nm_np1_ri_med_0
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6479])
-step => 160
-vid_id : tensor([[503]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Bier_richtig_einschenken_pour_u_cm_np1_fr_med_0
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7266])
-step => 161
-vid_id : tensor([[340]], dtype=torch.int32)
-vid_name_loader[vid_id] : kick_ball/FIFA_11_Gamescom-Trailer_kick_ball_f_cm_np1_ba_med_3
-n_frames : tensor([[24]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6678])
-step => 162
-vid_id : tensor([[663]], dtype=torch.int32)
-vid_name_loader[vid_id] : jump/St__Louis_Goalkeeping__Academy_elite_training_jump_f_nm_np1_le_bad_3
-n_frames : tensor([[20]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6279])
-step => 163
-vid_id : tensor([[305]], dtype=torch.int32)
-vid_name_loader[vid_id] : run/RATRACE_run_f_cm_np1_ba_med_14
-n_frames : tensor([[29]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6460])
-step => 164
-vid_id : tensor([[191]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/Torwarttraining_catch_u_cm_np1_ri_med_0
-n_frames : tensor([[23]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.8131])
-step => 165
-vid_id : tensor([[127]], dtype=torch.int32)
-vid_name_loader[vid_id] : stand/Fellowship_4_stand_f_cm_np1_fr_med_3
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6400])
-step => 166
-vid_id : tensor([[460]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_gun/FirearmsTraining_shoot_gun_u_nm_np1_ri_med_11
-n_frames : tensor([[35]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6687])
-step => 167
-vid_id : tensor([[524]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Drink_@18_-_Apple_martini_pour_u_nm_np1_fr_goo_0
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7698])
-step => 168
-vid_id : tensor([[472]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_gun/FirearmsTraining_shoot_gun_f_cm_np1_ri_med_0
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6701])
-step => 169
-vid_id : tensor([[125]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/Flamenco_Dance_Steps_-_Flamenco_Dance_Soft_Claps_clap_u_cm_np1_fr_goo_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6796])
-step => 170
-vid_id : tensor([[189]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/Torwarttraining_catch_u_cm_np1_le_bad_7
-n_frames : tensor([[21]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7475])
-step => 171
-vid_id : tensor([[595]], dtype=torch.int32)
-vid_name_loader[vid_id] : throw/KnifeThrowing_throw_f_nm_np1_le_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7112])
-step => 172
-vid_id : tensor([[884]], dtype=torch.int32)
-vid_name_loader[vid_id] : pick/Pick_Up_Your_Trash!_pick_f_cm_np1_le_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6794])
-step => 173
-vid_id : tensor([[360]], dtype=torch.int32)
-vid_name_loader[vid_id] : walk/EVOLUTION_walk_f_cm_np1_fr_med_23
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6824])
-step => 174
-vid_id : tensor([[206]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/LearnToShootFromTheMaster_catch_f_nm_np1_ba_med_0
+ gt_max_overlaps : tensor([0.5840])
+step => 10
+vid_id : tensor([[273]], dtype=torch.int32)
+vid_name_loader[vid_id] : run/TrumanShow_run_f_nm_np1_le_med_11
 n_frames : tensor([[18]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7193])
-step => 175
+ gt_max_overlaps : tensor([0.4808])
+step => 11
 vid_id : tensor([[78]], dtype=torch.int32)
 vid_name_loader[vid_id] : sit/Prelinger_ActYourA1949_sit_u_cm_np1_ri_med_2
 n_frames : tensor([[40]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4883])
-step => 176
-vid_id : tensor([[868]], dtype=torch.int32)
-vid_name_loader[vid_id] : swing_baseball/HowtoswingaBaseballbat_swing_baseball_f_nm_np1_le_bad_0
+ gt_max_overlaps : tensor([0.4730])
+step => 12
+vid_id : tensor([[238]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_bow/erikafrontcompound6feb09_shoot_bow_f_nm_np1_fr_med_0
 n_frames : tensor([[40]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4788])
-step => 177
-vid_id : tensor([[469]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_gun/dualdeserteagle_shoot_gun_f_cm_np1_le_med_0
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7779])
-step => 178
-vid_id : tensor([[765]], dtype=torch.int32)
-vid_name_loader[vid_id] : pullup/Random_Pull_Up_Exercises_pullup_f_nm_np1_fr_med_3
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.8386])
-step => 179
-vid_id : tensor([[707]], dtype=torch.int32)
-vid_name_loader[vid_id] : golf/golf_golf_f_nm_np1_ri_goo_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7075])
-step => 180
-vid_id : tensor([[655]], dtype=torch.int32)
-vid_name_loader[vid_id] : jump/prelinger_ControlY1950_jump_f_nm_np1_fr_med_12
-n_frames : tensor([[26]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5049])
-step => 181
-vid_id : tensor([[252]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/Hannahfront23may08_shoot_bow_u_nm_np1_fr_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7245])
-step => 182
+ gt_max_overlaps : tensor([0.5964])
+step => 13
 vid_id : tensor([[55]], dtype=torch.int32)
 vid_name_loader[vid_id] : sit/TrumanShow_sit_f_nm_np1_le_med_37
 n_frames : tensor([[39]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5586])
-step => 183
-vid_id : tensor([[514]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Kamikaze_Martini_Coctail_pour_u_nm_np1_fr_med_0
-n_frames : tensor([[30]], device='cuda:0')
+ gt_max_overlaps : tensor([0.5232])
+step => 14
+vid_id : tensor([[117]], dtype=torch.int32)
+vid_name_loader[vid_id] : clap/The_Slow_Clap_clap_u_nm_np1_fr_bad_20
+n_frames : tensor([[25]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5285])
-step => 184
-vid_id : tensor([[407]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/Walking_up_the_stairs_climb_stairs_l_cm_np1_ba_med_1
+ gt_max_overlaps : tensor([0.6961])
+step => 15
+vid_id : tensor([[782]], dtype=torch.int32)
+vid_name_loader[vid_id] : pullup/20_good_form_pullups_pullup_f_nm_np1_ri_goo_2
 n_frames : tensor([[40]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3975])
-step => 185
-vid_id : tensor([[559]], dtype=torch.int32)
-vid_name_loader[vid_id] : throw/Knifethrowing4knivestogethernospin_throw_u_nm_np1_ba_med_0
+ gt_max_overlaps : tensor([0.4699])
+step => 16
+vid_id : tensor([[847]], dtype=torch.int32)
+vid_name_loader[vid_id] : swing_baseball/hittingofftee2_swing_baseball_f_nm_np1_fr_med_9
 n_frames : tensor([[40]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7551])
-step => 186
-vid_id : tensor([[486]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_gun/MeShootin2_shoot_gun_u_nm_np1_ri_med_2
-n_frames : tensor([[29]], device='cuda:0')
+ gt_max_overlaps : tensor([0.7220])
+step => 17
+vid_id : tensor([[152]], dtype=torch.int32)
+vid_name_loader[vid_id] : stand/Panic_in_the_Streets_stand_u_cm_np1_ri_med_2
+n_frames : tensor([[27]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7407])
-step => 187
-vid_id : tensor([[683]], dtype=torch.int32)
-vid_name_loader[vid_id] : golf/Anna_Rawson_LPGA_golf_f_nm_np1_ri_goo_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7106])
-step => 188
-vid_id : tensor([[312]], dtype=torch.int32)
-vid_name_loader[vid_id] : run/Catch_Me_If_You_Can_run_u_cm_np1_fr_med_9
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7972])
-step => 189
-vid_id : tensor([[402]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/I_DO_NOT_Run_Up_Stairs_Like_A_GIRL_climb_stairs_l_cm_np1_ba_med_3
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4209])
-step => 190
-vid_id : tensor([[546]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Drink_@18_-_Apple_martini_pour_u_nm_np1_fr_goo_1
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7748])
-step => 191
-vid_id : tensor([[792]], dtype=torch.int32)
-vid_name_loader[vid_id] : pullup/32_Pull-ups_at_193IBS_pullup_f_cm_np1_ba_med_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7649])
-step => 192
-vid_id : tensor([[216]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/Torwarttraining_catch_u_cm_np1_le_bad_6
-n_frames : tensor([[22]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7200])
-step => 193
-vid_id : tensor([[789]], dtype=torch.int32)
-vid_name_loader[vid_id] : pullup/20_good_form_pullups_pullup_f_nm_np1_ri_goo_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5882])
-step => 194
-vid_id : tensor([[146]], dtype=torch.int32)
-vid_name_loader[vid_id] : stand/SweeneyTodd_stand_f_cm_np1_ri_med_33
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6402])
-step => 195
-vid_id : tensor([[57]], dtype=torch.int32)
-vid_name_loader[vid_id] : sit/likebeckam_sit_f_nm_np1_le_bad_29
-n_frames : tensor([[24]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5016])
-step => 196
-vid_id : tensor([[805]], dtype=torch.int32)
-vid_name_loader[vid_id] : pullup/20_good_form_pullups_pullup_f_nm_np1_ri_goo_0
+ gt_max_overlaps : tensor([0.5122])
+step => 18
+vid_id : tensor([[852]], dtype=torch.int32)
+vid_name_loader[vid_id] : swing_baseball/hittingofftee2_swing_baseball_f_nm_np1_fr_med_1
 n_frames : tensor([[40]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
  gt_max_overlaps : tensor([0.6957])
-step => 197
-vid_id : tensor([[169]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/Goalkeeper_Training_Day_@_7_catch_f_cm_np1_ri_med_0
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4293])
-step => 198
-vid_id : tensor([[417]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/I_DO_NOT_Run_Up_Stairs_Like_A_GIRL_climb_stairs_l_cm_np1_ba_med_5
-n_frames : tensor([[36]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5169])
-step => 199
-vid_id : tensor([[248]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/6arrowswithin30seconds_shoot_bow_f_nm_np1_fr_med_0
+step => 19
+vid_id : tensor([[0]], dtype=torch.int32)
+vid_name_loader[vid_id] : wave/Maya_beim_Winken_wave_f_cm_np1_fr_med_2
 n_frames : tensor([[40]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7463])
-step => 200
-vid_id : tensor([[475]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_gun/FirearmsTraining_shoot_gun_u_nm_np1_ri_med_4
-n_frames : tensor([[35]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.8230])
-step => 201
-vid_id : tensor([[742]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_ball/JashaunKidsWhoRipAmazingBasketball_shoot_ball_f_cm_np1_le_med_4
-n_frames : tensor([[22]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3370])
-step => 202
-vid_id : tensor([[176]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/Frisbee_catch_f_cm_np1_ri_med_0
-n_frames : tensor([[37]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6774])
-step => 203
-vid_id : tensor([[500]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Bartender_School_Students_Practice_pour_u_cm_np1_fr_med_3
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7574])
-step => 204
-vid_id : tensor([[771]], dtype=torch.int32)
-vid_name_loader[vid_id] : pullup/Random_Pull_Up_Exercises_pullup_f_nm_np1_fr_med_2
+ gt_max_overlaps : tensor([0.3879])
+step => 20
+vid_id : tensor([[125]], dtype=torch.int32)
+vid_name_loader[vid_id] : clap/Flamenco_Dance_Steps_-_Flamenco_Dance_Soft_Claps_clap_u_cm_np1_fr_goo_2
 n_frames : tensor([[40]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.8202])
-step => 205
+ gt_max_overlaps : tensor([0.6507])
+step => 21
 vid_id : tensor([[291]], dtype=torch.int32)
 vid_name_loader[vid_id] : run/RATRACE_run_f_cm_np1_fr_med_16
 n_frames : tensor([[25]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
  gt_max_overlaps : tensor([0.5785])
-step => 206
-vid_id : tensor([[424]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/I_DO_NOT_Run_Up_Stairs_Like_A_GIRL_climb_stairs_l_cm_np1_ba_med_0
+step => 22
+vid_id : tensor([[10]], dtype=torch.int32)
+vid_name_loader[vid_id] : wave/Maya_beim_Winken_wave_f_cm_np1_fr_med_0
 n_frames : tensor([[40]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5977])
-step => 207
-vid_id : tensor([[626]], dtype=torch.int32)
-vid_name_loader[vid_id] : push/pushing_box_around_house_push_f_cm_np1_le_bad_3
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5161])
-step => 208
-vid_id : tensor([[616]], dtype=torch.int32)
-vid_name_loader[vid_id] : push/Push_That_Car!_push_f_cm_np1_ri_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4215])
-step => 209
-vid_id : tensor([[515]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Bartender_of_America_Bartending_School_pour_u_cm_np1_fr_med_2
+ gt_max_overlaps : tensor([0.4964])
+step => 23
+vid_id : tensor([[450]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_gun/FirearmsTraining_shoot_gun_f_cm_np1_ri_med_1
 n_frames : tensor([[30]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6590])
-step => 210
+ gt_max_overlaps : tensor([0.7647])
+step => 24
+vid_id : tensor([[765]], dtype=torch.int32)
+vid_name_loader[vid_id] : pullup/Random_Pull_Up_Exercises_pullup_f_nm_np1_fr_med_3
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.8386])
+step => 25
+vid_id : tensor([[161]], dtype=torch.int32)
+vid_name_loader[vid_id] : stand/prelinger_ControlY1950_stand_f_cm_np1_fr_med_2
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6380])
+step => 26
+vid_id : tensor([[888]], dtype=torch.int32)
+vid_name_loader[vid_id] : pick/Pick_Up_Your_Trash!_pick_f_cm_np1_ba_med_1
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.3934])
+step => 27
+vid_id : tensor([[896]], dtype=torch.int32)
+vid_name_loader[vid_id] : pick/Fishing_For_People_pick_f_cm_np1_fr_med_3
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7635])
+step => 28
+vid_id : tensor([[176]], dtype=torch.int32)
+vid_name_loader[vid_id] : catch/Frisbee_catch_f_cm_np1_ri_med_0
+n_frames : tensor([[37]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6774])
+step => 29
+vid_id : tensor([[18]], dtype=torch.int32)
+vid_name_loader[vid_id] : wave/20060723sfjffbartsinger_wave_f_cm_np1_ba_med_0
+n_frames : tensor([[31]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.5756])
+step => 30
+vid_id : tensor([[32]], dtype=torch.int32)
+vid_name_loader[vid_id] : wave/Maya_beim_Winken_wave_f_cm_np1_fr_med_1
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.4705])
+step => 31
+vid_id : tensor([[517]], dtype=torch.int32)
+vid_name_loader[vid_id] : pour/How_To_Pour_Ice_Tea_pour_u_nm_np1_fr_med_2
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7825])
+step => 32
+vid_id : tensor([[334]], dtype=torch.int32)
+vid_name_loader[vid_id] : kick_ball/funny_soccer_commercial_kick_ball_f_cm_np1_fr_med_0
+n_frames : tensor([[31]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.4697])
+step => 33
+vid_id : tensor([[244]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_bow/6arrowswithin30seconds_shoot_bow_f_nm_np1_fr_med_5
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7516])
+step => 34
+vid_id : tensor([[58]], dtype=torch.int32)
+vid_name_loader[vid_id] : sit/NoCountryForOldMen_sit_f_nm_np1_ri_med_6
+n_frames : tensor([[39]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.1689])
+step => 35
+vid_id : tensor([[144]], dtype=torch.int32)
+vid_name_loader[vid_id] : stand/likebeckam_stand_f_nm_np1_fr_med_7
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.5055])
+step => 36
+vid_id : tensor([[759]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_ball/PlayingBasketballGotWater_shoot_ball_f_nm_np1_ri_med_1
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.3153])
+step => 37
+vid_id : tensor([[67]], dtype=torch.int32)
+vid_name_loader[vid_id] : sit/NoCountryForOldMen_sit_f_nm_np1_fr_goo_4
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6093])
+step => 38
+vid_id : tensor([[871]], dtype=torch.int32)
+vid_name_loader[vid_id] : swing_baseball/hittingofftee2_swing_baseball_f_nm_np1_fr_med_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7560])
+step => 39
+vid_id : tensor([[107]], dtype=torch.int32)
+vid_name_loader[vid_id] : clap/Flamenco_Dance_Steps_-_Flamenco_Dance_Soft_Claps_clap_u_cm_np1_fr_goo_1
+n_frames : tensor([[39]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6632])
+step => 40
+vid_id : tensor([[373]], dtype=torch.int32)
+vid_name_loader[vid_id] : walk/Juno_walk_f_cm_np1_fr_med_8
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6354])
+step => 41
+vid_id : tensor([[198]], dtype=torch.int32)
+vid_name_loader[vid_id] : catch/LearnToShootFromTheMaster_catch_f_nm_np1_ba_med_1
+n_frames : tensor([[15]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.3933])
+step => 42
+vid_id : tensor([[475]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_gun/FirearmsTraining_shoot_gun_u_nm_np1_ri_med_4
+n_frames : tensor([[35]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.8230])
+step => 43
+vid_id : tensor([[506]], dtype=torch.int32)
+vid_name_loader[vid_id] : pour/Drink_@18_-_Apple_martini_pour_u_nm_np1_fr_goo_2
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6796])
+step => 44
+vid_id : tensor([[662]], dtype=torch.int32)
+vid_name_loader[vid_id] : jump/prelinger_ControlY1950_jump_f_nm_np1_fr_bad_13
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.5570])
+step => 45
+vid_id : tensor([[287]], dtype=torch.int32)
+vid_name_loader[vid_id] : run/American_History_X_run_f_cm_np1_le_med_17
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6150])
+step => 46
+vid_id : tensor([[723]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_ball/PlayingBasketballGotWater_shoot_ball_f_nm_np1_ba_med_6
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.4711])
+step => 47
+vid_id : tensor([[554]], dtype=torch.int32)
+vid_name_loader[vid_id] : throw/KnifeThrowing_throw_f_nm_np1_le_med_1
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7308])
+step => 48
+vid_id : tensor([[231]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_bow/Shootingarecurve_shoot_bow_u_nm_np1_fr_med_0
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6654])
+step => 49
+vid_id : tensor([[779]], dtype=torch.int32)
+vid_name_loader[vid_id] : pullup/32_Pull-ups_at_193IBS_pullup_f_cm_np1_ba_med_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7499])
+step => 50
+vid_id : tensor([[600]], dtype=torch.int32)
+vid_name_loader[vid_id] : push/Pushing_Music_Table_push_f_cm_np1_le_bad_5
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.5923])
+step => 51
+vid_id : tensor([[844]], dtype=torch.int32)
+vid_name_loader[vid_id] : swing_baseball/hittingofftee2_swing_baseball_f_nm_np1_fr_med_3
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7638])
+step => 52
+vid_id : tensor([[663]], dtype=torch.int32)
+vid_name_loader[vid_id] : jump/St__Louis_Goalkeeping__Academy_elite_training_jump_f_nm_np1_le_bad_3
+n_frames : tensor([[20]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6279])
+step => 53
+vid_id : tensor([[915]], dtype=torch.int32)
+vid_name_loader[vid_id] : brush_hair/Brushing_my_hair_-_December_2008_brush_hair_u_cm_np1_ba_goo_1
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.5573])
+step => 54
+vid_id : tensor([[137]], dtype=torch.int32)
+vid_name_loader[vid_id] : stand/SoundAndTheStory_stand_f_cm_np1_ri_med_0
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.5576])
+step => 55
+vid_id : tensor([[815]], dtype=torch.int32)
+vid_name_loader[vid_id] : pullup/30_(dead-hang)_pull-ups_pullup_u_cm_np1_ba_med_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6399])
+step => 56
+vid_id : tensor([[242]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_bow/Shootingarecurve_shoot_bow_u_nm_np1_fr_med_4
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7575])
+step => 57
+vid_id : tensor([[649]], dtype=torch.int32)
+vid_name_loader[vid_id] : jump/Learn_Freerunning_and_Parkour__-_Diving_Kong_jump_f_cm_np1_ba_bad_1
+n_frames : tensor([[22]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.2611])
+step => 58
+vid_id : tensor([[104]], dtype=torch.int32)
+vid_name_loader[vid_id] : clap/Boom_Snap_Clap_clap_u_nm_np1_fr_med_1
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.8444])
+step => 59
+vid_id : tensor([[553]], dtype=torch.int32)
+vid_name_loader[vid_id] : throw/KnifeThrowing_throw_f_nm_np1_le_med_3
+n_frames : tensor([[39]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7648])
+step => 60
+vid_id : tensor([[763]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_ball/ReggieMillerTakesonThreeAverageGuysinaShootout_shoot_ball_u_nm_np1_ba_med_9
+n_frames : tensor([[20]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.4358])
+step => 61
+vid_id : tensor([[624]], dtype=torch.int32)
+vid_name_loader[vid_id] : push/Alexander_pushing_the_table_push_f_cm_np1_le_bad_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6627])
+step => 62
+vid_id : tensor([[856]], dtype=torch.int32)
+vid_name_loader[vid_id] : swing_baseball/hittingofftee2_swing_baseball_f_nm_np1_fr_med_11
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6775])
+step => 63
+vid_id : tensor([[672]], dtype=torch.int32)
+vid_name_loader[vid_id] : jump/Learn_Freerunning_and_Parkour__-_Diving_Kong_jump_f_cm_np1_le_bad_2
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.2020])
+step => 64
+vid_id : tensor([[403]], dtype=torch.int32)
+vid_name_loader[vid_id] : climb_stairs/GuardiansOfO256kb_climb_stairs_f_cm_np1_ba_med_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.5229])
+step => 65
+vid_id : tensor([[43]], dtype=torch.int32)
+vid_name_loader[vid_id] : sit/CharlieAndTheChocolateFactory_sit_f_nm_np1_fr_med_3
+n_frames : tensor([[34]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7361])
+step => 66
+vid_id : tensor([[460]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_gun/FirearmsTraining_shoot_gun_u_nm_np1_ri_med_11
+n_frames : tensor([[35]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6790])
+step => 67
+vid_id : tensor([[860]], dtype=torch.int32)
+vid_name_loader[vid_id] : swing_baseball/Tannerafterwecorrected_swing_baseball_f_cm_np1_fr_bad_1
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7364])
+step => 68
+vid_id : tensor([[645]], dtype=torch.int32)
+vid_name_loader[vid_id] : jump/Learn_Freerunning_and_Parkour__-_Diving_Kong_jump_f_cm_np1_le_bad_3
+n_frames : tensor([[25]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.2088])
+step => 69
+vid_id : tensor([[151]], dtype=torch.int32)
+vid_name_loader[vid_id] : stand/BATMAN_BEGINS_stand_f_cm_np1_fr_med_8
+n_frames : tensor([[21]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.5779])
+step => 70
+vid_id : tensor([[263]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_bow/6arrowswithin30seconds_shoot_bow_f_nm_np1_fr_med_1
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7272])
+step => 71
+vid_id : tensor([[169]], dtype=torch.int32)
+vid_name_loader[vid_id] : catch/Goalkeeper_Training_Day_@_7_catch_f_cm_np1_ri_med_0
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.4234])
+step => 72
+vid_id : tensor([[920]], dtype=torch.int32)
+vid_name_loader[vid_id] : brush_hair/brush_my_hair_without_wearing_the_glasses_brush_hair_u_nm_np1_fr_goo_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.5520])
+step => 73
+vid_id : tensor([[340]], dtype=torch.int32)
+vid_name_loader[vid_id] : kick_ball/FIFA_11_Gamescom-Trailer_kick_ball_f_cm_np1_ba_med_3
+n_frames : tensor([[24]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6668])
+step => 74
+vid_id : tensor([[391]], dtype=torch.int32)
+vid_name_loader[vid_id] : walk/Veoh_Alpha_Dog_2_walk_u_nm_np1_le_med_29
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.4137])
+step => 75
+vid_id : tensor([[355]], dtype=torch.int32)
+vid_name_loader[vid_id] : kick_ball/Wayne_Rooney_At_Home_Funny_Must_See_kick_ball_f_cm_np1_ba_med_6
+n_frames : tensor([[32]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6054])
+step => 76
+vid_id : tensor([[595]], dtype=torch.int32)
+vid_name_loader[vid_id] : throw/KnifeThrowing_throw_f_nm_np1_le_med_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6728])
+step => 77
+vid_id : tensor([[932]], dtype=torch.int32)
+vid_name_loader[vid_id] : brush_hair/Ella_brushing_her_amazing_long_hair_brush_hair_u_cm_np1_ba_goo_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6206])
+step => 78
+vid_id : tensor([[57]], dtype=torch.int32)
+vid_name_loader[vid_id] : sit/likebeckam_sit_f_nm_np1_le_bad_29
+n_frames : tensor([[24]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.5016])
+step => 79
+vid_id : tensor([[584]], dtype=torch.int32)
+vid_name_loader[vid_id] : throw/KnifeThrowing_throw_f_nm_np1_le_med_4
+n_frames : tensor([[38]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7203])
+step => 80
+vid_id : tensor([[199]], dtype=torch.int32)
+vid_name_loader[vid_id] : catch/Torwarttraining_catch_u_cm_np1_ri_med_2
+n_frames : tensor([[20]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.8395])
+step => 81
+vid_id : tensor([[734]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_ball/PlayingBasketballGotWater_shoot_ball_f_nm_np1_ba_med_8
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.5136])
+step => 82
+vid_id : tensor([[648]], dtype=torch.int32)
+vid_name_loader[vid_id] : jump/KUNG_FU_HUSTLE_jump_f_cm_np1_fr_bad_16
+n_frames : tensor([[39]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.3730])
+step => 83
+vid_id : tensor([[503]], dtype=torch.int32)
+vid_name_loader[vid_id] : pour/Bier_richtig_einschenken_pour_u_cm_np1_fr_med_0
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.5978])
+step => 84
+vid_id : tensor([[747]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_ball/JashaunKidsWhoRipAmazingBasketball_shoot_ball_f_cm_np1_le_med_5
+n_frames : tensor([[20]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.2779])
+step => 85
+vid_id : tensor([[497]], dtype=torch.int32)
+vid_name_loader[vid_id] : pour/Bier_richtig_einschenken_pour_u_cm_np1_fr_med_1
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.5209])
+step => 86
+vid_id : tensor([[696]], dtype=torch.int32)
+vid_name_loader[vid_id] : golf/Anna_Rawson_Driver_Practice_golf_f_nm_np1_ri_bad_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6156])
+step => 87
+vid_id : tensor([[349]], dtype=torch.int32)
+vid_name_loader[vid_id] : kick_ball/pepsi_banned_soccer_commercial_kick_ball_f_cm_np1_fr_bad_0
+n_frames : tensor([[20]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.5846])
+step => 88
+vid_id : tensor([[545]], dtype=torch.int32)
+vid_name_loader[vid_id] : pour/Basic_Vodka_Recipes_-_How_to_Make_a_Shirley_Temple_pour_u_cm_np1_fr_med_1
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6886])
+step => 89
+vid_id : tensor([[234]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_bow/Shootingarecurve_shoot_bow_u_nm_np1_fr_med_1
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7081])
+step => 90
+vid_id : tensor([[103]], dtype=torch.int32)
+vid_name_loader[vid_id] : clap/103_years_old_japanese_woman__Nao_is_clapping_with_piano_music_by_beethoven_clap_u_nm_np1_fr_med_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7221])
+step => 91
+vid_id : tensor([[437]], dtype=torch.int32)
+vid_name_loader[vid_id] : climb_stairs/Walking_up_the_stairs_climb_stairs_l_cm_np1_ba_med_2
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.2803])
+step => 92
+vid_id : tensor([[417]], dtype=torch.int32)
+vid_name_loader[vid_id] : climb_stairs/I_DO_NOT_Run_Up_Stairs_Like_A_GIRL_climb_stairs_l_cm_np1_ba_med_5
+n_frames : tensor([[36]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.4813])
+step => 93
+vid_id : tensor([[8]], dtype=torch.int32)
+vid_name_loader[vid_id] : wave/BIG_FISH_wave_u_nm_np1_fr_bad_4
+n_frames : tensor([[32]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.8296])
+step => 94
+vid_id : tensor([[523]], dtype=torch.int32)
+vid_name_loader[vid_id] : pour/Basic_Vodka_Recipes_-_How_to_Make_a_Shirley_Temple_pour_u_cm_np1_fr_med_0
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6234])
+step => 95
 vid_id : tensor([[607]], dtype=torch.int32)
 vid_name_loader[vid_id] : push/Joel_Pushing_Box_push_f_cm_np1_ba_bad_1
 n_frames : tensor([[40]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7039])
-step => 211
-vid_id : tensor([[686]], dtype=torch.int32)
-vid_name_loader[vid_id] : golf/Golfswing_golf_f_cm_np1_fr_goo_0
+ gt_max_overlaps : tensor([0.7052])
+step => 96
+vid_id : tensor([[248]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_bow/6arrowswithin30seconds_shoot_bow_f_nm_np1_fr_med_0
 n_frames : tensor([[40]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6130])
-step => 212
-vid_id : tensor([[152]], dtype=torch.int32)
-vid_name_loader[vid_id] : stand/Panic_in_the_Streets_stand_u_cm_np1_ri_med_2
+ gt_max_overlaps : tensor([0.7394])
+step => 97
+vid_id : tensor([[608]], dtype=torch.int32)
+vid_name_loader[vid_id] : push/pushing_box_around_house_push_f_cm_np1_le_med_2
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7058])
+step => 98
+vid_id : tensor([[162]], dtype=torch.int32)
+vid_name_loader[vid_id] : stand/RushHour2_stand_u_cm_np1_fr_med_11
+n_frames : tensor([[25]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7222])
+step => 99
+vid_id : tensor([[47]], dtype=torch.int32)
+vid_name_loader[vid_id] : sit/AllThePresidentMen_sit_f_nm_np1_ri_med_7
 n_frames : tensor([[27]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6249])
-step => 213
+ gt_max_overlaps : tensor([0.6835])
+step => 100
+vid_id : tensor([[434]], dtype=torch.int32)
+vid_name_loader[vid_id] : climb_stairs/I_DO_NOT_Run_Up_Stairs_Like_A_GIRL_climb_stairs_l_cm_np1_ba_med_1
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.3693])
+step => 101
+vid_id : tensor([[400]], dtype=torch.int32)
+vid_name_loader[vid_id] : climb_stairs/Walking_up_the_stairs_climb_stairs_l_cm_np1_ba_med_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.2721])
+step => 102
+vid_id : tensor([[101]], dtype=torch.int32)
+vid_name_loader[vid_id] : clap/Boom_Snap_Clap_clap_u_nm_np1_fr_med_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7793])
+step => 103
 vid_id : tensor([[878]], dtype=torch.int32)
 vid_name_loader[vid_id] : pick/Yep__I_m_picking_up_trash_today_pick_f_cm_np1_fr_med_1
 n_frames : tensor([[31]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
  gt_max_overlaps : tensor([0.6902])
-step => 214
-vid_id : tensor([[656]], dtype=torch.int32)
-vid_name_loader[vid_id] : jump/prelinger_ControlY1950_jump_f_nm_np1_fr_bad_7
-n_frames : tensor([[24]], device='cuda:0')
+step => 104
+vid_id : tensor([[114]], dtype=torch.int32)
+vid_name_loader[vid_id] : clap/The_Slow_Clap_clap_u_cm_np1_fr_med_4
+n_frames : tensor([[33]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.2737])
-step => 215
+ gt_max_overlaps : tensor([0.6491])
+step => 105
+vid_id : tensor([[111]], dtype=torch.int32)
+vid_name_loader[vid_id] : clap/Budam_-_Clap_Hands_clap_u_nm_np1_fr_med_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7439])
+step => 106
+vid_id : tensor([[703]], dtype=torch.int32)
+vid_name_loader[vid_id] : golf/golf_golf_f_nm_np1_ri_goo_2
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6567])
+step => 107
+vid_id : tensor([[424]], dtype=torch.int32)
+vid_name_loader[vid_id] : climb_stairs/I_DO_NOT_Run_Up_Stairs_Like_A_GIRL_climb_stairs_l_cm_np1_ba_med_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.5977])
+step => 108
+vid_id : tensor([[205]], dtype=torch.int32)
+vid_name_loader[vid_id] : catch/LearnToShootFromTheMaster_catch_f_nm_np1_ba_med_4
+n_frames : tensor([[17]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6407])
+step => 109
+vid_id : tensor([[106]], dtype=torch.int32)
+vid_name_loader[vid_id] : clap/Applauding_Abby_clap_u_nm_np1_fr_med_1
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7095])
+step => 110
+vid_id : tensor([[436]], dtype=torch.int32)
+vid_name_loader[vid_id] : climb_stairs/Stairway_to_fitness_climb_stairs_f_nm_np1_fr_med_1
+n_frames : tensor([[35]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7180])
+step => 111
+vid_id : tensor([[514]], dtype=torch.int32)
+vid_name_loader[vid_id] : pour/Kamikaze_Martini_Coctail_pour_u_nm_np1_fr_med_0
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.4642])
+step => 112
+vid_id : tensor([[352]], dtype=torch.int32)
+vid_name_loader[vid_id] : kick_ball/FIFA_11_Gamescom-Trailer_kick_ball_f_cm_np1_ba_med_4
+n_frames : tensor([[20]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.4219])
+step => 113
 vid_id : tensor([[474]], dtype=torch.int32)
 vid_name_loader[vid_id] : shoot_gun/FirearmsTraining_shoot_gun_u_nm_np1_ri_med_3
 n_frames : tensor([[30]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
  gt_max_overlaps : tensor([0.7363])
-step => 216
-vid_id : tensor([[782]], dtype=torch.int32)
-vid_name_loader[vid_id] : pullup/20_good_form_pullups_pullup_f_nm_np1_ri_goo_2
+step => 114
+vid_id : tensor([[411]], dtype=torch.int32)
+vid_name_loader[vid_id] : climb_stairs/I_DO_NOT_Run_Up_Stairs_Like_A_GIRL_climb_stairs_l_cm_np1_ba_med_4
 n_frames : tensor([[40]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4775])
-step => 217
-vid_id : tensor([[612]], dtype=torch.int32)
-vid_name_loader[vid_id] : push/Alexander_pushing_the_table_push_f_cm_np1_ba_bad_1
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7089])
-step => 218
-vid_id : tensor([[799]], dtype=torch.int32)
-vid_name_loader[vid_id] : pullup/Super_Training_Pull_Ups_pullup_f_cm_np1_ba_med_0
+ gt_max_overlaps : tensor([0.3867])
+step => 115
+vid_id : tensor([[385]], dtype=torch.int32)
+vid_name_loader[vid_id] : walk/LONGESTYARD_walk_f_nm_np1_fr_med_6
 n_frames : tensor([[40]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6768])
-step => 219
-vid_id : tensor([[747]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_ball/JashaunKidsWhoRipAmazingBasketball_shoot_ball_f_cm_np1_le_med_5
+ gt_max_overlaps : tensor([0.6275])
+step => 116
+vid_id : tensor([[916]], dtype=torch.int32)
+vid_name_loader[vid_id] : brush_hair/Brushing_Hair_with_Beth_brush_hair_h_nm_np1_le_goo_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.4579])
+step => 117
+vid_id : tensor([[710]], dtype=torch.int32)
+vid_name_loader[vid_id] : golf/Jeff_Ritter_-_Power_Drill_golf_f_nm_np1_ri_med_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6572])
+step => 118
+vid_id : tensor([[99]], dtype=torch.int32)
+vid_name_loader[vid_id] : clap/Applauding_Abby_clap_u_nm_np1_fr_med_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7101])
+step => 119
+vid_id : tensor([[805]], dtype=torch.int32)
+vid_name_loader[vid_id] : pullup/20_good_form_pullups_pullup_f_nm_np1_ri_goo_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6957])
+step => 120
+vid_id : tensor([[360]], dtype=torch.int32)
+vid_name_loader[vid_id] : walk/EVOLUTION_walk_f_cm_np1_fr_med_23
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6824])
+step => 121
+vid_id : tensor([[922]], dtype=torch.int32)
+vid_name_loader[vid_id] : brush_hair/April_09_brush_hair_u_nm_np1_ba_goo_2
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.8279])
+step => 122
+vid_id : tensor([[616]], dtype=torch.int32)
+vid_name_loader[vid_id] : push/Push_That_Car!_push_f_cm_np1_ri_med_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.2637])
+step => 123
+vid_id : tensor([[394]], dtype=torch.int32)
+vid_name_loader[vid_id] : walk/Prelinger_LetYours1940_walk_f_nm_np1_ba_med_5
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7363])
+step => 124
+vid_id : tensor([[909]], dtype=torch.int32)
+vid_name_loader[vid_id] : pick/NH_gun_owners_react_to_detention_with_armed_litter_pickup_pick_u_cm_np1_ba_med_2
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6035])
+step => 125
+vid_id : tensor([[156]], dtype=torch.int32)
+vid_name_loader[vid_id] : stand/SweeneyTodd_stand_f_cm_np1_le_med_10
+n_frames : tensor([[36]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6332])
+step => 126
+vid_id : tensor([[751]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_ball/ReggieMillerTakesonThreeAverageGuysinaShootout_shoot_ball_u_nm_np1_ba_med_3
 n_frames : tensor([[20]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3369])
-step => 220
-vid_id : tensor([[773]], dtype=torch.int32)
-vid_name_loader[vid_id] : pullup/Super_Training_Pull_Ups_pullup_f_cm_np1_ba_med_1
+ gt_max_overlaps : tensor([0.3116])
+step => 127
+vid_id : tensor([[882]], dtype=torch.int32)
+vid_name_loader[vid_id] : pick/Fishing_For_People_pick_f_cm_np1_ri_med_2
 n_frames : tensor([[40]], device='cuda:0')
 boxes.shape: torch.Size([1, 1, 40, 6])
 tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7387])
-step => 221
-vid_id : tensor([[85]], dtype=torch.int32)
+ gt_max_overlaps : tensor([0.4242])
+step => 128
+vid_id : tensor([[829]], dtype=torch.int32)
+vid_name_loader[vid_id] : swing_baseball/hittingofftee2_swing_baseball_f_nm_np1_fr_med_7
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6555])
+step => 129
+vid_id : tensor([[264]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_bow/6arrowswithin30seconds_shoot_bow_f_nm_np1_fr_med_4
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7508])
+step => 130
+vid_id : tensor([[25]], dtype=torch.int32)
+vid_name_loader[vid_id] : wave/50_FIRST_DATES_wave_u_cm_np1_fr_goo_30
+n_frames : tensor([[36]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7554])
+step => 131
+vid_id : tensor([[886]], dtype=torch.int32)
+vid_name_loader[vid_id] : pick/Fishing_For_People_pick_f_cm_np1_ri_med_5
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6360])
+step => 132
+vid_id : tensor([[546]], dtype=torch.int32)
+vid_name_loader[vid_id] : pour/Drink_@18_-_Apple_martini_pour_u_nm_np1_fr_goo_1
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7748])
+step => 133
+vid_id : tensor([[868]], dtype=torch.int32)
+vid_name_loader[vid_id] : swing_baseball/HowtoswingaBaseballbat_swing_baseball_f_nm_np1_le_bad_0
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.4710])
+step => 134
+vid_id : tensor([[127]], dtype=torch.int32)
+vid_name_loader[vid_id] : stand/Fellowship_4_stand_f_cm_np1_fr_med_3
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6400])
+step => 135
+vid_id : tensor([[252]], dtype=torch.int32)
+vid_name_loader[vid_id] : shoot_bow/Hannahfront23may08_shoot_bow_u_nm_np1_fr_med_1
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.7245])
+step => 136
+vid_id : tensor([[543]], dtype=torch.int32)
+vid_name_loader[vid_id] : pour/Bartender_of_America_Bartending_School_pour_u_cm_np1_fr_med_1
+n_frames : tensor([[30]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.5166])
+step => 137
+vid_id : tensor([[692]], dtype=torch.int32)
+vid_name_loader[vid_id] : golf/Golfswing_golf_f_cm_np1_ri_goo_1
+n_frames : tensor([[40]], device='cuda:0')
+boxes.shape: torch.Size([1, 1, 40, 6])
+tubes.shape : torch.Size([1, 500, 40, 4])
+ gt_max_overlaps : tensor([0.6289])
+step =>

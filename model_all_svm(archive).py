@@ -21,9 +21,7 @@ from ucf_dataset import single_video
 from bbox_transform import bbox_overlaps_connect
 from collections import OrderedDict
 from box_functions import bbox_transform, tube_transform_inv, clip_boxes, tube_overlaps
-
-from nms_3d_whole_video.nms_gpu import nms_gpu
-import time
+from imdetect import scoreTubes
 
 class Model(nn.Module):
     """ 
@@ -37,17 +35,14 @@ class Model(nn.Module):
         self.classes = actions
         self.n_classes = len(actions)
 
-        # self.act_net = ACT_net(actions,sample_duration)
-
         ## general options
         self.sample_duration = sample_duration
         self.sample_size = sample_size
 
         self.step = sample_duration
-        self.p_feat_size  = 64 # 128 # 256 # 512
+        self.p_feat_size = 64 # 128 # 256 # 512
         self.POOLING_SIZE = 7
-        self.nms_thresh   = 0.7
-        self.post_nms_topN = 500
+
         # For connection 
         self.max_num_tubes = conf.MAX_NUMBER_TUBES
         self.connection_thresh = conf.CONNECTION_THRESH
@@ -60,8 +55,6 @@ class Model(nn.Module):
         '''
         TODO describe procedure
         '''
-
-        start = time.time()
 
         clips = clips.squeeze(0)
         ret_n_frames = clips.size(0)
@@ -91,19 +84,9 @@ class Model(nn.Module):
         overlaps_scores = torch.zeros(max_clips, rois_per_image, rois_per_image).type_as(clips)
 
         pos_shape = [rois_per_image for i in range(n_clips)] + [n_clips,2]
-        # print('pos_shape :',pos_shape)
-        # print('max_clips:',max_clips)
-        # print('n_clips :',n_clips)
-        # pos = torch.zeros(pos_shape).type_as(clips) -1
-        # range_list = list(range(n_clips+2))
-        # print('range_list :',range_list)
 
         f_tubes = []
 
-        # #
-        # overlaps_scores = torch.zeros(n_clips, rois_per_image, rois_per_image).type_as(overlaps_scores)
-
-        
         if self.training:
             
             f_gt_tubes = torch.zeros(n_clips,num_actions,self.sample_duration*4) # gt_tubes
@@ -118,12 +101,9 @@ class Model(nn.Module):
 
         ## Init connect thresh
         self.calc.thresh = self.connection_thresh
-        # print('n_clips :',n_clips)
-        init_time = time.time()
-        print('init_sec :',init_time - start)
-        tpn_time = init_time
+
         for step, dt in enumerate(data_loader):
-            before_time = tpn_time
+
             # if step == 1:
             #     break
             # print('\tstep :',step)
@@ -150,15 +130,12 @@ class Model(nn.Module):
                                                             None,
                                                             box_,
                                                             start_fr)
-            tpn_time = time.time()
-            # print('tubes.device :',tubes.device)
-            # print('pooled_feat.device :',pooled_feat.device)
-            # print('sgl_rois_bbox_pred.device :',sgl_rois_bbox_pred.device)
-            print('tpn_time :',tpn_time-before_time)
+
             pooled_feat = pooled_feat.view(-1,rois_per_image,self.p_feat_size,self.sample_duration, self.POOLING_SIZE, self.POOLING_SIZE)
 
             # # regression
             n_tubes = len(tubes)
+
             if not self.training:
                 tubes = tubes.view(-1, self.sample_duration*4+2)
                 tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
@@ -189,48 +166,20 @@ class Model(nn.Module):
             for i in range(idx_s, idx_e):
                 if i == 0:
 
-                    # pos = torch.zeros(rois_per_image,2).int()
-                    # offset = torch.arange(0,rois_per_image).int()
-                    # pos[:,1] =offset
-
                     continue
 
                 # calculate overlaps
-                # overlaps_ = tube_overlaps(p_tubes[i-1,:,6*4:],p_tubes[i,:,:2*4]).type_as(p_tubes)  #
                 overlaps_ = tube_overlaps(p_tubes[i-1,:,-1*4:],p_tubes[i,:,:1*4]).type_as(p_tubes)  #
                 overlaps_scores[i-1] = overlaps_
 
-                # pos = pos.unsqueeze(-2).expand(pos.size(0),rois_per_image,i*2)
-
-                # new_pos = pos.new(rois_per_image,2).zero_()
-                # new_pos[:,0] = i
-                # new_pos[:,1] = offset
-                # new_pos = new_pos.unsqueeze(0).expand(pos.size(0),rois_per_image,2)
-
-                # pos = torch.cat((pos,new_pos), dim=-1)
-                # pos = pos.view(-1, (i+1)*2)
-            calc_time = time.time()
-            print('calc_time :',calc_time-tpn_time)
-        
-        # after passing all video clips, calculate scores
-        # pos = pos.contiguous().view(pos_shape)
-        # print('pos.shape :',pos.shape)
-        # print('pos.view(-1,rois_per_image*2)[134] :',pos.view(-1,n_clips*2).shape)
-        conn_start = time.time()
+        # calculate 500 best tubes
         pos, scores = self.calc(torch.Tensor([n_clips]),torch.Tensor([rois_per_image]),
                                 actioness_score, overlaps_scores)
-
+        
         pos = pos.view(-1,n_clips,2)
 
-        final_tubes = torch.zeros(pos.size(0), num_frames, 4).type_as(scores)
+        final_tubes = torch.zeros(pos.size(0), num_frames, 4)
         f_tubes  = []
-
-        connect_time = time.time()
-        print('connect_time :',connect_time-conn_start)
-        
-        print('pos.shape :',pos)
-        print('pos.shape :',pos.shape)
-        exit(-1)
 
         for i in range(pos.size(0)):
 
@@ -251,12 +200,11 @@ class Model(nn.Module):
                                                              final_tubes[i,start_fr:end_fr].type_as(curr_frames))
 
             f_tubes.append(tub)
-        translate_time = time.time()
-        print('translate_time :',translate_time- connect_time)
 
         ###################################################
         #          Choose gth Tubes for RCNN\TCN          #
         ###################################################
+
         if self.training:
 
             boxes_ = boxes.permute(1,0,2).contiguous()
@@ -285,15 +233,18 @@ class Model(nn.Module):
                     bg_tubes_indices_picked = (torch.rand(2)*bg_tubes_indices.size(0)).long()
                     bg_tubes_list = [f_tubes[i] for i in bg_tubes_indices[bg_tubes_indices_picked]]
                     bg_labels = torch.zeros(len(bg_tubes_list))
+                    bg_tubes = torch.cat([final_tubes[i] for i in bg_tubes_indices[bg_tubes_indices_picked]])
                 else:
                     bg_tubes_list = []
                     bg_labels = torch.Tensor([])
+                    bg_tubes = torch.Tensor([])
+                                        
             else:
                 bg_tubes_list = []
                 bg_labels = torch.Tensor([])
+                bg_tubes = torch.Tensor([])
 
             gt_tubes_list = [[] for i in range(num_actions)]
-
 
             for i in range(n_clips):
 
@@ -303,15 +254,17 @@ class Model(nn.Module):
                 for j in range(num_actions):
                     if max_overlaps[j] > 0.9: 
                         gt_tubes_list[j].append((i,j))
+
             gt_tubes_list = [i for i in gt_tubes_list if i != []]
 
             if len(gt_tubes_list) != num_actions:
                 print('len(gt_tubes_list :', len(gt_tubes_list))
                 print('num_actions :',num_actions)
                 print('boxes.cpu().numpy() :',boxes.cpu().numpy())
-                
 
-            # print('gt_tubes_list :',gt_tubes_list)
+            boxes_ = boxes.permute(1,0,2).contiguous()
+            boxes_ = boxes_[:,:,:4].contiguous().view(num_actions,num_frames,4)
+
             ## concate fb, bg tubes
             if gt_tubes_list == [[]]:
                 print('overlaps :',overlaps)
@@ -319,15 +272,17 @@ class Model(nn.Module):
                 print('p_tubes :',p_tubes)
                 print('f_gt_tubes :',f_gt_tubes)
                 exit(-1)
+
             if bg_tubes_list != []:
                 f_tubes = gt_tubes_list + bg_tubes_list
                 target_lbl = torch.cat([labels, bg_labels],dim=0)
+                tubes_ret = torch.cat([boxes_.type_as(bg_tubes), bg_tubes], dim=0)
             else:
                 f_tubes = gt_tubes_list
                 target_lbl = labels
-        background_time = time.time()
-        print('background_time :',background_time- translate_time)
-        print('num_frames :',num_frames)
+                tubes_ret = boxes_
+
+        # print('num_frames :',num_frames)
         # print('gt_tubes_list :',gt_tubes_list, ' labels :',labels)
         # print('f_tubes :',f_tubes, ' target_lbl :',target_lbl)    
         ##############################################
@@ -348,33 +303,18 @@ class Model(nn.Module):
         for i in range(len(f_tubes)):
 
             seq = f_tubes[i]
-            feats = torch.Tensor(len(seq),self.p_feat_size,self.sample_duration, self.POOLING_SIZE,self.POOLING_SIZE)
+            feats = torch.Tensor(5,self.p_feat_size,self.sample_duration, self.POOLING_SIZE,self.POOLING_SIZE)
+            # feats = torch.Tensor(5,self.p_feat_size, self.POOLING_SIZE,self.POOLING_SIZE)
             
             for j in range(len(seq)):
+                # feats[j] = features[seq[j][0],seq[j][1]].mean(1)
                 feats[j] = features[seq[j][0],seq[j][1]]
 
-            if mode == 'extract':
-                final_feats.append(torch.mean(feats,dim=0))
+            # final_feats.append(torch.mean(feats, dim=0))
+            final_feats.append(feats.max(0)[0])
+            # feats = torch.mean(feats, dim=0)
 
-            feats = torch.mean(feats, dim=0)
-
-            try:
-
-                prob_out[i] = self.act_rnn(feats.view(-1).cuda())
-
-            except Exception as e:
-
-                print('feats.shape :',feats.shape)
-                print('seq :',seq)
-                for i in range(len(f_tubes)):
-                    print('seq[i] :',f_tubes[i])
-                    
-                print('e :',e)
-                exit(-1)
-            if prob_out[i,0] != prob_out[i,0]:
-                print(' prob_out :', prob_out ,' feats :',feats.cpu().numpy(), ' numpy(), feats.shape  :,', feats.shape ,' target_lbl :',target_lbl, \
-                      ' \ntmp_tube :',tmp_tube, )
-                exit(-1)
+        final_feats = torch.stack(final_feats)
 
         if mode == 'extract':
             # now we use mean so we can have a tensor containing all features
@@ -389,19 +329,21 @@ class Model(nn.Module):
         # ##########################################
 
         cls_loss = torch.Tensor([0]).cuda()
-
-        final_tubes = final_tubes.type_as(pos)
-        # # classification probability
+        # print('final_feats.shape :',final_feats.shape)
+        # print('final_feats.view(final_feats.size(0), -1).shape :',final_feats.view(final_feats.size(0), -1).shape)
+        # print('self.svmWeights.shape :',self.svmWeights.shape)
+        scores = scoreTubes(final_feats.view(final_feats.size(0),-1).contiguous(),\
+                            self.svmWeights.type_as(final_feats), self.svmBias.type_as(final_feats),\
+                            self.svmFeatScale.type_as(final_feats), decisionThreshold=0.5)
 
         if self.training:
 
-            rest_time = time.time()
-            print('rest_time :',rest_time - background_time)
-            cls_loss = F.cross_entropy(prob_out.cpu(), target_lbl.long()).cuda()
             return None, None,  cls_loss, 
 
         else:
-            prob_out = F.softmax(prob_out)
+            # prob_out = F.softmax(prob_)
+            prob_out = scores
+
 
             # init padding tubes because of multi-GPU system
             if final_tubes.size(0) > conf.UPDATE_THRESH:
@@ -455,43 +397,14 @@ class Model(nn.Module):
         # load lstm
         if rnn_path != None:
 
-            # act_rnn = Act_RNN(self.p_feat_size,int(self.p_feat_size/2),self.n_classes)
-            # act_rnn_data = torch.load(rnn_path)
-            # act_rnn.load(act_rnn_data)
-
-            
-            act_rnn = nn.Sequential(
-                # nn.Linear(self.p_feat_size*self.sample_duration*self.POOLING_SIZE*self.POOLING_SIZE, 256),
-                # nn.ReLU(True),
-                # nn.Dropout(0.8),
-                # nn.Linear(256,self.n_classes),
-                # # nn.Linear(64*self.sample_duration, self.n_classes),
-                # # nn.ReLU(True),
-                # # nn.Dropout(0.8),
-                # # nn.Linear(256,self.n_classes),
-                nn.Linear(self.p_feat_size*self.sample_duration*self.POOLING_SIZE*self.POOLING_SIZE, self.n_classes),
-
-            )
-            act_rnn_data = torch.load(rnn_path)
-            print('act_rnn_data :',act_rnn_data.keys())
-            act_rnn.load_state_dict(act_rnn_data)
-            self.act_rnn = act_rnn
+            self.svmWeights = torch.from_numpy(np.loadtxt(os.path.join(rnn_path,'svmWeights.txt')))
+            self.svmBias = torch.from_numpy(np.loadtxt(os.path.join(rnn_path,'svmBias.txt')))
+            self.svmFeatScale = torch.from_numpy(np.loadtxt(os.path.join(rnn_path,'svmFeatScale.txt')))
 
         else:
+ 
+            self.svmWeights = torch.rand(self.n_classes, self.p_feat_size*self.sample_duration*self.POOLING_SIZE*self.POOLING_SIZE)
+            # self.svmWeights = torch.rand(self.n_classes, 5*self.p_feat_size*self.POOLING_SIZE*self.POOLING_SIZE)
+            self.svmBias = torch.rand(self.n_classes)
+            self.svmFeatScale = torch.rand(1)
 
-            # self.act_rnn =Act_RNN(self.p_feat_size,int(self.p_feat_size/2),self.n_classes)
-            self.act_rnn = nn.Sequential(
-                # nn.Linear(self.p_feat_size*self.sample_duration*self.POOLING_SIZE*self.POOLING_SIZE, 256),
-                # nn.ReLU(True),
-                # nn.Dropout(0.8),
-                # nn.Linear(256,self.n_classes),
-
-                # nn.Linear(64*self.sample_duration, self.n_classes),
-                # # nn.ReLU(True),
-                # # nn.Dropout(0.8),
-                # # nn.Linear(256,self.n_classes),
-                nn.Linear(self.p_feat_size*self.sample_duration*self.POOLING_SIZE*self.POOLING_SIZE, self.n_classes),
-            )
-            for m in self.act_rnn.modules():
-                if m == nn.Linear:
-                    m.weight.data.normal_().fmod_(2).mul_(stddev).add_(mean) # not a perfect approximation

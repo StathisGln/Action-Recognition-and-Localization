@@ -11,11 +11,11 @@ import pdb
 def nms_gpu(dets, thresh):
 
         # dets = dets.contiguous()
-        print('dets.shape :',dets.shape)
-        exit(-1)
+
+        n_frames = dets.size(-1) // 4
         keep = dets.new(dets.size(0), 1).zero_().int()
         num_out = dets.new(1).zero_().int()
-        nms.nms_cuda(keep, dets, num_out, thresh)
+        nms.nms_cuda(keep, dets, num_out, thresh, n_frames)
         keep = keep[:num_out[0]]
 
         return keep
