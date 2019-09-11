@@ -14,7 +14,7 @@ from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
 from model_all import Model
-
+# from model import Model
 from create_video_id import get_vid_dict
 from resize_rpn import resize_rpn, resize_tube
 import pdb
@@ -117,5 +117,5 @@ if __name__ == '__main__':
 
     print('**********VGIKE**********')
     print('rois.shape :',tubes.shape)
-    print('rois :',tubes)
+    # print('rois :',tubes)
 

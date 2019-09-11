@@ -365,7 +365,8 @@ if __name__ == '__main__':
     split_txt_path = '../UCF101_Action_detection_splits/'
 
     sample_size = 112
-    sample_duration = 16  # len(images)
+    sample_duration = 8  # len(images)
+    # sample_duration = 16  # len(images)
 
     n_devs = torch.cuda.device_count()
     # # get mean
@@ -391,63 +392,64 @@ if __name__ == '__main__':
 
     n_classes = len(actions)
 
-    # ###################################################
-    # #          Part 1-1 - extract features -          #
-    # ###################################################
+    ###################################################
+    #          Part 1-1 - extract features -          #
+    ###################################################
 
-    # print(' ----------------------------------------')
-    # print('|          - extract features -          |')
-    # print(' ----------------------------------------')
+    print(' ----------------------------------------')
+    print('|          - extract features -          |')
+    print(' ----------------------------------------')
 
-    # action_model_path = './action_net_model_16frm_64_avgpool.pwf'
+    action_model_path = './action_net_model_8frm_conf_ucf.pwf'
 
-    # # Init whole model
-    # model = Model(actions, sample_duration, sample_size)
-    # model.load_part_model(action_model_path=action_model_path)
+    # Init whole model
+    model = Model(actions, sample_duration, sample_size)
+    model.load_part_model(action_model_path=action_model_path)
 
-    # if torch.cuda.device_count() > 1:
-    #     print('Using {} GPUs!'.format(torch.cuda.device_count()))
-    #     model = nn.DataParallel(model)
-    # model.to(device)
+    if torch.cuda.device_count() > 1:
+        print('Using {} GPUs!'.format(torch.cuda.device_count()))
+        model = nn.DataParallel(model)
+    model.to(device)
 
-    # batch_size = 1
-    # vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train')
-    # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
-    #                                           shuffle=True, num_workers=32, pin_memory=True)
-    # out_path = '../UCF-101-features'
-    # mode = 'extract'
-    # for step, data  in enumerate(data_loader):
+    batch_size = 1
+    vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train')
+    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
+                                              shuffle=True, num_workers=32, pin_memory=True)
+    out_path = 'UCF-101-features'
+    mode = 'extract'
+    for step, data  in enumerate(data_loader):
 
-    #     # if step == 2:
-    #     #     break
-    #     print('step =>',step)
-    #     # clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
-    #     vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
+        # if step == 2:
+        #     break
+        print('step =>',step)
+        # clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
+        vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
 
-    #     if not(os.path.exists(os.path.join(out_path, vid_names[vid_id]))):
-    #         os.makedirs(os.path.join(out_path, vid_names[vid_id]))
+        if not(os.path.exists(os.path.join(out_path, vid_names[vid_id]))):
+            os.makedirs(os.path.join(out_path, vid_names[vid_id]))
 
-    #     vid_id = vid_id.to(device)
-    #     clips_ = clips.to(device)
-    #     boxes  = boxes.to(device)
-    #     n_frames = n_frames.to(device)
-    #     n_actions = n_actions.int().to(device)
-    #     im_info = torch.stack([h,w],dim=1).to(device)
+        vid_id = vid_id.to(device)
+        clips = clips.to(device)
+        boxes  = boxes.to(device)
+        n_frames = n_frames.to(device)
+        n_actions = n_actions.int().to(device)
+        im_info = torch.stack([h,w],dim=1).to(device)
 
-    #     inputs = Variable(clips_)
-
-    #     feats, labels, tube_len =  model(n_devs, dataset_frames, \
-    #                                 vid_names, clips, vid_id,  \
-    #                                 boxes, \
-    #                                 mode, cls2idx, n_actions, n_frames, h, w)
-    #     print('feats.shape :',feats.shape)
-    #     print('labels :',labels)
-    #     print('tube_len :',tube_len)
-
-    #     torch.save(feats, os.path.join(out_path, vid_names[vid_id], 'feats.pt'))
-    #     torch.save(labels, os.path.join(out_path, vid_names[vid_id], 'labels.pt'))
-    #     torch.save(tube_len, os.path.join(out_path, vid_names[vid_id], 'tube_len.pt'))
-    # exit(-1)
+        print('n_frames :',n_frames)
+        feats, tubes, labels, tube_len =  model(n_devs, dataset_frames, \
+                                                vid_names, clips, vid_id,  \
+                                                boxes, \
+                                                mode, cls2idx, n_actions, n_frames, h, w)
+        print('feats.shape :',feats.shape)
+        print('labels :',labels)
+        print('tube_len :',tube_len)
+        print('tubes :',tubes.shape)
+        
+        torch.save(feats, os.path.join(out_path, vid_names[vid_id], 'feats.pt'))
+        torch.save(labels, os.path.join(out_path, vid_names[vid_id], 'labels.pt'))
+        torch.save(tube_len, os.path.join(out_path, vid_names[vid_id], 'tube_len.pt'))
+        torch.save(tubes, os.path.join(out_path, vid_names[vid_id], 'tubes.pt'))
+    exit(-1)
 
     print(' ---------------------------------')
     print('|          - train RNN -          |')

@@ -41,6 +41,16 @@ class _ProposalLayer(nn.Module):
         super(_ProposalLayer, self).__init__()
 
         self.sample_duration = time_dim[0]
+
+        print('sample_duration :',self.sample_duration)
+
+        if self.sample_duration == 16:
+            from nms_3d.nms_gpu import nms_gpu
+        elif self.sample_duration == 8:
+            from nms_8fr_3d.nms_gpu import nms_gpu
+        else:
+            from nms_4fr_3d.nms_gpu import nms_gpu
+
         self.time_dim = time_dim
         self.scales = scales
         self.ratios = ratios

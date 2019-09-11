@@ -50,7 +50,8 @@ class _Regression_Layer(nn.Module):
         batch_size = rois.size(0)
         rois_per_image = rois.size(1)
 
-        base_feat = F.normalize(base_feat, p=2, dim=1)
+        base_feat_ = base_feat.contiguous()
+        base_feat  = F.normalize(base_feat, p=2, dim=1)
 
         offset = torch.arange(0,self.sample_duration).type_as(rois).unsqueeze(0).expand(batch_size,self.sample_duration)
         offset_batch = torch.arange(0,batch_size).type_as(rois) * self.sample_duration
@@ -64,14 +65,23 @@ class _Regression_Layer(nn.Module):
         
         rois = rois.permute(0,2,1,3).contiguous()
 
-        base_feat = base_feat.permute(0,2,1,3,4).contiguous().view(-1,base_feat.size(1),base_feat.size(3),base_feat.size(4))
+        base_feat  = base_feat.permute(0,2,1,3,4).contiguous().view(-1,base_feat.size(1),base_feat.size(3),base_feat.size(4))
+        base_feat_ = base_feat_.permute(0,2,1,3,4).contiguous().view(-1,base_feat_.size(1),base_feat_.size(3),base_feat_.size(4))
 
-        base_feat = self.roi_align(base_feat, rois.view(-1,5))
-        base_feat = base_feat.view(batch_size, self.sample_duration, rois_per_image,base_feat.size(1),base_feat.size(2),base_feat.size(3)).\
+        base_feat  = self.roi_align(base_feat, rois.view(-1,5))
+        base_feat_ = self.roi_align(base_feat_, rois.view(-1,5))
+
+        base_feat  = base_feat.view(batch_size, self.sample_duration, rois_per_image,base_feat.size(1),base_feat.size(2),base_feat.size(3)).\
+                    contiguous()
+        base_feat_ = base_feat_.view(batch_size, self.sample_duration, rois_per_image,base_feat_.size(1),base_feat_.size(2),base_feat_.size(3)).\
                     contiguous()
 
-        base_feat = base_feat.permute(0,2,3,1,4,5).contiguous().view(batch_size*rois_per_image, base_feat.size(3),\
+
+        base_feat  = base_feat.permute(0,2,3,1,4,5).contiguous().view(batch_size*rois_per_image, base_feat.size(3),\
                                                                       self.sample_duration, base_feat.size(4),base_feat.size(5))
+        base_feat_ = base_feat_.permute(0,2,3,1,4,5).contiguous().view(batch_size*rois_per_image, base_feat_.size(3),\
+                                                                      self.sample_duration, base_feat_.size(4),base_feat_.size(5))
+
         
         conv1_feats = self.Conv(base_feat)
         conv1_feats = self.avg_pool(conv1_feats)

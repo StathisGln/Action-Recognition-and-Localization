@@ -12,7 +12,7 @@ class Calculator(Function):
         self.k = k
         self.update_thresh = update_thresh
         self.thresh = thresh
-        self.n_ret_tubes = 500
+        self.n_ret_tubes = 6000
 
     def forward(self, N, K, actioness_scr, overlaps_scr): 
 
@@ -33,9 +33,11 @@ class Calculator(Function):
             top_tubes_score,top_tubes_idx = torch.topk(tube_scores, self.n_ret_tubes)
 
         ret_pos = actioness_scr.new(self.n_ret_tubes,N,2).int().zero_()
+        ret_scores = actioness_scr.new(self.n_ret_tubes).zero_()
 
         for i in range(top_tubes_idx.size(0)):
 
+            ret_scores[i] = top_tubes_score[i]
             tmp_K = 1
 
             for j in range(N-1,-1,-1):
@@ -43,7 +45,7 @@ class Calculator(Function):
                 ret_pos[i,j,1]=(top_tubes_idx[i]//tmp_K)%K
                 tmp_K *= K
 
-        return ret_pos,top_tubes_score
+        return ret_pos,ret_scores
         
 # if __name__ == '__main__':
     

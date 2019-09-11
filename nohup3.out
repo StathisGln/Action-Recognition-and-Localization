@@ -1,0 +1,5222 @@
+nohup: ignoring input
+Device being used: cuda:0
+ ----------------------------------------
+|          - extract features -          |
+ ----------------------------------------
+sample_duration : 8
+Loading pretrained weights from ../resnet-34-kinetics.pth
+2284
+max_frames : 641
+step => 0
+n_frames : tensor([[127]], device='cuda:0')
+feats.shape : torch.Size([3, 16, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [ 2.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 127, 4])
+step => 1
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [22.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 2
+n_frames : tensor([[106]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [4.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 106, 4])
+step => 3
+n_frames : tensor([[123]], device='cuda:0')
+feats.shape : torch.Size([4, 16, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [16.],
+        [ 2.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([4, 123, 4])
+step => 4
+n_frames : tensor([[94]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 94, 4])
+step => 5
+n_frames : tensor([[91]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([1., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [6.],
+        [7.]], device='cuda:0')
+tubes : torch.Size([3, 91, 4])
+step => 6
+n_frames : tensor([[79]], device='cuda:0')
+feats.shape : torch.Size([3, 8, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[8.],
+        [2.],
+        [6.]], device='cuda:0')
+tubes : torch.Size([3, 79, 4])
+step => 7
+n_frames : tensor([[200]], device='cuda:0')
+feats.shape : torch.Size([3, 18, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [ 8.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 200, 4])
+step => 8
+n_frames : tensor([[126]], device='cuda:0')
+feats.shape : torch.Size([3, 8, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [7.],
+        [8.]], device='cuda:0')
+tubes : torch.Size([3, 126, 4])
+step => 9
+n_frames : tensor([[236]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [23.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 236, 4])
+step => 10
+n_frames : tensor([[300]], device='cuda:0')
+feats.shape : torch.Size([3, 38, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[38.],
+        [28.],
+        [19.]], device='cuda:0')
+tubes : torch.Size([3, 300, 4])
+step => 11
+n_frames : tensor([[229]], device='cuda:0')
+feats.shape : torch.Size([3, 29, 64, 8, 7, 7])
+labels : tensor([22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[29.],
+        [ 8.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 229, 4])
+step => 12
+n_frames : tensor([[149]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [10.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([3, 149, 4])
+step => 13
+n_frames : tensor([[251]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [25.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 251, 4])
+step => 14
+n_frames : tensor([[210]], device='cuda:0')
+feats.shape : torch.Size([3, 15, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[15.],
+        [10.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 210, 4])
+step => 15
+n_frames : tensor([[113]], device='cuda:0')
+feats.shape : torch.Size([4, 14, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [14.],
+        [ 9.],
+        [11.]], device='cuda:0')
+tubes : torch.Size([4, 113, 4])
+step => 16
+n_frames : tensor([[173]], device='cuda:0')
+feats.shape : torch.Size([4, 5, 64, 8, 7, 7])
+labels : tensor([21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([4, 173, 4])
+step => 17
+n_frames : tensor([[254]], device='cuda:0')
+feats.shape : torch.Size([4, 32, 64, 8, 7, 7])
+labels : tensor([11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[32.],
+        [32.],
+        [21.],
+        [29.]], device='cuda:0')
+tubes : torch.Size([4, 254, 4])
+step => 18
+n_frames : tensor([[168]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [3.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 168, 4])
+step => 19
+n_frames : tensor([[72]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 72, 4])
+step => 20
+n_frames : tensor([[153]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [11.],
+        [11.]], device='cuda:0')
+tubes : torch.Size([3, 153, 4])
+step => 21
+n_frames : tensor([[94]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [2.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 94, 4])
+step => 22
+n_frames : tensor([[70]], device='cuda:0')
+feats.shape : torch.Size([3, 9, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [9.],
+        [6.]], device='cuda:0')
+tubes : torch.Size([3, 70, 4])
+step => 23
+n_frames : tensor([[206]], device='cuda:0')
+feats.shape : torch.Size([3, 26, 64, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[26.],
+        [ 2.],
+        [15.]], device='cuda:0')
+tubes : torch.Size([3, 206, 4])
+step => 24
+n_frames : tensor([[360]], device='cuda:0')
+feats.shape : torch.Size([3, 45, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[45.],
+        [18.],
+        [35.]], device='cuda:0')
+tubes : torch.Size([3, 360, 4])
+step => 25
+n_frames : tensor([[177]], device='cuda:0')
+feats.shape : torch.Size([3, 22, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[22.],
+        [10.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([3, 177, 4])
+step => 26
+n_frames : tensor([[219]], device='cuda:0')
+feats.shape : torch.Size([3, 28, 64, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[28.],
+        [ 5.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 219, 4])
+step => 27
+n_frames : tensor([[349]], device='cuda:0')
+feats.shape : torch.Size([3, 44, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[44.],
+        [ 8.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 349, 4])
+step => 28
+n_frames : tensor([[180]], device='cuda:0')
+feats.shape : torch.Size([4, 23, 64, 8, 7, 7])
+labels : tensor([22., 22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[10.],
+        [23.],
+        [19.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([4, 180, 4])
+step => 29
+n_frames : tensor([[72]], device='cuda:0')
+feats.shape : torch.Size([3, 8, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[8.],
+        [6.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 72, 4])
+step => 30
+n_frames : tensor([[251]], device='cuda:0')
+feats.shape : torch.Size([3, 32, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[32.],
+        [ 5.],
+        [12.]], device='cuda:0')
+tubes : torch.Size([3, 251, 4])
+step => 31
+n_frames : tensor([[131]], device='cuda:0')
+feats.shape : torch.Size([3, 17, 64, 8, 7, 7])
+labels : tensor([22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[17.],
+        [ 6.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 131, 4])
+step => 32
+n_frames : tensor([[248]], device='cuda:0')
+feats.shape : torch.Size([3, 31, 64, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[31.],
+        [30.],
+        [19.]], device='cuda:0')
+tubes : torch.Size([3, 248, 4])
+step => 33
+n_frames : tensor([[72]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [2.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 72, 4])
+step => 34
+n_frames : tensor([[69]], device='cuda:0')
+feats.shape : torch.Size([3, 8, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [2.],
+        [8.]], device='cuda:0')
+tubes : torch.Size([3, 69, 4])
+step => 35
+n_frames : tensor([[93]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [4.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 93, 4])
+step => 36
+n_frames : tensor([[84]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 84, 4])
+step => 37
+n_frames : tensor([[124]], device='cuda:0')
+feats.shape : torch.Size([4, 16, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [16.],
+        [ 6.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([4, 124, 4])
+step => 38
+n_frames : tensor([[70]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [5.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 70, 4])
+step => 39
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 15, 64, 8, 7, 7])
+labels : tensor([22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[15.],
+        [ 5.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 40
+n_frames : tensor([[153]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [ 2.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 153, 4])
+step => 41
+n_frames : tensor([[77]], device='cuda:0')
+feats.shape : torch.Size([3, 10, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[10.],
+        [ 2.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([3, 77, 4])
+step => 42
+n_frames : tensor([[134]], device='cuda:0')
+feats.shape : torch.Size([3, 12, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [ 8.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([3, 134, 4])
+step => 43
+n_frames : tensor([[108]], device='cuda:0')
+feats.shape : torch.Size([3, 8, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [8.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 108, 4])
+step => 44
+n_frames : tensor([[134]], device='cuda:0')
+feats.shape : torch.Size([4, 17, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[17.],
+        [17.],
+        [ 7.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([4, 134, 4])
+step => 45
+n_frames : tensor([[125]], device='cuda:0')
+feats.shape : torch.Size([4, 16, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [16.],
+        [ 3.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([4, 125, 4])
+step => 46
+n_frames : tensor([[95]], device='cuda:0')
+feats.shape : torch.Size([3, 12, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[11.],
+        [12.],
+        [12.]], device='cuda:0')
+tubes : torch.Size([3, 95, 4])
+step => 47
+n_frames : tensor([[106]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [2.],
+        [6.]], device='cuda:0')
+tubes : torch.Size([3, 106, 4])
+step => 48
+n_frames : tensor([[115]], device='cuda:0')
+feats.shape : torch.Size([3, 14, 64, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [10.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([3, 115, 4])
+step => 49
+n_frames : tensor([[159]], device='cuda:0')
+feats.shape : torch.Size([3, 20, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[20.],
+        [11.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 159, 4])
+step => 50
+n_frames : tensor([[145]], device='cuda:0')
+feats.shape : torch.Size([4, 18, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [18.],
+        [ 3.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([4, 145, 4])
+step => 51
+n_frames : tensor([[210]], device='cuda:0')
+feats.shape : torch.Size([3, 27, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[27.],
+        [20.],
+        [16.]], device='cuda:0')
+tubes : torch.Size([3, 210, 4])
+step => 52
+n_frames : tensor([[142]], device='cuda:0')
+feats.shape : torch.Size([4, 8, 64, 8, 7, 7])
+labels : tensor([20., 20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[8.],
+        [2.],
+        [3.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([4, 142, 4])
+step => 53
+n_frames : tensor([[109]], device='cuda:0')
+feats.shape : torch.Size([3, 14, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [12.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 109, 4])
+step => 54
+n_frames : tensor([[120]], device='cuda:0')
+feats.shape : torch.Size([3, 14, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [ 4.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 120, 4])
+step => 55
+n_frames : tensor([[180]], device='cuda:0')
+feats.shape : torch.Size([3, 23, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[23.],
+        [ 5.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([3, 180, 4])
+step => 56
+n_frames : tensor([[167]], device='cuda:0')
+feats.shape : torch.Size([7, 16, 64, 8, 7, 7])
+labels : tensor([15., 15., 15., 15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[15.],
+        [ 2.],
+        [ 3.],
+        [ 3.],
+        [16.],
+        [ 7.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([7, 167, 4])
+step => 57
+n_frames : tensor([[300]], device='cuda:0')
+feats.shape : torch.Size([4, 7, 64, 8, 7, 7])
+labels : tensor([1., 1., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [7.],
+        [2.],
+        [7.]], device='cuda:0')
+tubes : torch.Size([4, 300, 4])
+step => 58
+n_frames : tensor([[260]], device='cuda:0')
+feats.shape : torch.Size([4, 33, 64, 8, 7, 7])
+labels : tensor([11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[33.],
+        [33.],
+        [ 6.],
+        [12.]], device='cuda:0')
+tubes : torch.Size([4, 260, 4])
+step => 59
+n_frames : tensor([[142]], device='cuda:0')
+feats.shape : torch.Size([4, 18, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [18.],
+        [ 5.],
+        [13.]], device='cuda:0')
+tubes : torch.Size([4, 142, 4])
+step => 60
+n_frames : tensor([[192]], device='cuda:0')
+feats.shape : torch.Size([4, 6, 64, 8, 7, 7])
+labels : tensor([20., 20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [2.],
+        [6.],
+        [6.]], device='cuda:0')
+tubes : torch.Size([4, 192, 4])
+step => 61
+n_frames : tensor([[156]], device='cuda:0')
+feats.shape : torch.Size([3, 20, 64, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[20.],
+        [ 5.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 156, 4])
+step => 62
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [10.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 63
+n_frames : tensor([[251]], device='cuda:0')
+feats.shape : torch.Size([3, 32, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[32.],
+        [14.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 251, 4])
+step => 64
+n_frames : tensor([[180]], device='cuda:0')
+feats.shape : torch.Size([3, 9, 64, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [9.],
+        [7.]], device='cuda:0')
+tubes : torch.Size([3, 180, 4])
+step => 65
+n_frames : tensor([[111]], device='cuda:0')
+feats.shape : torch.Size([3, 14, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [ 9.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 111, 4])
+step => 66
+n_frames : tensor([[251]], device='cuda:0')
+feats.shape : torch.Size([3, 32, 64, 8, 7, 7])
+labels : tensor([11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[32.],
+        [10.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 251, 4])
+step => 67
+n_frames : tensor([[88]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([1., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [6.],
+        [6.]], device='cuda:0')
+tubes : torch.Size([3, 88, 4])
+step => 68
+n_frames : tensor([[168]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [12.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 168, 4])
+step => 69
+n_frames : tensor([[144]], device='cuda:0')
+feats.shape : torch.Size([4, 18, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [18.],
+        [ 8.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([4, 144, 4])
+step => 70
+n_frames : tensor([[170]], device='cuda:0')
+feats.shape : torch.Size([3, 22, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[22.],
+        [11.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 170, 4])
+step => 71
+n_frames : tensor([[180]], device='cuda:0')
+feats.shape : torch.Size([3, 23, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[23.],
+        [ 8.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 180, 4])
+step => 72
+n_frames : tensor([[84]], device='cuda:0')
+feats.shape : torch.Size([3, 11, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[ 8.],
+        [11.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 84, 4])
+step => 73
+n_frames : tensor([[95]], device='cuda:0')
+feats.shape : torch.Size([3, 8, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[8.],
+        [3.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 95, 4])
+step => 74
+n_frames : tensor([[144]], device='cuda:0')
+feats.shape : torch.Size([4, 18, 64, 8, 7, 7])
+labels : tensor([22., 22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [18.],
+        [13.],
+        [18.]], device='cuda:0')
+tubes : torch.Size([4, 144, 4])
+step => 75
+n_frames : tensor([[199]], device='cuda:0')
+feats.shape : torch.Size([7, 25, 64, 8, 7, 7])
+labels : tensor([3., 3., 3., 3., 3., 0., 0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [ 5.],
+        [ 9.],
+        [14.],
+        [ 6.],
+        [ 3.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([7, 199, 4])
+step => 76
+n_frames : tensor([[99]], device='cuda:0')
+feats.shape : torch.Size([3, 13, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[13.],
+        [ 6.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 99, 4])
+step => 77
+n_frames : tensor([[207]], device='cuda:0')
+feats.shape : torch.Size([3, 26, 64, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[26.],
+        [12.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 207, 4])
+step => 78
+n_frames : tensor([[79]], device='cuda:0')
+feats.shape : torch.Size([3, 9, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[9.],
+        [7.],
+        [8.]], device='cuda:0')
+tubes : torch.Size([3, 79, 4])
+step => 79
+n_frames : tensor([[281]], device='cuda:0')
+feats.shape : torch.Size([3, 16, 64, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[11.],
+        [15.],
+        [16.]], device='cuda:0')
+tubes : torch.Size([3, 281, 4])
+step => 80
+n_frames : tensor([[140]], device='cuda:0')
+feats.shape : torch.Size([3, 18, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [15.],
+        [12.]], device='cuda:0')
+tubes : torch.Size([3, 140, 4])
+step => 81
+n_frames : tensor([[258]], device='cuda:0')
+feats.shape : torch.Size([4, 33, 64, 8, 7, 7])
+labels : tensor([11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[33.],
+        [33.],
+        [18.],
+        [15.]], device='cuda:0')
+tubes : torch.Size([4, 258, 4])
+step => 82
+n_frames : tensor([[322]], device='cuda:0')
+feats.shape : torch.Size([3, 15, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[10.],
+        [13.],
+        [15.]], device='cuda:0')
+tubes : torch.Size([3, 322, 4])
+step => 83
+n_frames : tensor([[104]], device='cuda:0')
+feats.shape : torch.Size([3, 10, 64, 8, 7, 7])
+labels : tensor([1., 0., 0.], device='cuda:0')
+tube_len : tensor([[ 6.],
+        [10.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 104, 4])
+step => 84
+n_frames : tensor([[109]], device='cuda:0')
+feats.shape : torch.Size([3, 14, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [ 9.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 109, 4])
+step => 85
+n_frames : tensor([[71]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [7.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 71, 4])
+step => 86
+n_frames : tensor([[145]], device='cuda:0')
+feats.shape : torch.Size([3, 18, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [ 7.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([3, 145, 4])
+step => 87
+n_frames : tensor([[119]], device='cuda:0')
+feats.shape : torch.Size([4, 4, 64, 8, 7, 7])
+labels : tensor([23., 23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [2.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([4, 119, 4])
+step => 88
+n_frames : tensor([[324]], device='cuda:0')
+feats.shape : torch.Size([6, 41, 64, 8, 7, 7])
+labels : tensor([3., 3., 3., 3., 0., 0.], device='cuda:0')
+tube_len : tensor([[41.],
+        [ 5.],
+        [ 3.],
+        [ 5.],
+        [ 8.],
+        [31.]], device='cuda:0')
+tubes : torch.Size([6, 324, 4])
+step => 89
+n_frames : tensor([[217]], device='cuda:0')
+feats.shape : torch.Size([3, 27, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[27.],
+        [ 7.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 217, 4])
+step => 90
+n_frames : tensor([[416]], device='cuda:0')
+feats.shape : torch.Size([3, 52, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[52.],
+        [23.],
+        [34.]], device='cuda:0')
+tubes : torch.Size([3, 416, 4])
+step => 91
+n_frames : tensor([[156]], device='cuda:0')
+feats.shape : torch.Size([3, 20, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[20.],
+        [12.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([3, 156, 4])
+step => 92
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [17.],
+        [17.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 93
+n_frames : tensor([[183]], device='cuda:0')
+feats.shape : torch.Size([3, 23, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[23.],
+        [ 5.],
+        [15.]], device='cuda:0')
+tubes : torch.Size([3, 183, 4])
+step => 94
+n_frames : tensor([[182]], device='cuda:0')
+feats.shape : torch.Size([3, 23, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[23.],
+        [ 4.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 182, 4])
+step => 95
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [ 5.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 96
+n_frames : tensor([[167]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [ 3.],
+        [17.]], device='cuda:0')
+tubes : torch.Size([3, 167, 4])
+step => 97
+n_frames : tensor([[253]], device='cuda:0')
+feats.shape : torch.Size([4, 32, 64, 8, 7, 7])
+labels : tensor([11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[32.],
+        [32.],
+        [24.],
+        [28.]], device='cuda:0')
+tubes : torch.Size([4, 253, 4])
+step => 98
+n_frames : tensor([[360]], device='cuda:0')
+feats.shape : torch.Size([3, 45, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[45.],
+        [30.],
+        [22.]], device='cuda:0')
+tubes : torch.Size([3, 360, 4])
+step => 99
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([4, 10, 64, 8, 7, 7])
+labels : tensor([21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[ 8.],
+        [ 9.],
+        [ 4.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([4, 201, 4])
+step => 100
+n_frames : tensor([[145]], device='cuda:0')
+feats.shape : torch.Size([4, 5, 64, 8, 7, 7])
+labels : tensor([21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [3.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([4, 145, 4])
+step => 101
+n_frames : tensor([[152]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [12.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 152, 4])
+step => 102
+n_frames : tensor([[221]], device='cuda:0')
+feats.shape : torch.Size([3, 28, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[28.],
+        [ 3.],
+        [21.]], device='cuda:0')
+tubes : torch.Size([3, 221, 4])
+step => 103
+n_frames : tensor([[172]], device='cuda:0')
+feats.shape : torch.Size([4, 6, 64, 8, 7, 7])
+labels : tensor([21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [5.],
+        [6.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([4, 172, 4])
+step => 104
+n_frames : tensor([[141]], device='cuda:0')
+feats.shape : torch.Size([3, 18, 64, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [ 2.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 141, 4])
+step => 105
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([6, 25, 64, 8, 7, 7])
+labels : tensor([22., 22., 22., 22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [25.],
+        [19.],
+        [25.],
+        [11.],
+        [19.]], device='cuda:0')
+tubes : torch.Size([6, 201, 4])
+step => 106
+n_frames : tensor([[92]], device='cuda:0')
+feats.shape : torch.Size([3, 11, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[11.],
+        [ 8.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([3, 92, 4])
+step => 107
+n_frames : tensor([[80]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [4.],
+        [6.]], device='cuda:0')
+tubes : torch.Size([3, 80, 4])
+step => 108
+n_frames : tensor([[206]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[17.],
+        [25.],
+        [25.]], device='cuda:0')
+tubes : torch.Size([3, 206, 4])
+step => 109
+n_frames : tensor([[110]], device='cuda:0')
+feats.shape : torch.Size([4, 7, 64, 8, 7, 7])
+labels : tensor([9., 9., 0., 0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [5.],
+        [2.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([4, 110, 4])
+step => 110
+n_frames : tensor([[232]], device='cuda:0')
+feats.shape : torch.Size([3, 29, 64, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[29.],
+        [26.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 232, 4])
+step => 111
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [11.],
+        [13.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 112
+n_frames : tensor([[122]], device='cuda:0')
+feats.shape : torch.Size([3, 12, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [ 3.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 122, 4])
+step => 113
+n_frames : tensor([[159]], device='cuda:0')
+feats.shape : torch.Size([3, 14, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[ 9.],
+        [ 2.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([3, 159, 4])
+step => 114
+n_frames : tensor([[103]], device='cuda:0')
+feats.shape : torch.Size([3, 13, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[13.],
+        [ 2.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 103, 4])
+step => 115
+n_frames : tensor([[250]], device='cuda:0')
+feats.shape : torch.Size([3, 32, 64, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[32.],
+        [ 5.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 250, 4])
+step => 116
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [17.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 117
+n_frames : tensor([[267]], device='cuda:0')
+feats.shape : torch.Size([5, 19, 64, 8, 7, 7])
+labels : tensor([20., 20., 20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[ 3.],
+        [ 4.],
+        [19.],
+        [ 2.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([5, 267, 4])
+step => 118
+n_frames : tensor([[105]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [4.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 105, 4])
+step => 119
+n_frames : tensor([[167]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [ 6.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 167, 4])
+step => 120
+n_frames : tensor([[207]], device='cuda:0')
+feats.shape : torch.Size([3, 18, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [ 4.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([3, 207, 4])
+step => 121
+n_frames : tensor([[191]], device='cuda:0')
+feats.shape : torch.Size([3, 18, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [12.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 191, 4])
+step => 122
+n_frames : tensor([[209]], device='cuda:0')
+feats.shape : torch.Size([3, 26, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[26.],
+        [ 5.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 209, 4])
+step => 123
+n_frames : tensor([[68]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 68, 4])
+step => 124
+n_frames : tensor([[111]], device='cuda:0')
+feats.shape : torch.Size([3, 14, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [ 6.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 111, 4])
+step => 125
+n_frames : tensor([[152]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [ 8.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 152, 4])
+step => 126
+n_frames : tensor([[108]], device='cuda:0')
+feats.shape : torch.Size([4, 7, 64, 8, 7, 7])
+labels : tensor([21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [7.],
+        [6.]], device='cuda:0')
+tubes : torch.Size([4, 108, 4])
+step => 127
+n_frames : tensor([[269]], device='cuda:0')
+feats.shape : torch.Size([4, 34, 64, 8, 7, 7])
+labels : tensor([11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[34.],
+        [34.],
+        [17.],
+        [11.]], device='cuda:0')
+tubes : torch.Size([4, 269, 4])
+step => 128
+n_frames : tensor([[68]], device='cuda:0')
+feats.shape : torch.Size([3, 9, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[9.],
+        [3.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 68, 4])
+step => 129
+n_frames : tensor([[232]], device='cuda:0')
+feats.shape : torch.Size([3, 29, 64, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[29.],
+        [14.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 232, 4])
+step => 130
+n_frames : tensor([[196]], device='cuda:0')
+feats.shape : torch.Size([4, 25, 64, 8, 7, 7])
+labels : tensor([3., 3., 0., 0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [25.],
+        [ 5.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([4, 196, 4])
+step => 131
+n_frames : tensor([[213]], device='cuda:0')
+feats.shape : torch.Size([3, 27, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[27.],
+        [ 2.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 213, 4])
+step => 132
+n_frames : tensor([[226]], device='cuda:0')
+feats.shape : torch.Size([3, 29, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[29.],
+        [ 2.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 226, 4])
+step => 133
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [ 8.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 134
+n_frames : tensor([[261]], device='cuda:0')
+feats.shape : torch.Size([4, 33, 64, 8, 7, 7])
+labels : tensor([11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[33.],
+        [33.],
+        [23.],
+        [12.]], device='cuda:0')
+tubes : torch.Size([4, 261, 4])
+step => 135
+n_frames : tensor([[200]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [18.],
+        [21.]], device='cuda:0')
+tubes : torch.Size([3, 200, 4])
+step => 136
+n_frames : tensor([[91]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 91, 4])
+step => 137
+n_frames : tensor([[76]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [3.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 76, 4])
+step => 138
+n_frames : tensor([[162]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [ 2.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 162, 4])
+step => 139
+n_frames : tensor([[150]], device='cuda:0')
+feats.shape : torch.Size([4, 10, 64, 8, 7, 7])
+labels : tensor([20., 20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[10.],
+        [ 1.],
+        [ 3.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([4, 150, 4])
+step => 140
+n_frames : tensor([[270]], device='cuda:0')
+feats.shape : torch.Size([3, 29, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[29.],
+        [ 2.],
+        [17.]], device='cuda:0')
+tubes : torch.Size([3, 270, 4])
+step => 141
+n_frames : tensor([[166]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [ 4.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 166, 4])
+step => 142
+n_frames : tensor([[58]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 58, 4])
+step => 143
+n_frames : tensor([[231]], device='cuda:0')
+feats.shape : torch.Size([3, 29, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[29.],
+        [14.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 231, 4])
+step => 144
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [13.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 145
+n_frames : tensor([[251]], device='cuda:0')
+feats.shape : torch.Size([4, 32, 64, 8, 7, 7])
+labels : tensor([11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[32.],
+        [18.],
+        [ 7.],
+        [20.]], device='cuda:0')
+tubes : torch.Size([4, 251, 4])
+step => 146
+n_frames : tensor([[171]], device='cuda:0')
+feats.shape : torch.Size([3, 22, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[22.],
+        [10.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 171, 4])
+step => 147
+n_frames : tensor([[116]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 116, 4])
+step => 148
+n_frames : tensor([[78]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [3.],
+        [6.]], device='cuda:0')
+tubes : torch.Size([3, 78, 4])
+step => 149
+n_frames : tensor([[228]], device='cuda:0')
+feats.shape : torch.Size([3, 26, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[26.],
+        [ 9.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 228, 4])
+step => 150
+n_frames : tensor([[220]], device='cuda:0')
+feats.shape : torch.Size([3, 28, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[28.],
+        [11.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 220, 4])
+step => 151
+n_frames : tensor([[105]], device='cuda:0')
+feats.shape : torch.Size([3, 12, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [ 2.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([3, 105, 4])
+step => 152
+n_frames : tensor([[82]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [3.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 82, 4])
+step => 153
+n_frames : tensor([[125]], device='cuda:0')
+feats.shape : torch.Size([3, 16, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [ 8.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 125, 4])
+step => 154
+n_frames : tensor([[167]], device='cuda:0')
+feats.shape : torch.Size([6, 18, 64, 8, 7, 7])
+labels : tensor([15., 15., 15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [ 4.],
+        [ 2.],
+        [18.],
+        [ 3.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([6, 167, 4])
+step => 155
+n_frames : tensor([[107]], device='cuda:0')
+feats.shape : torch.Size([5, 12, 64, 8, 7, 7])
+labels : tensor([4., 4., 4., 0., 0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [12.],
+        [12.],
+        [ 2.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([5, 107, 4])
+step => 156
+n_frames : tensor([[117]], device='cuda:0')
+feats.shape : torch.Size([3, 8, 64, 8, 7, 7])
+labels : tensor([1., 0., 0.], device='cuda:0')
+tube_len : tensor([[8.],
+        [5.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 117, 4])
+step => 157
+n_frames : tensor([[100]], device='cuda:0')
+feats.shape : torch.Size([3, 13, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[13.],
+        [ 8.],
+        [11.]], device='cuda:0')
+tubes : torch.Size([3, 100, 4])
+step => 158
+n_frames : tensor([[167]], device='cuda:0')
+feats.shape : torch.Size([7, 21, 64, 8, 7, 7])
+labels : tensor([15., 15., 15., 15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[ 1.],
+        [ 6.],
+        [ 8.],
+        [ 6.],
+        [21.],
+        [ 8.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([7, 167, 4])
+step => 159
+n_frames : tensor([[180]], device='cuda:0')
+feats.shape : torch.Size([3, 23, 64, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[23.],
+        [12.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 180, 4])
+step => 160
+n_frames : tensor([[256]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [5.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 256, 4])
+step => 161
+n_frames : tensor([[121]], device='cuda:0')
+feats.shape : torch.Size([3, 15, 64, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[15.],
+        [ 7.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 121, 4])
+step => 162
+n_frames : tensor([[84]], device='cuda:0')
+feats.shape : torch.Size([3, 9, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [9.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 84, 4])
+step => 163
+n_frames : tensor([[61]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [2.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 61, 4])
+step => 164
+n_frames : tensor([[110]], device='cuda:0')
+feats.shape : torch.Size([3, 14, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [ 4.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 110, 4])
+step => 165
+n_frames : tensor([[118]], device='cuda:0')
+feats.shape : torch.Size([3, 15, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[15.],
+        [ 3.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 118, 4])
+step => 166
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [ 8.],
+        [15.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 167
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [17.],
+        [12.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 168
+n_frames : tensor([[137]], device='cuda:0')
+feats.shape : torch.Size([5, 7, 64, 8, 7, 7])
+labels : tensor([1., 1., 1., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [6.],
+        [2.],
+        [7.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([5, 137, 4])
+step => 169
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [25.],
+        [22.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 170
+n_frames : tensor([[81]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 81, 4])
+step => 171
+n_frames : tensor([[165]], device='cuda:0')
+feats.shape : torch.Size([4, 16, 64, 8, 7, 7])
+labels : tensor([13., 13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [ 5.],
+        [ 5.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([4, 165, 4])
+step => 172
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [13.],
+        [15.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 173
+n_frames : tensor([[100]], device='cuda:0')
+feats.shape : torch.Size([3, 13, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[13.],
+        [11.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 100, 4])
+step => 174
+n_frames : tensor([[178]], device='cuda:0')
+feats.shape : torch.Size([3, 18, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [ 3.],
+        [11.]], device='cuda:0')
+tubes : torch.Size([3, 178, 4])
+step => 175
+n_frames : tensor([[599]], device='cuda:0')
+feats.shape : torch.Size([3, 75, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[75.],
+        [55.],
+        [27.]], device='cuda:0')
+tubes : torch.Size([3, 599, 4])
+step => 176
+n_frames : tensor([[200]], device='cuda:0')
+feats.shape : torch.Size([6, 25, 64, 8, 7, 7])
+labels : tensor([15., 15., 15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [11.],
+        [ 7.],
+        [ 4.],
+        [15.],
+        [23.]], device='cuda:0')
+tubes : torch.Size([6, 200, 4])
+step => 177
+n_frames : tensor([[208]], device='cuda:0')
+feats.shape : torch.Size([3, 26, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[26.],
+        [ 3.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 208, 4])
+step => 178
+n_frames : tensor([[176]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [13.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 176, 4])
+step => 179
+n_frames : tensor([[188]], device='cuda:0')
+feats.shape : torch.Size([3, 24, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[24.],
+        [21.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 188, 4])
+step => 180
+n_frames : tensor([[293]], device='cuda:0')
+feats.shape : torch.Size([3, 28, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[24.],
+        [28.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 293, 4])
+step => 181
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 24, 64, 8, 7, 7])
+labels : tensor([22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[24.],
+        [ 2.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 182
+n_frames : tensor([[450]], device='cuda:0')
+feats.shape : torch.Size([3, 57, 64, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[57.],
+        [13.],
+        [11.]], device='cuda:0')
+tubes : torch.Size([3, 450, 4])
+step => 183
+n_frames : tensor([[156]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[17.],
+        [14.],
+        [19.]], device='cuda:0')
+tubes : torch.Size([3, 156, 4])
+step => 184
+n_frames : tensor([[129]], device='cuda:0')
+feats.shape : torch.Size([3, 12, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [ 3.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 129, 4])
+step => 185
+n_frames : tensor([[210]], device='cuda:0')
+feats.shape : torch.Size([3, 27, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[27.],
+        [ 9.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 210, 4])
+step => 186
+n_frames : tensor([[101]], device='cuda:0')
+feats.shape : torch.Size([3, 11, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[11.],
+        [ 2.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([3, 101, 4])
+step => 187
+n_frames : tensor([[263]], device='cuda:0')
+feats.shape : torch.Size([3, 33, 64, 8, 7, 7])
+labels : tensor([11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[33.],
+        [23.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 263, 4])
+step => 188
+n_frames : tensor([[125]], device='cuda:0')
+feats.shape : torch.Size([4, 16, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [16.],
+        [ 6.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([4, 125, 4])
+step => 189
+n_frames : tensor([[264]], device='cuda:0')
+feats.shape : torch.Size([4, 33, 64, 8, 7, 7])
+labels : tensor([11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[33.],
+        [33.],
+        [29.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([4, 264, 4])
+step => 190
+n_frames : tensor([[98]], device='cuda:0')
+feats.shape : torch.Size([3, 13, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[13.],
+        [ 8.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 98, 4])
+step => 191
+n_frames : tensor([[163]], device='cuda:0')
+feats.shape : torch.Size([5, 15, 64, 8, 7, 7])
+labels : tensor([3., 3., 3., 0., 0.], device='cuda:0')
+tube_len : tensor([[15.],
+        [ 3.],
+        [ 8.],
+        [ 2.],
+        [12.]], device='cuda:0')
+tubes : torch.Size([5, 163, 4])
+step => 192
+n_frames : tensor([[106]], device='cuda:0')
+feats.shape : torch.Size([3, 12, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [ 3.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 106, 4])
+step => 193
+n_frames : tensor([[203]], device='cuda:0')
+feats.shape : torch.Size([3, 26, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[26.],
+        [ 8.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 203, 4])
+step => 194
+n_frames : tensor([[175]], device='cuda:0')
+feats.shape : torch.Size([3, 22, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[22.],
+        [11.],
+        [11.]], device='cuda:0')
+tubes : torch.Size([3, 175, 4])
+step => 195
+n_frames : tensor([[145]], device='cuda:0')
+feats.shape : torch.Size([4, 18, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [18.],
+        [ 2.],
+        [12.]], device='cuda:0')
+tubes : torch.Size([4, 145, 4])
+step => 196
+n_frames : tensor([[161]], device='cuda:0')
+feats.shape : torch.Size([3, 20, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[20.],
+        [10.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([3, 161, 4])
+step => 197
+n_frames : tensor([[153]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [ 4.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([3, 153, 4])
+step => 198
+n_frames : tensor([[210]], device='cuda:0')
+feats.shape : torch.Size([3, 27, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[27.],
+        [ 2.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 210, 4])
+step => 199
+n_frames : tensor([[105]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([1., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 105, 4])
+step => 200
+n_frames : tensor([[129]], device='cuda:0')
+feats.shape : torch.Size([3, 16, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [11.],
+        [13.]], device='cuda:0')
+tubes : torch.Size([3, 129, 4])
+step => 201
+n_frames : tensor([[77]], device='cuda:0')
+feats.shape : torch.Size([3, 8, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[8.],
+        [2.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 77, 4])
+step => 202
+n_frames : tensor([[141]], device='cuda:0')
+feats.shape : torch.Size([3, 18, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [ 3.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 141, 4])
+step => 203
+n_frames : tensor([[96]], device='cuda:0')
+feats.shape : torch.Size([4, 5, 64, 8, 7, 7])
+labels : tensor([21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [2.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([4, 96, 4])
+step => 204
+n_frames : tensor([[84]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([1., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 84, 4])
+step => 205
+n_frames : tensor([[81]], device='cuda:0')
+feats.shape : torch.Size([3, 9, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [9.],
+        [7.]], device='cuda:0')
+tubes : torch.Size([3, 81, 4])
+step => 206
+n_frames : tensor([[327]], device='cuda:0')
+feats.shape : torch.Size([3, 41, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[41.],
+        [11.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 327, 4])
+step => 207
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([4, 30, 64, 8, 7, 7])
+labels : tensor([24., 24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [24.],
+        [ 5.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([4, 240, 4])
+step => 208
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([5, 29, 64, 8, 7, 7])
+labels : tensor([3., 3., 3., 0., 0.], device='cuda:0')
+tube_len : tensor([[ 7.],
+        [ 8.],
+        [29.],
+        [23.],
+        [25.]], device='cuda:0')
+tubes : torch.Size([5, 240, 4])
+step => 209
+n_frames : tensor([[284]], device='cuda:0')
+feats.shape : torch.Size([4, 8, 64, 8, 7, 7])
+labels : tensor([21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [6.],
+        [8.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([4, 284, 4])
+step => 210
+n_frames : tensor([[136]], device='cuda:0')
+feats.shape : torch.Size([3, 11, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[11.],
+        [ 4.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([3, 136, 4])
+step => 211
+n_frames : tensor([[237]], device='cuda:0')
+feats.shape : torch.Size([4, 12, 64, 8, 7, 7])
+labels : tensor([20., 20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[ 8.],
+        [12.],
+        [12.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([4, 237, 4])
+step => 212
+n_frames : tensor([[75]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [1.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 75, 4])
+step => 213
+n_frames : tensor([[219]], device='cuda:0')
+feats.shape : torch.Size([3, 28, 64, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[28.],
+        [ 4.],
+        [11.]], device='cuda:0')
+tubes : torch.Size([3, 219, 4])
+step => 214
+n_frames : tensor([[145]], device='cuda:0')
+feats.shape : torch.Size([3, 17, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[15.],
+        [17.],
+        [13.]], device='cuda:0')
+tubes : torch.Size([3, 145, 4])
+step => 215
+n_frames : tensor([[176]], device='cuda:0')
+feats.shape : torch.Size([5, 7, 64, 8, 7, 7])
+labels : tensor([21., 21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [6.],
+        [3.],
+        [7.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([5, 176, 4])
+step => 216
+n_frames : tensor([[90]], device='cuda:0')
+feats.shape : torch.Size([3, 12, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [ 1.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 90, 4])
+step => 217
+n_frames : tensor([[98]], device='cuda:0')
+feats.shape : torch.Size([3, 9, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [5.],
+        [9.]], device='cuda:0')
+tubes : torch.Size([3, 98, 4])
+step => 218
+n_frames : tensor([[61]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 61, 4])
+step => 219
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([4, 10, 64, 8, 7, 7])
+labels : tensor([22., 22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[10.],
+        [10.],
+        [ 6.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([4, 201, 4])
+step => 220
+n_frames : tensor([[93]], device='cuda:0')
+feats.shape : torch.Size([3, 9, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[9.],
+        [4.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 93, 4])
+step => 221
+n_frames : tensor([[184]], device='cuda:0')
+feats.shape : torch.Size([3, 23, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[23.],
+        [ 3.],
+        [12.]], device='cuda:0')
+tubes : torch.Size([3, 184, 4])
+step => 222
+n_frames : tensor([[301]], device='cuda:0')
+feats.shape : torch.Size([3, 38, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[38.],
+        [13.],
+        [11.]], device='cuda:0')
+tubes : torch.Size([3, 301, 4])
+step => 223
+n_frames : tensor([[251]], device='cuda:0')
+feats.shape : torch.Size([3, 32, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[32.],
+        [ 4.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 251, 4])
+step => 224
+n_frames : tensor([[84]], device='cuda:0')
+feats.shape : torch.Size([3, 8, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[8.],
+        [4.],
+        [8.]], device='cuda:0')
+tubes : torch.Size([3, 84, 4])
+step => 225
+n_frames : tensor([[177]], device='cuda:0')
+feats.shape : torch.Size([3, 22, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[22.],
+        [18.],
+        [22.]], device='cuda:0')
+tubes : torch.Size([3, 177, 4])
+step => 226
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([4, 25, 64, 8, 7, 7])
+labels : tensor([22., 22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [25.],
+        [10.],
+        [19.]], device='cuda:0')
+tubes : torch.Size([4, 201, 4])
+step => 227
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [ 8.],
+        [13.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 228
+n_frames : tensor([[141]], device='cuda:0')
+feats.shape : torch.Size([3, 14, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [ 4.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([3, 141, 4])
+step => 229
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [ 5.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 230
+n_frames : tensor([[200]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [ 2.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 200, 4])
+step => 231
+n_frames : tensor([[81]], device='cuda:0')
+feats.shape : torch.Size([3, 8, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[8.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 81, 4])
+step => 232
+n_frames : tensor([[148]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [ 3.],
+        [18.]], device='cuda:0')
+tubes : torch.Size([3, 148, 4])
+step => 233
+n_frames : tensor([[200]], device='cuda:0')
+feats.shape : torch.Size([5, 25, 64, 8, 7, 7])
+labels : tensor([10., 10., 10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [ 6.],
+        [16.],
+        [20.],
+        [15.]], device='cuda:0')
+tubes : torch.Size([5, 200, 4])
+step => 234
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [ 4.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 235
+n_frames : tensor([[141]], device='cuda:0')
+feats.shape : torch.Size([4, 6, 64, 8, 7, 7])
+labels : tensor([21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [3.],
+        [4.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([4, 141, 4])
+step => 236
+n_frames : tensor([[67]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [5.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 67, 4])
+step => 237
+n_frames : tensor([[152]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [ 9.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 152, 4])
+step => 238
+n_frames : tensor([[69]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [6.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 69, 4])
+step => 239
+n_frames : tensor([[208]], device='cuda:0')
+feats.shape : torch.Size([3, 26, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[26.],
+        [15.],
+        [12.]], device='cuda:0')
+tubes : torch.Size([3, 208, 4])
+step => 240
+n_frames : tensor([[186]], device='cuda:0')
+feats.shape : torch.Size([3, 24, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[24.],
+        [ 7.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 186, 4])
+step => 241
+n_frames : tensor([[167]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [10.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([3, 167, 4])
+step => 242
+n_frames : tensor([[333]], device='cuda:0')
+feats.shape : torch.Size([9, 20, 64, 8, 7, 7])
+labels : tensor([15., 15., 15., 15., 15., 15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[11.],
+        [17.],
+        [12.],
+        [ 3.],
+        [11.],
+        [ 4.],
+        [20.],
+        [ 3.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([9, 333, 4])
+step => 243
+n_frames : tensor([[101]], device='cuda:0')
+feats.shape : torch.Size([3, 3, 64, 8, 7, 7])
+labels : tensor([23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [2.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 101, 4])
+step => 244
+n_frames : tensor([[167]], device='cuda:0')
+feats.shape : torch.Size([6, 16, 64, 8, 7, 7])
+labels : tensor([15., 15., 15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[ 5.],
+        [16.],
+        [11.],
+        [10.],
+        [ 5.],
+        [12.]], device='cuda:0')
+tubes : torch.Size([6, 167, 4])
+step => 245
+n_frames : tensor([[170]], device='cuda:0')
+feats.shape : torch.Size([4, 22, 64, 8, 7, 7])
+labels : tensor([10., 10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[22.],
+        [22.],
+        [ 9.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([4, 170, 4])
+step => 246
+n_frames : tensor([[166]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [ 7.],
+        [16.]], device='cuda:0')
+tubes : torch.Size([3, 166, 4])
+step => 247
+n_frames : tensor([[137]], device='cuda:0')
+feats.shape : torch.Size([4, 17, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[17.],
+        [17.],
+        [ 5.],
+        [16.]], device='cuda:0')
+tubes : torch.Size([4, 137, 4])
+step => 248
+n_frames : tensor([[125]], device='cuda:0')
+feats.shape : torch.Size([5, 16, 64, 8, 7, 7])
+labels : tensor([7., 7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [ 7.],
+        [ 7.],
+        [ 6.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([5, 125, 4])
+step => 249
+n_frames : tensor([[192]], device='cuda:0')
+feats.shape : torch.Size([3, 13, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[13.],
+        [ 3.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 192, 4])
+step => 250
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [25.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 251
+n_frames : tensor([[146]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [ 9.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 146, 4])
+step => 252
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [15.],
+        [13.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 253
+n_frames : tensor([[171]], device='cuda:0')
+feats.shape : torch.Size([3, 13, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[13.],
+        [ 2.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([3, 171, 4])
+step => 254
+n_frames : tensor([[216]], device='cuda:0')
+feats.shape : torch.Size([4, 14, 64, 8, 7, 7])
+labels : tensor([24., 24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [14.],
+        [ 6.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([4, 216, 4])
+step => 255
+n_frames : tensor([[210]], device='cuda:0')
+feats.shape : torch.Size([3, 27, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[27.],
+        [19.],
+        [13.]], device='cuda:0')
+tubes : torch.Size([3, 210, 4])
+step => 256
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [ 6.],
+        [17.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 257
+n_frames : tensor([[151]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [ 6.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 151, 4])
+step => 258
+n_frames : tensor([[251]], device='cuda:0')
+feats.shape : torch.Size([4, 32, 64, 8, 7, 7])
+labels : tensor([11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[32.],
+        [32.],
+        [25.],
+        [23.]], device='cuda:0')
+tubes : torch.Size([4, 251, 4])
+step => 259
+n_frames : tensor([[88]], device='cuda:0')
+feats.shape : torch.Size([3, 8, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [6.],
+        [8.]], device='cuda:0')
+tubes : torch.Size([3, 88, 4])
+step => 260
+n_frames : tensor([[87]], device='cuda:0')
+feats.shape : torch.Size([3, 9, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[9.],
+        [6.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 87, 4])
+step => 261
+n_frames : tensor([[333]], device='cuda:0')
+feats.shape : torch.Size([11, 39, 64, 8, 7, 7])
+labels : tensor([15., 15., 15., 15., 15., 15., 15., 15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[10.],
+        [ 6.],
+        [11.],
+        [13.],
+        [ 2.],
+        [ 6.],
+        [14.],
+        [13.],
+        [ 7.],
+        [ 2.],
+        [39.]], device='cuda:0')
+tubes : torch.Size([11, 333, 4])
+step => 262
+n_frames : tensor([[88]], device='cuda:0')
+feats.shape : torch.Size([3, 11, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[11.],
+        [ 3.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 88, 4])
+step => 263
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [15.],
+        [17.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 264
+n_frames : tensor([[84]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [3.],
+        [6.]], device='cuda:0')
+tubes : torch.Size([3, 84, 4])
+step => 265
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [ 3.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 266
+n_frames : tensor([[180]], device='cuda:0')
+feats.shape : torch.Size([3, 23, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[23.],
+        [ 7.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 180, 4])
+step => 267
+n_frames : tensor([[93]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [3.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 93, 4])
+step => 268
+n_frames : tensor([[120]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([1., 0., 0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 120, 4])
+step => 269
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [ 3.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 270
+n_frames : tensor([[137]], device='cuda:0')
+feats.shape : torch.Size([3, 17, 64, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[17.],
+        [ 8.],
+        [16.]], device='cuda:0')
+tubes : torch.Size([3, 137, 4])
+step => 271
+n_frames : tensor([[158]], device='cuda:0')
+feats.shape : torch.Size([5, 14, 64, 8, 7, 7])
+labels : tensor([13., 13., 13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[ 4.],
+        [12.],
+        [ 3.],
+        [14.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([5, 158, 4])
+step => 272
+n_frames : tensor([[94]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [5.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 94, 4])
+step => 273
+n_frames : tensor([[84]], device='cuda:0')
+feats.shape : torch.Size([3, 11, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[11.],
+        [ 2.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([3, 84, 4])
+step => 274
+n_frames : tensor([[176]], device='cuda:0')
+feats.shape : torch.Size([3, 2, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[2.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 176, 4])
+step => 275
+n_frames : tensor([[75]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [4.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 75, 4])
+step => 276
+n_frames : tensor([[171]], device='cuda:0')
+feats.shape : torch.Size([4, 15, 64, 8, 7, 7])
+labels : tensor([13., 13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[15.],
+        [ 6.],
+        [14.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([4, 171, 4])
+step => 277
+n_frames : tensor([[139]], device='cuda:0')
+feats.shape : torch.Size([3, 18, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [ 6.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 139, 4])
+step => 278
+n_frames : tensor([[599]], device='cuda:0')
+feats.shape : torch.Size([3, 75, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[75.],
+        [16.],
+        [29.]], device='cuda:0')
+tubes : torch.Size([3, 599, 4])
+step => 279
+n_frames : tensor([[78]], device='cuda:0')
+feats.shape : torch.Size([3, 9, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[9.],
+        [9.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 78, 4])
+step => 280
+n_frames : tensor([[249]], device='cuda:0')
+feats.shape : torch.Size([4, 7, 64, 8, 7, 7])
+labels : tensor([21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [5.],
+        [5.],
+        [7.]], device='cuda:0')
+tubes : torch.Size([4, 249, 4])
+step => 281
+n_frames : tensor([[151]], device='cuda:0')
+feats.shape : torch.Size([4, 19, 64, 8, 7, 7])
+labels : tensor([3., 3., 0., 0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [19.],
+        [ 2.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([4, 151, 4])
+step => 282
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [ 2.],
+        [12.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 283
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [ 3.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 284
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [ 6.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 285
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [22.],
+        [24.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 286
+n_frames : tensor([[151]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [14.],
+        [11.]], device='cuda:0')
+tubes : torch.Size([3, 151, 4])
+step => 287
+n_frames : tensor([[258]], device='cuda:0')
+feats.shape : torch.Size([3, 33, 64, 8, 7, 7])
+labels : tensor([11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[33.],
+        [24.],
+        [17.]], device='cuda:0')
+tubes : torch.Size([3, 258, 4])
+step => 288
+n_frames : tensor([[106]], device='cuda:0')
+feats.shape : torch.Size([8, 14, 64, 8, 7, 7])
+labels : tensor([22., 22., 22., 22., 22., 22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [12.],
+        [13.],
+        [ 9.],
+        [ 3.],
+        [ 4.],
+        [ 8.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([8, 106, 4])
+step => 289
+n_frames : tensor([[150]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [ 3.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 150, 4])
+step => 290
+n_frames : tensor([[151]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [16.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([3, 151, 4])
+step => 291
+n_frames : tensor([[82]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [2.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 82, 4])
+step => 292
+n_frames : tensor([[64]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 64, 4])
+step => 293
+n_frames : tensor([[128]], device='cuda:0')
+feats.shape : torch.Size([3, 16, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [ 5.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 128, 4])
+step => 294
+n_frames : tensor([[217]], device='cuda:0')
+feats.shape : torch.Size([3, 27, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[27.],
+        [ 8.],
+        [12.]], device='cuda:0')
+tubes : torch.Size([3, 217, 4])
+step => 295
+n_frames : tensor([[210]], device='cuda:0')
+feats.shape : torch.Size([3, 27, 64, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[27.],
+        [ 2.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([3, 210, 4])
+step => 296
+n_frames : tensor([[167]], device='cuda:0')
+feats.shape : torch.Size([5, 21, 64, 8, 7, 7])
+labels : tensor([15., 15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[ 3.],
+        [19.],
+        [21.],
+        [11.],
+        [17.]], device='cuda:0')
+tubes : torch.Size([5, 167, 4])
+step => 297
+n_frames : tensor([[120]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([1., 0., 0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 120, 4])
+step => 298
+n_frames : tensor([[169]], device='cuda:0')
+feats.shape : torch.Size([3, 9, 64, 8, 7, 7])
+labels : tensor([23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [3.],
+        [9.]], device='cuda:0')
+tubes : torch.Size([3, 169, 4])
+step => 299
+n_frames : tensor([[167]], device='cuda:0')
+feats.shape : torch.Size([4, 21, 64, 8, 7, 7])
+labels : tensor([15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [21.],
+        [12.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([4, 167, 4])
+step => 300
+n_frames : tensor([[209]], device='cuda:0')
+feats.shape : torch.Size([3, 26, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[26.],
+        [ 5.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 209, 4])
+step => 301
+n_frames : tensor([[125]], device='cuda:0')
+feats.shape : torch.Size([4, 16, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [16.],
+        [ 3.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([4, 125, 4])
+step => 302
+n_frames : tensor([[101]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([1., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 101, 4])
+step => 303
+n_frames : tensor([[151]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [ 5.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 151, 4])
+step => 304
+n_frames : tensor([[124]], device='cuda:0')
+feats.shape : torch.Size([3, 16, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [ 3.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 124, 4])
+step => 305
+n_frames : tensor([[234]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [13.],
+        [19.]], device='cuda:0')
+tubes : torch.Size([3, 234, 4])
+step => 306
+n_frames : tensor([[165]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [10.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([3, 165, 4])
+step => 307
+n_frames : tensor([[158]], device='cuda:0')
+feats.shape : torch.Size([3, 20, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[20.],
+        [10.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 158, 4])
+step => 308
+n_frames : tensor([[103]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [2.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 103, 4])
+step => 309
+n_frames : tensor([[124]], device='cuda:0')
+feats.shape : torch.Size([3, 10, 64, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[ 6.],
+        [ 6.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([3, 124, 4])
+step => 310
+n_frames : tensor([[136]], device='cuda:0')
+feats.shape : torch.Size([3, 17, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[17.],
+        [ 3.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 136, 4])
+step => 311
+n_frames : tensor([[196]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [14.],
+        [18.]], device='cuda:0')
+tubes : torch.Size([3, 196, 4])
+step => 312
+n_frames : tensor([[153]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 153, 4])
+step => 313
+n_frames : tensor([[223]], device='cuda:0')
+feats.shape : torch.Size([3, 28, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[28.],
+        [22.],
+        [16.]], device='cuda:0')
+tubes : torch.Size([3, 223, 4])
+step => 314
+n_frames : tensor([[180]], device='cuda:0')
+feats.shape : torch.Size([4, 16, 64, 8, 7, 7])
+labels : tensor([22., 22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[13.],
+        [ 7.],
+        [ 6.],
+        [16.]], device='cuda:0')
+tubes : torch.Size([4, 180, 4])
+step => 315
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [11.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 316
+n_frames : tensor([[188]], device='cuda:0')
+feats.shape : torch.Size([4, 6, 64, 8, 7, 7])
+labels : tensor([21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.],
+        [6.]], device='cuda:0')
+tubes : torch.Size([4, 188, 4])
+step => 317
+n_frames : tensor([[131]], device='cuda:0')
+feats.shape : torch.Size([4, 6, 64, 8, 7, 7])
+labels : tensor([21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [5.],
+        [2.],
+        [6.]], device='cuda:0')
+tubes : torch.Size([4, 131, 4])
+step => 318
+n_frames : tensor([[260]], device='cuda:0')
+feats.shape : torch.Size([3, 33, 64, 8, 7, 7])
+labels : tensor([11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[33.],
+        [27.],
+        [23.]], device='cuda:0')
+tubes : torch.Size([3, 260, 4])
+step => 319
+n_frames : tensor([[112]], device='cuda:0')
+feats.shape : torch.Size([3, 14, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [ 5.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 112, 4])
+step => 320
+n_frames : tensor([[253]], device='cuda:0')
+feats.shape : torch.Size([6, 11, 64, 8, 7, 7])
+labels : tensor([20., 20., 20., 20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[11.],
+        [ 2.],
+        [ 3.],
+        [11.],
+        [ 4.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([6, 253, 4])
+step => 321
+n_frames : tensor([[210]], device='cuda:0')
+feats.shape : torch.Size([3, 27, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[27.],
+        [ 4.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 210, 4])
+step => 322
+n_frames : tensor([[73]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [5.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 73, 4])
+step => 323
+n_frames : tensor([[163]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [ 9.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 163, 4])
+step => 324
+n_frames : tensor([[200]], device='cuda:0')
+feats.shape : torch.Size([7, 14, 64, 8, 7, 7])
+labels : tensor([15., 15., 15., 15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[ 5.],
+        [14.],
+        [ 3.],
+        [12.],
+        [12.],
+        [ 5.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([7, 200, 4])
+step => 325
+n_frames : tensor([[167]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [12.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 167, 4])
+step => 326
+n_frames : tensor([[151]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [13.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 151, 4])
+step => 327
+n_frames : tensor([[110]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [2.],
+        [7.]], device='cuda:0')
+tubes : torch.Size([3, 110, 4])
+step => 328
+n_frames : tensor([[74]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [4.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 74, 4])
+step => 329
+n_frames : tensor([[86]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [2.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 86, 4])
+step => 330
+n_frames : tensor([[102]], device='cuda:0')
+feats.shape : torch.Size([3, 13, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[13.],
+        [ 7.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 102, 4])
+step => 331
+n_frames : tensor([[266]], device='cuda:0')
+feats.shape : torch.Size([4, 34, 64, 8, 7, 7])
+labels : tensor([11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[34.],
+        [34.],
+        [ 4.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([4, 266, 4])
+step => 332
+n_frames : tensor([[136]], device='cuda:0')
+feats.shape : torch.Size([3, 13, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[13.],
+        [ 8.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 136, 4])
+step => 333
+n_frames : tensor([[232]], device='cuda:0')
+feats.shape : torch.Size([6, 7, 64, 8, 7, 7])
+labels : tensor([1., 1., 1., 1., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [6.],
+        [6.],
+        [6.],
+        [3.],
+        [7.]], device='cuda:0')
+tubes : torch.Size([6, 232, 4])
+step => 334
+n_frames : tensor([[92]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [6.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 92, 4])
+step => 335
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [13.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 336
+n_frames : tensor([[116]], device='cuda:0')
+feats.shape : torch.Size([3, 9, 64, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [8.],
+        [9.]], device='cuda:0')
+tubes : torch.Size([3, 116, 4])
+step => 337
+n_frames : tensor([[180]], device='cuda:0')
+feats.shape : torch.Size([3, 23, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[23.],
+        [ 3.],
+        [16.]], device='cuda:0')
+tubes : torch.Size([3, 180, 4])
+step => 338
+n_frames : tensor([[128]], device='cuda:0')
+feats.shape : torch.Size([3, 16, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [15.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 128, 4])
+step => 339
+n_frames : tensor([[124]], device='cuda:0')
+feats.shape : torch.Size([3, 16, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [ 2.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 124, 4])
+step => 340
+n_frames : tensor([[139]], device='cuda:0')
+feats.shape : torch.Size([3, 18, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [ 8.],
+        [11.]], device='cuda:0')
+tubes : torch.Size([3, 139, 4])
+step => 341
+n_frames : tensor([[123]], device='cuda:0')
+feats.shape : torch.Size([3, 16, 64, 8, 7, 7])
+labels : tensor([22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [ 8.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 123, 4])
+step => 342
+n_frames : tensor([[102]], device='cuda:0')
+feats.shape : torch.Size([3, 12, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[10.],
+        [12.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 102, 4])
+step => 343
+n_frames : tensor([[76]], device='cuda:0')
+feats.shape : torch.Size([3, 10, 64, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[10.],
+        [ 2.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 76, 4])
+step => 344
+n_frames : tensor([[115]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [3.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 115, 4])
+step => 345
+n_frames : tensor([[306]], device='cuda:0')
+feats.shape : torch.Size([3, 39, 64, 8, 7, 7])
+labels : tensor([22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[39.],
+        [30.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 306, 4])
+step => 346
+n_frames : tensor([[117]], device='cuda:0')
+feats.shape : torch.Size([3, 15, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[15.],
+        [ 6.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 117, 4])
+step => 347
+n_frames : tensor([[229]], device='cuda:0')
+feats.shape : torch.Size([3, 29, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[29.],
+        [10.],
+        [16.]], device='cuda:0')
+tubes : torch.Size([3, 229, 4])
+step => 348
+n_frames : tensor([[200]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [ 2.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 200, 4])
+step => 349
+n_frames : tensor([[104]], device='cuda:0')
+feats.shape : torch.Size([3, 8, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [8.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 104, 4])
+step => 350
+n_frames : tensor([[118]], device='cuda:0')
+feats.shape : torch.Size([3, 15, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[15.],
+        [10.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 118, 4])
+step => 351
+n_frames : tensor([[67]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [4.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 67, 4])
+step => 352
+n_frames : tensor([[262]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [6.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 262, 4])
+step => 353
+n_frames : tensor([[72]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [2.],
+        [7.]], device='cuda:0')
+tubes : torch.Size([3, 72, 4])
+step => 354
+n_frames : tensor([[140]], device='cuda:0')
+feats.shape : torch.Size([3, 18, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [ 6.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 140, 4])
+step => 355
+n_frames : tensor([[175]], device='cuda:0')
+feats.shape : torch.Size([3, 22, 64, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[22.],
+        [ 8.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 175, 4])
+step => 356
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [23.],
+        [16.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 357
+n_frames : tensor([[154]], device='cuda:0')
+feats.shape : torch.Size([4, 20, 64, 8, 7, 7])
+labels : tensor([11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[20.],
+        [20.],
+        [18.],
+        [13.]], device='cuda:0')
+tubes : torch.Size([4, 154, 4])
+step => 358
+n_frames : tensor([[111]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [4.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 111, 4])
+step => 359
+n_frames : tensor([[94]], device='cuda:0')
+feats.shape : torch.Size([3, 12, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [ 9.],
+        [11.]], device='cuda:0')
+tubes : torch.Size([3, 94, 4])
+step => 360
+n_frames : tensor([[155]], device='cuda:0')
+feats.shape : torch.Size([4, 11, 64, 8, 7, 7])
+labels : tensor([20., 20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[ 5.],
+        [11.],
+        [ 5.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([4, 155, 4])
+step => 361
+n_frames : tensor([[203]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [19.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 203, 4])
+step => 362
+n_frames : tensor([[76]], device='cuda:0')
+feats.shape : torch.Size([3, 10, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[10.],
+        [ 6.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([3, 76, 4])
+step => 363
+n_frames : tensor([[307]], device='cuda:0')
+feats.shape : torch.Size([3, 39, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[39.],
+        [ 2.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 307, 4])
+step => 364
+n_frames : tensor([[85]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([1., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 85, 4])
+step => 365
+n_frames : tensor([[74]], device='cuda:0')
+feats.shape : torch.Size([3, 8, 64, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[8.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 74, 4])
+step => 366
+n_frames : tensor([[154]], device='cuda:0')
+feats.shape : torch.Size([3, 16, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [16.],
+        [13.]], device='cuda:0')
+tubes : torch.Size([3, 154, 4])
+step => 367
+n_frames : tensor([[180]], device='cuda:0')
+feats.shape : torch.Size([3, 23, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[23.],
+        [16.],
+        [12.]], device='cuda:0')
+tubes : torch.Size([3, 180, 4])
+step => 368
+n_frames : tensor([[219]], device='cuda:0')
+feats.shape : torch.Size([3, 28, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[28.],
+        [ 6.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 219, 4])
+step => 369
+n_frames : tensor([[89]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([1., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 89, 4])
+step => 370
+n_frames : tensor([[245]], device='cuda:0')
+feats.shape : torch.Size([5, 31, 64, 8, 7, 7])
+labels : tensor([11., 11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[31.],
+        [ 9.],
+        [13.],
+        [22.],
+        [11.]], device='cuda:0')
+tubes : torch.Size([5, 245, 4])
+step => 371
+n_frames : tensor([[114]], device='cuda:0')
+feats.shape : torch.Size([3, 15, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[15.],
+        [ 6.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 114, 4])
+step => 372
+n_frames : tensor([[76]], device='cuda:0')
+feats.shape : torch.Size([3, 10, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[10.],
+        [ 3.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 76, 4])
+step => 373
+n_frames : tensor([[234]], device='cuda:0')
+feats.shape : torch.Size([4, 6, 64, 8, 7, 7])
+labels : tensor([21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [6.],
+        [6.],
+        [6.]], device='cuda:0')
+tubes : torch.Size([4, 234, 4])
+step => 374
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [27.],
+        [15.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 375
+n_frames : tensor([[107]], device='cuda:0')
+feats.shape : torch.Size([3, 13, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[13.],
+        [ 4.],
+        [13.]], device='cuda:0')
+tubes : torch.Size([3, 107, 4])
+step => 376
+n_frames : tensor([[153]], device='cuda:0')
+feats.shape : torch.Size([3, 15, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [ 3.],
+        [15.]], device='cuda:0')
+tubes : torch.Size([3, 153, 4])
+step => 377
+n_frames : tensor([[189]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 189, 4])
+step => 378
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([4, 25, 64, 8, 7, 7])
+labels : tensor([10., 10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [25.],
+        [ 2.],
+        [23.]], device='cuda:0')
+tubes : torch.Size([4, 201, 4])
+step => 379
+n_frames : tensor([[100]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [6.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 100, 4])
+step => 380
+n_frames : tensor([[220]], device='cuda:0')
+feats.shape : torch.Size([3, 23, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[23.],
+        [ 4.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([3, 220, 4])
+step => 381
+n_frames : tensor([[249]], device='cuda:0')
+feats.shape : torch.Size([3, 31, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[31.],
+        [10.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 249, 4])
+step => 382
+n_frames : tensor([[175]], device='cuda:0')
+feats.shape : torch.Size([3, 22, 64, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[22.],
+        [11.],
+        [12.]], device='cuda:0')
+tubes : torch.Size([3, 175, 4])
+step => 383
+n_frames : tensor([[161]], device='cuda:0')
+feats.shape : torch.Size([4, 6, 64, 8, 7, 7])
+labels : tensor([21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [4.],
+        [5.],
+        [6.]], device='cuda:0')
+tubes : torch.Size([4, 161, 4])
+step => 384
+n_frames : tensor([[199]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [ 4.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([3, 199, 4])
+step => 385
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [ 5.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 386
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [ 8.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 387
+n_frames : tensor([[105]], device='cuda:0')
+feats.shape : torch.Size([3, 8, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[8.],
+        [6.],
+        [7.]], device='cuda:0')
+tubes : torch.Size([3, 105, 4])
+step => 388
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [11.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 389
+n_frames : tensor([[302]], device='cuda:0')
+feats.shape : torch.Size([3, 38, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[38.],
+        [17.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([3, 302, 4])
+step => 390
+n_frames : tensor([[108]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 108, 4])
+step => 391
+n_frames : tensor([[138]], device='cuda:0')
+feats.shape : torch.Size([3, 18, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [ 5.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 138, 4])
+step => 392
+n_frames : tensor([[251]], device='cuda:0')
+feats.shape : torch.Size([3, 32, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[32.],
+        [ 7.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([3, 251, 4])
+step => 393
+n_frames : tensor([[599]], device='cuda:0')
+feats.shape : torch.Size([3, 75, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[75.],
+        [ 8.],
+        [25.]], device='cuda:0')
+tubes : torch.Size([3, 599, 4])
+step => 394
+n_frames : tensor([[354]], device='cuda:0')
+feats.shape : torch.Size([3, 45, 64, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[45.],
+        [23.],
+        [30.]], device='cuda:0')
+tubes : torch.Size([3, 354, 4])
+step => 395
+n_frames : tensor([[228]], device='cuda:0')
+feats.shape : torch.Size([3, 12, 64, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[ 9.],
+        [12.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 228, 4])
+step => 396
+n_frames : tensor([[173]], device='cuda:0')
+feats.shape : torch.Size([3, 22, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[22.],
+        [ 7.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 173, 4])
+step => 397
+n_frames : tensor([[82]], device='cuda:0')
+feats.shape : torch.Size([3, 9, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [8.],
+        [9.]], device='cuda:0')
+tubes : torch.Size([3, 82, 4])
+step => 398
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([4, 25, 64, 8, 7, 7])
+labels : tensor([22., 22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [25.],
+        [11.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([4, 201, 4])
+step => 399
+n_frames : tensor([[160]], device='cuda:0')
+feats.shape : torch.Size([3, 20, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[20.],
+        [14.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([3, 160, 4])
+step => 400
+n_frames : tensor([[128]], device='cuda:0')
+feats.shape : torch.Size([4, 16, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [16.],
+        [ 9.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([4, 128, 4])
+step => 401
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([4, 25, 64, 8, 7, 7])
+labels : tensor([22., 22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [20.],
+        [15.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([4, 201, 4])
+step => 402
+n_frames : tensor([[171]], device='cuda:0')
+feats.shape : torch.Size([3, 22, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[22.],
+        [18.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 171, 4])
+step => 403
+n_frames : tensor([[329]], device='cuda:0')
+feats.shape : torch.Size([3, 41, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[41.],
+        [15.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 329, 4])
+step => 404
+n_frames : tensor([[118]], device='cuda:0')
+feats.shape : torch.Size([3, 15, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[15.],
+        [15.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 118, 4])
+step => 405
+n_frames : tensor([[186]], device='cuda:0')
+feats.shape : torch.Size([4, 5, 64, 8, 7, 7])
+labels : tensor([21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([4, 186, 4])
+step => 406
+n_frames : tensor([[209]], device='cuda:0')
+feats.shape : torch.Size([3, 26, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[26.],
+        [ 3.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 209, 4])
+step => 407
+n_frames : tensor([[210]], device='cuda:0')
+feats.shape : torch.Size([3, 27, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[27.],
+        [ 2.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 210, 4])
+step => 408
+n_frames : tensor([[143]], device='cuda:0')
+feats.shape : torch.Size([3, 18, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [ 2.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([3, 143, 4])
+step => 409
+n_frames : tensor([[156]], device='cuda:0')
+feats.shape : torch.Size([3, 17, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[17.],
+        [ 4.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([3, 156, 4])
+step => 410
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [18.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 411
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([5, 29, 64, 8, 7, 7])
+labels : tensor([3., 3., 3., 0., 0.], device='cuda:0')
+tube_len : tensor([[ 7.],
+        [12.],
+        [29.],
+        [27.],
+        [12.]], device='cuda:0')
+tubes : torch.Size([5, 240, 4])
+step => 412
+n_frames : tensor([[200]], device='cuda:0')
+feats.shape : torch.Size([4, 4, 64, 8, 7, 7])
+labels : tensor([23., 23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[2.],
+        [3.],
+        [4.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([4, 200, 4])
+step => 413
+n_frames : tensor([[76]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 76, 4])
+step => 414
+n_frames : tensor([[188]], device='cuda:0')
+feats.shape : torch.Size([4, 7, 64, 8, 7, 7])
+labels : tensor([1., 1., 0., 0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [7.],
+        [7.],
+        [6.]], device='cuda:0')
+tubes : torch.Size([4, 188, 4])
+step => 415
+n_frames : tensor([[83]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [6.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 83, 4])
+step => 416
+n_frames : tensor([[182]], device='cuda:0')
+feats.shape : torch.Size([3, 23, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[23.],
+        [ 2.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 182, 4])
+step => 417
+n_frames : tensor([[106]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 106, 4])
+step => 418
+n_frames : tensor([[168]], device='cuda:0')
+feats.shape : torch.Size([3, 16, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [ 8.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 168, 4])
+step => 419
+n_frames : tensor([[211]], device='cuda:0')
+feats.shape : torch.Size([3, 27, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[27.],
+        [ 2.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 211, 4])
+step => 420
+n_frames : tensor([[288]], device='cuda:0')
+feats.shape : torch.Size([3, 27, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [ 4.],
+        [27.]], device='cuda:0')
+tubes : torch.Size([3, 288, 4])
+step => 421
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [ 2.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 422
+n_frames : tensor([[246]], device='cuda:0')
+feats.shape : torch.Size([3, 31, 64, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[31.],
+        [ 3.],
+        [ 1.]], device='cuda:0')
+tubes : torch.Size([3, 246, 4])
+step => 423
+n_frames : tensor([[149]], device='cuda:0')
+feats.shape : torch.Size([4, 18, 64, 8, 7, 7])
+labels : tensor([13., 13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[15.],
+        [ 2.],
+        [ 2.],
+        [18.]], device='cuda:0')
+tubes : torch.Size([4, 149, 4])
+step => 424
+n_frames : tensor([[251]], device='cuda:0')
+feats.shape : torch.Size([3, 32, 64, 8, 7, 7])
+labels : tensor([11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[32.],
+        [15.],
+        [18.]], device='cuda:0')
+tubes : torch.Size([3, 251, 4])
+step => 425
+n_frames : tensor([[131]], device='cuda:0')
+feats.shape : torch.Size([3, 10, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[10.],
+        [ 6.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 131, 4])
+step => 426
+n_frames : tensor([[151]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [ 3.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 151, 4])
+step => 427
+n_frames : tensor([[138]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 138, 4])
+step => 428
+n_frames : tensor([[108]], device='cuda:0')
+feats.shape : torch.Size([3, 14, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [ 4.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 108, 4])
+step => 429
+n_frames : tensor([[180]], device='cuda:0')
+feats.shape : torch.Size([3, 23, 64, 8, 7, 7])
+labels : tensor([22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[23.],
+        [ 5.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 180, 4])
+step => 430
+n_frames : tensor([[179]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[13.],
+        [21.],
+        [20.]], device='cuda:0')
+tubes : torch.Size([3, 179, 4])
+step => 431
+n_frames : tensor([[334]], device='cuda:0')
+feats.shape : torch.Size([3, 42, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[42.],
+        [21.],
+        [25.]], device='cuda:0')
+tubes : torch.Size([3, 334, 4])
+step => 432
+n_frames : tensor([[147]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [ 3.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 147, 4])
+step => 433
+n_frames : tensor([[59]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [2.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 59, 4])
+step => 434
+n_frames : tensor([[155]], device='cuda:0')
+feats.shape : torch.Size([3, 20, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[20.],
+        [18.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 155, 4])
+step => 435
+n_frames : tensor([[333]], device='cuda:0')
+feats.shape : torch.Size([9, 28, 64, 8, 7, 7])
+labels : tensor([15., 15., 15., 15., 15., 15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[15.],
+        [28.],
+        [ 9.],
+        [ 9.],
+        [ 4.],
+        [ 8.],
+        [ 7.],
+        [13.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([9, 333, 4])
+step => 436
+n_frames : tensor([[104]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [2.],
+        [6.]], device='cuda:0')
+tubes : torch.Size([3, 104, 4])
+step => 437
+n_frames : tensor([[170]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [ 2.],
+        [21.]], device='cuda:0')
+tubes : torch.Size([3, 170, 4])
+step => 438
+n_frames : tensor([[102]], device='cuda:0')
+feats.shape : torch.Size([3, 13, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[13.],
+        [ 8.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 102, 4])
+step => 439
+n_frames : tensor([[195]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [7.],
+        [6.]], device='cuda:0')
+tubes : torch.Size([3, 195, 4])
+step => 440
+n_frames : tensor([[136]], device='cuda:0')
+feats.shape : torch.Size([3, 17, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[17.],
+        [ 2.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 136, 4])
+step => 441
+n_frames : tensor([[191]], device='cuda:0')
+feats.shape : torch.Size([3, 24, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[24.],
+        [ 6.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 191, 4])
+step => 442
+n_frames : tensor([[71]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [7.],
+        [7.]], device='cuda:0')
+tubes : torch.Size([3, 71, 4])
+step => 443
+n_frames : tensor([[268]], device='cuda:0')
+feats.shape : torch.Size([6, 34, 64, 8, 7, 7])
+labels : tensor([15., 15., 15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[ 6.],
+        [18.],
+        [ 9.],
+        [34.],
+        [21.],
+        [23.]], device='cuda:0')
+tubes : torch.Size([6, 268, 4])
+step => 444
+n_frames : tensor([[165]], device='cuda:0')
+feats.shape : torch.Size([4, 21, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [21.],
+        [ 8.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([4, 165, 4])
+step => 445
+n_frames : tensor([[92]], device='cuda:0')
+feats.shape : torch.Size([3, 8, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [3.],
+        [8.]], device='cuda:0')
+tubes : torch.Size([3, 92, 4])
+step => 446
+n_frames : tensor([[136]], device='cuda:0')
+feats.shape : torch.Size([4, 17, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[17.],
+        [17.],
+        [ 7.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([4, 136, 4])
+step => 447
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [15.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 448
+n_frames : tensor([[103]], device='cuda:0')
+feats.shape : torch.Size([3, 9, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[9.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 103, 4])
+step => 449
+n_frames : tensor([[95]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [3.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 95, 4])
+step => 450
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [ 8.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 451
+n_frames : tensor([[209]], device='cuda:0')
+feats.shape : torch.Size([4, 17, 64, 8, 7, 7])
+labels : tensor([18., 18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[17.],
+        [ 4.],
+        [ 2.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([4, 209, 4])
+step => 452
+n_frames : tensor([[151]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [15.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([3, 151, 4])
+step => 453
+n_frames : tensor([[180]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([1., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 180, 4])
+step => 454
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [18.],
+        [21.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 455
+n_frames : tensor([[151]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [ 7.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 151, 4])
+step => 456
+n_frames : tensor([[187]], device='cuda:0')
+feats.shape : torch.Size([4, 5, 64, 8, 7, 7])
+labels : tensor([21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [5.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([4, 187, 4])
+step => 457
+n_frames : tensor([[88]], device='cuda:0')
+feats.shape : torch.Size([3, 11, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[11.],
+        [ 3.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 88, 4])
+step => 458
+n_frames : tensor([[118]], device='cuda:0')
+feats.shape : torch.Size([3, 13, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[13.],
+        [ 6.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([3, 118, 4])
+step => 459
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [ 7.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 460
+n_frames : tensor([[149]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [11.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 149, 4])
+step => 461
+n_frames : tensor([[151]], device='cuda:0')
+feats.shape : torch.Size([4, 15, 64, 8, 7, 7])
+labels : tensor([22., 22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [ 6.],
+        [14.],
+        [15.]], device='cuda:0')
+tubes : torch.Size([4, 151, 4])
+step => 462
+n_frames : tensor([[251]], device='cuda:0')
+feats.shape : torch.Size([4, 32, 64, 8, 7, 7])
+labels : tensor([11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[32.],
+        [32.],
+        [26.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([4, 251, 4])
+step => 463
+n_frames : tensor([[114]], device='cuda:0')
+feats.shape : torch.Size([3, 15, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[15.],
+        [ 8.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 114, 4])
+step => 464
+n_frames : tensor([[125]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [3.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 125, 4])
+step => 465
+n_frames : tensor([[75]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [4.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 75, 4])
+step => 466
+n_frames : tensor([[113]], device='cuda:0')
+feats.shape : torch.Size([3, 14, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [ 2.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([3, 113, 4])
+step => 467
+n_frames : tensor([[109]], device='cuda:0')
+feats.shape : torch.Size([3, 14, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [ 2.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 109, 4])
+step => 468
+n_frames : tensor([[199]], device='cuda:0')
+feats.shape : torch.Size([4, 25, 64, 8, 7, 7])
+labels : tensor([24., 24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [25.],
+        [13.],
+        [16.]], device='cuda:0')
+tubes : torch.Size([4, 199, 4])
+step => 469
+n_frames : tensor([[137]], device='cuda:0')
+feats.shape : torch.Size([3, 17, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[17.],
+        [ 5.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([3, 137, 4])
+step => 470
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([4, 17, 64, 8, 7, 7])
+labels : tensor([24., 24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [17.],
+        [ 2.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([4, 240, 4])
+step => 471
+n_frames : tensor([[179]], device='cuda:0')
+feats.shape : torch.Size([3, 23, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[23.],
+        [17.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 179, 4])
+step => 472
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [23.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 473
+n_frames : tensor([[142]], device='cuda:0')
+feats.shape : torch.Size([3, 18, 64, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [ 9.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 142, 4])
+step => 474
+n_frames : tensor([[82]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [7.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 82, 4])
+step => 475
+n_frames : tensor([[251]], device='cuda:0')
+feats.shape : torch.Size([3, 8, 64, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[8.],
+        [6.],
+        [8.]], device='cuda:0')
+tubes : torch.Size([3, 251, 4])
+step => 476
+n_frames : tensor([[333]], device='cuda:0')
+feats.shape : torch.Size([7, 26, 64, 8, 7, 7])
+labels : tensor([15., 15., 15., 15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[11.],
+        [ 8.],
+        [23.],
+        [15.],
+        [26.],
+        [ 8.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([7, 333, 4])
+step => 477
+n_frames : tensor([[236]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [ 5.],
+        [24.]], device='cuda:0')
+tubes : torch.Size([3, 236, 4])
+step => 478
+n_frames : tensor([[91]], device='cuda:0')
+feats.shape : torch.Size([3, 12, 64, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [ 2.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([3, 91, 4])
+step => 479
+n_frames : tensor([[111]], device='cuda:0')
+feats.shape : torch.Size([3, 13, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[13.],
+        [ 5.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([3, 111, 4])
+step => 480
+n_frames : tensor([[101]], device='cuda:0')
+feats.shape : torch.Size([3, 13, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[13.],
+        [ 4.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 101, 4])
+step => 481
+n_frames : tensor([[259]], device='cuda:0')
+feats.shape : torch.Size([3, 33, 64, 8, 7, 7])
+labels : tensor([11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[33.],
+        [21.],
+        [19.]], device='cuda:0')
+tubes : torch.Size([3, 259, 4])
+step => 482
+n_frames : tensor([[242]], device='cuda:0')
+feats.shape : torch.Size([4, 31, 64, 8, 7, 7])
+labels : tensor([11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[31.],
+        [31.],
+        [27.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([4, 242, 4])
+step => 483
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([10, 29, 64, 8, 7, 7])
+labels : tensor([3., 3., 3., 3., 3., 3., 3., 3., 0., 0.], device='cuda:0')
+tube_len : tensor([[29.],
+        [ 7.],
+        [13.],
+        [12.],
+        [12.],
+        [14.],
+        [14.],
+        [14.],
+        [ 6.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([10, 240, 4])
+step => 484
+n_frames : tensor([[117]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 117, 4])
+step => 485
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [ 3.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 486
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [ 6.],
+        [13.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 487
+n_frames : tensor([[142]], device='cuda:0')
+feats.shape : torch.Size([3, 18, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [ 8.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 142, 4])
+step => 488
+n_frames : tensor([[143]], device='cuda:0')
+feats.shape : torch.Size([3, 18, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [ 7.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([3, 143, 4])
+step => 489
+n_frames : tensor([[61]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [3.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 61, 4])
+step => 490
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [ 9.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 491
+n_frames : tensor([[151]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [11.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([3, 151, 4])
+step => 492
+n_frames : tensor([[113]], device='cuda:0')
+feats.shape : torch.Size([3, 14, 64, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [ 7.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 113, 4])
+step => 493
+n_frames : tensor([[74]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [6.],
+        [7.]], device='cuda:0')
+tubes : torch.Size([3, 74, 4])
+step => 494
+n_frames : tensor([[509]], device='cuda:0')
+feats.shape : torch.Size([4, 26, 64, 8, 7, 7])
+labels : tensor([13., 13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[26.],
+        [16.],
+        [ 4.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([4, 509, 4])
+step => 495
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 17, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[17.],
+        [ 2.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 496
+n_frames : tensor([[159]], device='cuda:0')
+feats.shape : torch.Size([3, 20, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[20.],
+        [ 5.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([3, 159, 4])
+step => 497
+n_frames : tensor([[257]], device='cuda:0')
+feats.shape : torch.Size([3, 32, 64, 8, 7, 7])
+labels : tensor([11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[32.],
+        [26.],
+        [18.]], device='cuda:0')
+tubes : torch.Size([3, 257, 4])
+step => 498
+n_frames : tensor([[273]], device='cuda:0')
+feats.shape : torch.Size([3, 20, 64, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[11.],
+        [20.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([3, 273, 4])
+step => 499
+n_frames : tensor([[279]], device='cuda:0')
+feats.shape : torch.Size([3, 35, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[35.],
+        [16.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([3, 279, 4])
+step => 500
+n_frames : tensor([[167]], device='cuda:0')
+feats.shape : torch.Size([4, 21, 64, 8, 7, 7])
+labels : tensor([15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [21.],
+        [ 3.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([4, 167, 4])
+step => 501
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [ 9.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 502
+n_frames : tensor([[82]], device='cuda:0')
+feats.shape : torch.Size([3, 11, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[11.],
+        [ 3.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 82, 4])
+step => 503
+n_frames : tensor([[210]], device='cuda:0')
+feats.shape : torch.Size([3, 27, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[27.],
+        [ 3.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 210, 4])
+step => 504
+n_frames : tensor([[235]], device='cuda:0')
+feats.shape : torch.Size([3, 16, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [13.],
+        [13.]], device='cuda:0')
+tubes : torch.Size([3, 235, 4])
+step => 505
+n_frames : tensor([[197]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [12.],
+        [15.]], device='cuda:0')
+tubes : torch.Size([3, 197, 4])
+step => 506
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [14.],
+        [11.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 507
+n_frames : tensor([[350]], device='cuda:0')
+feats.shape : torch.Size([3, 44, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[44.],
+        [28.],
+        [27.]], device='cuda:0')
+tubes : torch.Size([3, 350, 4])
+step => 508
+n_frames : tensor([[112]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [4.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 112, 4])
+step => 509
+n_frames : tensor([[259]], device='cuda:0')
+feats.shape : torch.Size([5, 28, 64, 8, 7, 7])
+labels : tensor([20., 20., 20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[ 2.],
+        [28.],
+        [ 3.],
+        [15.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([5, 259, 4])
+step => 510
+n_frames : tensor([[111]], device='cuda:0')
+feats.shape : torch.Size([3, 14, 64, 8, 7, 7])
+labels : tensor([1., 0., 0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [ 3.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 111, 4])
+step => 511
+n_frames : tensor([[94]], device='cuda:0')
+feats.shape : torch.Size([3, 9, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[9.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 94, 4])
+step => 512
+n_frames : tensor([[119]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 119, 4])
+step => 513
+n_frames : tensor([[125]], device='cuda:0')
+feats.shape : torch.Size([4, 16, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [16.],
+        [ 6.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([4, 125, 4])
+step => 514
+n_frames : tensor([[244]], device='cuda:0')
+feats.shape : torch.Size([3, 31, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[31.],
+        [28.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 244, 4])
+step => 515
+n_frames : tensor([[187]], device='cuda:0')
+feats.shape : torch.Size([3, 24, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[24.],
+        [ 2.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 187, 4])
+step => 516
+n_frames : tensor([[190]], device='cuda:0')
+feats.shape : torch.Size([3, 24, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[24.],
+        [ 3.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 190, 4])
+step => 517
+n_frames : tensor([[168]], device='cuda:0')
+feats.shape : torch.Size([8, 13, 64, 8, 7, 7])
+labels : tensor([15., 15., 15., 15., 15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[13.],
+        [ 7.],
+        [ 3.],
+        [ 2.],
+        [ 8.],
+        [ 7.],
+        [10.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([8, 168, 4])
+step => 518
+n_frames : tensor([[155]], device='cuda:0')
+feats.shape : torch.Size([3, 17, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [17.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 155, 4])
+step => 519
+n_frames : tensor([[97]], device='cuda:0')
+feats.shape : torch.Size([3, 12, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [ 4.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 97, 4])
+step => 520
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [21.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 521
+n_frames : tensor([[133]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [5.],
+        [7.]], device='cuda:0')
+tubes : torch.Size([3, 133, 4])
+step => 522
+n_frames : tensor([[140]], device='cuda:0')
+feats.shape : torch.Size([3, 18, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [10.],
+        [11.]], device='cuda:0')
+tubes : torch.Size([3, 140, 4])
+step => 523
+n_frames : tensor([[83]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [6.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 83, 4])
+step => 524
+n_frames : tensor([[113]], device='cuda:0')
+feats.shape : torch.Size([3, 14, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[14.],
+        [11.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 113, 4])
+step => 525
+n_frames : tensor([[93]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [3.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 93, 4])
+step => 526
+n_frames : tensor([[104]], device='cuda:0')
+feats.shape : torch.Size([3, 10, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[10.],
+        [ 8.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 104, 4])
+step => 527
+n_frames : tensor([[97]], device='cuda:0')
+feats.shape : torch.Size([3, 12, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [ 4.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 97, 4])
+step => 528
+n_frames : tensor([[74]], device='cuda:0')
+feats.shape : torch.Size([3, 9, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[9.],
+        [7.],
+        [8.]], device='cuda:0')
+tubes : torch.Size([3, 74, 4])
+step => 529
+n_frames : tensor([[165]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [ 2.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([3, 165, 4])
+step => 530
+n_frames : tensor([[124]], device='cuda:0')
+feats.shape : torch.Size([4, 16, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [16.],
+        [ 2.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([4, 124, 4])
+step => 531
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 26, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[26.],
+        [23.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 532
+n_frames : tensor([[51]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [6.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 51, 4])
+step => 533
+n_frames : tensor([[256]], device='cuda:0')
+feats.shape : torch.Size([4, 32, 64, 8, 7, 7])
+labels : tensor([11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[32.],
+        [32.],
+        [ 8.],
+        [13.]], device='cuda:0')
+tubes : torch.Size([4, 256, 4])
+step => 534
+n_frames : tensor([[141]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 141, 4])
+step => 535
+n_frames : tensor([[171]], device='cuda:0')
+feats.shape : torch.Size([4, 5, 64, 8, 7, 7])
+labels : tensor([21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [5.],
+        [2.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([4, 171, 4])
+step => 536
+n_frames : tensor([[235]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [16.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 235, 4])
+step => 537
+n_frames : tensor([[181]], device='cuda:0')
+feats.shape : torch.Size([3, 23, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[23.],
+        [ 5.],
+        [15.]], device='cuda:0')
+tubes : torch.Size([3, 181, 4])
+step => 538
+n_frames : tensor([[357]], device='cuda:0')
+feats.shape : torch.Size([3, 45, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[45.],
+        [ 6.],
+        [12.]], device='cuda:0')
+tubes : torch.Size([3, 357, 4])
+step => 539
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [19.],
+        [18.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 540
+n_frames : tensor([[85]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [3.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 85, 4])
+step => 541
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [27.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 542
+n_frames : tensor([[103]], device='cuda:0')
+feats.shape : torch.Size([4, 4, 64, 8, 7, 7])
+labels : tensor([21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [3.],
+        [4.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([4, 103, 4])
+step => 543
+n_frames : tensor([[153]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [ 5.],
+        [15.]], device='cuda:0')
+tubes : torch.Size([3, 153, 4])
+step => 544
+n_frames : tensor([[123]], device='cuda:0')
+feats.shape : torch.Size([3, 16, 64, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [ 9.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 123, 4])
+step => 545
+n_frames : tensor([[155]], device='cuda:0')
+feats.shape : torch.Size([4, 13, 64, 8, 7, 7])
+labels : tensor([23., 23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[10.],
+        [ 6.],
+        [11.],
+        [13.]], device='cuda:0')
+tubes : torch.Size([4, 155, 4])
+step => 546
+n_frames : tensor([[89]], device='cuda:0')
+feats.shape : torch.Size([3, 11, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[11.],
+        [ 4.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([3, 89, 4])
+step => 547
+n_frames : tensor([[167]], device='cuda:0')
+feats.shape : torch.Size([3, 17, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[10.],
+        [17.],
+        [17.]], device='cuda:0')
+tubes : torch.Size([3, 167, 4])
+step => 548
+n_frames : tensor([[168]], device='cuda:0')
+feats.shape : torch.Size([5, 21, 64, 8, 7, 7])
+labels : tensor([15., 15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [16.],
+        [ 5.],
+        [ 6.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([5, 168, 4])
+step => 549
+n_frames : tensor([[95]], device='cuda:0')
+feats.shape : torch.Size([4, 12, 64, 8, 7, 7])
+labels : tensor([11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [12.],
+        [ 6.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([4, 95, 4])
+step => 550
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [13.],
+        [19.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 551
+n_frames : tensor([[95]], device='cuda:0')
+feats.shape : torch.Size([3, 12, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [ 6.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([3, 95, 4])
+step => 552
+n_frames : tensor([[115]], device='cuda:0')
+feats.shape : torch.Size([3, 15, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[15.],
+        [ 7.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 115, 4])
+step => 553
+n_frames : tensor([[251]], device='cuda:0')
+feats.shape : torch.Size([3, 32, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[32.],
+        [ 7.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 251, 4])
+step => 554
+n_frames : tensor([[177]], device='cuda:0')
+feats.shape : torch.Size([4, 12, 64, 8, 7, 7])
+labels : tensor([20., 20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [ 4.],
+        [ 3.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([4, 177, 4])
+step => 555
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([4, 30, 64, 8, 7, 7])
+labels : tensor([11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [30.],
+        [23.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([4, 240, 4])
+step => 556
+n_frames : tensor([[151]], device='cuda:0')
+feats.shape : torch.Size([4, 19, 64, 8, 7, 7])
+labels : tensor([22., 22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [13.],
+        [ 9.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([4, 151, 4])
+step => 557
+n_frames : tensor([[69]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [5.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 69, 4])
+step => 558
+n_frames : tensor([[163]], device='cuda:0')
+feats.shape : torch.Size([4, 21, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [21.],
+        [20.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([4, 163, 4])
+step => 559
+n_frames : tensor([[186]], device='cuda:0')
+feats.shape : torch.Size([7, 12, 64, 8, 7, 7])
+labels : tensor([20., 20., 20., 20., 20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[ 1.],
+        [ 1.],
+        [ 5.],
+        [ 2.],
+        [12.],
+        [ 7.],
+        [11.]], device='cuda:0')
+tubes : torch.Size([7, 186, 4])
+step => 560
+n_frames : tensor([[151]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [18.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 151, 4])
+step => 561
+n_frames : tensor([[161]], device='cuda:0')
+feats.shape : torch.Size([3, 20, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[20.],
+        [15.],
+        [15.]], device='cuda:0')
+tubes : torch.Size([3, 161, 4])
+step => 562
+n_frames : tensor([[80]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [5.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 80, 4])
+step => 563
+n_frames : tensor([[103]], device='cuda:0')
+feats.shape : torch.Size([3, 12, 64, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [ 4.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 103, 4])
+step => 564
+n_frames : tensor([[79]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [6.],
+        [6.]], device='cuda:0')
+tubes : torch.Size([3, 79, 4])
+step => 565
+n_frames : tensor([[245]], device='cuda:0')
+feats.shape : torch.Size([3, 31, 64, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[31.],
+        [ 4.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 245, 4])
+step => 566
+n_frames : tensor([[219]], device='cuda:0')
+feats.shape : torch.Size([3, 28, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[28.],
+        [11.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 219, 4])
+step => 567
+n_frames : tensor([[150]], device='cuda:0')
+feats.shape : torch.Size([3, 18, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [13.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 150, 4])
+step => 568
+n_frames : tensor([[211]], device='cuda:0')
+feats.shape : torch.Size([3, 27, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[27.],
+        [25.],
+        [17.]], device='cuda:0')
+tubes : torch.Size([3, 211, 4])
+step => 569
+n_frames : tensor([[56]], device='cuda:0')
+feats.shape : torch.Size([3, 4, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [2.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 56, 4])
+step => 570
+n_frames : tensor([[296]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [19.],
+        [13.]], device='cuda:0')
+tubes : torch.Size([3, 296, 4])
+step => 571
+n_frames : tensor([[300]], device='cuda:0')
+feats.shape : torch.Size([3, 38, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[38.],
+        [30.],
+        [11.]], device='cuda:0')
+tubes : torch.Size([3, 300, 4])
+step => 572
+n_frames : tensor([[74]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [2.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 74, 4])
+step => 573
+n_frames : tensor([[177]], device='cuda:0')
+feats.shape : torch.Size([3, 22, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[22.],
+        [ 2.],
+        [17.]], device='cuda:0')
+tubes : torch.Size([3, 177, 4])
+step => 574
+n_frames : tensor([[163]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [ 3.],
+        [13.]], device='cuda:0')
+tubes : torch.Size([3, 163, 4])
+step => 575
+n_frames : tensor([[584]], device='cuda:0')
+feats.shape : torch.Size([3, 68, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[68.],
+        [11.],
+        [23.]], device='cuda:0')
+tubes : torch.Size([3, 584, 4])
+step => 576
+n_frames : tensor([[174]], device='cuda:0')
+feats.shape : torch.Size([3, 22, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[22.],
+        [ 2.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 174, 4])
+step => 577
+n_frames : tensor([[70]], device='cuda:0')
+feats.shape : torch.Size([3, 8, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[8.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 70, 4])
+step => 578
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [ 3.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 579
+n_frames : tensor([[164]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [15.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 164, 4])
+step => 580
+n_frames : tensor([[186]], device='cuda:0')
+feats.shape : torch.Size([3, 23, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[23.],
+        [ 2.],
+        [18.]], device='cuda:0')
+tubes : torch.Size([3, 186, 4])
+step => 581
+n_frames : tensor([[129]], device='cuda:0')
+feats.shape : torch.Size([3, 8, 64, 8, 7, 7])
+labels : tensor([23.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[8.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 129, 4])
+step => 582
+n_frames : tensor([[336]], device='cuda:0')
+feats.shape : torch.Size([3, 42, 64, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[42.],
+        [19.],
+        [20.]], device='cuda:0')
+tubes : torch.Size([3, 336, 4])
+step => 583
+n_frames : tensor([[333]], device='cuda:0')
+feats.shape : torch.Size([9, 19, 64, 8, 7, 7])
+labels : tensor([15., 15., 15., 15., 15., 15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[15.],
+        [ 7.],
+        [19.],
+        [ 5.],
+        [12.],
+        [18.],
+        [ 5.],
+        [15.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([9, 333, 4])
+step => 584
+n_frames : tensor([[301]], device='cuda:0')
+feats.shape : torch.Size([3, 28, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[28.],
+        [ 9.],
+        [ 4.]], device='cuda:0')
+tubes : torch.Size([3, 301, 4])
+step => 585
+n_frames : tensor([[250]], device='cuda:0')
+feats.shape : torch.Size([4, 32, 64, 8, 7, 7])
+labels : tensor([11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[32.],
+        [32.],
+        [19.],
+        [14.]], device='cuda:0')
+tubes : torch.Size([4, 250, 4])
+step => 586
+n_frames : tensor([[213]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[18.],
+        [21.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 213, 4])
+step => 587
+n_frames : tensor([[330]], device='cuda:0')
+feats.shape : torch.Size([4, 37, 64, 8, 7, 7])
+labels : tensor([20., 20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[ 4.],
+        [37.],
+        [13.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([4, 330, 4])
+step => 588
+n_frames : tensor([[126]], device='cuda:0')
+feats.shape : torch.Size([3, 16, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[16.],
+        [14.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 126, 4])
+step => 589
+n_frames : tensor([[92]], device='cuda:0')
+feats.shape : torch.Size([3, 6, 64, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [3.],
+        [6.]], device='cuda:0')
+tubes : torch.Size([3, 92, 4])
+step => 590
+n_frames : tensor([[163]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [ 7.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 163, 4])
+step => 591
+n_frames : tensor([[127]], device='cuda:0')
+feats.shape : torch.Size([4, 12, 64, 8, 7, 7])
+labels : tensor([24., 24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [ 3.],
+        [ 3.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([4, 127, 4])
+step => 592
+n_frames : tensor([[167]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [ 2.],
+        [18.]], device='cuda:0')
+tubes : torch.Size([3, 167, 4])
+step => 593
+n_frames : tensor([[164]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [11.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 164, 4])
+step => 594
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [ 4.],
+        [10.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 595
+n_frames : tensor([[155]], device='cuda:0')
+feats.shape : torch.Size([3, 20, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[20.],
+        [ 7.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([3, 155, 4])
+step => 596
+n_frames : tensor([[248]], device='cuda:0')
+feats.shape : torch.Size([4, 8, 64, 8, 7, 7])
+labels : tensor([21., 21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[6.],
+        [4.],
+        [8.],
+        [8.]], device='cuda:0')
+tubes : torch.Size([4, 248, 4])
+step => 597
+n_frames : tensor([[148]], device='cuda:0')
+feats.shape : torch.Size([3, 19, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[19.],
+        [10.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 148, 4])
+step => 598
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [18.],
+        [19.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 599
+n_frames : tensor([[61]], device='cuda:0')
+feats.shape : torch.Size([3, 7, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[7.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 61, 4])
+step => 600
+n_frames : tensor([[333]], device='cuda:0')
+feats.shape : torch.Size([8, 25, 64, 8, 7, 7])
+labels : tensor([15., 15., 15., 15., 15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[24.],
+        [11.],
+        [ 6.],
+        [ 3.],
+        [13.],
+        [25.],
+        [23.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([8, 333, 4])
+step => 601
+n_frames : tensor([[160]], device='cuda:0')
+feats.shape : torch.Size([3, 20, 64, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[20.],
+        [ 2.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 160, 4])
+step => 602
+n_frames : tensor([[97]], device='cuda:0')
+feats.shape : torch.Size([3, 10, 64, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[10.],
+        [ 8.],
+        [ 5.]], device='cuda:0')
+tubes : torch.Size([3, 97, 4])
+step => 603
+n_frames : tensor([[240]], device='cuda:0')
+feats.shape : torch.Size([3, 30, 64, 8, 7, 7])
+labels : tensor([24.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[30.],
+        [20.],
+        [17.]], device='cuda:0')
+tubes : torch.Size([3, 240, 4])
+step => 604
+n_frames : tensor([[167]], device='cuda:0')
+feats.shape : torch.Size([6, 17, 64, 8, 7, 7])
+labels : tensor([15., 15., 15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[ 9.],
+        [11.],
+        [17.],
+        [ 3.],
+        [ 4.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([6, 167, 4])
+step => 605
+n_frames : tensor([[210]], device='cuda:0')
+feats.shape : torch.Size([3, 27, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[27.],
+        [14.],
+        [13.]], device='cuda:0')
+tubes : torch.Size([3, 210, 4])
+step => 606
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([22.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [ 2.],
+        [24.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 607
+n_frames : tensor([[301]], device='cuda:0')
+feats.shape : torch.Size([3, 38, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[38.],
+        [11.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 301, 4])
+step => 608
+n_frames : tensor([[253]], device='cuda:0')
+feats.shape : torch.Size([3, 29, 64, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[29.],
+        [ 2.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 253, 4])
+step => 609
+n_frames : tensor([[164]], device='cuda:0')
+feats.shape : torch.Size([3, 21, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [ 7.],
+        [ 2.]], device='cuda:0')
+tubes : torch.Size([3, 164, 4])
+step => 610
+n_frames : tensor([[63]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [2.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 63, 4])
+step => 611
+n_frames : tensor([[257]], device='cuda:0')
+feats.shape : torch.Size([4, 32, 64, 8, 7, 7])
+labels : tensor([11., 11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[32.],
+        [32.],
+        [10.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([4, 257, 4])
+step => 612
+n_frames : tensor([[91]], device='cuda:0')
+feats.shape : torch.Size([3, 12, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [ 2.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([3, 91, 4])
+step => 613
+n_frames : tensor([[201]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [ 6.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 201, 4])
+step => 614
+n_frames : tensor([[168]], device='cuda:0')
+feats.shape : torch.Size([4, 21, 64, 8, 7, 7])
+labels : tensor([15., 15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[21.],
+        [18.],
+        [ 5.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([4, 168, 4])
+step => 615
+n_frames : tensor([[213]], device='cuda:0')
+feats.shape : torch.Size([3, 27, 64, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[27.],
+        [18.],
+        [ 7.]], device='cuda:0')
+tubes : torch.Size([3, 213, 4])
+step => 616
+n_frames : tensor([[87]], device='cuda:0')
+feats.shape : torch.Size([3, 11, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[11.],
+        [ 3.],
+        [ 8.]], device='cuda:0')
+tubes : torch.Size([3, 87, 4])
+step => 617
+n_frames : tensor([[209]], device='cuda:0')
+feats.shape : torch.Size([3, 26, 64, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[26.],
+        [ 3.],
+        [ 6.]], device='cuda:0')
+tubes : torch.Size([3, 209, 4])
+step => 618
+n_frames : tensor([[200]], device='cuda:0')
+feats.shape : torch.Size([3, 25, 64, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[25.],
+        [ 2.],
+        [ 3.]], device='cuda:0')
+tubes : torch.Size([3, 200, 4])
+step => 619
+n_frames : tensor([[212]], device='cuda:0')
+feats.shape : torch.Size([3, 27, 64, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[27.],
+        [21.],
+        [16.]], device='cuda:0')
+tubes : torch.Size([3, 212, 4])
+step => 620
+n_frames : tensor([[131]], device='cuda:0')
+feats.shape : torch.Size([4, 17, 64, 8, 7, 7])
+labels : tensor([7., 7., 0., 0.], device='cuda:0')
+tube_len : tensor([[17.],
+        [17.],
+        [ 7.],
+        [ 9.]], device='cuda:0')
+tubes : torch.Size([4, 131, 4])
+step => 621
+n_frames : tensor([[156]], device='cuda:0')
+feats.shape : torch.Size([3, 20, 64, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[20.],
+        [14.],
+        [12.]], device='cuda:0')
+tubes : torch.Size([3, 156, 4])
+step => 622
+n_frames : tensor([[59]], device='cuda:0')
+feats.shape : torch.Size([3, 5, 64, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [5.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 59, 4])
+step => 623
+n_frames : tensor([[244]], device='cuda:0')
+feats.shape : torch.Size([4, 12, 64, 8, 7, 7])
+labels : tensor([20., 20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[12.],
+        [ 8.],
+        [ 4.],
+        [ 5.]], device='cuda:0')

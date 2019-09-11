@@ -21,7 +21,7 @@ from model_all import Model
 from resize_rpn import resize_tube
 
 def validate_model(model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path,\
-                   cls2idx,):
+                   cls2idx,n_devs):
 
     iou_thresh = 0.5 # Intersection Over Union thresh
     iou_thresh_4 = 0.4 # Intersection Over Union thresh
@@ -29,8 +29,9 @@ def validate_model(model, dataset_folder, sample_duration, spatial_transform, te
 
     confidence_thresh = 0.5
 
+    batch_size = n_devs
     vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='test', classes_idx=cls2idx, plot=True)
-    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1, num_workers=8*n_devs, pin_memory=True,
+    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size, num_workers=8*n_devs, pin_memory=True,
                                               shuffle=True)    # reset learning rate
     model.eval()
     ## 2 rois : 1450
@@ -40,9 +41,10 @@ def validate_model(model, dataset_folder, sample_duration, spatial_transform, te
 
     for step, data  in enumerate(data_loader):
 
-        # if step == 25:
-        if step == 1:
+        if step == 20:
             break
+        # if step == 2:
+        #     exit(-1)
         
         vid_id, clips, boxes, n_frames, n_actions, h, w, target, clips_plot =data
         vid_id = vid_id.int()
@@ -86,7 +88,6 @@ def validate_model(model, dataset_folder, sample_duration, spatial_transform, te
             # print('f_tubes.shape :',f_tubes.shape)
             # print('f_tubes.shape :',f_tubes[:, :2])
 
-
             f_boxes = torch.cat([target.type_as(boxes),boxes[i,:,:n_frames[i],:4].contiguous().view(n_frames[i]*4)]).unsqueeze(0)
             v_name = vid_names[vid_id[i]].split('/')[1]
             detection_dic[v_name] = f_tubes.float()
@@ -126,9 +127,9 @@ if __name__ == '__main__':
     boxes_file = '../poses.json'
 
     sample_size = 112
-    sample_duration = 16  # len(images)
+    # sample_duration = 16  # len(images)
+    sample_duration = 8  # len(images)
 
-    batch_size = 1
 
     # # # get mean
     mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
@@ -156,8 +157,16 @@ if __name__ == '__main__':
     #          Model Initialization          #
     ##########################################
 
-    model = Model(actions, sample_duration, sample_size)
-    model.load_part_model()
+    # Init action_net
+    # action_model_path = './action_net_model_16frm_max_jhmdb.pwf'
+    action_model_path = './action_net_model_8frm_2_avg_jhmdb.pwf'
+    # action_model_path = './action_net_model_4frm_max_jhmdb.pwf'
+
+    linear_path = None
+
+    model = Model(actions, sample_duration, sample_size)    
+    # model.load_part_model()
+    model.load_part_model(action_model_path=action_model_path, rnn_path=linear_path)
     model.deactivate_action_net_grad()
 
     lr = 0.1
@@ -183,6 +192,8 @@ if __name__ == '__main__':
     #          Train starts here          #
     #######################################
 
+    n_devs = torch.cuda.device_count()
+    batch_size = n_devs
     vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
                                               shuffle=True)
@@ -190,7 +201,6 @@ if __name__ == '__main__':
     epochs = 60
     # epochs = 5
 
-    n_devs = torch.cuda.device_count()
     if torch.cuda.device_count() > 1:
 
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
@@ -246,11 +256,11 @@ if __name__ == '__main__':
     
         if ( ep + 1 ) % 5 == 0:
             torch.save(model.state_dict(), "model_linear_mean_{}epoch.pwf".format(ep+1))
-        if (ep + 1) % (5) == 0:
-            print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(ep+1, epochs))
-            validate_model( model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file,\
-                            split_txt_path, cls2idx)
-
+        # if (ep + 1) % (5) == 0:
+        #     print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(ep+1, epochs))
+        #     validate_model( model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file,\
+        #                     split_txt_path, cls2idx, n_devs)
+            
     torch.save(model.state_dict(), "model_linear_mean.pwf")
 
 

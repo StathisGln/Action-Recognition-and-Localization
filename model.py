@@ -21,7 +21,7 @@ from ucf_dataset import single_video
 from bbox_transform import bbox_overlaps_connect
 from collections import OrderedDict
 from box_functions import bbox_transform, tube_transform_inv, clip_boxes, tube_overlaps
-
+from nms_3d_whole_video.nms_gpu import nms_gpu
 
 class Model(nn.Module):
     """ 
@@ -40,17 +40,11 @@ class Model(nn.Module):
         ## general options
         self.sample_duration = sample_duration
         self.sample_size = sample_size
-        # self.step = int(self.sample_duration/2)
-        # self.step = int(self.sample_duration*3/4)
-        # self.step = int(self.sample_duration*7/8)
-
-        # self.step = int(15)
-        # self.step = int(12)
-
-        # self.step = int(2)
         self.step = sample_duration
+
         self.p_feat_size = 64 # 128 # 256 # 512
         self.POOLING_SIZE = 7
+        self.nms_thresh = 0.7
         # For connection 
         self.max_num_tubes = conf.MAX_NUMBER_TUBES
         self.connection_thresh = conf.CONNECTION_THRESH
@@ -324,16 +318,17 @@ class Model(nn.Module):
                     bg_tubes_indices_picked = (torch.rand(2)*bg_tubes_indices.size(0)).long()
                     bg_tubes_list = [f_tubes[i] for i in bg_tubes_indices[bg_tubes_indices_picked]]
                     bg_labels = torch.zeros(len(bg_tubes_list))
+                    bg_tubes = torch.cat([final_tubes[i] for i in bg_tubes_indices[bg_tubes_indices_picked]])
                 else:
                     bg_tubes_list = []
                     bg_labels = torch.Tensor([])
+                    bg_tubes = torch.Tensor([])
             else:
                 bg_tubes_list = []
                 bg_labels = torch.Tensor([])
+                bg_tubes = torch.Tensor([])
 
             gt_tubes_list = [[] for i in range(num_actions)]
-
-            # print('n_clips :',n_clips)
 
             for i in range(n_clips):
                 # print('i :',i)
@@ -347,7 +342,7 @@ class Model(nn.Module):
                 max_overlaps, argmax_overlaps = torch.max(overlaps, 0)
 
                 for j in range(num_actions):
-                    if max_overlaps[j] == 1.0: 
+                    if max_overlaps[j] > 0.9: 
                         gt_tubes_list[j].append((i,j))
             gt_tubes_list = [i for i in gt_tubes_list if i != []]
             if len(gt_tubes_list) != num_actions:
@@ -355,7 +350,6 @@ class Model(nn.Module):
                 print('num_actions :',num_actions)
                 print('boxes.cpu().numpy() :',boxes.cpu().numpy())
                 
-            # print('gt_tubes_list :',gt_tubes_list)
             ## concate fb, bg tubes
             if gt_tubes_list == [[]]:
                 print('overlaps :',overlaps)
@@ -363,12 +357,20 @@ class Model(nn.Module):
                 print('p_tubes :',p_tubes)
                 print('f_gt_tubes :',f_gt_tubes)
                 exit(-1)
+
+            boxes_ = boxes.permute(1,0,2).contiguous()
+            boxes_ = boxes_[:,:,:4].contiguous().view(num_actions,num_frames,4)
+
+
             if bg_tubes_list != []:
                 f_tubes = gt_tubes_list + bg_tubes_list
                 target_lbl = torch.cat([labels, bg_labels],dim=0)
+                tubes_ret = torch.cat([boxes_.type_as(bg_tubes), bg_tubes], dim=0)
             else:
                 f_tubes = gt_tubes_list
                 target_lbl = labels
+                tubes_ret = boxes_
+
 
         # print('num_frames :',num_frames)
         # print('gt_tubes_list :',gt_tubes_list, ' labels :',labels)
@@ -387,11 +389,17 @@ class Model(nn.Module):
         ## calculate input rois
         prob_out = torch.zeros(len(f_tubes), self.n_classes).cuda()
         final_feats = []
+        extract_tubes = []
+        len_tubes = []
+        
         # feats = torch.zeros(29,self.p_feat_size, self.sample_duration)
         for i in range(len(f_tubes)):
 
             seq = f_tubes[i]
-            feats = torch.Tensor(len(seq),self.p_feat_size,self.sample_duration, self.POOLING_SIZE,self.POOLING_SIZE)
+            len_tubes.append(torch.Tensor([len(seq)]))
+            # feats = torch.Tensor(len(seq),self.p_feat_size,self.sample_duration, self.POOLING_SIZE,self.POOLING_SIZE)
+            feats = torch.zeros(max_length,self.p_feat_size,self.sample_duration, self.POOLING_SIZE,self.POOLING_SIZE)
+
             
             for j in range(len(seq)):
                 feats[j] = features[seq[j][0],seq[j][1]]
@@ -400,32 +408,33 @@ class Model(nn.Module):
             # prob_out[i] = self.act_rnn(feats.cuda())
 
             if mode == 'extract':
-                final_feats.append(torch.mean(feats,dim=0))
+                final_feats.append(feats)
 
             feats = torch.mean(feats, dim=0)
 
-            try:
-                prob_out[i] = self.act_rnn(feats.view(-1).cuda())
-            except Exception as e:
-                print('feats.shape :',feats.shape)
-                print('seq :',seq)
-                for i in range(len(f_tubes)):
-                    print('seq[i] :',f_tubes[i])
+            # try:
+            #     prob_out[i] = self.act_rnn(feats.view(-1).cuda())
+            # except Exception as e:
+            #     print('feats.shape :',feats.shape)
+            #     print('seq :',seq)
+            #     for i in range(len(f_tubes)):
+            #         print('seq[i] :',f_tubes[i])
                     
-                print('e :',e)
-                exit(-1)
-            if prob_out[i,0] != prob_out[i,0]:
-                print(' prob_out :', prob_out ,' feats :',feats.cpu().numpy(), ' numpy(), feats.shape  :,', feats.shape ,' target_lbl :',target_lbl, \
-                      ' \ntmp_tube :',tmp_tube, )
-                exit(-1)
+            #     print('e :',e)
+            #     exit(-1)
+            # if prob_out[i,0] != prob_out[i,0]:
+            #     print(' prob_out :', prob_out ,' feats :',feats.cpu().numpy(), ' numpy(), feats.shape  :,', feats.shape ,' target_lbl :',target_lbl, \
+            #           ' \ntmp_tube :',tmp_tube, )
+            #     exit(-1)
 
         if mode == 'extract':
+
             # now we use mean so we can have a tensor containing all features
             final_feats = torch.stack(final_feats).cuda()
-            final_tubes = final_tubes.cuda()
+            tubes_ret = tubes_ret.cuda()
             target_lbl = target_lbl.cuda()
-            max_length = torch.Tensor([max_length]).cuda()
-            return final_feats, target_lbl, max_length
+            len_tubes = torch.stack(len_tubes).cuda()
+            return final_feats, tubes_ret, target_lbl, len_tubes
         # ##########################################
         # #           Time for Linear Loss         #
         # ##########################################

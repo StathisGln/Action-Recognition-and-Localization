@@ -33,7 +33,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='test', classes_idx=cls2idx, plot=True)
     # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
     #                                           shuffle=True)    # reset learning rate
-    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1, num_workers=8*n_devs, pin_memory=True,
+    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
                                               shuffle=True)    # reset learning rate
 
     model.eval()
@@ -59,8 +59,10 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
     for step, data  in enumerate(data_loader):
 
-        # if step == 3:
+        # if step == 1:
+        #     exit(-1)
         #     break
+
         print('step =>',step)
 
         # vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
@@ -291,28 +293,29 @@ if __name__ == '__main__':
 
     # Init action_net
     # action_model_path = './action_net_model_16frm_max_jhmdb.pwf'
-    action_model_path = './action_net_model_8frm_2_avg_jhmdb.pwf'
+    # action_model_path = './action_net_model_8frm_2_avg_jhmdb.pwf'
     # action_model_path = './action_net_model_4frm_max_jhmdb.pwf'
 
     # linear_path = './linear_jhmdb.pwf'
-    linear_path = './linear_jhmdb_5.pwf'
-    # linear_path = None
+    # linear_path = './linear_jhmdb_5.pwf'
+
+    linear_path = None
 
     model = Model(actions, sample_duration, sample_size)
 
-    # model.load_part_model()
-    model.load_part_model(action_model_path=action_model_path, rnn_path=linear_path)
+    model.load_part_model()
+    # model.load_part_model(action_model_path=action_model_path, rnn_path=linear_path)
 
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
     model = nn.DataParallel(model)
     model.to(device)
 
-    # model_path = './model_linear.pwf'
-    # # model_path = './model.pwf'
-    # model_data = torch.load(model_path)
-    # model.load_state_dict(model_data)
+    model_path = './model_linear_mean_60epoch.pwf'
+    # model_path = './model.pwf'
+    model_data = torch.load(model_path)
+    model.load_state_dict(model_data)
 
     model.eval()
-    
+ 
     validation(0, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, batch_size, n_threads)

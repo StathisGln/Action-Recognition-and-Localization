@@ -42,9 +42,10 @@ class Model(nn.Module):
         self.sample_size = sample_size
 
         self.step = sample_duration
-        self.p_feat_size = 64 # 128 # 256 # 512
+        self.p_feat_size  = 64 # 128 # 256 # 512
         self.POOLING_SIZE = 7
-
+        self.nms_thresh   = 0.7
+        self.post_nms_topN = 500
         # For connection 
         self.max_num_tubes = conf.MAX_NUMBER_TUBES
         self.connection_thresh = conf.CONNECTION_THRESH
@@ -205,7 +206,7 @@ class Model(nn.Module):
         
         pos, scores = self.calc(torch.Tensor([n_clips]),torch.Tensor([rois_per_image]),
                                 actioness_score, overlaps_scores)
-        
+
         pos = pos.view(-1,n_clips,2)
 
         final_tubes = torch.zeros(pos.size(0), num_frames, 4)
@@ -231,6 +232,24 @@ class Model(nn.Module):
 
             f_tubes.append(tub)
 
+        # if not self.training:
+
+
+        final_tubes = final_tubes.view(-1, num_frames*4).contiguous()
+        keep_idx_i = nms_gpu(torch.cat((final_tubes, scores_single), 1),self.nms_thresh).type_as(scores)        
+        keep_idx_i = keep_idx_i.long().view(-1)
+
+        print('keep_idx_i :',keep_idx_i)
+        if post_nms_topN > 0:
+            keep_idx_i = keep_idx_i[:post_nms_topN]
+        print('keep_idx_i :',keep_idx_i)
+
+        print('final_tubes.shape :',final_tubes.shape)
+        final_tubes = final_tubes[keep_idx_i]
+        print('final_tubes.shape :',final_tubes.shape)
+        print('len(final_tubes) :',len(final_tubes))
+        print('scores.shape :',scores.shape)
+        exit(-1)
         ###################################################
         #          Choose gth Tubes for RCNN\TCN          #
         ###################################################
@@ -387,6 +406,7 @@ class Model(nn.Module):
             ret_prob_out = torch.zeros(1,conf.UPDATE_THRESH,self.n_classes).type_as(final_tubes).float() - 1
             ret_tubes[0,:final_tubes.size(0),:num_frames] = final_tubes
             ret_prob_out[0,:final_tubes.size(0)] = prob_out
+
             return ret_tubes, ret_prob_out, torch.Tensor([final_tubes.size(0)]).cuda()
         
             # return final_tubes, prob_out, None
