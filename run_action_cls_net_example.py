@@ -15,7 +15,7 @@ from ucf_dataset import Video_UCF, video_names
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
-from action_net import ACT_net
+from action_net_cls import ACT_net
 from resize_rpn import resize_rpn, resize_tube
 import pdb
 
@@ -83,9 +83,11 @@ if __name__ == '__main__':
 
     clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data[14]
     clips2, h2, w2, gt_tubes_r2, gt_rois2, n_actions2, n_frames2, im_info2 = data[15]
+
     clips_ = clips.unsqueeze(0).to(device)
     gt_tubes_r_ = gt_tubes_r.unsqueeze(0).to(device)
     gt_rois_ = gt_rois.unsqueeze(0).to(device)
+
     # print('gt_rois_[0,0] :',gt_rois_[0,0,:,:4].shape)
     # print(torch.Tensor([43., 59., 55., 80., 43., 59., 55., 80., 44., 60., 56., 81., 44., 60.,
     #                            56., 81., 32.,  32.,  21.,  21.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
@@ -138,20 +140,26 @@ if __name__ == '__main__':
     print('n_actions_.shape :',n_actions_.shape)
     print('start_fr.shape :',start_fr.shape)
     print('im_info_.shape :',im_info_.shape)
+    target = gt_tubes_r_[...,-1]
+    print('target :',target)
+    print('gt_tubes_r_.shape :',gt_tubes_r_.shape)
+    print('target.shape :',target.shape)
     print('**********Starts**********')
     # exit(-1)
+    
     inputs = Variable(clips_)
     rois, feats, \
     rpn_loss_cls,  rpn_loss_bbox, \
     rpn_loss_cls_16,\
     rpn_loss_bbox_16,  rois_label, \
-    sgl_rois_bbox_pred, sgl_rois_bbox_loss,  = model(inputs, \
-                                                im_info_,
-                                                gt_tubes_r_, gt_rois_,
-                                                start_fr)
+    sgl_rois_bbox_pred, sgl_rois_bbox_loss,
+    base_feats = model(inputs, \
+                       im_info_,
+                       gt_tubes_r_, gt_rois_,
+                       start_fr)
 
     print('**********VGIKE**********')
     print('feats.shape :',feats.shape)
     print('rois.shape :',rois.shape)
     print('sgl_rois_bbox_pred.shape :',sgl_rois_bbox_pred.shape)
-
+    print('base_feats.shape :',base_feats.shape)

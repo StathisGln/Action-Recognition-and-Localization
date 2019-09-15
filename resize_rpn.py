@@ -138,6 +138,46 @@ def resize_boxes_np(gt_rois_old, h,w, sample_size):
         gt_rois[padding_pos[0][i],padding_pos[1][i]] = np.array([[0,0,0,0,-1]])
     return gt_rois
 
+## This is for resizing without padding
+# def resize_boxes_np(gt_rois_old, h,w, sample_size):
+#     '''
+#     Input: a torch.Tensor
+#     size shape is [h,w]
+#     '''
+#     target_h = sample_size
+#     target_w = sample_size
+
+#     gt_rois =np.zeros(gt_rois_old.shape)
+
+#     w_bigger_h = w > h
+#     scale = (sample_size * 1.0 )/ max(h,w)
+#     scale_small = (sample_size * 1.0 )/ min(h,w)
+#     # print('scale :',scale)
+#     if w_bigger_h:
+#         scale_h = scale_small
+#         scale_w = scale
+#     else:
+#         scale_w = scale_small
+#         scale_h = scale
+
+#     padding_pos = np.where(gt_rois_old[:,:,4] < 0)
+#     # print('gt_rois_old.shape :',gt_rois_old.shape)
+#     # print('gt_rois.shape :',gt_rois.shape)
+#     gt_rois[:,:,0] = (np.round(gt_rois_old[:,:,0]  * float(scale_w)) )
+#     gt_rois[:,:,1] = (np.round(gt_rois_old[:,:,1]  * float(scale_h)) )
+#     gt_rois[:,:,2] = (np.round(gt_rois_old[:,:,2]  * float(scale_w)) )
+#     gt_rois[:,:,3] = (np.round(gt_rois_old[:,:,3]  * float(scale_h)) )
+#     gt_rois[:,:,4] = gt_rois_old[:,:,4]
+
+#     # print('padding_pos :',padding_pos)
+#     for i in range(padding_pos[0].shape[0]):
+#         # print(i)
+#         # print('padding_pos[0][i] :',padding_pos[0][i])
+#         # print('gt_rois[padding_pos[i,0],padding_pos[i,1]] :',gt_rois[padding_pos[0][i],padding_pos[1][i]])
+#         # print('gt_rois :',gt_rois)
+#         gt_rois[padding_pos[0][i],padding_pos[1][i]] = np.array([[0,0,0,0,-1]])
+#     return gt_rois
+
 
 def resize_tube(gt_rois, h_tensor,w_tensor, sample_size):
     '''

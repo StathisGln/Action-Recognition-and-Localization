@@ -36,9 +36,13 @@ __C.TRAIN.FG_FRACTION = 0.25
 
 # IOU >= thresh: positive example
 __C.TRAIN.RPN_POSITIVE_OVERLAP = 0.8
+# __C.TRAIN.RPN_POSITIVE_OVERLAP = 0.7
+
 # IOU < thresh: negative example
+
+
 __C.TRAIN.RPN_NEGATIVE_OVERLAP = 0.5
-# __C.TRAIN.RPN_NEGATIVE_OVERLAP = 0.5
+# __C.TRAIN.RPN_NEGATIVE_OVERLAP = 0.3
 
 # Deprecated (outside weights)
 __C.TRAIN.RPN_BBOX_INSIDE_WEIGHTS = (1.0, 1.0, 1.0, 1.0)
@@ -56,7 +60,7 @@ __C.TRAIN.RPN_CLOBBER_POSITIVES = False
 
 
 # Overlap threshold for a ROI to be considered foreground (if >= FG_THRESH)
-__C.TRAIN.FG_THRESH = 0.5 # 0.9
+__C.TRAIN.FG_THRESH = 0.9 # 0.9
 
 # Overlap threshold for a ROI to be considered background (class = 0 if
 # overlap in [LO, HI))

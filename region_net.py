@@ -33,6 +33,10 @@ class _RPN(nn.Module):
 
         # # define the convrelu layers processing input feature map
         self.RPN_Conv = nn.Conv3d(self.din, self.din, 3, stride=1, padding=1, bias=True)
+        self.batch_norm = nn.BatchNorm3d(self.din)
+        # self.RPN_Conv_3_4 = nn.Conv3d(self.din, self.din, 3, stride=1, padding=1, bias=True)
+        # self.RPN_Conv_2 = nn.Conv3d(self.din, self.din, 3, stride=1, padding=1, bias=True)
+        # self.RPN_Conv_4 = nn.Conv3d(self.din, self.din, 3, stride=1, padding=1, bias=True)        
 
         self.nc_score_out = len(self.anchor_scales) * len(self.anchor_ratios) *  2
 
@@ -61,15 +65,15 @@ class _RPN(nn.Module):
         # define anchor target layer
         self.RPN_anchor_target = _AnchorTargetLayer(self.feat_stride,  self.anchor_scales, self.anchor_ratios, self.anchor_duration, None)
 
-        # self.avg_pool = nn.MaxPool3d((self.sample_duration,1,1), stride=1)
-        # self.avg_pool_3_4 = nn.MaxPool3d((int(sample_duration*3/4),1,1), stride=1)
-        # self.avg_pool_2 = nn.MaxPool3d((int(sample_duration/2),1,1), stride=1)
-        # self.avg_pool_4 = nn.MaxPool3d((int(sample_duration/4),1,1), stride=1)
+        self.avg_pool = nn.MaxPool3d((self.sample_duration,1,1), stride=1)
+        self.avg_pool_3_4 = nn.MaxPool3d((int(sample_duration*3/4),1,1), stride=1)
+        self.avg_pool_2 = nn.MaxPool3d((int(sample_duration/2),1,1), stride=1)
+        self.avg_pool_4 = nn.MaxPool3d((int(sample_duration/4),1,1), stride=1)
 
-        self.avg_pool = nn.AvgPool3d((self.sample_duration,1,1), stride=1)
-        self.avg_pool_3_4 = nn.AvgPool3d((int(sample_duration*3/4),1,1), stride=1)
-        self.avg_pool_2 = nn.AvgPool3d((int(sample_duration/2),1,1), stride=1)
-        self.avg_pool_4 = nn.AvgPool3d((int(sample_duration/4),1,1), stride=1)
+        # self.avg_pool = nn.AvgPool3d((self.sample_duration,1,1), stride=1)
+        # self.avg_pool_3_4 = nn.AvgPool3d((int(sample_duration*3/4),1,1), stride=1)
+        # self.avg_pool_2 = nn.AvgPool3d((int(sample_duration/2),1,1), stride=1)
+        # self.avg_pool_4 = nn.AvgPool3d((int(sample_duration/4),1,1), stride=1)
 
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0
@@ -101,12 +105,27 @@ class _RPN(nn.Module):
     def forward(self, base_feat, im_info, gt_boxes, gt_rois):
 
         batch_size = base_feat.size(0)
-        rpn_conv1 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
+        rpn_conv1 = F.relu(self.batch_norm( self.RPN_Conv(base_feat)), inplace=True) # 3d convolution
+        # rpn_conv_3_4 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
+        # rpn_conv_2 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
+        # rpn_conv_4 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
+
+        # rpn_conv_avg = self.avg_pool(rpn_conv1)
+        # rpn_conv_avg_3_4 = self.avg_pool_3_4(rpn_conv_3_4)
+        # rpn_conv_avg_2 = self.avg_pool_2(rpn_conv_2)
+        # rpn_conv_avg_4 = self.avg_pool_4(rpn_conv_4)
 
         rpn_conv_avg = self.avg_pool(rpn_conv1)
         rpn_conv_avg_3_4 = self.avg_pool_3_4(rpn_conv1)
         rpn_conv_avg_2 = self.avg_pool_2(rpn_conv1)
         rpn_conv_avg_4 = self.avg_pool_4(rpn_conv1)
+
+        # print('self.anchor_duration :',self.anchor_duration)
+        # print('rpn_conv_avg :',rpn_conv_avg.shape)
+        # print('rpn_conv_avg_3_4 :',rpn_conv_avg_3_4.shape)
+        # print('rpn_conv_avg_2 :',rpn_conv_avg_2.shape)
+        # print('rpn_conv_avg_4 :',rpn_conv_avg_4.shape)
+        # exit(-1)
 
         rpn_cls_score = self.RPN_cls_score(rpn_conv_avg)  # classification layer
         rpn_cls_score_3_4 = self.RPN_cls_score(rpn_conv_avg_3_4)  # classification layer

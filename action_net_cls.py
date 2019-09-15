@@ -13,11 +13,9 @@ from torch.autograd import Variable
 
 from resnet_3D import resnet34
 from region_net import _RPN 
-from human_reg import _Regression_Layer
-# from human_reg_3d import _Regression_Layer
+# from human_reg import _Regression_Layer
+from human_reg_3d import _Regression_Layer
 # from human_reg_2d import _Regression_Layer
-
-
 
 from proposal_target_layer_cascade import _ProposalTargetLayer
 from proposal_target_layer_cascade_single_frame import _ProposalTargetLayer as _ProposalTargetLayer_single
@@ -44,6 +42,7 @@ class ACT_net(nn.Module):
         # # self.spatial_scale = 1.0/16
         # self.spatial_scale = 1.0/4
     
+        self.din = 256
         # define rpn
         self.act_rpn = _RPN(256, sample_duration).cuda()
 
@@ -55,7 +54,16 @@ class ACT_net(nn.Module):
         # self.reg_layer = _Regression_Layer(128, self.sample_duration).cuda()
         self.reg_layer = _Regression_Layer(256, self.sample_duration).cuda()
         self.batch_norm = nn.BatchNorm3d(256)
+        self.head_to_tail_ = nn.Sequential(
+            
+            nn.Linear(self.din * self.sample_duration, 2048),
+            nn.ReLU(True),
+            nn.Dropout(0.8),
+            nn.Linear(2048,512),
+            nn.ReLU(True)
+            )
 
+        self.cls = nn.Linear(512,self.n_classes)
     def create_architecture(self):
         self._init_modules()
         self._init_weights()
@@ -71,8 +79,11 @@ class ACT_net(nn.Module):
         base_feat_3 = self.act_base_3(base_feat_2)
         base_feat_3 = self.batch_norm(base_feat_3)
 
+        # rois, _, rpn_loss_cls, rpn_loss_bbox, \
+        #     _, _ = self.act_rpn(base_feat_1, im_info, gt_tubes, gt_rois)
         rois, _, rpn_loss_cls, rpn_loss_bbox, \
             _, _ = self.act_rpn(base_feat_3, im_info, gt_tubes, gt_rois)
+
 
         if self.training:
 
@@ -96,6 +107,15 @@ class ACT_net(nn.Module):
         # sgl_rois_bbox_pred, feats = self.reg_layer(base_feat_1,rois[:,:,1:-1], gt_rois)
         sgl_rois_bbox_pred, feats = self.reg_layer(base_feat_3,rois[:,:,1:-1], gt_rois)
 
+        # cls time
+        print('feats.shape :',feats.shape)
+        print('base_feat_1.shape :',base_feat_1.shape)
+        print('base_feat_3.shape :',base_feat_3.shape)
+        print('feats.mean(-1) :',feats.mean(-1).shape)
+        print('feats.mean(-1).mean(-1) :',feats.mean(-1).mean(-1).shape)
+        cls_feats = self.head_to_tail_(feats.mean(-1).mean(-1).view(feats.size(0),-1))
+        cls_scr = self.cls(cls_feats)
+        
         if not self.training:
             sgl_rois_bbox_pred = Variable(sgl_rois_bbox_pred, requires_grad=False)
 

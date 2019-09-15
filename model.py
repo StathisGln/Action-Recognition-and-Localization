@@ -142,7 +142,6 @@ class Model(nn.Module):
             pooled_feat = pooled_feat.mean(-1).mean(-1)
             pooled_feat = pooled_feat.view(-1,rois_per_image,self.p_feat_size,self.sample_duration)
 
-
             # regression
             n_tubes = len(tubes)
             if not self.training:

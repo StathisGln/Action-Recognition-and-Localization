@@ -24,11 +24,11 @@ class _Regression_Layer(nn.Module):
         super(_Regression_Layer, self).__init__()
         self.din = din
         self.sample_duration = sample_duration
-        self.pooling_size = 14
-        # self.pooling_size = 7
+        # self.pooling_size = 14
+        self.pooling_size = 7
         # self.spatial_scale = 1.0/4
-        self.spatial_scale = 1.0/8
-        # self.spatial_scale = 1.0/16
+        # self.spatial_scale = 1.0/8
+        self.spatial_scale = 1.0/16
 
         # self.Conv = nn.Conv3d(self.din, din, 1, stride=1, padding=0, bias=True)
         self.Conv = nn.Conv2d(self.din, din, 1, stride=1, padding=0, bias=True)
@@ -44,9 +44,9 @@ class _Regression_Layer(nn.Module):
         # self.avg_pool = nn.AvgPool2d((7, 7), stride=1)
         # self.bbox_pred = nn.Linear(512,self.sample_duration*4)
         self.bbox_pred = nn.Linear(512,4)
+        self.batch_norm = nn.BatchNorm3d(self.din)
 
-
-        self.roi_align = RoIAlign(self.pooling_size, self.pooling_size, self.spatial_scale)
+        self.roi_align = RoIAlignAvg(self.pooling_size, self.pooling_size, self.spatial_scale)
         self.avg_pool = nn.AvgPool3d((int(sample_duration),1,1), stride=1)
         self.reg_target = _Regression_TargetLayer()
 
@@ -57,7 +57,8 @@ class _Regression_Layer(nn.Module):
         batch_size = rois.size(0)
         rois_per_image = rois.size(1)
 
-        base_feat = F.normalize(base_feat, p=2, dim=1)
+        # base_feat = F.normalize(base_feat, p=2, dim=1)
+        base_feat = self.batch_norm(base_feat)
 
         offset = torch.arange(0,self.sample_duration).type_as(rois).unsqueeze(0).expand(batch_size,self.sample_duration)
         offset_batch = torch.arange(0,batch_size).type_as(rois) * self.sample_duration

@@ -108,7 +108,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     recall_4 = float(sgl_true_pos_4)  / (float(sgl_true_pos_4)  + float(sgl_false_neg_4))
     recall_3 = float(sgl_true_pos_3)  / (float(sgl_true_pos_3)  + float(sgl_false_neg_3))
 
-    f = open('recall.txt', 'a')
+    f = open('recall_ucf.txt', 'a')
     f.write('| Validation Epoch: {: >3} |\n'.format(epoch+1))
     f.write('| Threshold : 0.5       |\n')
     f.write('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |\n'.format(
@@ -153,10 +153,14 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
     data = Video_UCF(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
                  split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
+
     # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*16,
     #                                           shuffle=True, num_workers=32, pin_memory=True)
     data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*8,
                                               shuffle=True, num_workers=32, pin_memory=True)
+
+    # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*4,
+    #                                           shuffle=True, num_workers=32, pin_memory=True)
 
     # data_loader = torch.utils.data.DataLoader(data, batch_size=2,
     #                                           shuffle=True, num_workers=0, pin_memory=True)
@@ -237,13 +241,12 @@ if __name__ == '__main__':
     split_txt_path = '../UCF101_Action_detection_splits/'
 
     sample_size = 112
-    # sample_duration = 8  # len(images)
-    sample_duration = 16  # len(images)
-
+    # sample_duration = 4  # len(images)
+    sample_duration = 8  # len(images)
+    # sample_duration = 16  # len(images)
 
     # # get mean
     mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
-
 
     # generate model
     actions = ['__background__', 'Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
@@ -321,11 +324,11 @@ if __name__ == '__main__':
         act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*4, 0, lr, mode=5)
 
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_16frm_avg_ucf.pwf".format(epoch+1))
+            torch.save(act_model.state_dict(), "action_net_model_{}frm_256_7_RoiAlignAvg_ucf.pwf".format(sample_duration))
 
         if (epoch + 1) % (5) == 0:
             print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
             validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
 
-    torch.save(act_model.state_dict(), "action_net_model_16frm_avgpool_ucf.pwf")
+    torch.save(act_model.state_dict(), "action_net_model_{}frm_256_7_RoiAlignAvg_ucf.pwf".format(sample_duration))
 

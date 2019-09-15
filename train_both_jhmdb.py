@@ -68,8 +68,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                        im_info,
                                        None, None,
                                        None)
-        n_tubes = len(tubes)
 
+        n_tubes = len(tubes)
         tubes = tubes.view(-1, sample_duration*4+2)
         tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
                                            sgl_rois_bbox_pred.view(-1,sample_duration*4),(1.0,1.0,1.0,1.0))
@@ -155,10 +155,11 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
     data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
                  split_txt_path=splt_txt_path, mode='train', classes_idx=cls2idx)
-    # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*16,
-    #                                           shuffle=True, num_workers=32, pin_memory=True)
-    data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*8,
+    data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*16,
                                               shuffle=True, num_workers=32, pin_memory=True)
+    # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*4,
+    #                                           shuffle=True, num_workers=32, pin_memory=True)
+
 
     # data_loader = torch.utils.data.DataLoader(data, batch_size=2,
     #                                           shuffle=True, num_workers=0, pin_memory=True)
@@ -211,7 +212,6 @@ def training(epoch, device, model, dataset_folder, sample_duration, spatial_tran
         # if step % 4 == 0:
         #     optimizer.step()
 
-
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -239,8 +239,10 @@ if __name__ == '__main__':
     boxes_file = '../poses.json'
 
     sample_size = 112
-    # sample_duration = 8  # len(images)
-    sample_duration = 16  # len(images)
+
+    # sample_duration = 4  # len(images)
+    sample_duration = 8  # len(images)
+    # sample_duration = 16  # len(images)
 
     # # get mean
     mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
@@ -318,12 +320,12 @@ if __name__ == '__main__':
         # act_model, loss = training(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*4, 0, lr, mode=4)
         act_model, loss = training(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*4, 0, lr, mode=5)
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_16frm_avg_jhmdb.pwf".format(epoch+1))
+            torch.save(act_model.state_dict(), "action_net_model_16frm_max_jhmdb.pwf".format(epoch+1))
 
         if (epoch + 1) % (5) == 0:
 
             print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
             validation(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
 
-    torch.save(act_model.state_dict(), "action_net_model_16frm_avg_jhmdb.pwf")
+    torch.save(act_model.state_dict(), "action_net_model_16frm_max_jhmdb.pwf")
 
