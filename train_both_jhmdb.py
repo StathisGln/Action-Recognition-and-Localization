@@ -236,8 +236,8 @@ if __name__ == '__main__':
     boxes_file = '../poses.json'
 
     sample_size = 112
-    sample_duration = 16  # len(images)
-    # sample_duration = 8  # len(images)
+    # sample_duration = 16  # len(images)
+    sample_duration = 8  # len(images)
     # sample_duration = 4  # len(images)
 
 
@@ -317,12 +317,12 @@ if __name__ == '__main__':
 
         act_model, loss = training(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*4, 0, lr, mode=5)
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "action_net_model_jhmdb_16frm_64.pwf".format(epoch+1))
+            torch.save(act_model.state_dict(), "action_net_model_jhmdb_8frm_128.pwf".format(epoch+1))
 
         if (epoch + 1) % (5) == 0:
 
             print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
             validation(epoch, device, act_model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
 
-    torch.save(act_model.state_dict(), "action_net_model_jhmdb_16frm_64.pwf")
+    torch.save(act_model.state_dict(), "action_net_model_jhmdb_8frm_128.pwf")
 

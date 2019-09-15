@@ -205,7 +205,7 @@ def prepare_samples (vid_names, vid_id, sample_duration, step, n_frames):
         'n_frames': n_frames,
     }
 
-    if n_frames < 17:
+    if n_frames < sample_duration+1:
         sample_i = copy.deepcopy(sample)
         sample_i['frame_indices'] = list(range(1, min( sample_duration, n_frames)+1))
         sample_i['start_fr'] = 0

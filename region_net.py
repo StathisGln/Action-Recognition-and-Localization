@@ -105,26 +105,11 @@ class _RPN(nn.Module):
 
         batch_size = base_feat.size(0)
         rpn_conv1 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
-        # rpn_conv_3_4 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
-        # rpn_conv_2 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
-        # rpn_conv_4 = F.relu(self.RPN_Conv(base_feat), inplace=True) # 3d convolution
-
-        # rpn_conv_avg = self.avg_pool(rpn_conv1)
-        # rpn_conv_avg_3_4 = self.avg_pool_3_4(rpn_conv_3_4)
-        # rpn_conv_avg_2 = self.avg_pool_2(rpn_conv_2)
-        # rpn_conv_avg_4 = self.avg_pool_4(rpn_conv_4)
 
         rpn_conv_avg = self.avg_pool(rpn_conv1)
         rpn_conv_avg_3_4 = self.avg_pool_3_4(rpn_conv1)
         rpn_conv_avg_2 = self.avg_pool_2(rpn_conv1)
         rpn_conv_avg_4 = self.avg_pool_4(rpn_conv1)
-
-        # print('self.anchor_duration :',self.anchor_duration)
-        # print('rpn_conv_avg :',rpn_conv_avg.shape)
-        # print('rpn_conv_avg_3_4 :',rpn_conv_avg_3_4.shape)
-        # print('rpn_conv_avg_2 :',rpn_conv_avg_2.shape)
-        # print('rpn_conv_avg_4 :',rpn_conv_avg_4.shape)
-        # exit(-1)
 
         rpn_cls_score = self.RPN_cls_score(rpn_conv_avg)  # classification layer
         rpn_cls_score_3_4 = self.RPN_cls_score(rpn_conv_avg_3_4)  # classification layer
@@ -161,12 +146,8 @@ class _RPN(nn.Module):
                                   rpn_bbox_pred.data, rpn_bbox_pred_3_4.data, rpn_bbox_pred_2.data, rpn_bbox_pred_4.data,
                                      im_info, cfg_key))
 
-
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0
-        # self.rpn_loss_cls_16 = 0
-        # self.rpn_loss_box_16 = 0
-
 
         # generating training labels a# nd build the rpn loss
         if self.training:

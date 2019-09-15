@@ -39,6 +39,7 @@ __device__ inline float devIoU(float const * const a, float const * const b, con
   const int T = 40;
 
   for (int i=0; i<T; i++){
+    // printf("i %d\n", i);
     if ( i >= n_frames)
       break;
     left = max(a[0 + i*4], b[0 + i*4]), right = min(a[2 + i*4], b[2 + i*4]);
@@ -48,11 +49,10 @@ __device__ inline float devIoU(float const * const a, float const * const b, con
     Sa = (a[2 + i*4] - a[0 + i*4] + 1) * (a[3 + i*4] - a[1 + i*4] + 1);
     Sb = (b[2 + i*4] - b[0 + i*4] + 1) * (b[3 + i*4] - b[1 + i*4] + 1);
     interS_sum += interS / (Sa + Sb - interS);
-    i++;
   }
   // printf("interS_sum :%f\n",interS_sum);
 
-  return interS_sum / T;
+  return interS_sum / n_frames;
 }
 
 __global__ void nms_kernel(int n_boxes, float nms_overlap_thresh, int n_frames,
@@ -75,13 +75,12 @@ __global__ void nms_kernel(int n_boxes, float nms_overlap_thresh, int n_frames,
   if (threadIdx.x < col_size) {
 
     for (int i=0;  i<(4*T+1); i++){
-      if (threadIdx.x == 0)
-	printf(" i :%d n_frames %d\n", i, n_frames);
 
-      if (i >= n_frames)
+      if (i >= n_frames*4+1)
 	break;
-      block_boxes[threadIdx.x * (T*4+1) + i ] =
-        dev_boxes[(threadsPerBlock * col_start + threadIdx.x) * (T*4+1) + i ];
+
+      block_boxes[threadIdx.x * (n_frames*4+1) + i ] =
+        dev_boxes[(threadsPerBlock * col_start + threadIdx.x) * (n_frames*4+1) + i ];
     }
   }
   __syncthreads();
@@ -97,7 +96,7 @@ __global__ void nms_kernel(int n_boxes, float nms_overlap_thresh, int n_frames,
       start = threadIdx.x + 1;
     }
     for (i = start; i < col_size; i++) {
-      if (devIoU(cur_box, block_boxes + i *(4*T+1), n_frames) > nms_overlap_thresh) {
+      if (devIoU(cur_box, block_boxes + i *(4*n_frames+1), n_frames) > nms_overlap_thresh) {
         t |= 1ULL << i;
       }
     }
@@ -114,6 +113,8 @@ void nms_cuda_compute(int* keep_out, int *num_out, float* boxes_host, int boxes_
 
   const int col_blocks = DIVUP(boxes_num, threadsPerBlock);
 
+  // printf("col_blocks %d boxes_num %d, threadsPerBlock %d\n",
+  // 	 col_blocks, boxes_num, threadsPerBlock);
   CUDA_CHECK(cudaMalloc(&boxes_dev,
                         boxes_num * boxes_dim * sizeof(float)));
   CUDA_CHECK(cudaMemcpy(boxes_dev,

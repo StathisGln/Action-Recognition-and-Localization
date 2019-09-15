@@ -3,8 +3,8 @@ import torch
 import numpy as np
 from torch.nn.modules.module import Module
 
-# from _ext import nms
-from ._ext import nms
+from _ext import nms
+# from ._ext import nms
 
 import pdb
 

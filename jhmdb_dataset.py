@@ -122,19 +122,14 @@ def create_tcn_dataset(split_txt_path,json_path, classes, mode):
                 dataset.append(sample)
     return dataset
     
-def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
+def make_video_dataset(dataset_path,split_txt_path, sample_duration,mode='train'):
+
     dataset = []
     classes = next(os.walk(dataset_path, True))[1]
 
-    with open(boxes_file, 'r') as fp:
-        boxes_data = json.load(fp)
-        
-    assert classes != (None), 'classes must not be None, Check dataset path'
-    
-    max_sim_actions = -1
-    max_frames = -1
+
     for idx, cls in enumerate(classes):
-        
+
         class_path = os.path.join(dataset_path, cls)
         videos = []
         with open(os.path.join(split_txt_path,'{}_test_split1.txt'.format(cls)), 'r') as fp:
@@ -154,6 +149,65 @@ def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
                 videos.append(vid_name)
 
         for vid in videos:
+
+            video_path = os.path.join(dataset_path, cls, vid)
+            n_frames = len(glob.glob(video_path+'/*.png'))
+
+            if n_frames > max_frames:
+                max_frames = n_frames
+
+            begin_t = 1
+            end_t = n_frames
+
+            sample = {
+                'video': vid,
+                'class': cls,
+                'abs_path' : video_path,
+                'begin_t': begin_t,
+                'end_t' : end_t,
+                'frame_indices':list(range(1, n_frames + 1))
+            }
+            dataset.append(sample)        
+
+    print(len(dataset))
+
+    print('max_frames :', max_frames)
+    return dataset, max_frames
+
+    
+def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
+    dataset = []
+    classes = next(os.walk(dataset_path, True))[1]
+
+    with open(boxes_file, 'r') as fp:
+        boxes_data = json.load(fp)
+        
+    assert classes != (None), 'classes must not be None, Check dataset path'
+    
+    max_sim_actions = -1
+    max_frames = -1
+    for idx, cls in enumerate(classes):
+
+        class_path = os.path.join(dataset_path, cls)
+        videos = []
+        with open(os.path.join(split_txt_path,'{}_test_split1.txt'.format(cls)), 'r') as fp:
+            lines=fp.readlines()
+        for l in lines:
+            spl = l.split()
+            if spl[1] == '1' and mode == 'train' : # train video
+                vid_name = spl[0][:-4]
+                b_key =  os.path.join(cls,vid_name)
+                if b_key in boxes_data:
+                    videos.append(vid_name)
+                else:
+                    print ( '2', b_key)
+            elif spl[1] == '2' and (mode == 'test' or mode == 'val'): # train video
+                vid_name = spl[0][:-4]
+
+                videos.append(vid_name)
+
+        for vid in videos:
+
 
             video_path = os.path.join(dataset_path, cls, vid)
             n_frames = len(glob.glob(video_path+'/*.png'))
@@ -182,6 +236,7 @@ def make_dataset(dataset_path, split_txt_path, boxes_file, mode='train'):
 
             dataset.append(video_sample)
     print(len(dataset))
+
     print('max_frames :', max_frames)
     return dataset, max_frames
 
@@ -311,6 +366,10 @@ def make_dataset_names(dataset_path, spt_path, boxes_file, mode):
     for idx, cls in enumerate(classes):
         # if cls != 'swing_baseball':
         #     continue
+        # print('cls :',cls)
+        # if cls == '__background__' and (mode == 'test' or mode == 'val'):
+        if cls == '__background__':
+            continue
         videos = []
         with open(os.path.join(spt_path,'{}_test_split1.txt'.format(cls)), 'r') as fp:
             lines=fp.readlines()
@@ -332,11 +391,17 @@ def make_dataset_names(dataset_path, spt_path, boxes_file, mode):
 
         for vid in videos:
 
+
             # if vid != 'hittingofftee2_swing_baseball_f_nm_np1_fr_med_8':
             #     continue
+            # if vid != 'Arrasando_no_Le_Parkour_jump_f_cm_np1_ri_bad_1':
+            #     continue
+
             video_path = os.path.join(cls,vid)
             n_frames = len(glob.glob(os.path.join(dataset_path,video_path+'/*.png')))
 
+            # if n_frames > 15:
+            #     continue
 
             json_key = os.path.join(cls,vid)
             boxes = boxes_data[json_key]

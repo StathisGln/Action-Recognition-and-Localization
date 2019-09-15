@@ -63,9 +63,14 @@ class ACT_net(nn.Module):
         # feed image data to base model to obtain base feature map
         base_feat_1 = self.act_base_1(im_data)
         base_feat_2 = self.act_base_2(base_feat_1)
+        # base_feat_3 = self.act_base_3(base_feat_2)
+
+        # rois, _, rpn_loss_cls, rpn_loss_bbox, \
+        #     _, _ = self.act_rpn(base_feat_3, im_info, gt_tubes, gt_rois)
 
         rois, _, rpn_loss_cls, rpn_loss_bbox, \
             _, _ = self.act_rpn(base_feat_2, im_info, gt_tubes, gt_rois)
+
 
         if self.training:
 
@@ -86,10 +91,13 @@ class ACT_net(nn.Module):
             rpn_loss_cls = 0
             rpn_loss_bbox = 0
             
-        sgl_rois_bbox_pred, feats = self.reg_layer(base_feat_1,rois[:,:,1:-1], gt_rois)
+        # sgl_rois_bbox_pred, feats = self.reg_layer(base_feat_1, base_feat_3, rois[:,:,1:-1], gt_rois)
+        sgl_rois_bbox_pred, feats = self.reg_layer(base_feat_1, base_feat_2, rois[:,:,1:-1], gt_rois)
+
 
         if not self.training:
             sgl_rois_bbox_pred = Variable(sgl_rois_bbox_pred, requires_grad=False)
+
         if self.training:
 
             sgl_rois_bbox_loss = _smooth_l1_loss(sgl_rois_bbox_pred, rois_target, rois_inside_ws, rois_outside_ws,
@@ -131,9 +139,13 @@ class ACT_net(nn.Module):
         truncated = False
         normal_init(self.act_rpn.RPN_Conv, 0, 0.01, truncated)
         normal_init(self.act_rpn.RPN_cls_score, 0, 0.01, truncated)
+        normal_init(self.act_rpn.RPN_cls_score_3_4, 0, 0.01, truncated)
+        normal_init(self.act_rpn.RPN_cls_score_2, 0, 0.01, truncated)
+        normal_init(self.act_rpn.RPN_cls_score_4, 0, 0.01, truncated)
         normal_init(self.act_rpn.RPN_bbox_pred, 0, 0.01, truncated)
-        normal_init(self.reg_layer.Conv, 0, 0.01, truncated)
-        normal_init(self.reg_layer.bbox_pred, 0, 0.01, truncated)
+        normal_init(self.act_rpn.RPN_bbox_pred_3_4, 0, 0.01, truncated)
+        normal_init(self.act_rpn.RPN_bbox_pred_2, 0, 0.01, truncated)
+        normal_init(self.act_rpn.RPN_bbox_pred_4, 0, 0.01, truncated)
 
 
     def _init_modules(self):
@@ -169,15 +181,18 @@ class ACT_net(nn.Module):
 
         # Build resnet.
         self.act_base_1 = nn.Sequential(model.module.conv1, model.module.bn1, model.module.relu,
-          model.module.maxpool,model.module.layer1)
+                                        model.module.maxpool,model.module.layer1)
         self.act_base_2 = nn.Sequential(model.module.layer2,model.module.layer3)
+        # self.act_base_2 = nn.Sequential(model.module.layer2)
+        # self.act_base_3 = nn.Sequential(model.module.layer3)
 
         # Fix blocks
         for p in self.act_base_1[0].parameters(): p.requires_grad=False
         for p in self.act_base_1[1].parameters(): p.requires_grad=False
 
         fixed_blocks = 3
-        if fixed_blocks >= 3:
+        if fixed_blocks >= 2:
+          # for p in self.act_base_3[0].parameters(): p.requires_grad=False
           for p in self.act_base_2[1].parameters(): p.requires_grad=False
         if fixed_blocks >= 2:
           for p in self.act_base_2[0].parameters(): p.requires_grad=False
@@ -192,4 +207,5 @@ class ACT_net(nn.Module):
         self.act_base_1.apply(set_bn_fix)
         self.act_base_2.apply(set_bn_fix)
         # self.act_base_3.apply(set_bn_fix)
+
 

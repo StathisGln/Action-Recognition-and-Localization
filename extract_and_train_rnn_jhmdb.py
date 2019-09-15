@@ -17,7 +17,8 @@ from create_video_id import get_vid_dict
 from net_utils import adjust_learning_rate
 from resize_rpn import resize_rpn, resize_tube
 
-from model import Model
+# from model import Model
+from model_all import Model
 from action_net import ACT_net
 from resize_rpn import resize_boxes
 import argparse
@@ -399,6 +400,8 @@ if __name__ == '__main__':
     print(' ----------------------------------------')
 
     # action_model_path = './action_net_model_both_single_frm_jhmdb.pwf'
+
+    # action_model_path = './action_net_model_8frm_64_jhmdb.pwf'
     action_model_path = './action_net_model_8frm_2_avg_jhmdb.pwf'
 
     # Init whole model
@@ -412,10 +415,12 @@ if __name__ == '__main__':
     model.to(device)
 
     batch_size = 1
-    vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train', classes_idx=cls2idx)
+    vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='test', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
                                               shuffle=True, num_workers=32, pin_memory=True)
-    out_path = 'JHMDB-features-linear'
+    # out_path = 'JHMDB-features-256-mod7-test'
+    out_path = 'JHMDB-features-256-7ver2-test'
+
     mode = 'extract'
     for step, data  in enumerate(data_loader):
 
@@ -424,7 +429,9 @@ if __name__ == '__main__':
         print('step =>',step)
         # clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data
         vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
-
+        print('vid_names[vid_id] :',vid_names[vid_id])
+        
+        print('n_frames :',n_frames)
         if not(os.path.exists(os.path.join(out_path, vid_names[vid_id]))):
             os.makedirs(os.path.join(out_path, vid_names[vid_id]))
 

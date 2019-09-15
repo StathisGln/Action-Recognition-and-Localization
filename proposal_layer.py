@@ -44,12 +44,6 @@ class _ProposalLayer(nn.Module):
 
         print('sample_duration :',self.sample_duration)
 
-        if self.sample_duration == 16:
-            from nms_3d.nms_gpu import nms_gpu
-        elif self.sample_duration == 8:
-            from nms_8fr_3d.nms_gpu import nms_gpu
-        else:
-            from nms_4fr_3d.nms_gpu import nms_gpu
 
         self.time_dim = time_dim
         self.scales = scales
@@ -128,7 +122,70 @@ class _ProposalLayer(nn.Module):
         anchors_all = []
         bbox_frame_all = []
 
+        # # for i in range(1,2):
+        # print('self.time_dim :',self.time_dim)
+        # # x_pos = torch.arange(self.time_dim[0])
+        # # combs = torch.arange(self.sample_duration-self.time_dim[0]+1)
+        # # print('x_pos :',x_pos)
+        # # print('combs :',combs)
+        # # x_pos = torch.arange(self.time_dim[1])
+        # # combs = torch.arange(self.sample_duration-self.time_dim[1]+1)
+        # # x_pos = x_pos.unsqueeze(1).expand(x_pos.size(0),combs.size(0))
+        # # combs = combs.unsqueeze(0).expand(x_pos.size(0),combs.size(0))
+        # # together = x_pos+combs
+        # # print('x_pos :',x_pos)
+        # # print('combs :',combs)
+        # # print('together :',together.shape)
+        # # x_pos = torch.arange(self.
+        # print('bboxes[0].shape :',bboxes[0].shape)
+        # print('bboxes[1].shape :',bboxes[1].shape)
+        # print('bboxes[1][:,:,j].shape    :',bboxes[1][:,:,0].shape)
+        # print('bboxes[1][:,:,j].shape    :',bboxes[1][:,:,0].permute(0,2,3,1).shape)
+        # print('bboxes[1][:,:,j].shape    :',bboxes[1][:,:,0].permute(0,2,3,1).contiguous().\
+        #       view(batch_size, anchors.size(0), self.time_dim[1],4).shape)
+        # print('bboxes[1][:,:,j].shape    :',bboxes[1].shape)
+        # print('bboxes[1][:,:,j].shape    :',bboxes[1].permute(0,2,3,1).shape)
+        # # print('bboxes[1][:,:,j].shape    :',bboxes[1].permute(0,2,3,1).contiguous().\
+        # #       view(batch_size, anchors.size(0), self.time_dim[1],4).shape)
+
+        
+        # i = 1
+        # x_pos = torch.arange(self.time_dim[i])
+        # combs = torch.arange(self.sample_duration-self.time_dim[i]+1)
+        # combs = combs.unsqueeze(1).expand(combs.size(0),x_pos.size(0))
+        # x_pos = x_pos.unsqueeze(0).expand(combs.size(0),x_pos.size(0))
+        # together = x_pos+combs
+        # final = torch.cat([combs.unsqueeze(-1),together.unsqueeze(-1)],dim=2).view(-1,2)
+        # print('final :',final.shape)
+        
+
+        # exit(-1)
         # for i in range(1,2):
+        # # for i in range(len(self.time_dim)):
+            
+        #     x_pos = torch.arange(self.time_dim[i])
+        #     combs = torch.arange(self.sample_duration-self.time_dim[i]+1)
+        #     combs = combs.unsqueeze(1).expand(combs.size(0),x_pos.size(0))
+        #     x_pos = x_pos.unsqueeze(0).expand(combs.size(0),x_pos.size(0))
+        #     together = x_pos+combs
+        #     final = torch.cat([combs.unsqueeze(-1),together.unsqueeze(-1)],dim=2).view(-1,2)
+        #     anchors_ = torch.zeros(self.sample_duration-self.time_dim[i]+1,\
+        #                            self.sample_duration, anchors.size(0),4).type_as(anchors)
+        #     anchors_[final[:,0],final[:,1]] = anchors
+        # print('anchors.size(0) :',anchors.size(0))
+        # print('anchors.size(0) :',anchors.shape)
+        # print('anchors.device :',anchors.device)
+        # # anc = torch.zeros((self.sample_duration,anchors.size(0),4))
+        # print('anchors_ :',anchors_)
+        # print('x_pos :',x_pos)
+        # print('combs :',combs)
+        # print('x_pos :',x_pos.shape)
+        # print('combs :',combs.shape)
+        # print('together :',together.shape)
+        # print('together :',together)
+
+        # exit(-1)
+        
         for i in range(len(self.time_dim)):
             for j in range(0,self.sample_duration-self.time_dim[i]+1):
                 anc = torch.zeros((self.sample_duration,anchors.size(0),4))

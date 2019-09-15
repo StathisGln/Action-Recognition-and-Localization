@@ -1,973 +1,1993 @@
 nohup: ignoring input
 Device being used: cuda:0
+ ----------------------------------------
+|          - extract features -          |
+ ----------------------------------------
 sample_duration : 8
 Loading pretrained weights from ../resnet-34-kinetics.pth
 268
 max_frames : 40
 step => 0
-vid_id : tensor([[254]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/Shootingarecurve_shoot_bow_u_cm_np1_fr_med_5
-n_frames : tensor([[26]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7017])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([16.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 1
-vid_id : tensor([[270]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/Shootingarecurve_shoot_bow_u_nm_np1_fr_med_2
-n_frames : tensor([[38]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6747])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 2
-vid_id : tensor([[483]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_gun/deserteagle_shoot_gun_u_cm_np1_ri_goo_0
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6993])
+n_frames : tensor([[18]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 18, 4])
 step => 3
-vid_id : tensor([[371]], dtype=torch.int32)
-vid_name_loader[vid_id] : walk/50_FIRST_DATES_walk_f_cm_np1_le_med_33
-n_frames : tensor([[36]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6873])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
 step => 4
-vid_id : tensor([[196]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/Torwarttraining_catch_u_cm_np1_fr_bad_4
-n_frames : tensor([[19]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4481])
+n_frames : tensor([[36]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([9.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 36, 4])
 step => 5
-vid_id : tensor([[869]], dtype=torch.int32)
-vid_name_loader[vid_id] : swing_baseball/Tannerafterwecorrected_swing_baseball_f_cm_np1_fr_bad_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7418])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([16.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 6
-vid_id : tensor([[470]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_gun/FirearmsTraining_shoot_gun_u_cm_np1_ba_med_5
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7350])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([7., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
 step => 7
-vid_id : tensor([[902]], dtype=torch.int32)
-vid_name_loader[vid_id] : pick/NH_gun_owners_react_to_detention_with_armed_litter_pickup_pick_f_cm_np1_ba_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6032])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 8
-vid_id : tensor([[12]], dtype=torch.int32)
-vid_name_loader[vid_id] : wave/WeddingCrashers_wave_u_nm_np1_fr_goo_0
-n_frames : tensor([[28]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5423])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([1, 4, 256, 8, 7, 7])
+labels : tensor([14.], device='cuda:0')
+tube_len : tensor([[4.]], device='cuda:0')
+tubes : torch.Size([1, 30, 4])
 step => 9
-vid_id : tensor([[54]], dtype=torch.int32)
-vid_name_loader[vid_id] : sit/AllThePresidentMen_sit_f_nm_np1_fr_goo_3
-n_frames : tensor([[20]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5840])
+n_frames : tensor([[33]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 33, 4])
 step => 10
-vid_id : tensor([[273]], dtype=torch.int32)
-vid_name_loader[vid_id] : run/TrumanShow_run_f_nm_np1_le_med_11
-n_frames : tensor([[18]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4808])
+n_frames : tensor([[20]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 20, 4])
 step => 11
-vid_id : tensor([[78]], dtype=torch.int32)
-vid_name_loader[vid_id] : sit/Prelinger_ActYourA1949_sit_u_cm_np1_ri_med_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4730])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([1., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 12
-vid_id : tensor([[238]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/erikafrontcompound6feb09_shoot_bow_f_nm_np1_fr_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5964])
+n_frames : tensor([[16]])
+feats.shape : torch.Size([3, 1, 256, 8, 7, 7])
+labels : tensor([7., 0., 0.], device='cuda:0')
+tube_len : tensor([[1.],
+        [1.],
+        [1.]], device='cuda:0')
+tubes : torch.Size([3, 16, 4])
 step => 13
-vid_id : tensor([[55]], dtype=torch.int32)
-vid_name_loader[vid_id] : sit/TrumanShow_sit_f_nm_np1_le_med_37
-n_frames : tensor([[39]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5232])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 14
-vid_id : tensor([[117]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/The_Slow_Clap_clap_u_nm_np1_fr_bad_20
-n_frames : tensor([[25]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6961])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
 step => 15
-vid_id : tensor([[782]], dtype=torch.int32)
-vid_name_loader[vid_id] : pullup/20_good_form_pullups_pullup_f_nm_np1_ri_goo_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4699])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 16
-vid_id : tensor([[847]], dtype=torch.int32)
-vid_name_loader[vid_id] : swing_baseball/hittingofftee2_swing_baseball_f_nm_np1_fr_med_9
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7220])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
 step => 17
-vid_id : tensor([[152]], dtype=torch.int32)
-vid_name_loader[vid_id] : stand/Panic_in_the_Streets_stand_u_cm_np1_ri_med_2
-n_frames : tensor([[27]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5122])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([3.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 18
-vid_id : tensor([[852]], dtype=torch.int32)
-vid_name_loader[vid_id] : swing_baseball/hittingofftee2_swing_baseball_f_nm_np1_fr_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6957])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 19
-vid_id : tensor([[0]], dtype=torch.int32)
-vid_name_loader[vid_id] : wave/Maya_beim_Winken_wave_f_cm_np1_fr_med_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3879])
+n_frames : tensor([[28]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 28, 4])
 step => 20
-vid_id : tensor([[125]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/Flamenco_Dance_Steps_-_Flamenco_Dance_Soft_Claps_clap_u_cm_np1_fr_goo_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6507])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 21
-vid_id : tensor([[291]], dtype=torch.int32)
-vid_name_loader[vid_id] : run/RATRACE_run_f_cm_np1_fr_med_16
-n_frames : tensor([[25]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5785])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([19.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 22
-vid_id : tensor([[10]], dtype=torch.int32)
-vid_name_loader[vid_id] : wave/Maya_beim_Winken_wave_f_cm_np1_fr_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4964])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([2.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 23
-vid_id : tensor([[450]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_gun/FirearmsTraining_shoot_gun_f_cm_np1_ri_med_1
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7647])
+n_frames : tensor([[26]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 26, 4])
 step => 24
-vid_id : tensor([[765]], dtype=torch.int32)
-vid_name_loader[vid_id] : pullup/Random_Pull_Up_Exercises_pullup_f_nm_np1_fr_med_3
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.8386])
+n_frames : tensor([[20]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 20, 4])
 step => 25
-vid_id : tensor([[161]], dtype=torch.int32)
-vid_name_loader[vid_id] : stand/prelinger_ControlY1950_stand_f_cm_np1_fr_med_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6380])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 26
-vid_id : tensor([[888]], dtype=torch.int32)
-vid_name_loader[vid_id] : pick/Pick_Up_Your_Trash!_pick_f_cm_np1_ba_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3934])
+n_frames : tensor([[19]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 19, 4])
 step => 27
-vid_id : tensor([[896]], dtype=torch.int32)
-vid_name_loader[vid_id] : pick/Fishing_For_People_pick_f_cm_np1_fr_med_3
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7635])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
 step => 28
-vid_id : tensor([[176]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/Frisbee_catch_f_cm_np1_ri_med_0
-n_frames : tensor([[37]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6774])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 29
-vid_id : tensor([[18]], dtype=torch.int32)
-vid_name_loader[vid_id] : wave/20060723sfjffbartsinger_wave_f_cm_np1_ba_med_0
-n_frames : tensor([[31]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5756])
+n_frames : tensor([[39]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([10.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 39, 4])
 step => 30
-vid_id : tensor([[32]], dtype=torch.int32)
-vid_name_loader[vid_id] : wave/Maya_beim_Winken_wave_f_cm_np1_fr_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4705])
+n_frames : tensor([[34]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 34, 4])
 step => 31
-vid_id : tensor([[517]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/How_To_Pour_Ice_Tea_pour_u_nm_np1_fr_med_2
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7825])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 32
-vid_id : tensor([[334]], dtype=torch.int32)
-vid_name_loader[vid_id] : kick_ball/funny_soccer_commercial_kick_ball_f_cm_np1_fr_med_0
-n_frames : tensor([[31]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4697])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 33
-vid_id : tensor([[244]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/6arrowswithin30seconds_shoot_bow_f_nm_np1_fr_med_5
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7516])
+n_frames : tensor([[21]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 21, 4])
 step => 34
-vid_id : tensor([[58]], dtype=torch.int32)
-vid_name_loader[vid_id] : sit/NoCountryForOldMen_sit_f_nm_np1_ri_med_6
-n_frames : tensor([[39]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.1689])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 35
-vid_id : tensor([[144]], dtype=torch.int32)
-vid_name_loader[vid_id] : stand/likebeckam_stand_f_nm_np1_fr_med_7
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5055])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([14.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 36
-vid_id : tensor([[759]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_ball/PlayingBasketballGotWater_shoot_ball_f_nm_np1_ri_med_1
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3153])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
 step => 37
-vid_id : tensor([[67]], dtype=torch.int32)
-vid_name_loader[vid_id] : sit/NoCountryForOldMen_sit_f_nm_np1_fr_goo_4
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6093])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([18.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 38
-vid_id : tensor([[871]], dtype=torch.int32)
-vid_name_loader[vid_id] : swing_baseball/hittingofftee2_swing_baseball_f_nm_np1_fr_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7560])
+n_frames : tensor([[20]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([7., 0., 0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 20, 4])
 step => 39
-vid_id : tensor([[107]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/Flamenco_Dance_Steps_-_Flamenco_Dance_Soft_Claps_clap_u_cm_np1_fr_goo_1
-n_frames : tensor([[39]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6632])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 40
-vid_id : tensor([[373]], dtype=torch.int32)
-vid_name_loader[vid_id] : walk/Juno_walk_f_cm_np1_fr_med_8
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6354])
+n_frames : tensor([[24]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 24, 4])
 step => 41
-vid_id : tensor([[198]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/LearnToShootFromTheMaster_catch_f_nm_np1_ba_med_1
-n_frames : tensor([[15]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3933])
+n_frames : tensor([[39]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([10.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 39, 4])
 step => 42
-vid_id : tensor([[475]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_gun/FirearmsTraining_shoot_gun_u_nm_np1_ri_med_4
-n_frames : tensor([[35]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.8230])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([11.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 43
-vid_id : tensor([[506]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Drink_@18_-_Apple_martini_pour_u_nm_np1_fr_goo_2
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6796])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([7., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
 step => 44
-vid_id : tensor([[662]], dtype=torch.int32)
-vid_name_loader[vid_id] : jump/prelinger_ControlY1950_jump_f_nm_np1_fr_bad_13
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5570])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 45
-vid_id : tensor([[287]], dtype=torch.int32)
-vid_name_loader[vid_id] : run/American_History_X_run_f_cm_np1_le_med_17
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6150])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 46
-vid_id : tensor([[723]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_ball/PlayingBasketballGotWater_shoot_ball_f_nm_np1_ba_med_6
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4711])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([11.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 47
-vid_id : tensor([[554]], dtype=torch.int32)
-vid_name_loader[vid_id] : throw/KnifeThrowing_throw_f_nm_np1_le_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7308])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 48
-vid_id : tensor([[231]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/Shootingarecurve_shoot_bow_u_nm_np1_fr_med_0
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6654])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 49
-vid_id : tensor([[779]], dtype=torch.int32)
-vid_name_loader[vid_id] : pullup/32_Pull-ups_at_193IBS_pullup_f_cm_np1_ba_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7499])
+n_frames : tensor([[18]])
+feats.shape : torch.Size([1, 3, 256, 8, 7, 7])
+labels : tensor([17.], device='cuda:0')
+tube_len : tensor([[3.]], device='cuda:0')
+tubes : torch.Size([1, 18, 4])
 step => 50
-vid_id : tensor([[600]], dtype=torch.int32)
-vid_name_loader[vid_id] : push/Pushing_Music_Table_push_f_cm_np1_le_bad_5
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5923])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([15.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 51
-vid_id : tensor([[844]], dtype=torch.int32)
-vid_name_loader[vid_id] : swing_baseball/hittingofftee2_swing_baseball_f_nm_np1_fr_med_3
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7638])
+n_frames : tensor([[33]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 33, 4])
 step => 52
-vid_id : tensor([[663]], dtype=torch.int32)
-vid_name_loader[vid_id] : jump/St__Louis_Goalkeeping__Academy_elite_training_jump_f_nm_np1_le_bad_3
-n_frames : tensor([[20]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6279])
+n_frames : tensor([[31]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 31, 4])
 step => 53
-vid_id : tensor([[915]], dtype=torch.int32)
-vid_name_loader[vid_id] : brush_hair/Brushing_my_hair_-_December_2008_brush_hair_u_cm_np1_ba_goo_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5573])
+n_frames : tensor([[20]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 20, 4])
 step => 54
-vid_id : tensor([[137]], dtype=torch.int32)
-vid_name_loader[vid_id] : stand/SoundAndTheStory_stand_f_cm_np1_ri_med_0
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5576])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
 step => 55
-vid_id : tensor([[815]], dtype=torch.int32)
-vid_name_loader[vid_id] : pullup/30_(dead-hang)_pull-ups_pullup_u_cm_np1_ba_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6399])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([1, 4, 256, 8, 7, 7])
+labels : tensor([18.], device='cuda:0')
+tube_len : tensor([[4.]], device='cuda:0')
+tubes : torch.Size([1, 30, 4])
 step => 56
-vid_id : tensor([[242]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/Shootingarecurve_shoot_bow_u_nm_np1_fr_med_4
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7575])
+n_frames : tensor([[22]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([7., 0., 0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 22, 4])
 step => 57
-vid_id : tensor([[649]], dtype=torch.int32)
-vid_name_loader[vid_id] : jump/Learn_Freerunning_and_Parkour__-_Diving_Kong_jump_f_cm_np1_ba_bad_1
-n_frames : tensor([[22]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.2611])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 58
-vid_id : tensor([[104]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/Boom_Snap_Clap_clap_u_nm_np1_fr_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.8444])
+n_frames : tensor([[17]])
+feats.shape : torch.Size([3, 2, 256, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[2.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 17, 4])
 step => 59
-vid_id : tensor([[553]], dtype=torch.int32)
-vid_name_loader[vid_id] : throw/KnifeThrowing_throw_f_nm_np1_le_med_3
-n_frames : tensor([[39]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7648])
+n_frames : tensor([[38]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 38, 4])
 step => 60
-vid_id : tensor([[763]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_ball/ReggieMillerTakesonThreeAverageGuysinaShootout_shoot_ball_u_nm_np1_ba_med_9
-n_frames : tensor([[20]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4358])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
 step => 61
-vid_id : tensor([[624]], dtype=torch.int32)
-vid_name_loader[vid_id] : push/Alexander_pushing_the_table_push_f_cm_np1_le_bad_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6627])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 62
-vid_id : tensor([[856]], dtype=torch.int32)
-vid_name_loader[vid_id] : swing_baseball/hittingofftee2_swing_baseball_f_nm_np1_fr_med_11
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6775])
+n_frames : tensor([[20]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 20, 4])
 step => 63
-vid_id : tensor([[672]], dtype=torch.int32)
-vid_name_loader[vid_id] : jump/Learn_Freerunning_and_Parkour__-_Diving_Kong_jump_f_cm_np1_le_bad_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.2020])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
 step => 64
-vid_id : tensor([[403]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/GuardiansOfO256kb_climb_stairs_f_cm_np1_ba_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5229])
+n_frames : tensor([[25]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 25, 4])
 step => 65
-vid_id : tensor([[43]], dtype=torch.int32)
-vid_name_loader[vid_id] : sit/CharlieAndTheChocolateFactory_sit_f_nm_np1_fr_med_3
-n_frames : tensor([[34]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7361])
+n_frames : tensor([[20]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 20, 4])
 step => 66
-vid_id : tensor([[460]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_gun/FirearmsTraining_shoot_gun_u_nm_np1_ri_med_11
-n_frames : tensor([[35]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6790])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 67
-vid_id : tensor([[860]], dtype=torch.int32)
-vid_name_loader[vid_id] : swing_baseball/Tannerafterwecorrected_swing_baseball_f_cm_np1_fr_bad_1
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7364])
+n_frames : tensor([[29]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 29, 4])
 step => 68
-vid_id : tensor([[645]], dtype=torch.int32)
-vid_name_loader[vid_id] : jump/Learn_Freerunning_and_Parkour__-_Diving_Kong_jump_f_cm_np1_le_bad_3
-n_frames : tensor([[25]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.2088])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 69
-vid_id : tensor([[151]], dtype=torch.int32)
-vid_name_loader[vid_id] : stand/BATMAN_BEGINS_stand_f_cm_np1_fr_med_8
-n_frames : tensor([[21]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5779])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 70
-vid_id : tensor([[263]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/6arrowswithin30seconds_shoot_bow_f_nm_np1_fr_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7272])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 71
-vid_id : tensor([[169]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/Goalkeeper_Training_Day_@_7_catch_f_cm_np1_ri_med_0
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4234])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
 step => 72
-vid_id : tensor([[920]], dtype=torch.int32)
-vid_name_loader[vid_id] : brush_hair/brush_my_hair_without_wearing_the_glasses_brush_hair_u_nm_np1_fr_goo_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5520])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([2.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 73
-vid_id : tensor([[340]], dtype=torch.int32)
-vid_name_loader[vid_id] : kick_ball/FIFA_11_Gamescom-Trailer_kick_ball_f_cm_np1_ba_med_3
-n_frames : tensor([[24]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6668])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
 step => 74
-vid_id : tensor([[391]], dtype=torch.int32)
-vid_name_loader[vid_id] : walk/Veoh_Alpha_Dog_2_walk_u_nm_np1_le_med_29
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4137])
+n_frames : tensor([[33]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 33, 4])
 step => 75
-vid_id : tensor([[355]], dtype=torch.int32)
-vid_name_loader[vid_id] : kick_ball/Wayne_Rooney_At_Home_Funny_Must_See_kick_ball_f_cm_np1_ba_med_6
-n_frames : tensor([[32]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6054])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([7., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 76
-vid_id : tensor([[595]], dtype=torch.int32)
-vid_name_loader[vid_id] : throw/KnifeThrowing_throw_f_nm_np1_le_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6728])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 77
-vid_id : tensor([[932]], dtype=torch.int32)
-vid_name_loader[vid_id] : brush_hair/Ella_brushing_her_amazing_long_hair_brush_hair_u_cm_np1_ba_goo_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6206])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([6.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 78
-vid_id : tensor([[57]], dtype=torch.int32)
-vid_name_loader[vid_id] : sit/likebeckam_sit_f_nm_np1_le_bad_29
-n_frames : tensor([[24]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5016])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 79
-vid_id : tensor([[584]], dtype=torch.int32)
-vid_name_loader[vid_id] : throw/KnifeThrowing_throw_f_nm_np1_le_med_4
-n_frames : tensor([[38]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7203])
+n_frames : tensor([[26]])
+feats.shape : torch.Size([1, 4, 256, 8, 7, 7])
+labels : tensor([11.], device='cuda:0')
+tube_len : tensor([[4.]], device='cuda:0')
+tubes : torch.Size([1, 26, 4])
 step => 80
-vid_id : tensor([[199]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/Torwarttraining_catch_u_cm_np1_ri_med_2
-n_frames : tensor([[20]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.8395])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([1, 4, 256, 8, 7, 7])
+labels : tensor([7.], device='cuda:0')
+tube_len : tensor([[4.]], device='cuda:0')
+tubes : torch.Size([1, 30, 4])
 step => 81
-vid_id : tensor([[734]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_ball/PlayingBasketballGotWater_shoot_ball_f_nm_np1_ba_med_8
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5136])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 82
-vid_id : tensor([[648]], dtype=torch.int32)
-vid_name_loader[vid_id] : jump/KUNG_FU_HUSTLE_jump_f_cm_np1_fr_bad_16
-n_frames : tensor([[39]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3730])
+n_frames : tensor([[21]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 21, 4])
 step => 83
-vid_id : tensor([[503]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Bier_richtig_einschenken_pour_u_cm_np1_fr_med_0
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5978])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([15.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 84
-vid_id : tensor([[747]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_ball/JashaunKidsWhoRipAmazingBasketball_shoot_ball_f_cm_np1_le_med_5
-n_frames : tensor([[20]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.2779])
+n_frames : tensor([[24]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 24, 4])
 step => 85
-vid_id : tensor([[497]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Bier_richtig_einschenken_pour_u_cm_np1_fr_med_1
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5209])
+n_frames : tensor([[36]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 36, 4])
 step => 86
-vid_id : tensor([[696]], dtype=torch.int32)
-vid_name_loader[vid_id] : golf/Anna_Rawson_Driver_Practice_golf_f_nm_np1_ri_bad_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6156])
+n_frames : tensor([[22]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 22, 4])
 step => 87
-vid_id : tensor([[349]], dtype=torch.int32)
-vid_name_loader[vid_id] : kick_ball/pepsi_banned_soccer_commercial_kick_ball_f_cm_np1_fr_bad_0
-n_frames : tensor([[20]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5846])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([18.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 88
-vid_id : tensor([[545]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Basic_Vodka_Recipes_-_How_to_Make_a_Shirley_Temple_pour_u_cm_np1_fr_med_1
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6886])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 89
-vid_id : tensor([[234]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/Shootingarecurve_shoot_bow_u_nm_np1_fr_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7081])
+n_frames : tensor([[17]])
+feats.shape : torch.Size([3, 2, 256, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[2.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 17, 4])
 step => 90
-vid_id : tensor([[103]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/103_years_old_japanese_woman__Nao_is_clapping_with_piano_music_by_beethoven_clap_u_nm_np1_fr_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7221])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([1.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 91
-vid_id : tensor([[437]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/Walking_up_the_stairs_climb_stairs_l_cm_np1_ba_med_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.2803])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
 step => 92
-vid_id : tensor([[417]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/I_DO_NOT_Run_Up_Stairs_Like_A_GIRL_climb_stairs_l_cm_np1_ba_med_5
-n_frames : tensor([[36]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4813])
+n_frames : tensor([[17]])
+feats.shape : torch.Size([3, 2, 256, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[2.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 17, 4])
 step => 93
-vid_id : tensor([[8]], dtype=torch.int32)
-vid_name_loader[vid_id] : wave/BIG_FISH_wave_u_nm_np1_fr_bad_4
-n_frames : tensor([[32]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.8296])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([18.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 94
-vid_id : tensor([[523]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Basic_Vodka_Recipes_-_How_to_Make_a_Shirley_Temple_pour_u_cm_np1_fr_med_0
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6234])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([16.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 95
-vid_id : tensor([[607]], dtype=torch.int32)
-vid_name_loader[vid_id] : push/Joel_Pushing_Box_push_f_cm_np1_ba_bad_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7052])
+n_frames : tensor([[23]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 23, 4])
 step => 96
-vid_id : tensor([[248]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/6arrowswithin30seconds_shoot_bow_f_nm_np1_fr_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7394])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([15.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 97
-vid_id : tensor([[608]], dtype=torch.int32)
-vid_name_loader[vid_id] : push/pushing_box_around_house_push_f_cm_np1_le_med_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7058])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 98
-vid_id : tensor([[162]], dtype=torch.int32)
-vid_name_loader[vid_id] : stand/RushHour2_stand_u_cm_np1_fr_med_11
-n_frames : tensor([[25]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7222])
+n_frames : tensor([[20]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([7., 0., 0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 20, 4])
 step => 99
-vid_id : tensor([[47]], dtype=torch.int32)
-vid_name_loader[vid_id] : sit/AllThePresidentMen_sit_f_nm_np1_ri_med_7
-n_frames : tensor([[27]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6835])
+n_frames : tensor([[39]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 39, 4])
 step => 100
-vid_id : tensor([[434]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/I_DO_NOT_Run_Up_Stairs_Like_A_GIRL_climb_stairs_l_cm_np1_ba_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3693])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 101
-vid_id : tensor([[400]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/Walking_up_the_stairs_climb_stairs_l_cm_np1_ba_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.2721])
+n_frames : tensor([[39]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 39, 4])
 step => 102
-vid_id : tensor([[101]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/Boom_Snap_Clap_clap_u_nm_np1_fr_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7793])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
 step => 103
-vid_id : tensor([[878]], dtype=torch.int32)
-vid_name_loader[vid_id] : pick/Yep__I_m_picking_up_trash_today_pick_f_cm_np1_fr_med_1
-n_frames : tensor([[31]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6902])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
 step => 104
-vid_id : tensor([[114]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/The_Slow_Clap_clap_u_cm_np1_fr_med_4
-n_frames : tensor([[33]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6491])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 105
-vid_id : tensor([[111]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/Budam_-_Clap_Hands_clap_u_nm_np1_fr_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7439])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 106
-vid_id : tensor([[703]], dtype=torch.int32)
-vid_name_loader[vid_id] : golf/golf_golf_f_nm_np1_ri_goo_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6567])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 107
-vid_id : tensor([[424]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/I_DO_NOT_Run_Up_Stairs_Like_A_GIRL_climb_stairs_l_cm_np1_ba_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5977])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([20.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 108
-vid_id : tensor([[205]], dtype=torch.int32)
-vid_name_loader[vid_id] : catch/LearnToShootFromTheMaster_catch_f_nm_np1_ba_med_4
-n_frames : tensor([[17]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6407])
+n_frames : tensor([[38]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([11.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 38, 4])
 step => 109
-vid_id : tensor([[106]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/Applauding_Abby_clap_u_nm_np1_fr_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7095])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
 step => 110
-vid_id : tensor([[436]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/Stairway_to_fitness_climb_stairs_f_nm_np1_fr_med_1
-n_frames : tensor([[35]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7180])
+n_frames : tensor([[31]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 31, 4])
 step => 111
-vid_id : tensor([[514]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Kamikaze_Martini_Coctail_pour_u_nm_np1_fr_med_0
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4642])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 112
-vid_id : tensor([[352]], dtype=torch.int32)
-vid_name_loader[vid_id] : kick_ball/FIFA_11_Gamescom-Trailer_kick_ball_f_cm_np1_ba_med_4
-n_frames : tensor([[20]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4219])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([20.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 113
-vid_id : tensor([[474]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_gun/FirearmsTraining_shoot_gun_u_nm_np1_ri_med_3
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7363])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([20.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 114
-vid_id : tensor([[411]], dtype=torch.int32)
-vid_name_loader[vid_id] : climb_stairs/I_DO_NOT_Run_Up_Stairs_Like_A_GIRL_climb_stairs_l_cm_np1_ba_med_4
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3867])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 115
-vid_id : tensor([[385]], dtype=torch.int32)
-vid_name_loader[vid_id] : walk/LONGESTYARD_walk_f_nm_np1_fr_med_6
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6275])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 116
-vid_id : tensor([[916]], dtype=torch.int32)
-vid_name_loader[vid_id] : brush_hair/Brushing_Hair_with_Beth_brush_hair_h_nm_np1_le_goo_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4579])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([10.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 117
-vid_id : tensor([[710]], dtype=torch.int32)
-vid_name_loader[vid_id] : golf/Jeff_Ritter_-_Power_Drill_golf_f_nm_np1_ri_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6572])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([1, 4, 256, 8, 7, 7])
+labels : tensor([5.], device='cuda:0')
+tube_len : tensor([[4.]], device='cuda:0')
+tubes : torch.Size([1, 30, 4])
 step => 118
-vid_id : tensor([[99]], dtype=torch.int32)
-vid_name_loader[vid_id] : clap/Applauding_Abby_clap_u_nm_np1_fr_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7101])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 119
-vid_id : tensor([[805]], dtype=torch.int32)
-vid_name_loader[vid_id] : pullup/20_good_form_pullups_pullup_f_nm_np1_ri_goo_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6957])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 120
-vid_id : tensor([[360]], dtype=torch.int32)
-vid_name_loader[vid_id] : walk/EVOLUTION_walk_f_cm_np1_fr_med_23
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6824])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([1.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 121
-vid_id : tensor([[922]], dtype=torch.int32)
-vid_name_loader[vid_id] : brush_hair/April_09_brush_hair_u_nm_np1_ba_goo_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.8279])
+n_frames : tensor([[35]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([8.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 35, 4])
 step => 122
-vid_id : tensor([[616]], dtype=torch.int32)
-vid_name_loader[vid_id] : push/Push_That_Car!_push_f_cm_np1_ri_med_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.2637])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
 step => 123
-vid_id : tensor([[394]], dtype=torch.int32)
-vid_name_loader[vid_id] : walk/Prelinger_LetYours1940_walk_f_nm_np1_ba_med_5
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7363])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 124
-vid_id : tensor([[909]], dtype=torch.int32)
-vid_name_loader[vid_id] : pick/NH_gun_owners_react_to_detention_with_armed_litter_pickup_pick_u_cm_np1_ba_med_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6035])
+n_frames : tensor([[25]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 25, 4])
 step => 125
-vid_id : tensor([[156]], dtype=torch.int32)
-vid_name_loader[vid_id] : stand/SweeneyTodd_stand_f_cm_np1_le_med_10
-n_frames : tensor([[36]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6332])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 126
-vid_id : tensor([[751]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_ball/ReggieMillerTakesonThreeAverageGuysinaShootout_shoot_ball_u_nm_np1_ba_med_3
-n_frames : tensor([[20]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.3116])
+n_frames : tensor([[29]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 29, 4])
 step => 127
-vid_id : tensor([[882]], dtype=torch.int32)
-vid_name_loader[vid_id] : pick/Fishing_For_People_pick_f_cm_np1_ri_med_2
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4242])
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
 step => 128
-vid_id : tensor([[829]], dtype=torch.int32)
-vid_name_loader[vid_id] : swing_baseball/hittingofftee2_swing_baseball_f_nm_np1_fr_med_7
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6555])
+n_frames : tensor([[39]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 39, 4])
 step => 129
-vid_id : tensor([[264]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/6arrowswithin30seconds_shoot_bow_f_nm_np1_fr_med_4
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7508])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 130
-vid_id : tensor([[25]], dtype=torch.int32)
-vid_name_loader[vid_id] : wave/50_FIRST_DATES_wave_u_cm_np1_fr_goo_30
-n_frames : tensor([[36]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7554])
+n_frames : tensor([[16]])
+feats.shape : torch.Size([3, 1, 256, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[1.],
+        [1.],
+        [1.]], device='cuda:0')
+tubes : torch.Size([3, 16, 4])
 step => 131
-vid_id : tensor([[886]], dtype=torch.int32)
-vid_name_loader[vid_id] : pick/Fishing_For_People_pick_f_cm_np1_ri_med_5
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6360])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 132
-vid_id : tensor([[546]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Drink_@18_-_Apple_martini_pour_u_nm_np1_fr_goo_1
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7748])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([15.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 133
-vid_id : tensor([[868]], dtype=torch.int32)
-vid_name_loader[vid_id] : swing_baseball/HowtoswingaBaseballbat_swing_baseball_f_nm_np1_le_bad_0
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.4710])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([6.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
 step => 134
-vid_id : tensor([[127]], dtype=torch.int32)
-vid_name_loader[vid_id] : stand/Fellowship_4_stand_f_cm_np1_fr_med_3
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6400])
+n_frames : tensor([[20]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([7., 0., 0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 20, 4])
 step => 135
-vid_id : tensor([[252]], dtype=torch.int32)
-vid_name_loader[vid_id] : shoot_bow/Hannahfront23may08_shoot_bow_u_nm_np1_fr_med_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.7245])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 136
-vid_id : tensor([[543]], dtype=torch.int32)
-vid_name_loader[vid_id] : pour/Bartender_of_America_Bartending_School_pour_u_cm_np1_fr_med_1
-n_frames : tensor([[30]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.5166])
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
 step => 137
-vid_id : tensor([[692]], dtype=torch.int32)
-vid_name_loader[vid_id] : golf/Golfswing_golf_f_cm_np1_ri_goo_1
-n_frames : tensor([[40]], device='cuda:0')
-boxes.shape: torch.Size([1, 1, 40, 6])
-tubes.shape : torch.Size([1, 500, 40, 4])
- gt_max_overlaps : tensor([0.6289])
-step =>
+n_frames : tensor([[17]])
+feats.shape : torch.Size([3, 2, 256, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[2.],
+        [2.],
+        [2.]], device='cuda:0')
+tubes : torch.Size([3, 17, 4])
+step => 138
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 139
+n_frames : tensor([[21]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 21, 4])
+step => 140
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([9.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 141
+n_frames : tensor([[35]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 35, 4])
+step => 142
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([1.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 143
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([1.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 144
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
+step => 145
+n_frames : tensor([[38]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([18.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 38, 4])
+step => 146
+n_frames : tensor([[24]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 24, 4])
+step => 147
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([6.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 148
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 149
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
+step => 150
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
+step => 151
+n_frames : tensor([[25]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 25, 4])
+step => 152
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
+step => 153
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 154
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([1.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 155
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([20.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 156
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([2.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 157
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
+step => 158
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([18.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 159
+n_frames : tensor([[23]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 23, 4])
+step => 160
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([19.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 161
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([21.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 162
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([1.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 163
+n_frames : tensor([[19]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 19, 4])
+step => 164
+n_frames : tensor([[21]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 21, 4])
+step => 165
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 166
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
+step => 167
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 168
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 169
+n_frames : tensor([[25]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 25, 4])
+step => 170
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 171
+n_frames : tensor([[25]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 25, 4])
+step => 172
+n_frames : tensor([[27]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 27, 4])
+step => 173
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 174
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 175
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
+step => 176
+n_frames : tensor([[26]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([18.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 26, 4])
+step => 177
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
+step => 178
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 179
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([3.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 180
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([18.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 181
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 182
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 183
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([11.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 184
+n_frames : tensor([[15]])
+feats.shape : torch.Size([3, 1, 256, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[1.],
+        [1.],
+        [1.]], device='cuda:0')
+tubes : torch.Size([3, 15, 4])
+step => 185
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([11.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 186
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([18.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 187
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([1.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 188
+n_frames : tensor([[30]])
+feats.shape : torch.Size([1, 4, 256, 8, 7, 7])
+labels : tensor([18.], device='cuda:0')
+tube_len : tensor([[4.]], device='cuda:0')
+tubes : torch.Size([1, 30, 4])
+step => 189
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([2.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 190
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
+step => 191
+n_frames : tensor([[36]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 36, 4])
+step => 192
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([10.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 193
+n_frames : tensor([[32]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 32, 4])
+step => 194
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([16.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 195
+n_frames : tensor([[36]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([11.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 36, 4])
+step => 196
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([16.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 197
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([20.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 198
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 199
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
+step => 200
+n_frames : tensor([[37]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 37, 4])
+step => 201
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([20.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 202
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 203
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([18.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 204
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 205
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([16.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 206
+n_frames : tensor([[15]])
+feats.shape : torch.Size([3, 1, 256, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[1.],
+        [1.],
+        [1.]], device='cuda:0')
+tubes : torch.Size([3, 15, 4])
+step => 207
+n_frames : tensor([[32]])
+feats.shape : torch.Size([1, 4, 256, 8, 7, 7])
+labels : tensor([14.], device='cuda:0')
+tube_len : tensor([[4.]], device='cuda:0')
+tubes : torch.Size([1, 32, 4])
+step => 208
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([18.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 209
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 210
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([18.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 211
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
+step => 212
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 213
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
+step => 214
+n_frames : tensor([[32]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 32, 4])
+step => 215
+n_frames : tensor([[22]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 22, 4])
+step => 216
+n_frames : tensor([[20]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 20, 4])
+step => 217
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
+step => 218
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 219
+n_frames : tensor([[39]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([19.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 39, 4])
+step => 220
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 221
+n_frames : tensor([[25]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 25, 4])
+step => 222
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([1., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 223
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 224
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([13.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 225
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([1.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 226
+n_frames : tensor([[27]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 27, 4])
+step => 227
+n_frames : tensor([[35]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 35, 4])
+step => 228
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([8., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
+step => 229
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 230
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([18.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 231
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([17.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 232
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 233
+n_frames : tensor([[39]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([2., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 39, 4])
+step => 234
+n_frames : tensor([[31]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 31, 4])
+step => 235
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([11.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 236
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([1.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 237
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([15.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 238
+n_frames : tensor([[24]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 24, 4])
+step => 239
+n_frames : tensor([[17]])
+feats.shape : torch.Size([1, 2, 256, 8, 7, 7])
+labels : tensor([14.], device='cuda:0')
+tube_len : tensor([[2.]], device='cuda:0')
+tubes : torch.Size([1, 17, 4])
+step => 240
+n_frames : tensor([[24]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([14.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 24, 4])
+step => 241
+n_frames : tensor([[30]])
+feats.shape : torch.Size([1, 4, 256, 8, 7, 7])
+labels : tensor([12.], device='cuda:0')
+tube_len : tensor([[4.]], device='cuda:0')
+tubes : torch.Size([1, 30, 4])
+step => 242
+n_frames : tensor([[27]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 27, 4])
+step => 243
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 244
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
+step => 245
+n_frames : tensor([[29]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 29, 4])
+step => 246
+n_frames : tensor([[34]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([14.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 34, 4])
+step => 247
+n_frames : tensor([[20]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 20, 4])
+step => 248
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([6., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 249
+n_frames : tensor([[27]])
+feats.shape : torch.Size([1, 4, 256, 8, 7, 7])
+labels : tensor([2.], device='cuda:0')
+tube_len : tensor([[4.]], device='cuda:0')
+tubes : torch.Size([1, 27, 4])
+step => 250
+n_frames : tensor([[39]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([19.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 39, 4])
+step => 251
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([1.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 252
+n_frames : tensor([[29]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([4., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 29, 4])
+step => 253
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([7., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
+step => 254
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([12.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 255
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 256
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([3., 0., 0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 257
+n_frames : tensor([[26]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([17.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 26, 4])
+step => 258
+n_frames : tensor([[38]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([10.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 38, 4])
+step => 259
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([5., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
+step => 260
+n_frames : tensor([[30]])
+feats.shape : torch.Size([3, 4, 256, 8, 7, 7])
+labels : tensor([9., 0., 0.], device='cuda:0')
+tube_len : tensor([[4.],
+        [4.],
+        [4.]], device='cuda:0')
+tubes : torch.Size([3, 30, 4])
+step => 261
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([9.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 262
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([20.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 263
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([21.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 264
+n_frames : tensor([[40]])
+feats.shape : torch.Size([3, 5, 256, 8, 7, 7])
+labels : tensor([13.,  0.,  0.], device='cuda:0')
+tube_len : tensor([[5.],
+        [5.],
+        [5.]], device='cuda:0')
+tubes : torch.Size([3, 40, 4])
+step => 265
+n_frames : tensor([[20]])
+feats.shape : torch.Size([3, 3, 256, 8, 7, 7])
+labels : tensor([7., 0., 0.], device='cuda:0')
+tube_len : tensor([[3.],
+        [3.],
+        [3.]], device='cuda:0')
+tubes : torch.Size([3, 20, 4])
+step => 266
+n_frames : tensor([[40]])
+feats.shape : torch.Size([1, 5, 256, 8, 7, 7])
+labels : tensor([9.], device='cuda:0')
+tube_len : tensor([[5.]], device='cuda:0')
+tubes : torch.Size([1, 40, 4])
+step => 267
+n_frames : tensor([[30]])
+feats.shape : torch.Size([1, 4, 256, 8, 7, 7])
+labels : tensor([5.], device='cuda:0')
+tube_len : tensor([[4.]], device='cuda:0')
+tubes : torch.Size([1, 30, 4])

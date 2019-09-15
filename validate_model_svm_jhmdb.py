@@ -29,12 +29,15 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     iou_thresh_4 = 0.4 # Intersection Over Union thresh
     iou_thresh_3 = 0.3 # Intersection Over Union thresh
 
-    confidence_thresh = 0.1
+    confidence_thresh = 0.5
     vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='test', classes_idx=cls2idx, plot=True)
     # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
     #                                           shuffle=True)    # reset learning rate
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1, num_workers=8*n_devs, pin_memory=True,
                                               shuffle=True)    # reset learning rate
+    # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1, num_workers=8*n_devs, pin_memory=True,
+    #                                           shuffle=False)    # reset learning rate
+
 
     model.eval()
     
@@ -59,8 +62,11 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
     for step, data  in enumerate(data_loader):
 
+        # if step == 20:
+        #     break
         # if step == 3:
         #     break
+
         print('step =>',step)
 
         # vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
@@ -78,7 +84,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
         im_info = torch.cat([h,w,torch.ones(clips.size(0)).long()*clips.size(2)]).to(device)
         mode = 'test'
-        # print('target :',target)
+        print('target :',target)
         print('n_frames :',n_frames)
         # print('vid_id :',vid_id)
         # print('vid_names[vid_id] :',vid_names[vid_id])
@@ -97,6 +103,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         for i in range(batch_size):
 
             _, cls_int = torch.max(prob_out[i],1)
+
+            # print('cls_int :',cls_int)
             f_prob = torch.zeros(n_tubes[i].long()).type_as(prob_out)
 
             for j in range(n_tubes[i].long()):
@@ -133,24 +141,9 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             #     json.dump(f_boxes.cpu().tolist(), f)
 
 
-        if tubes.dim() == 1:
-        
-            for i in range(clips.size(0)):
-
-                box = boxes[i,:n_actions, :n_frames,:4].contiguous()
-                box = box.view(-1,n_frames*4)
- 
-                non_empty_indices =  box.ne(0).any(dim=1).nonzero().view(-1)
-                n_elems = non_empty_indices.nelement()            
-                false_neg += n_elems
-                false_neg_4 += n_elems
-                false_neg_3 += n_elems 
-            continue
-
-
         for i in range(clips.size(0)):
-            print('boxes.shape:',boxes.shape)
-            print('tubes.shape :',tubes.shape)
+            # print('boxes.shape:',boxes.shape)
+            # print('tubes.shape :',tubes.shape)
             box = boxes[i,:n_actions[i].long(), :n_frames[i].long(),:4].contiguous()
             box = box.view(-1,n_frames[i]*4).contiguous().type_as(tubes)
 
@@ -161,21 +154,10 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             non_empty_indices =  box.ne(0).any(dim=1).nonzero().view(-1)
             n_elems = non_empty_indices.nelement()
 
-
-            # if gt_max_overlaps[0] > 0.5 :
-            #     print('clips_plot.shape :',clips_plot.shape)
-            #     print('n_frames :', n_frames)
-            #     print('argmax_gt_overlaps :',argmax_gt_overlaps)
-            #     print('tubes.shape :',tubes.shape)
-            #     print('tubes[argmax_gt_overlaps].shap :',tubes[i,argmax_gt_overlaps].shape)
-            #     print('box.shape :',box.shape)
-            #     print('box[i].shape :',box[i].shape)
-            #     print(' gt_max_overlaps :',gt_max_overlaps )
-            #     plot_tube_with_gt(clips_plot, n_frames[i], tubes[i,argmax_gt_overlaps], box.view(1,1,-1,4).contiguous())
-            #     exit(-1)
-            #     print('tubes_t[max_indices[0]] :',tubes[argmax_gt_overlaps[0]])
-            #     print('gt_rois_t[0] :',box[0])
-            print(' gt_max_overlaps :',gt_max_overlaps )
+            # print('gt_max_overlaps :',gt_max_overlaps )
+            # print('argmax_gt_overlaps :',argmax_gt_overlaps)
+            # print('prob_out[argmax_gt_overlaps] :',prob_out[i,argmax_gt_overlaps])
+            # print('cls_int[argmax_gt_overlaps] :',cls_int[argmax_gt_overlaps])
             # 0.5 thresh
             gt_max_overlaps_ = torch.where(gt_max_overlaps > iou_thresh, gt_max_overlaps,\
                                            torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
@@ -294,6 +276,7 @@ if __name__ == '__main__':
     # Init action_net
     # action_model_path = './action_net_model_16frm_max_jhmdb.pwf'
     action_model_path = './action_net_model_8frm_2_avg_jhmdb.pwf'
+    # action_model_path = './action_net_model_8frm_64_jhmdb.pwf'    
     # action_model_path = './action_net_model_4frm_max_jhmdb.pwf'
 
     # linear_path = './linear_jhmdb.pwf'

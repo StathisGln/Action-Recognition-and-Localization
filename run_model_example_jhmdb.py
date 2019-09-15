@@ -13,8 +13,8 @@ from jhmdb_dataset import  video_names, RNN_JHMDB
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
-from model_all import Model
-# from model import Model
+# from model_all import Model
+from model import Model
 from create_video_id import get_vid_dict
 from resize_rpn import resize_rpn, resize_tube
 import pdb
@@ -106,7 +106,7 @@ if __name__ == '__main__':
     prob_out, cls_loss =  model(n_devs, dataset_frames, \
                                 vid_names, clips, vid_id,  \
                                 boxes, \
-                                mode, cls2idx, n_actions,n_frames, h, w)
+                                'extract', cls2idx, n_actions,n_frames, h, w)
 
     # rois,  bbox_pred, cls_prob, \
     # rpn_loss_cls,  rpn_loss_bbox, \

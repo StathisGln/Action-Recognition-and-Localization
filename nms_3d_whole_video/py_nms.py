@@ -33,7 +33,7 @@ def py_cpu_nms_tubes(dets, thresh):
     while order.size > 0:
         i = order[0]
         keep.append(i)
-        print('keep :',keep)
+
         ovT = 0.0
         for t in range(T):
             xx1 = np.maximum(dets[i, 4 * t + 0], dets[order[1:], 4 * t + 0])
@@ -50,7 +50,7 @@ def py_cpu_nms_tubes(dets, thresh):
 
         inds = np.where(ovT <= thresh)[0]
         order = order[inds + 1]
-        print('order :',order)
+
     return keep
 
 def py_cpu_softnms(dets, sc, Nt=0.3, sigma=0.5, thresh=0.001, method=2):

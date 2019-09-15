@@ -15,6 +15,7 @@ def nms_gpu(dets, thresh):
         n_frames = dets.size(-1) // 4
         keep = dets.new(dets.size(0), 1).zero_().int()
         num_out = dets.new(1).zero_().int()
+
         nms.nms_cuda(keep, dets, num_out, thresh, n_frames)
         keep = keep[:num_out[0]]
 
@@ -70,7 +71,7 @@ if __name__ == '__main__':
         scores = torch.Tensor([[0.7495],
                                [0.7391],
                                [0.6810]]).cuda()
-        
+        print('t.shape :',t.shape)
         keep_idx_i = nms_gpu(torch.cat((t, scores), 1),0.7).type_as(scores)
         keep_idx_i = keep_idx_i.long().view(-1)
         print('keep_idx_i :',keep_idx_i.cpu().numpy(),keep_idx_i.nelement())

@@ -22,7 +22,7 @@ from bbox_transform import bbox_overlaps_connect
 from collections import OrderedDict
 from box_functions import bbox_transform, tube_transform_inv, clip_boxes, tube_overlaps
 from nms_3d_whole_video.nms_gpu import nms_gpu
-
+import time 
 class Model(nn.Module):
     """ 
     action localizatio network which contains:
@@ -149,7 +149,7 @@ class Model(nn.Module):
                 tubes = tubes.view(n_tubes,rois_per_image, self.sample_duration*4+2)
                 tubes[:,:,1:-1] = clip_boxes(tubes[:,:,1:-1], im_info, tubes.size(0))
 
-            indexes_ = (torch.arange(0, tubes.size(0))*int(self.sample_duration/2) + start_fr[0].cpu()).unsqueeze(1)
+            indexes_ = (torch.arange(0, tubes.size(0))*int(step) + start_fr[0].cpu()).unsqueeze(1)
             indexes_ = indexes_.expand(tubes.size(0),tubes.size(1)).type_as(tubes)
 
             idx_s = step * batch_size 
@@ -267,24 +267,50 @@ class Model(nn.Module):
 
         f_tubes  = []
 
+        print('pos.shape :',pos.shape)
+        
+        arxi = time.time()
+        # for i in range(pos.size(0)):
+
+        #     for j in range(pos.size(1)):
+                
+        #         curr_ = pos[i,j]
+        #         start_fr = curr_[0]* int(self.step)
+        #         end_fr = min((curr_[0]*int(self.step)+self.sample_duration).type_as(num_frames), num_frames).type_as(start_fr)
+
+        #         if curr_[0] == -1:
+        #             break
+                
+        #         curr_frames = p_tubes[curr_[0], curr_[1]]
+        #         tub.append((curr_[0].item(),  curr_[1].item()))
+        #         ## TODO change with avg
+        #         final_tubes[i,start_fr:end_fr] =  torch.max( curr_frames.view(-1,4).contiguous()[:(end_fr-start_fr).long()],
+        #                                                      final_tubes[i,start_fr:end_fr].type_as(curr_frames))
+
+        #     f_tubes.append(tub)
+
         for i in range(final_poss.size(0)):
+
             tub = []
-            for j in range(final_poss.size(1)):
-                
-                curr_ = final_poss[i,j]
-                start_fr = curr_[0]* int(self.sample_duration/2)
-                end_fr = min((curr_[0]*int(self.sample_duration/2)+self.sample_duration).type_as(num_frames), num_frames).type_as(start_fr)
 
-                if curr_[0] == -1:
-                    break
-                
-                curr_frames = p_tubes[curr_[0], curr_[1]]
-                tub.append((curr_[0].item(),  curr_[1].item()))
-                ## TODO change with avg
-                final_tubes[i,start_fr:end_fr] =  torch.max( curr_frames.view(-1,4).contiguous()[:(end_fr-start_fr).long()],
-                                                             final_tubes[i,start_fr:end_fr].type_as(curr_frames))
-            f_tubes.append(tub)
+            non_zr = final_poss[i,:,0].ne(-1).nonzero().view(-1)
+            thesis = final_poss[i,non_zr].long()
 
+            p_tubes_ = p_tubes[thesis[:,0], thesis[:,1]]
+
+            start_fr = thesis[0,0]* int(self.step)
+            end_fr = torch.min((thesis[-1,0]+1)*self.step, num_frames)
+
+            final_tubes[i, start_fr:end_fr] = p_tubes[thesis[:,0], thesis[:,1]].contiguous().\
+                                              view(non_zr.size(0)*self.sample_duration,4)
+
+            f_tubes.append(thesis)
+
+        # print('final_tubes[:3] :',final_tubes[:2])
+        # print('f_tubes :',f_tubes)
+        telos = time.time()
+        print('diarkeia :',telos-arxi)
+        exit(-1)
         ###################################################
         #          Choose gth Tubes for RCNN\TCN          #
         ###################################################

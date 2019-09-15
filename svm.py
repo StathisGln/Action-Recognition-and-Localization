@@ -28,7 +28,7 @@ class SVMTrainer(object):
     """
 
     def __init__(self, net, tube_db, num_classes, files_path,  im_detect=im_detect, #svmWeightsPath, svmBiassPath, svmFeatScalePath,
-                 svm_C=0.001, svm_B=10.0, svm_nrEpochs=2, svm_retrainLimit=500, svm_evictThreshold=-1.1, svm_posWeight="balanced",
+                 svm_C=0.001, svm_B=10.0, svm_nrEpochs=2, svm_retrainLimit=2000, svm_evictThreshold=-1.1, svm_posWeight="balanced",
                  svm_targetNorm=20.0, svm_penality='l2', svm_loss='l1', svm_rngSeed=3):
 
         self.net = net
@@ -60,7 +60,8 @@ class SVMTrainer(object):
         total_sum = 0.0
         count = 0.0
 
-        num_images = 100
+        # num_images = len(self.files_path)
+        # num_images = 1
         total_n_images = len(self.files_path)
         num_images = min(num_images, total_n_images)
         inds = np.random.choice(range(total_n_images), size=num_images, replace=False)
@@ -148,11 +149,34 @@ class SVMTrainer(object):
 
                 for j in range(1, self.num_classes):
 
+                    # print('tube_db[i][\'labels\'][0] :',tube_db[i]['labels'][0])
+                    # print('j :', j)
+                    if j != tube_db[i]['labels'][0]:
+                        hard_inds = (scores[:,j].gt(self.hard_thresh) & tube_db[i]['labels'].ne(j) \
+                                     & tube_db[i]['labels'].ne(0)).nonzero().view(-1)
+                        # continue
+                    else:
+                        hard_inds = (scores[:,j].gt(self.hard_thresh) & tube_db[i]['labels'].eq(0)) \
+                        .nonzero().view(-1)
+
                     ## TODO change overlaps because now use only background rois
                     # print('tube_db[i][\'labels\'] :',tube_db[i]['labels'])
-                    # print('tube_db[i][\'labels\'] :',tube_db[i]['labels'].eq(j))
+                    # print('tube_db[i][\'labels\'] :',tube_db[i]['labels'].ne(j))
+                    # print('scores.device :',scores.device)
+                    # print('tube_db[i][\'labels\'].device :',tube_db[i]['labels'].device)
                     # print('exw :',(scores[:,j].gt(self.hard_thresh) & tube_db[i]['labels'].ne(j)).nonzero().view(-1))
-                    hard_inds = (scores[:,j].gt(self.hard_thresh) & tube_db[i]['labels'].ne(j)).nonzero().view(-1)
+                    # hard_inds = (scores[:,j].gt(self.hard_thresh) & tube_db[i]['labels'].ne(j) \
+                    #              & tube_db[i]['labels'].ne(0)).nonzero().view(-1)
+
+
+                    # hard_inds = (scores[:,j].gt(self.hard_thresh) & tube_db[i]['labels'].ne(j) \
+                    #              & tube_db[i]['labels'].ne(0)).nonzero().view(-1)
+                    
+
+
+                    # hard_inds = (scores[:,j].gt(self.hard_thresh) & tube_db[i]['labels'].ne(j)).nonzero().view(-1)
+                    # hard_inds = (scores[:,j].gt(self.hard_thresh) & tube_db[i]['labels'].eq(0)).nonzero().view(-1)
+                    # print('hard_inds :',hard_inds)
                     # exit(-1)
                     # hard_inds = \
                     #     np.where((scores[:, j] > self.hard_thresh) &
@@ -311,10 +335,34 @@ class SVMClassTrainer(object):
 
 if __name__ == '__main__':
 
-    files = glob.glob('./JHMDB-features-linear/*/*')
+    #  files = glob.glob('./JHMDB-features-linear/*/*')
+    files = glob.glob('./JHMDB-features-256-7ver2/*/*')
+    # files = glob.glob('./JHMDB-features-64-7/*/*')
+
+    # files = glob.glob('./JHMDB-features-256-4/*/*')
+    # files = glob.glob('./JHMDB-features-256-2/*/*')
     print('len(files) :',len(files))
     n_classes = 21+1
-    net = DummyNet(25088,n_classes)
+
+    # net = DummyNet(256*8,n_classes)
+    # net = DummyNet(256*8*7*7,n_classes)
+    # net = DummyNet(256*8*7,n_classes)
+    # net = DummyNet(2*256*8*7*7,n_classes)
+    # net = DummyNet(2*256*7*7,n_classes)
+    # net = DummyNet(2*256*7*7,n_classes)
+    # net = DummyNet(2*256*4*4,n_classes)
+    # net = DummyNet(2*256*8*2*2,n_classes)
+    # net = DummyNet(256*7*7,n_classes)
+    # net = DummyNet(2*256*8*7*7,n_classes)
+    net = DummyNet(2*256*7*7,n_classes)
+    # net = DummyNet(2*64*7*7,n_classes)
+    # net = DummyNet(64*8*7,n_classes)
+    # net = DummyNet(128*8*7*7,n_classes)
+    # net = DummyNet(256*8,n_classes)
+    # net = DummyNet(256*8*4*4,n_classes)
+    # net = DummyNet(2*128*8,n_classes)
+    # net = DummyNet(64*8*7*7,n_classes)
+    # net = DummyNet(25088,n_classes)
     # net = DummyNet(15680,n_classes)
     tube_db = create_tubedb(files)
     svm = SVMTrainer(net, tube_db, n_classes, files_path=files)
