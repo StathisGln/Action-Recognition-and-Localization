@@ -14,7 +14,7 @@ from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
 # from model import Model
-from model_all_svm import Model
+from model_all_restnet import Model
 from resize_rpn import resize_rpn, resize_tube
 from jhmdb_dataset import Video, video_names
 
@@ -64,7 +64,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
         # if step == 20:
         #     break
-        # if step == 3:
+        # if step == 2:
+        #     exit(-1)
         #     break
 
         print('step =>',step)
@@ -280,8 +281,8 @@ if __name__ == '__main__':
     # action_model_path = './action_net_model_4frm_max_jhmdb.pwf'
 
     # linear_path = './linear_jhmdb.pwf'
-    # linear_path = './linear_jhmdb_5.pwf'
-    linear_path = './'
+    linear_path = './RestNet.pwf'
+    # linear_path = None
 
     model = Model(actions, sample_duration, sample_size)
 

@@ -49,8 +49,8 @@ class _Regression_Layer(nn.Module):
 
         self.roi_align = RoIAlign(self.pooling_size, self.pooling_size, self.spatial_scale)
         # self.roi_align_feats = RoIAlign(7, 7, 1/4.0)
-        self.roi_align_feats = modRoIAlign(7, 7, 1/16.0)
-        # self.roi_align_feats = RoIAlign(7, 7, 1/16.0)
+        # self.roi_align_feats = modRoIAlign(7, 7, 1/16.0)
+        self.roi_align_feats = RoIAlign(7, 7, 1/16.0)
         # self.roi_align_feats = RoIAlign(4, 4, 1.0/4)
         # self.roi_align_feats = RoIAlign(2, 2, 1.0/16)
         self.avg_pool = nn.AvgPool3d((int(sample_duration),1,1), stride=1)

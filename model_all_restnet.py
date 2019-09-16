@@ -10,6 +10,7 @@ from torch.autograd import Variable
 from conf import conf
 from action_net import ACT_net
 from act_rnn import Act_RNN
+from rest_model import RestNet
 from all_scores.calc import Calculator
 
 from create_tubes_from_boxes import create_video_tube, create_tube_from_tubes, create_tube_with_frames
@@ -46,6 +47,7 @@ class Model(nn.Module):
         # self.p_feat_size = 128 # 256 # 512
         self.p_feat_size = 256 # 512
         self.POOLING_SIZE = 7
+        self.pooling_time = 2
         # self.POOLING_SIZE = 4
 
         # For connection 
@@ -200,7 +202,7 @@ class Model(nn.Module):
         final_tubes = torch.zeros(pos.size(0), num_frames, 4).type_as(conn_scores)
         f_tubes  = []
 
-        print('final_tubes.device :',final_tubes.device)
+        # print('final_tubes.device :',final_tubes.device)
         for i in range(pos.size(0)):
 
             tub = []
@@ -302,9 +304,14 @@ class Model(nn.Module):
         # print('final_feats.shape:',final_feats.shape)
         # print('final_feats.shape:',final_feats.device)
         # print('svmWeights.device :',self.svmWeights.device)
-        scores = scoreTubes(final_feats,\
-                            self.svmWeights.type_as(final_feats), self.svmBias.type_as(final_feats),\
-                            self.svmFeatScale.type_as(final_feats), decisionThreshold=0.5)
+        
+        f_features = self.temporal_pool(final_feats)
+        f_features= f_features.max(3)[0]
+        f_features = f_features.permute(0,2,1,3,4).contiguous()
+
+        f_features = self.rest_net(f_features).mean(4).mean(3).squeeze()
+
+        scores = self.cls(f_features)
 
         # print('rest time :',time.time() - connect_and_translate_time)
         if self.training:
@@ -321,7 +328,7 @@ class Model(nn.Module):
                 print('indices.shape :',indices.shape)
                 final_tubes = final_tubes[indices[:conf.ALL_SCORES_THRESH]].contiguous()
                 prob_out = prob_out[indices[:conf.ALL_SCORES_THRESH]].contiguous()
-            print('final_tubes :',final_tubes.shape)
+
             ret_tubes = torch.zeros(1,conf.ALL_SCORES_THRESH, ret_n_frames,4).type_as(final_tubes).float() -1
             ret_prob_out = torch.zeros(1,conf.ALL_SCORES_THRESH,self.n_classes).type_as(final_tubes).float() - 1
             ret_tubes[0,:final_tubes.size(0),:num_frames] = final_tubes
@@ -330,6 +337,34 @@ class Model(nn.Module):
             return ret_tubes, ret_prob_out, torch.Tensor([final_tubes.size(0)]).cuda()
         
             # return final_tubes, prob_out, None
+
+    def temporal_pool(self, features):
+
+        batch_size = features.size(0)
+        n_filters = features.size(2)
+        x_axis = features.size(4)
+        y_axis = features.size(5)
+        
+        indexes = torch.linspace(0, features.size(1), self.pooling_time+1).int()
+        ret_feats = features.new(batch_size,self.pooling_time, n_filters,\
+                                self.sample_duration,x_axis, y_axis).zero_()
+
+        if features.size(1) < 2:
+
+            ret_feats[0] = features
+            return ret_feats
+    
+        for i in range(self.pooling_time):
+            
+            t = features[:,indexes[i]:indexes[i+1]].permute(0,2,1,3,4,5).\
+                contiguous().view(batch_size*n_filters,-1,self.sample_duration,x_axis,y_axis)
+            t = t.view(t.size(0),t.size(1),t.size(2),-1)
+            t = F.max_pool3d(t,kernel_size=(indexes[i+1]-indexes[i],1,1)).squeeze()
+
+            ret_feats[:,i] = t.view(batch_size,n_filters,self.sample_duration,x_axis,y_axis)
+
+        return ret_feats
+
         
 
     def deactivate_action_net_grad(self):
@@ -345,8 +380,6 @@ class Model(nn.Module):
         if action_model_path != None:
             
             act_data = torch.load(action_model_path)
-            # act_data = torch.load('./action_net_model.pwf')
-
 
             ## to remove module
             new_state_dict = OrderedDict()
@@ -368,15 +401,19 @@ class Model(nn.Module):
         # load lstm
         if rnn_path != None:
 
-            self.svmWeights = torch.from_numpy(np.loadtxt(os.path.join(rnn_path,'svmWeights.txt')))
-            self.svmBias = torch.from_numpy(np.loadtxt(os.path.join(rnn_path,'svmBias.txt')))
-            self.svmFeatScale = torch.from_numpy(np.loadtxt(os.path.join(rnn_path,'svmFeatScale.txt')))
+            model = RestNet(self.classes, self.sample_duration)
+            model.create_architecture()
+            model_data = torch.load(rnn_path)
+            model.load_state_dict(model_data)
 
+            self.rest_net = nn.Sequential(model.top_net)
+            self.cls = model.cls
         else:
  
-            self.svmWeights = torch.rand(self.n_classes, self.p_feat_size*self.sample_duration*self.POOLING_SIZE*self.POOLING_SIZE)
-            # self.svmWeights = torch.rand(self.n_classes, 5*self.p_feat_size*self.POOLING_SIZE*self.POOLING_SIZE)
-            self.svmBias = torch.rand(self.n_classes)
-            self.svmFeatScale = torch.rand(1)
+            model = RestNet(self.classes, self.sample_duration)
+            model.create_architecture()
+
+            self.rest_net = nn.Sequential(model.top_net)
+            self.cls = model.cls
 
 
