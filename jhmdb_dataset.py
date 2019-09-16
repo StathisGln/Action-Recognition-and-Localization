@@ -521,7 +521,7 @@ class Video(data.Dataset):
 class RNN_JHMDB(data.Dataset):
 
     def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader, \
-                 max_n_tubes = 19, max_len_tubes = 73, sample_duration=16):
+                 max_n_tubes = 16, max_len_tubes = 5, sample_duration=16):
 
         self.sample_duration = sample_duration
         self.POOLING_SIZE = 7
@@ -544,7 +544,7 @@ class RNN_JHMDB(data.Dataset):
         path = self.data[index]['video']   # video path
 
         # f_features = torch.zeros(self.max_n_tubes,self.max_len_tubes, 64, 16) - 1 
-        f_features = torch.zeros(self.max_n_tubes, 64, self.sample_duration, self.POOLING_SIZE, self.POOLING_SIZE) - 1 
+        f_features = torch.zeros(self.max_n_tubes, 5, 256, self.sample_duration, self.POOLING_SIZE, self.POOLING_SIZE) - 1 
         len_tubes = torch.zeros(self.max_n_tubes) 
         f_target_lbl = torch.zeros(self.max_n_tubes) - 1
 
@@ -553,14 +553,18 @@ class RNN_JHMDB(data.Dataset):
         # f_target_lbl = np.zeros((self.max_n_tubes)) - 1
 
         features    = torch.load(os.path.join(self.dataset_folder,path, 'feats.pt'),map_location='cpu')
-        target_lbl  = torch.load(os.path.join(self.dataset_folder,path, 'labels.pt'),map_location='cpu')
+        target_lbl  = torch.load(os.path.join(self.dataset_folder,path, 'labels.pt'),map_location='cpu').long()
+        len_tubes   = torch.load(os.path.join(self.dataset_folder,path, 'tube_len.pt'),map_location='cpu').int()
+
         n_tubes = features.size(0)
         # for b in range(features.size(0)):
+        # print('len_tubes :',len_tubes)
 
         for b in range(features.size(0)):
 
+
             # f_features[b,:feat_len] = features[b]
-            f_features[b] = features[b]
+            f_features[b, :len_tubes[b,0]] = features[b]
             f_target_lbl[b] = target_lbl[b]
             # for j in range(features.size(1)):
             #     len_tubes[b] += 1
@@ -569,7 +573,7 @@ class RNN_JHMDB(data.Dataset):
             #         break
 
         # return f_features, len_tubes,  f_target_lbl,
-        return f_features, n_tubes,   f_target_lbl,
+        return f_features, n_tubes, f_target_lbl, len_tubes
 
     def __len__(self):
         return len(self.data)
