@@ -313,6 +313,8 @@ class Model(nn.Module):
 
         scores = self.cls(f_features)
 
+        scores = F.softmax(scores, dim=1)
+
         # print('rest time :',time.time() - connect_and_translate_time)
         if self.training:
 

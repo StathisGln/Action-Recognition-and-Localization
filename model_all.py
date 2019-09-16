@@ -247,7 +247,7 @@ class Model(nn.Module):
         ###################################################
         if self.training:
 
-            tubes_per_video = 16
+            tubes_per_video = 32
             tubes_labels = torch.zeros(tubes_per_video).type_as(final_tubes)
             picked_tubes = torch.zeros(tubes_per_video, num_frames, 4).type_as(final_tubes)
 
@@ -279,7 +279,8 @@ class Model(nn.Module):
             fg_tubes_indices = max_overlaps.ge(0.7).nonzero().view(-1)
             fg_num_tubes = fg_tubes_indices.numel()
             bg_tubes_indices = torch.nonzero((max_overlaps >= 0.1 ) &
-                                             (max_overlaps <  0.5 )).view(-1)
+                                             (max_overlaps <  0.3 )).view(-1)
+                                             # (max_overlaps <  0.5 )).view(-1)
             bg_num_tubes = bg_tubes_indices.numel()
 
             if fg_num_tubes > 0 and bg_num_tubes > 0:

@@ -79,7 +79,13 @@ class RestNet(nn.Module):
 
         if self.training:
 
-            self.cls_loss =  F.cross_entropy(cls_scr, target.view(-1).long())
+            target = target.view(-1).contiguous()
+            # non_zero_tubes = target.nonzero().view(-1)
+
+            # cls_scr = cls_scr[non_zero_tubes]
+            # target = target[non_zero_tubes]
+
+            self.cls_loss =  F.cross_entropy(cls_scr, target.long())
 
 
         cls_scr = F.softmax(cls_scr, dim=1)

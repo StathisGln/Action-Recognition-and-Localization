@@ -336,7 +336,7 @@ class SVMClassTrainer(object):
 if __name__ == '__main__':
 
     #  files = glob.glob('./JHMDB-features-linear/*/*')
-    files = glob.glob('./JHMDB-features-256-mod7/*/*')
+    files = glob.glob('./JHMDB-features-256-7ver3/*/*')
     # files = glob.glob('./JHMDB-features-256-7ver2/*/*')
 
     # files = glob.glob('./JHMDB-features-64-7/*/*')

@@ -115,6 +115,14 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             keep_ = (f_prob.ge(confidence_thresh)) & cls_int.ne(0)
             keep_indices = keep_.nonzero().view(-1)
 
+            if keep_indices.nelement() == 0:
+                print('no tube over thresh :', keep_,' f_prob :', f_prob)
+                keep_ =  cls_int.ne(0)
+                keep_indices = keep_.nonzero().view(-1)
+                if keep_indices.nelement() == 0:
+                    f_tubes = torch.zeros((1,n_frames[i]+2))
+                    print('f_tubes.shape :',f_tubes.shape)
+
             f_tubes = torch.cat([cls_int.view(-1,1).type_as(tubes),f_prob.view(-1,1).type_as(tubes), \
                                  tubes[i,:n_tubes[i].long(),:n_frames[i]].contiguous().view(-1,n_frames[i]*4)], dim=1)
 
@@ -128,9 +136,10 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             # print('f_tubes.shape :',f_tubes.shape)
             # print('f_tubes.shape :',f_tubes[:, :2])
 
-
-            f_boxes = torch.cat([target.type_as(boxes),boxes[i,:,:n_frames[i],:4].contiguous().view(n_frames[i]*4)]).unsqueeze(0)
+            f_boxes = torch.cat([target[i].unsqueeze(0).type_as(boxes),\
+                                 boxes[i,:,:n_frames[i],:4].contiguous().view(n_frames[i]*4)]).unsqueeze(0)
             v_name = vid_names[vid_id[i]].split('/')[1]
+
             # print('f_tubes :',f_tubes.cpu().detach().numpy())
             # print('f_boxes :',f_boxes.cpu().detach().numpy())
             detection_dic[v_name] = f_tubes.float()

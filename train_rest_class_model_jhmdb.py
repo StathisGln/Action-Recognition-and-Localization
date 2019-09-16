@@ -34,7 +34,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     iou_thresh_4 = 0.4 # Intersection Over Union thresh
     iou_thresh_3 = 0.3 # Intersection Over Union thresh
 
-    confidence_thresh = 0.5
+    confidence_thresh = 0.1
 
     vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='test', classes_idx= cls2idx)
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=n_devs, pin_memory=True,
@@ -61,12 +61,13 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
     for step, data  in enumerate(data_loader):
 
-        # if step == 1:
+        # if step == 2:
         #     break
         print('step =>',step)
 
         vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
 
+        print('n_frames :',n_frames)
         vid_id = vid_id.int()
         clips = clips.to(device)
         boxes = boxes.to(device)
@@ -84,6 +85,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                     mode, cls2idx, None, n_frames, h, w)
 
 
+
         for i in range(clips.size(0)):
 
             _, cls_int = torch.max(prob_out[i],1)
@@ -99,17 +101,25 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             keep_ = (f_prob.ge(confidence_thresh)) & cls_int.ne(0)
             keep_indices = keep_.nonzero().view(-1)
 
+            
             f_tubes = torch.cat([cls_int.view(-1,1).type_as(tubes),f_prob.view(-1,1).type_as(tubes), \
                                  tubes[i,:n_tubes[i].long(),:n_frames[i]].contiguous().view(-1,n_frames[i]*4)], dim=1)
 
-
-            f_tubes = f_tubes[keep_indices].contiguous()
+            if keep_indices.nelement() == 0:
+                print('no tube over thresh :', keep_)
+                keep_ =  cls_int.ne(0)
+                keep_indices = keep_.nonzero().view(-1)
+                if keep_indices.nelement() == 0:
+                    f_tubes = torch.zeros((1,f_tubes.size(1)))
+            else:
+                f_tubes = f_tubes[keep_indices].contiguous()
 
             if f_tubes.nelement() != 0 :
                 _, best_tube = torch.max(f_tubes[:,1],dim=0)
                 f_tubes= f_tubes[best_tube].unsqueeze(0)
 
-            f_boxes = torch.cat([target.type_as(boxes),boxes[i,:,:n_frames[i],:4].contiguous().view(n_frames[i]*4)]).unsqueeze(0)
+            f_boxes = torch.cat([target[i].type_as(boxes).unsqueeze(0),\
+                                 boxes[i,:,:n_frames[i],:4].contiguous().view(n_frames[i]*4)]).unsqueeze(0)
             v_name = vid_names[vid_id[i]].split('/')[1]
 
             detection_dic[v_name] = f_tubes.float()
@@ -199,7 +209,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     print('|                  |')
     print(' ------------------')
     calculate_mAP(detection_dic, groundtruth_dic, iou_thresh_3)
-    
+
         
 def training(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads, lr, mode = 1):
 
@@ -294,7 +304,7 @@ if __name__ == '__main__':
     print(' -------------------------------------')
 
     dataset_frames = '../JHMDB-act-detector-frames'
-    dataset_features = './JHMDB-features-256-7ver2'
+    dataset_features = './JHMDB-features-256-7ver3'
 
     lr = 0.1
     lr_decay_step = 15
@@ -344,21 +354,21 @@ if __name__ == '__main__':
 
         if ( epoch + 1 ) % 10 == 0:
 
-            model = Model(actions, sample_duration, sample_size)
+            model_val = Model(actions, sample_duration, sample_size)
 
             action_model_path = './action_net_model_8frm_2_avg_jhmdb.pwf'
             linear_path = './RestNet.pwf'
 
-            model.load_part_model(action_model_path=action_model_path, rnn_path=linear_path)
+            model_val.load_part_model(action_model_path=action_model_path, rnn_path=linear_path)
 
-            model = nn.DataParallel(model)
-            model.to(device)
-            model.eval()
+            model_val = nn.DataParallel(model_val)
+            model_val.to(device)
+            model_val.eval()
     
-            validation(0, device, model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
+            validation(0, device, model_val, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
 
 
-    torch.save(model.module.state_dict(), "RestNet.pwf".format(epoch+1))
+    # torch.save(model.module.state_dict(), "RestNet.pwf".format(epoch+1))
 
 
 

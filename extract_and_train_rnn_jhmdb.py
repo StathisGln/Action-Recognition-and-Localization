@@ -418,8 +418,8 @@ if __name__ == '__main__':
     vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
                                               shuffle=True, num_workers=32, pin_memory=True)
-    out_path = 'JHMDB-features-256-mod7'
-    # out_path = 'JHMDB-features-256-7ver2-test'
+    # out_path = 'JHMDB-features-256-mod7'
+    out_path = 'JHMDB-features-256-7ver3'
 
     mode = 'extract'
     for step, data  in enumerate(data_loader):

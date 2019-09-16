@@ -521,7 +521,7 @@ class Video(data.Dataset):
 class RNN_JHMDB(data.Dataset):
 
     def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader, \
-                 max_n_tubes = 16, max_len_tubes = 5, sample_duration=16):
+                 max_n_tubes = 32, max_len_tubes = 5, sample_duration=16):
 
         self.sample_duration = sample_duration
         self.POOLING_SIZE = 7
