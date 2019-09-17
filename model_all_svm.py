@@ -245,22 +245,23 @@ class Model(nn.Module):
 
         # connect_and_translate_time = time.time()
         # print('connect_and_translate :',connect_and_translate_time-proposals_time)
+        ## NMS time
 
-        # # print('final_tubes.shape :',final_tubes.shape)
-        # # print('conn_scores.shape :',conn_scores.shape)
-        # fin_tubes =final_tubes.view(-1,num_frames*4).contiguous()
-        # # # print('final_tubes.shape :',fin_tubes.shape)
-        # # # print('torch.cat([fin_tubes,conn_scores.unsqueeze(1)], dim=1).shape :',\
-        # # #       torch.cat([fin_tubes,conn_scores.unsqueeze(1)], dim=1).shape)
-        # # keep_idx_i = nms_gpu.nms_gpu(torch.cat([fin_tubes,conn_scores.unsqueeze(1)], dim=1), 0.7)
-        # keep_idx_i = py_cpu_nms_tubes(torch.cat([fin_tubes,conn_scores.unsqueeze(1)], dim=1).cpu().numpy(), 0.7)
-        # keep_idx_i = torch.Tensor(keep_idx_i).cuda().long().view(-1)
+        # print('final_tubes.shape :',final_tubes.shape)
+        # print('conn_scores.shape :',conn_scores.shape)
+        fin_tubes =final_tubes.view(-1,num_frames*4).contiguous()
+        # # print('final_tubes.shape :',fin_tubes.shape)
+        # # print('torch.cat([fin_tubes,conn_scores.unsqueeze(1)], dim=1).shape :',\
+        # #       torch.cat([fin_tubes,conn_scores.unsqueeze(1)], dim=1).shape)
+        # keep_idx_i = nms_gpu.nms_gpu(torch.cat([fin_tubes,conn_scores.unsqueeze(1)], dim=1), 0.7)
+        keep_idx_i = py_cpu_nms_tubes(torch.cat([fin_tubes,conn_scores.unsqueeze(1)], dim=1).cpu().numpy(), 0.7)
+        keep_idx_i = torch.Tensor(keep_idx_i).cuda().long().view(-1)
 
-        # if self.post_nms_topN > 0:
-        #     keep_idx_i = keep_idx_i[:self.post_nms_topN]
+        if self.post_nms_topN > 0:
+            keep_idx_i = keep_idx_i[:self.post_nms_topN]
 
-        # final_tubes = final_tubes[keep_idx_i]
-        # f_tubes = [f_tubes[int(i)] for i in keep_idx_i]
+        final_tubes = final_tubes[keep_idx_i]
+        f_tubes = [f_tubes[int(i)] for i in keep_idx_i]
 
         ##############################################
 

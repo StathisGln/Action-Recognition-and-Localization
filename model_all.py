@@ -45,6 +45,7 @@ class Model(nn.Module):
         self.sample_size = sample_size
 
         self.step = sample_duration
+
         # self.p_feat_size  = 64 # 128 # 256 # 512
         # self.p_feat_size  = 128 # 256 # 512
         self.p_feat_size  = 256 # 512

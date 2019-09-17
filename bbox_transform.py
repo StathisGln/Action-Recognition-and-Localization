@@ -300,6 +300,35 @@ def clip_boxes_3d(boxes, im_shape, batch_size):
     return boxes
 
 
+def bbox_temporal_overlaps(anchors, gt_boxes):
+
+    '''
+    anchors  : candidate tubes, (N,2)
+    gt_boxes : gt tubes,        (K,2)
+    '''
+
+    N = anchors.size(0)
+    K = gt_boxes.size(0)
+
+    gt_boxes_area = gt_boxes[:,1] - gt_boxes[:,0]
+    anchors_area  = anchors[:,1]  - anchors[:,0]
+
+    gt_boxes_area = gt_boxes_area.view(1,K)
+    anchors_area  = anchors_area.view(N,1)
+
+    boxes = anchors.view(N, 1, 2).expand(N, K, 2)
+    query_boxes = gt_boxes.view(1, K, 2).expand(N, K, 2)
+
+    it = (torch.min(boxes[:, :, 1], query_boxes[:, :, 1]) -
+          torch.max(boxes[:, :, 0], query_boxes[:, :, 0]) + 1)
+    it[it < 0] = 0
+
+
+    ua = anchors_area + gt_boxes_area - it
+    overlaps = it / ua
+
+    return overlaps
+
 def bbox_overlaps(anchors, gt_boxes):
     """
     anchors: (N, 4) ndarray of float
@@ -791,3 +820,23 @@ def bbox_overlaps_batch_3d(anchors, gt_boxes):
     return overlaps
 
 
+if __name__ == '__main__':
+
+    gt_tubes = torch.tensor([[ 6., 35.]])
+    tubes_t = torch.tensor([[ 0., 12.],
+        [ 0., 16.],
+        [ 0., 16.],
+        [ 0., 16.],
+        [ 0., 16.],
+        [ 0., 16.],
+        [ 0., 16.],
+        [ 0., 16.],
+        [ 0., 16.],
+        [ 0., 16.],
+        [ 0., 16.],
+        [ 0., 16.],
+        [ 0., 16.],
+        [ 0., 16.],
+        [ 0., 16.]])
+    ret = bbox_temporal_overlaps(tubes_t, gt_tubes)
+    print('ret.shape :',ret.shape)

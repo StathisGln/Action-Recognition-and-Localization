@@ -30,8 +30,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     iou_thresh_4 = 0.4 # Intersection Over Union thresh
     iou_thresh_3 = 0.3 # Intersection Over Union thresh
 
-    confidence_thresh = 0.5
-
+    # confidence_thresh = 0.5
+    confidence_thresh = 0.05
     # test_folder_path = './JHMDB-features-256-7-test'
     # test_folder_path = './JHMDB-features-256-mod7-test'
     test_folder_path = './JHMDB-features-256-7ver2-test'

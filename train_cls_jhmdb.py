@@ -16,7 +16,8 @@ from create_video_id import get_vid_dict
 from net_utils import adjust_learning_rate
 from resize_rpn import resize_rpn, resize_tube
 
-from action_cls_part import ACT_cls
+from model import Model
+from class_net import ACT_net
 from resize_rpn import resize_boxes
 import argparse
 from box_functions import tube_overlaps, tube_transform_inv, clip_boxes

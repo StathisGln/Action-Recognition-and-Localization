@@ -419,7 +419,7 @@ if __name__ == '__main__':
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
                                               shuffle=True, num_workers=32, pin_memory=True)
     # out_path = 'JHMDB-features-256-mod7'
-    out_path = 'JHMDB-features-256-7ver3'
+    out_path = 'JHMDB-features-256-7ver4'
 
     mode = 'extract'
     for step, data  in enumerate(data_loader):

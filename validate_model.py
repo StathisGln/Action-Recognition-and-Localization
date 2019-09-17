@@ -16,6 +16,7 @@ from model import Model
 from resize_rpn import resize_rpn, resize_tube
 from ucf_dataset import Video_UCF, video_names
 from box_functions import bbox_transform, tube_transform_inv, clip_boxes, tube_overlaps
+from bbox_transform import bbox_temporal_overlaps
 
 np.random.seed(42)
 
@@ -50,12 +51,13 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
-        # if step == 10:
-        #     break
+        if step == 50:
+            break
         print('step =>',step)
 
         vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
         vid_id = vid_id.int()
+        print('vid_names[vid_id] :',vid_names[vid_id], vid_id)
         clips = clips.to(device)
         boxes = boxes.to(device)
         n_frames = n_frames.to(device)
@@ -80,13 +82,35 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
         for i in range(clips.size(0)):
             
-            box = boxes[i,:n_actions, :n_frames[i].int(),:4].contiguous()
+            box = boxes[i,:n_actions[i].int(), :n_frames[i].int(),:4].contiguous()
+
+            # calculate temporal limits of gt tubes
+            gt_limits = torch.zeros(n_actions[i].int(),2)
+            t = torch.arange(n_frames[i].int().item()).unsqueeze(0).expand(n_actions[i].int().item(),n_frames[i].int().item()).type_as(box)
+            z = box.eq(0).all(dim=2)
+
+
+            gt_limits[:,0] = torch.min(t.masked_fill_(z,1000),dim=1)[0]
+            gt_limits[:,1] = torch.max(t.masked_fill_(z,-1),dim=1)[0]+1
+
             box = box.view(-1,n_frames[i].int()*4)
-            print('box.shape :',box.shape)
-            print('tubes.shape :',tubes.shape)
+
             tubes_t = tubes[i,:n_tubes[i].long(),:n_frames[i].long()]
+
+            # calculate temporal limits of tubes
+            tub_limits = torch.zeros(n_tubes[i].long(),2)
+
+            t = torch.arange(n_frames[i].int().item()).unsqueeze(0).expand(n_tubes[i].int().item(),n_frames[i].int().item()).type_as(tubes_t)
+            z = tubes_t.eq(0).all(dim=2)
+
+            tub_limits[:,0] = torch.min(t.masked_fill_(z,1000),dim=1)[0]
+            tub_limits[:,1] = torch.max(t.masked_fill_(z,-1),dim=1)[0]+1
+
+            print('gt_limits :',gt_limits)
+            print('tubes_t   :',tub_limits[:15])
+            exit(-1)
             tubes_t = tubes_t.view(-1, n_frames[i].int()*4)
-            print('tubes_t.shape :',tubes_t.shape)
+
             overlaps = tube_overlaps(tubes_t.float(), box.float())
 
             gt_max_overlaps, argmax_gt_overlaps = torch.max(overlaps, 0)
@@ -97,6 +121,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             print('gt_max_overlaps :',gt_max_overlaps)
 
             # 0.5 thresh
+            
             gt_max_overlaps_ = torch.where(gt_max_overlaps > iou_thresh, gt_max_overlaps, torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
             detected =  gt_max_overlaps_[non_empty_indices].ne(0).sum()
             true_pos += detected

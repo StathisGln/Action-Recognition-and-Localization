@@ -42,7 +42,8 @@ def im_detect(net, folder_path,  boxes=None, feature_scale=None, bboxIndices=Non
     ## edit feats max/mean
     f_feats = []
 
-    for i in range(feats.size(0)):
+    # for i in range(feats.size(0)):
+    for i in range(24):
         # f_feats.append(temporal_pool(feats[i]))
         f_feats.append(temporal_pool(feats[i]).max(2)[0])
         # f_feats.append(temporal_pool(feats[i]).mean(2))        
@@ -175,9 +176,11 @@ def create_tubedb(files_path):
         tube_len   = os.path.join(i,'tube_len.pt')
         tubes       = os.path.join(i,'tubes.pt')
         tube_dict['path']     = i
-        tube_dict['labels']   = torch.load(labels_path).cpu()
+        lbls = torch.load(labels_path).cpu()
+        tube_dict['labels']   = lbls[:24]
         # tube_dict['tubes']    = torch.load(tubes)
-        tube_dict['tube_len'] = torch.load(tube_len)
+        tub_ln = torch.load(tube_len)
+        tube_dict['tube_len'] = tub_ln[24]
 
         tube_db.append(tube_dict)
 

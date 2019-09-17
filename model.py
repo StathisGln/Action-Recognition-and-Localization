@@ -42,9 +42,14 @@ class Model(nn.Module):
         self.sample_size = sample_size
         self.step = sample_duration
 
-        self.p_feat_size = 64 # 128 # 256 # 512
+        # self.p_feat_size = 64 # 128 # 256 # 512
+        self.p_feat_size  = 256 # 512
+
         self.POOLING_SIZE = 7
-        self.nms_thresh = 0.7
+        self.post_nms_topN = 2000 if self.training else 500
+
+
+
         # For connection 
         self.max_num_tubes = conf.MAX_NUMBER_TUBES
         self.connection_thresh = conf.CONNECTION_THRESH
@@ -138,19 +143,18 @@ class Model(nn.Module):
                                                             None,
                                                             box_,
                                                             start_fr)
+            
             pooled_feat = pooled_feat.view(-1,rois_per_image,self.p_feat_size,self.sample_duration, self.POOLING_SIZE, self.POOLING_SIZE)
-
+            
             # # regression
             n_tubes = len(tubes)
             if not self.training:
+
                 tubes = tubes.view(-1, self.sample_duration*4+2)
                 tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
                                                sgl_rois_bbox_pred.view(-1,self.sample_duration*4),(1.0,1.0,1.0,1.0))
                 tubes = tubes.view(n_tubes,rois_per_image, self.sample_duration*4+2)
                 tubes[:,:,1:-1] = clip_boxes(tubes[:,:,1:-1], im_info, tubes.size(0))
-
-            indexes_ = (torch.arange(0, tubes.size(0))*int(step) + start_fr[0].cpu()).unsqueeze(1)
-            indexes_ = indexes_.expand(tubes.size(0),tubes.size(1)).type_as(tubes)
 
             idx_s = step * batch_size 
             idx_e = min(step * batch_size + batch_size, n_clips)
@@ -262,7 +266,7 @@ class Model(nn.Module):
             final_scores, final_poss, pos , pos_indices, \
                 actioness_scr, overlaps_scr,  f_scores = self.calc.update_scores(final_scores,final_poss, f_scores, pos, pos_indices, actioness_scr, overlaps_scr)
             # print('Updating thresh...', final_scores.shape, final_poss.shape, pos.shape, f_scores.shape, pos_indices.shape)
-
+            
         final_tubes = torch.zeros(final_poss.size(0), num_frames, 4)
 
         f_tubes  = []
@@ -270,47 +274,47 @@ class Model(nn.Module):
         print('pos.shape :',pos.shape)
         
         arxi = time.time()
-        # for i in range(pos.size(0)):
-
-        #     for j in range(pos.size(1)):
-                
-        #         curr_ = pos[i,j]
-        #         start_fr = curr_[0]* int(self.step)
-        #         end_fr = min((curr_[0]*int(self.step)+self.sample_duration).type_as(num_frames), num_frames).type_as(start_fr)
-
-        #         if curr_[0] == -1:
-        #             break
-                
-        #         curr_frames = p_tubes[curr_[0], curr_[1]]
-        #         tub.append((curr_[0].item(),  curr_[1].item()))
-        #         ## TODO change with avg
-        #         final_tubes[i,start_fr:end_fr] =  torch.max( curr_frames.view(-1,4).contiguous()[:(end_fr-start_fr).long()],
-        #                                                      final_tubes[i,start_fr:end_fr].type_as(curr_frames))
-
-        #     f_tubes.append(tub)
-
         for i in range(final_poss.size(0)):
-
             tub = []
+            for j in range(final_poss.size(1)):
+                
+                curr_ = final_poss[i,j]
 
-            non_zr = final_poss[i,:,0].ne(-1).nonzero().view(-1)
-            thesis = final_poss[i,non_zr].long()
+                start_fr = curr_[0]* int(self.step)
+                end_fr = min((curr_[0]*int(self.step)+self.sample_duration).type_as(num_frames), num_frames).type_as(start_fr)
 
-            p_tubes_ = p_tubes[thesis[:,0], thesis[:,1]]
+                if curr_[0] == -1:
+                    break
+                
+                curr_frames = p_tubes[curr_[0], curr_[1]]
+                tub.append((curr_[0].item(),  curr_[1].item()))
+                ## TODO change with avg
+                final_tubes[i,start_fr:end_fr] =  torch.max( curr_frames.view(-1,4).contiguous()[:(end_fr-start_fr).long()],
+                                                             final_tubes[i,start_fr:end_fr].type_as(curr_frames))
 
-            start_fr = thesis[0,0]* int(self.step)
-            end_fr = torch.min((thesis[-1,0]+1)*self.step, num_frames)
+            f_tubes.append(tub)
 
-            final_tubes[i, start_fr:end_fr] = p_tubes[thesis[:,0], thesis[:,1]].contiguous().\
-                                              view(non_zr.size(0)*self.sample_duration,4)
+        # for i in range(final_poss.size(0)):
 
-            f_tubes.append(thesis)
+        #     tub = []
+
+        #     non_zr = final_poss[i,:,0].ne(-1).nonzero().view(-1)
+        #     thesis = final_poss[i,non_zr].long()
+
+        #     p_tubes_ = p_tubes[thesis[:,0], thesis[:,1]]
+
+        #     start_fr = thesis[0,0]* int(self.step)
+        #     end_fr = torch.min((thesis[-1,0]+1)*self.step, num_frames)
+
+        #     final_tubes[i, start_fr:end_fr] = p_tubes[thesis[:,0], thesis[:,1]].contiguous().\
+        #                                       view(non_zr.size(0)*self.sample_duration,4)
+
+        #     f_tubes.append(thesis)
 
         # print('final_tubes[:3] :',final_tubes[:2])
         # print('f_tubes :',f_tubes)
         telos = time.time()
-        print('diarkeia :',telos-arxi)
-        exit(-1)
+
         ###################################################
         #          Choose gth Tubes for RCNN\TCN          #
         ###################################################
@@ -340,6 +344,7 @@ class Model(nn.Module):
 
                 ## TODO change numbers
                 bg_tubes_indices = max_overlaps.lt(0.3).nonzero()
+
                 if bg_tubes_indices.nelement() > 0:
                     bg_tubes_indices_picked = (torch.rand(2)*bg_tubes_indices.size(0)).long()
                     bg_tubes_list = [f_tubes[i] for i in bg_tubes_indices[bg_tubes_indices_picked]]

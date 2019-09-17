@@ -518,10 +518,85 @@ class Video(data.Dataset):
     def __len__(self):
         return len(self.data)
 
+class Video_cls(data.Dataset):
+    def __init__(self, video_path, frames_dur=8, split_txt_path=None, sample_size= 112,
+                 spatial_transform=None, temporal_transform=None, json_file = None,
+                 sample_duration=16, get_loader=get_default_video_loader, mode='train', classes_idx=None):
+
+        self.mode = mode
+        self.data, self.max_frames = make_dataset(video_path, split_txt_path, json_file, self.mode)
+
+        self.spatial_transform = spatial_transform
+        self.temporal_transform = temporal_transform
+        self.loader = get_loader()
+        self.sample_duration = frames_dur
+        self.sample_size = sample_size
+        self.json_file = json_file
+        self.classes_idx = classes_idx
+        
+    def __getitem__(self, index):
+        """
+        Args:
+            index (int): Index
+        Returns:
+            tuple: (image, target) where target is class_index of the target class.
+        """
+        # print(self.data[index]['video'])
+        path = self.data[index]['abs_path']
+        begin_t = self.data[index]['begin_t']
+        end_t = self.data[index]['end_t']
+        boxes = self.data[index]['boxes']
+        n_frames = self.data[index]['end_t']
+
+        if n_frames < self.sample_duration+1:
+            time_index = 1
+            frame_indices = list(range(time_index, min(n_frames, time_index + self.sample_duration)))  # get the corresponding frames
+        else:
+            try:
+                time_index = np.random.randint(0, n_frames - self.sample_duration ) + 1
+            except:
+                print('n_frames :',n_frames)
+                print(' n_frames - self.sample_duration - 1 :', n_frames - self.sample_duration )
+                raise
+            frame_indices = list(
+            range(time_index, time_index + self.sample_duration))  # get the corresponding frames
+
+        # print(frame_indices)
+        if self.temporal_transform is not None:
+            frame_indices = self.temporal_transform(frame_indices)
+
+        clip = self.loader(path, frame_indices)
+
+        # # get original height and width
+        w, h = clip[0].size
+        
+        if self.spatial_transform is not None:
+            clip = [self.spatial_transform(img) for img in clip]
+        clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
+
+        # get bbox
+        cls = self.data[index]['class']
+        name = self.data[index]['video']
+        json_key = os.path.join(cls, name)
+
+        class_int = self.classes_idx[cls]
+        im_info = torch.Tensor([self.sample_size, self.sample_size, self.sample_duration])
+
+        if self.mode == 'train':
+            return clip, h, w, im_info, class_int
+        elif self.mode == 'val':
+            return clip, h, w, im_info, class_int
+        else:
+            return clip, h, w, im_info, class_int
+        
+        
+    def __len__(self):
+        return len(self.data)
+
 class RNN_JHMDB(data.Dataset):
 
     def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader, \
-                 max_n_tubes = 32, max_len_tubes = 5, sample_duration=16):
+                 max_n_tubes = 24, max_len_tubes = 5, sample_duration=16):
 
         self.sample_duration = sample_duration
         self.POOLING_SIZE = 7
@@ -560,8 +635,9 @@ class RNN_JHMDB(data.Dataset):
         # for b in range(features.size(0)):
         # print('len_tubes :',len_tubes)
 
-        for b in range(features.size(0)):
 
+        # for b in range(features.size(0)):
+        for b in range(24):
 
             # f_features[b,:feat_len] = features[b]
             f_features[b, :len_tubes[b,0]] = features[b]
