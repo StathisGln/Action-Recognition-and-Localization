@@ -414,8 +414,11 @@ if __name__ == '__main__':
     batch_size = 1
     vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train')
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
-                                              shuffle=True, num_workers=32, pin_memory=True)
-    out_path = 'UCF-101-features'
+                                              shuffle=True, num_workers=2, pin_memory=True)
+    # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
+    #                                           shuffle=True, num_workers=32, pin_memory=True)
+
+    out_path = 'UCF-101-features-256-7'
     mode = 'extract'
     for step, data  in enumerate(data_loader):
 
@@ -435,6 +438,7 @@ if __name__ == '__main__':
         n_actions = n_actions.int().to(device)
         im_info = torch.stack([h,w],dim=1).to(device)
 
+        print('vid_names[vid_id] :',vid_names[vid_id])
         print('n_frames :',n_frames)
         feats, tubes, labels, tube_len =  model(n_devs, dataset_frames, \
                                                 vid_names, clips, vid_id,  \
@@ -444,7 +448,7 @@ if __name__ == '__main__':
         print('labels :',labels)
         print('tube_len :',tube_len)
         print('tubes :',tubes.shape)
-        
+
         torch.save(feats, os.path.join(out_path, vid_names[vid_id], 'feats.pt'))
         torch.save(labels, os.path.join(out_path, vid_names[vid_id], 'labels.pt'))
         torch.save(tube_len, os.path.join(out_path, vid_names[vid_id], 'tube_len.pt'))

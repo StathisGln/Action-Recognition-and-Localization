@@ -85,16 +85,16 @@ class Calculator(Function):
 
         _, indices = torch.sort(f_scores,descending=True)
 
-        # if self.thresh == f_scores[indices[self.k]].item():
+        if self.thresh == f_scores[indices[self.k]].item():
 
-        #     print('f_scores[:self.k] :',f_scores[:self.k].cpu().numpy())
-        #     self.thresh = self.thresh + 0.001
-        # else:
-        #     self.thresh = f_scores[indices[self.k]].item()
+            print('f_scores[:self.k] :',f_scores[:self.k].cpu().numpy())
+            self.thresh = self.thresh + 0.001
+        else:
+            self.thresh = f_scores[indices[self.k]].item()
 
         indices = indices[:self.k]
         # self.thresh = f_scores[self.update_thresh].item()
-        # self.thresh = f_scores[self.k].item()
+        self.thresh = f_scores[self.k].item()
 
         pos = pos[indices].contiguous()
         pos_indices = pos_indices[indices].contiguous()

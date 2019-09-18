@@ -254,8 +254,14 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
 
             # if vid == 'v_IceDancing_g07_c01':
             #     continue
-            if vid != 'v_BasketballDunk_g07_c02':
-                continue
+            # if vid != 'v_BasketballDunk_g07_c02':
+            #     continue
+            # if vid != 'v_RopeClimbing_g18_c04':
+            #     continue
+            # if vid != 'v_Skiing_g14_c04':
+            #     continue
+
+
 
             video_path = os.path.join(cls,vid)
             if video_path not in boxes_data or not(vid in file_names):
@@ -269,14 +275,16 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
             n_actions = len(annots)
             # if n_actions < 2:
             #     continue
-            if n_frames > 50:
-                continue
+            # if n_frames > 50:
+            #     continue
             if n_frames > max_frames:
                 max_frames = n_frames
 
             # if n_frames < 800:
             #     continue
             # if n_frames > 100:
+            #     continue
+            # if n_frames != 204:
             #     continue
             # if n_actions < 2:
             #     continue

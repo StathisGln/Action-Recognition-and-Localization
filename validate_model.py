@@ -43,6 +43,15 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     true_pos_3 = 0
     false_neg_3 = 0
 
+    temp_true_pos = 0
+    temp_false_neg = 0
+
+    temp_true_pos_8 = 0
+    temp_false_neg_8 = 0
+
+    temp_true_pos_7 = 0
+    temp_false_neg_7 = 0
+    
     correct_preds = torch.zeros(1).long().to(device)
     n_preds = torch.zeros(1).long().to(device)
     preds = torch.zeros(1).long().to(device)
@@ -51,13 +60,13 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     tubes_sum = 0
     for step, data  in enumerate(data_loader):
 
-        if step == 50:
+        if step == 25:
             break
         print('step =>',step)
 
         vid_id, clips, boxes, n_frames, n_actions, h, w, target =data
         vid_id = vid_id.int()
-        print('vid_names[vid_id] :',vid_names[vid_id], vid_id)
+        print('vid_names[vid_id] :',vid_names[vid_id], vid_id, 'n_frames :',n_frames)
         clips = clips.to(device)
         boxes = boxes.to(device)
         n_frames = n_frames.to(device)
@@ -106,17 +115,47 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             tub_limits[:,0] = torch.min(t.masked_fill_(z,1000),dim=1)[0]
             tub_limits[:,1] = torch.max(t.masked_fill_(z,-1),dim=1)[0]+1
 
-            print('gt_limits :',gt_limits)
-            print('tubes_t   :',tub_limits[:15])
-            exit(-1)
+            non_empty_indices =  box.ne(0).any(dim=1).nonzero().view(-1)
+            n_elems = non_empty_indices.nelement()            
+
             tubes_t = tubes_t.view(-1, n_frames[i].int()*4)
+
+            ## temporal overlaps
+            temp_overlaps = bbox_temporal_overlaps(tub_limits, gt_limits)
+
+            gt_temp_max_overlaps, argmax_temp_gt_overlaps = torch.max(temp_overlaps, 0)
+
+            print('gt_temp_max_overlaps :',gt_temp_max_overlaps)
+            print('gt_limits :',gt_limits)
+            print('tub_limits[argmax_temp_gt_overlaps] :',tub_limits[argmax_temp_gt_overlaps])
+
+
+            gt_temp_max_overlaps_ = torch.where(gt_temp_max_overlaps > 0.9, gt_temp_max_overlaps, torch.zeros_like(gt_temp_max_overlaps).type_as(gt_temp_max_overlaps))
+            detected =  gt_temp_max_overlaps_[non_empty_indices].ne(0).sum()
+            temp_true_pos += detected
+            temp_false_neg += n_elems - detected
+
+            gt_temp_max_overlaps, argmax_temp_gt_overlaps = torch.max(temp_overlaps, 0)
+            gt_temp_max_overlaps_ = torch.where(gt_temp_max_overlaps > 0.8, gt_temp_max_overlaps, torch.zeros_like(gt_temp_max_overlaps).type_as(gt_temp_max_overlaps))
+            
+            detected =  gt_temp_max_overlaps_[non_empty_indices].ne(0).sum()
+            temp_true_pos_8 += detected
+            temp_false_neg_8 += n_elems - detected
+
+            gt_temp_max_overlaps, argmax_temp_gt_overlaps = torch.max(temp_overlaps, 0)
+            gt_temp_max_overlaps_ = torch.where(gt_temp_max_overlaps > 0.7, gt_temp_max_overlaps, torch.zeros_like(gt_temp_max_overlaps).type_as(gt_temp_max_overlaps))
+            
+            detected =  gt_temp_max_overlaps_[non_empty_indices].ne(0).sum()
+            temp_true_pos_7 += detected
+            temp_false_neg_7 += n_elems - detected
+
+
+            # spatio-temporal overlaps
 
             overlaps = tube_overlaps(tubes_t.float(), box.float())
 
             gt_max_overlaps, argmax_gt_overlaps = torch.max(overlaps, 0)
 
-            non_empty_indices =  box.ne(0).any(dim=1).nonzero().view(-1)
-            n_elems = non_empty_indices.nelement()            
 
             print('gt_max_overlaps :',gt_max_overlaps)
 
@@ -135,7 +174,6 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
             # 0.3 thresh
             gt_max_overlaps_ = torch.where(gt_max_overlaps > iou_thresh_3, gt_max_overlaps, torch.zeros_like(gt_max_overlaps).type_as(gt_max_overlaps))
-            print('gt_max_overlaps_ :',gt_max_overlaps_)
             detected =  gt_max_overlaps_[non_empty_indices].ne(0).sum()
             true_pos_3 += detected
             false_neg_3 += n_elems - detected
@@ -151,6 +189,10 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     recall    = true_pos.float()    / (true_pos.float()    + false_neg.float())
     recall_4  = true_pos_4.float()  / (true_pos_4.float()  + false_neg_4.float())
     recall_3  = true_pos_3.float()  / (true_pos_3.float()  + false_neg_3.float())
+
+    temp_recall    = temp_true_pos.float()    / (temp_true_pos.float()    + temp_false_neg.float())
+    temp_recall_8  = temp_true_pos_8.float()  / (temp_true_pos_8.float()  + temp_false_neg_8.float())
+    temp_recall_7  = temp_true_pos_7.float()  / (temp_true_pos_7.float()  + temp_false_neg_7.float())
 
     print(' -----------------------')
     print('| Validation Epoch: {: >3} | '.format(epoch+1))
@@ -175,6 +217,23 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     print('|                       |')
     print('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
         true_pos_3, false_neg_3, recall_3))
+    print('|                       |')
+    print('| Temporal overlaps     |')
+    print('|                       |')
+    print('| Threshold : 0.9       |')
+    print('|                       |')
+    print('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        temp_true_pos, temp_false_neg, temp_recall))
+    print('|                       |')
+    print('| Threshold : 0.8       |')
+    print('|                       |')
+    print('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        temp_true_pos_8, temp_false_neg_8, temp_recall_8))
+    print('|                       |')
+    print('| Threshold : 0.7       |')
+    print('|                       |')
+    print('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
+        temp_true_pos_7, temp_false_neg_7, temp_recall_7))
 
 
     print(' -----------------------')
