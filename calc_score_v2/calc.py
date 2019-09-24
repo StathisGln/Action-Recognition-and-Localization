@@ -6,18 +6,21 @@ from ._ext import calc as c
 import sys
 import numpy
 
+
 class Calculator(Function):
 
-    def __init__(self, k, update_thresh, thresh, ):
+    def __init__(self, k, update_thresh, thresh, final_scores_update, final_scores_keep):
         self.k = k  
         self.update_thresh = update_thresh
         self.thresh = thresh
-
+        self.final_scores_update = final_scores_update
+        self.final_scores_keep = final_scores_keep
     def forward(self, N, K, array_size, pos, pos_indices, \
-                actioness, overlaps_scr, overlaps, scores, indx):
+                actioness, overlaps_scr, overlaps, scores, indx, thresh):
 
         N = N.int().item()
         K = K.int().item()
+
         array_size = array_size.int().item()
         indx = indx.int().item()
 
@@ -30,7 +33,7 @@ class Calculator(Function):
         next_overlaps_scr = overlaps_scr.new(next_pos_max_size).zero_()
         f_scores = actioness.new(next_pos_max_size).zero_()
 
-        c.calc_test_cuda(K, N, self.thresh, array_size, pos.view(-1), pos_indices, actioness,
+        c.calc_test_cuda(K, N, thresh, array_size, pos.view(-1), pos_indices, actioness,
                          overlaps_scr, scores, overlaps.view(-1), 0,
                          overthr_pos_indices, next_actioness,
                          next_overlaps_scr, f_scores)
@@ -51,22 +54,22 @@ class Calculator(Function):
         f_scores = f_scores[update_indices]
         next_actioness = next_actioness[update_indices]
         next_overlaps_scr = next_overlaps_scr[update_indices]
-        
-        return next_pos, next_pos_indices, f_scores, next_actioness, next_overlaps_scr
+
+        return next_pos, next_pos_indices, f_scores, next_actioness, next_overlaps_scr, thresh
 
     def update_scores(self, final_scores, final_poss, f_scores, pos, pos_indices, actioness, \
-                      overlaps_scr):
+                      overlaps_scr, thresh):
 
-        # print('Updating thresh')  
+        print('Updating thresh', thresh, final_scores.device, final_scores.shape)  
         ## first update next loop
 
         _, indices = torch.topk(f_scores, self.k)
 
-        if self.thresh == f_scores[indices[-1]].item():
+        if thresh == f_scores[indices[-1]].item():
 
-            self.thresh = self.thresh + 0.001
+            thresh = self.thresh + 0.001
         else:
-            self.thresh = f_scores[indices[-1]].item()
+            thresh = f_scores[indices[-1]].item()
 
         pos = pos[indices].contiguous()
         pos_indices = pos_indices[indices].contiguous()
@@ -74,18 +77,18 @@ class Calculator(Function):
         overlaps_scr = overlaps_scr[indices].contiguous()
         f_scores = f_scores[indices].contiguous()
 
-        ## now time for final scores
-        indices = final_scores.ge(self.thresh).nonzero().view(-1)
+        ## now time for final scores to update if we save too many tubes
+        n_final_tubes = final_scores.size(0)
 
-        if indices.nelement() < self.k:
-            _,indices = torch.topk(final_scores,min(final_scores.size(0),self.k))
+        if n_final_tubes > self.final_scores_update:
 
+            _,indices = torch.topk(final_scores,min(final_scores.size(0),self.final_scores_keep))
 
-        final_scores = final_scores[indices].contiguous()
-        final_poss = final_poss[indices].contiguous()
+            final_scores = final_scores[indices].contiguous()
+            final_poss = final_poss[indices].contiguous()
 
         return final_scores, final_poss, pos, pos_indices, \
-            actioness, overlaps_scr,  f_scores
+            actioness, overlaps_scr,  f_scores, thresh
         
 if __name__ == '__main__':
 

@@ -92,7 +92,7 @@ class ACT_net(nn.Module):
             rpn_loss_bbox = 0
             
         # sgl_rois_bbox_pred, feats = self.reg_layer(base_feat_1, base_feat_3, rois[:,:,1:-1], gt_rois)
-        sgl_rois_bbox_pred, feats = self.reg_layer(base_feat_1, base_feat_2, rois[:,:,1:-1], gt_rois)
+        sgl_rois_bbox_pred = self.reg_layer(base_feat_1,  rois[:,:,1:-1], gt_rois)
 
 
         if not self.training:
@@ -103,23 +103,20 @@ class ACT_net(nn.Module):
             sgl_rois_bbox_loss = _smooth_l1_loss(sgl_rois_bbox_pred, rois_target, rois_inside_ws, rois_outside_ws,
                                                  sigma=3, dim=[1])
             sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(batch_size,-1, self.sample_duration*4)
-            feats = feats.view(batch_size,-1, feats.size(1), feats.size(2), feats.size(3), feats.size(4))
             rois_label =rois_label.view(batch_size,-1).long()
 
             # return rois,  None, rpn_loss_cls, rpn_loss_bbox, None,None, \
             #     None, None, None
             
-            return rois,  feats, rpn_loss_cls, rpn_loss_bbox, None,None, \
+            return rois, None, rpn_loss_cls, rpn_loss_bbox, None,None, \
                 rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss
 
         sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(batch_size,-1, self.sample_duration*4)
-        feats = feats.view(batch_size,-1, feats.size(1), feats.size(2), feats.size(3), feats.size(4))
-
 
         # return rois, None, None, None, None, None, \
         #     None, None, None,
 
-        return rois, feats, None, None, None, None, \
+        return rois, None, None, None, None, None, \
             None, sgl_rois_bbox_pred, None,
 
 

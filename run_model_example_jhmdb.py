@@ -14,7 +14,8 @@ from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
 # from model_all import Model
-from model import Model
+# from model import Model
+from model_par_all import Model
 from create_video_id import get_vid_dict
 from resize_rpn import resize_rpn, resize_tube
 import pdb
@@ -97,6 +98,7 @@ if __name__ == '__main__':
     n_frames = torch.from_numpy(n_frames).to(device)
     n_actions = torch.from_numpy(n_actions).int().to(device)
     im_info = torch.Tensor([h,w,clips.size(2)]).unsqueeze(0).to(device)
+    target = torch.Tensor([target]).unsqueeze(0).to(device)
     mode = 'train'
 
     print('n_frames:',n_frames)
@@ -106,7 +108,7 @@ if __name__ == '__main__':
     prob_out, cls_loss =  model(n_devs, dataset_frames, \
                                 vid_names, clips, vid_id,  \
                                 boxes, \
-                                'extract', cls2idx, n_actions,n_frames, h, w)
+                                'extract', cls2idx, n_actions,n_frames, h, w, target)
 
     # rois,  bbox_pred, cls_prob, \
     # rpn_loss_cls,  rpn_loss_bbox, \

@@ -12,7 +12,7 @@ extern "C" {
             i += blockDim.x * gridDim.x)
 
 
-    __global__ void Calculate_scores(const int nthreads,const int K, const int N, const float thresh, const int array_size,
+    __global__ void Calculate_scores(const int nthreads,const int K, const int N, const float *thresh, const int array_size,
 				    const int* pos, const int* pos_indices, const float *actioness, const float *overlaps_scr,
 				    const float *scores, const float *overlaps, const int indx, 
 				    int *next_pos_indices,float *next_actioness, float *next_overlaps_scr, float *f_scores) {
@@ -55,7 +55,7 @@ extern "C" {
 	  //   printf("m %d tmp_sum %f tmp_pos %d, j %d, z %d, j*K+z %d\n", m, tmp_sum, tmp_pos, j, z, j * K + z);
 	  // }
 	  
-	  if (tmp_sum > thresh){
+	  if (tmp_sum > thresh[0]){
 	  // if (tmp_sum > 0.5){
 	    
 	    next_pos_indices[tmp_pos] = pos_indices[j] + 1;
@@ -79,7 +79,7 @@ extern "C" {
     }
 
 
-    int CalculationLaucher(const int K, const int N, const float thresh, const int array_size, const int* pos, const int* pos_indices,
+    int CalculationLaucher(const int K, const int N, const float *thresh, const int array_size, const int* pos, const int* pos_indices,
 			   const float *actioness, const float *overlaps_scr, const float *scores, const float *overlaps, const int indx,
 			   int *next_pos_indices,float *next_actioness, float *next_overlaps_scr, float *f_scores,
 			   cudaStream_t stream) {

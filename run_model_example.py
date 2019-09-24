@@ -13,7 +13,10 @@ from ucf_dataset import Video_UCF, video_names
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
-from model import Model
+# from model import Model
+# from model_par_ucf import Model
+# from model_par_all import Model
+from model_par import Model
 
 from create_video_id import get_vid_dict
 from resize_rpn import resize_rpn, resize_tube
@@ -33,8 +36,8 @@ if __name__ == '__main__':
 
     n_devs = torch.cuda.device_count()
     sample_size = 112
-    sample_duration = 16  # len(images)
-
+    # sample_duration = 16  # len(images)
+    sample_duration = 8  # len(images)
     batch_size = 1
     n_threads = 0
 
@@ -66,7 +69,8 @@ if __name__ == '__main__':
 
     # Init action_net
     model = Model(actions, sample_duration, sample_size)
-    model.load_part_model()
+    model.load_part_model(action_model_path ='./action_net_model_8frm_conf_ucf.pwf',cls_path= './cls_model_8frm_256_7_ucf.pwf')
+    # model.load_part_model()
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
         model = nn.DataParallel(model)
@@ -97,18 +101,20 @@ if __name__ == '__main__':
 
     vid_id = torch.Tensor(vid_id).int()
     clips = clips.unsqueeze(0).to(device)
-    boxes = torch.from_numpy(boxes).to(device)
-    n_frames = torch.from_numpy(n_frames).to(device)
-    n_actions = torch.from_numpy(n_actions).int().to(device)
+    boxes = torch.from_numpy(boxes).unsqueeze(0).to(device)
+    n_frames = torch.from_numpy(n_frames).unsqueeze(0).to(device)
+    n_actions = torch.from_numpy(n_actions).int().unsqueeze(0).to(device)
     im_info = torch.Tensor([h,w,clips.size(2)]).unsqueeze(0).to(device)
+    target = torch.Tensor([target]).unsqueeze(0).to(device)
     mode = 'train'
+    print('target :',target)
     print('**********Starts**********')
-
+    model.eval()
     tubes,  \
     prob_out, cls_loss =  model(n_devs, dataset_frames, \
                                 vid_names, clips, vid_id,  \
                                 boxes, \
-                                mode, cls2idx, n_actions,n_frames, h, w)
+                                mode, cls2idx, n_actions,n_frames, h, w, target)
 
     # rois,  bbox_pred, cls_prob, \
     # rpn_loss_cls,  rpn_loss_bbox, \
@@ -121,3 +127,8 @@ if __name__ == '__main__':
     print('rois.shape :',tubes.shape)
     print('rois :',tubes)
 
+    for b in range(batch_size):
+
+        _, cls_int = torch.max(prob_out[b], dim=1)
+
+        print('cls_int :',cls_int)

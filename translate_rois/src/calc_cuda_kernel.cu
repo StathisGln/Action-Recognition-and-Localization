@@ -12,86 +12,58 @@ extern "C" {
             i += blockDim.x * gridDim.x)
 
 
-    __global__ void Calculate_scores(const int nthreads,const int K, const int N, const float thresh, const int array_size,
-				    const int* pos, const int* pos_indices, const float *actioness, const float *overlaps_scr,
-				    const float *scores, const float *overlaps, const int indx, int *next_pos,
-				    int *next_pos_indices,float *next_actioness, float *next_overlaps_scr, float *f_scores) {
+  __global__ void Calculate_scores(const int nthreads, const int K, const int N, const int n_frames, const int n_combs, const int sample_duration, const int step,  const float *p_tubes,
+				   const int* combinations, float *ret_tubes) {
         CUDA_1D_KERNEL_LOOP(index, nthreads) {
 
-	  float tmp_sum;
-	  float new_score, new_overlap;
-	  int idx_i, idx_j, m, tmp_pos;
-	  int j, z;
-
-	  j = index / K;
-	  z = index % K;
-
-	  // if (index == 0){
-	  //   printf("K %d, j %d z %d\n", K,j,z);
-	  // }
-
-	  idx_i = pos[j * N * 2 + pos_indices[j] * 2];
-	  idx_j = pos[j * N * 2 + pos_indices[j] * 2 + 1];
-
-	  // if (index == 0){
-	  //   printf("idx_i %d idx_j %d\n", idx_i, idx_j);
-	  // }
+	  int i,j;
+	  int idx_i, idx_j;
+	  int start_fr;
+	  int comb_index, p_tube_index_i,p_tube_index_j, r_tube_index;
 	  
-	  new_score = actioness[j] + scores[z];
-	  new_overlap = overlaps_scr[j] + overlaps[idx_j *  K + z  ];
+	  comb_index = index * N * 2;
+	  p_tube_index_i = K * sample_duration * 4; // for easy idx_i
+	  p_tube_index_j = sample_duration * 4; // for easy idx_i
+	  r_tube_index = index * n_frames * 4;
+	   
+	  for ( i=0; i<N; i++){
 
-	  // if (index == 0){
-	  //   printf("actioness[j] %f scores[z] %f new_score %f\n", actioness[j], scores[z], new_score);
-	  //   printf("overlaps_scr[j] %f overlaps[idx_i * K * K + idx_j * K + z] %f new_overlap %f\n", overlaps_scr[j], overlaps[idx_i * K * K + idx_j * K + z], new_overlap);
-	  // }
+	    idx_i = combinations[comb_index + i * 2];
+	    idx_j = combinations[comb_index + i * 2 + 1];
 
-	  m = pos_indices[j] + 1;
+	    if (idx_i != -1){
 
-	  // tmp_sum =   new_overlap / m; // 0.8
-	  tmp_sum = new_score / (m+1) +  new_overlap / m; // 0.8
-	  tmp_pos = j * K + z;
+	      start_fr = idx_i * step * 4;
 
-	  // if (index == 0){
-	  //   printf("m %d tmp_sum %f tmp_pos %d, j %d, z %d, j*K+z %d\n", m, tmp_sum, tmp_pos, j, z, j * K + z);
-	  // }
-	  
-	  if (tmp_sum > thresh){
-	  // if (tmp_sum > 0.5){
-	    
-	    next_pos_indices[tmp_pos] = pos_indices[j] + 1;
-	    next_actioness[tmp_pos] = new_score;
-	    next_overlaps_scr[tmp_pos] = new_overlap;
-	    // f_scores[tmp_pos] = new_score / (m+1);
-	    f_scores[tmp_pos] = tmp_sum;
-	    // if (index == 0){
-	    //   printf("pos_indices[j] %d, next_pos_indices[tmp_pos] %d\n",pos_indices[j], next_pos_indices[tmp_pos]);
-	      
-	    // }
+	      for (j = 0; j<sample_duration; j++){
 
+		if (j + idx_i * step >= n_frames)
+		  break;
 
-	  }else{
-	    next_pos_indices[tmp_pos] = -1;
-	    next_actioness[tmp_pos] = -1;
-	    next_overlaps_scr[tmp_pos] = -1;
-	    f_scores[tmp_pos] = -1;
+	      	ret_tubes[r_tube_index+start_fr + j * 4    ] = p_tubes[idx_i * p_tube_index_i + idx_j * p_tube_index_j +j * 4];
+	      	ret_tubes[r_tube_index+start_fr + j * 4 + 1] = p_tubes[idx_i * p_tube_index_i + idx_j * p_tube_index_j + j * 4 + 1];
+		ret_tubes[r_tube_index+start_fr + j * 4 + 2] = p_tubes[idx_i * p_tube_index_i + idx_j * p_tube_index_j + j * 4 + 2];
+		ret_tubes[r_tube_index+start_fr + j * 4 + 3] = p_tubes[idx_i * p_tube_index_i + idx_j * p_tube_index_j + j * 4 + 3];
+	      }
+	      // else
+	      // 	break;
+	    }
 	  }
 	}
     }
 
 
-    int CalculationLaucher(const int K, const int N, const float thresh, const int array_size, const int* pos, const int* pos_indices,
-			   const float *actioness, const float *overlaps_scr, const float *scores, const float *overlaps, const int indx,
-			   int *next_pos, int *next_pos_indices,float *next_actioness, float *next_overlaps_scr, float *f_scores,
-			   cudaStream_t stream) {
+	int CalculationLaucher(const int K, const int N, const int n_frames, const int n_combs, const int sample_duration, const int step, const float *p_tubes, const int *combinations,
+			 float *ret_tubes,  cudaStream_t stream) {
         const int kThreadsPerBlock = 1024;
         // const int kThreadsPerBlock = 64;
 
-        const int output_size = array_size * K;
+        const int output_size =  n_combs;
         cudaError_t err;
 	// printf("output_size %d\n",output_size);
         Calculate_scores <<< (output_size + kThreadsPerBlock - 1) / kThreadsPerBlock, kThreadsPerBlock, 0, stream >>>(
-          output_size, K, N, thresh, array_size, pos, pos_indices, actioness, overlaps_scr, scores, overlaps, indx,
-	  next_pos, next_pos_indices, next_actioness, next_overlaps_scr, f_scores);
+        output_size, K, N, n_frames, n_combs, sample_duration, step, p_tubes, combinations,
+	ret_tubes);
 
         err = cudaGetLastError();
         if(cudaSuccess != err) {
