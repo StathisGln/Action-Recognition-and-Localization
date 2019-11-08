@@ -36,9 +36,9 @@ __C.TRAIN.FG_FRACTION = 0.25
 
 # IOU >= thresh: positive example
 __C.TRAIN.RPN_POSITIVE_OVERLAP = 0.8
+
 # IOU < thresh: negative example
 __C.TRAIN.RPN_NEGATIVE_OVERLAP = 0.5
-# __C.TRAIN.RPN_NEGATIVE_OVERLAP = 0.5
 
 # Deprecated (outside weights)
 __C.TRAIN.RPN_BBOX_INSIDE_WEIGHTS = (1.0, 1.0, 1.0, 1.0)
@@ -87,20 +87,57 @@ __C.TEST.RPN_MIN_SIZE = 16
 
 ## Number of top scoring boxes to keep before apply NMS to RPN proposals
 __C.TEST.RPN_PRE_NMS_TOP_N = 6000
-
+# __C.TEST.RPN_PRE_NMS_TOP_N = 2000
 ## Number of top scoring boxes to keep after applying NMS to RPN proposals
 __C.TEST.RPN_POST_NMS_TOP_N = 150
+# __C.TEST.RPN_POST_NMS_TOP_N = 100
+# __C.TEST.RPN_POST_NMS_TOP_N = 30
 # __C.TEST.RPN_POST_NMS_TOP_N = 30
 
+################################
+#    Connection algo params    #
+################################
 
-# number of tubes after connection
 
-__C.MAX_NUMBER_TUBES=100
-# __C.MAX_NUMBER_TUBES=20
-# __C.CONNECTION_THRESH=0.5
-__C.CONNECTION_THRESH=0.5
-__C.UPDATE_THRESH=500
-# __C.UPDATE_THRESH=2000
+##################
+#   ALL SCORES   #
+##################
 
 __C.ALL_SCORES_THRESH=2000
+# __C.ALL_SCORES_THRESH=1000
 # __C.ALL_SCORES_THRESH=500
+
+# number of tubes after connection
+__C.MAX_NUMBER_TUBES=2000
+
+
+#################
+#   CALC ALGO   #
+#################
+
+# __C.CONNECTION_THRESH=0.5
+# __C.CONNECTION_THRESH=0.6
+__C.CONNECTION_THRESH=0.75
+
+# __C.UPDATE_THRESH=20000
+__C.UPDATE_THRESH=15000
+
+# __C.FINAL_SCORES_UPDATE = 50000
+__C.FINAL_SCORES_UPDATE = 50000
+__C.FINAL_SCORES_KEEP = 20000
+
+# __C.CALC_THRESH =500
+__C.CALC_THRESH =2000
+# __C.CALC_THRESH =4000
+
+# __C.FINAL_SCORES_MAX_NUM=50000
+__C.FINAL_SCORES_MAX_NUM=50000
+# __C.MODEL_PRE_NMS_TUBES=20000
+__C.MODEL_PRE_NMS_TUBES=20000
+
+# __C.MODEL_POST_NMS_TUBES=500
+# __C.MODEL_POST_NMS_TUBES=2000
+__C.MODEL_POST_NMS_TUBES=4000
+
+__C.POOLING_TIME = 20
+__C.POOLING_TIME_JHMDB = 2

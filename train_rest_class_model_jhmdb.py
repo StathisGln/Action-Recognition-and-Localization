@@ -304,7 +304,7 @@ if __name__ == '__main__':
     print(' -------------------------------------')
 
     dataset_frames = '../JHMDB-act-detector-frames'
-    dataset_features = './JHMDB-features-256-7ver3'
+
 
     lr = 0.1
     lr_decay_step = 15

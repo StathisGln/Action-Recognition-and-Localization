@@ -224,6 +224,7 @@ class _ProposalTargetLayer(nn.Module):
                 bg_rois_per_this_image = 0
 
             elif bg_num_rois > 0 and fg_num_rois == 0:
+                print('NO FG...')
 
                 # sampling bg
                 rand_num = np.floor(np.random.rand(rois_per_image) * bg_num_rois)

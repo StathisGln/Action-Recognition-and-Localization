@@ -258,8 +258,7 @@ class video_names(data.Dataset):
         spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
                                      ToTensor(),
                                      Normalize(mean, [1, 1, 1])])
-        plot_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
-                                     ToTensor()])
+        plot_transform = Compose([ToTensor()])
 
         self.spatial_transform=spatial_transform
         self.plot_transform = plot_transform
@@ -329,7 +328,7 @@ class video_names(data.Dataset):
         f_clips[:n_frames] = clip.permute(1,0,2,3)
 
         if self.plot:
-            f_clips_plot = torch.zeros(self.max_frames,3,self.sample_size,self.sample_size)
+            f_clips_plot = torch.zeros(self.max_frames,3,240,320)
             f_clips_plot[:n_frames] = clip_plot.permute(1,0,2,3)
         ## add frame to final_boxes
         
@@ -366,6 +365,9 @@ def make_dataset_names(dataset_path, spt_path, boxes_file, mode):
     for idx, cls in enumerate(classes):
         # if cls != 'swing_baseball':
         #     continue
+        # if cls != 'swing_baseball':
+        #     continue
+
         # print('cls :',cls)
         # if cls == '__background__' and (mode == 'test' or mode == 'val'):
         if cls == '__background__':
@@ -392,10 +394,36 @@ def make_dataset_names(dataset_path, spt_path, boxes_file, mode):
         for vid in videos:
 
 
+
+            # if vid != '':
+            #     continue
+            # if vid != 'Nike_Soccer_Commercial_-_Good_vs__Evil_kick_ball_f_cm_np1_fr_med_0':
+            #     continue
+            # if vid != 'THE_PROTECTOR_walk_f_cm_np1_ba_med_27':
+            #     continue
             # if vid != 'hittingofftee2_swing_baseball_f_nm_np1_fr_med_8':
             #     continue
             # if vid != 'Arrasando_no_Le_Parkour_jump_f_cm_np1_ri_bad_1':
             #     continue
+            # if vid != 'IamLegend_run_f_nm_np1_le_med_3':
+            #     continue
+            # if vid != 'Wayne_Rooney_At_Home_Funny_Must_See_kick_ball_f_cm_np1_ba_med_6':
+            #     continue
+            # if vid != 'BIG_FISH_wave_u_nm_np1_fr_bad_4':
+            #     continue
+
+            # if vid != 'Faith_Rewarded_run_f_cm_np1_le_med_16': # auto pou exw sto keimeno
+            #     continue
+
+            # if vid != 'Torwarttraining_catch_u_cm_np1_ri_med_2':
+            #    continue
+            # if vid != '103_years_old_japanese_woman__Nao_is_clapping_with_piano_music_by_beethoven_clap_u_cm_np1_fr_med_1':
+            #    continue
+            # if vid != 'GardenWiseB256kb_pick_f_nm_np1_le_med_0':
+            #    continue
+
+
+
 
             video_path = os.path.join(cls,vid)
             n_frames = len(glob.glob(os.path.join(dataset_path,video_path+'/*.png')))
@@ -596,7 +624,15 @@ class Video_cls(data.Dataset):
 class RNN_JHMDB(data.Dataset):
 
     def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader, \
-                 max_n_tubes = 24, max_len_tubes = 5, sample_duration=16):
+                 # max_n_tubes = 32, max_len_tubes = 5, sample_duration=16):
+                 # max_n_tubes = 24, max_len_tubes = 5, sample_duration=16):
+                 # max_n_tubes = 16, max_len_tubes = 5, sample_duration=16):
+                 max_n_tubes = 12, max_len_tubes = 5, sample_duration=16):
+                 # max_n_tubes = 8, max_len_tubes = 5, sample_duration=16):
+                 # max_n_tubes = 6, max_len_tubes = 5, sample_duration=16):
+                 # max_n_tubes = 4, max_len_tubes = 5, sample_duration=16):
+                 # max_n_tubes = 3, max_len_tubes = 5, sample_duration=16):
+
 
         self.sample_duration = sample_duration
         self.POOLING_SIZE = 7
@@ -608,6 +644,7 @@ class RNN_JHMDB(data.Dataset):
         self.mode = mode
         self.data, self.max_frames, self.max_actions = make_dataset_names( dataset_folder, spt_path, boxes_file, mode)
         self.loader = get_loader()
+        print('max_n_tubes :',self.max_n_tubes)
 
     def __getitem__(self, index):
         """
@@ -631,15 +668,73 @@ class RNN_JHMDB(data.Dataset):
         target_lbl  = torch.load(os.path.join(self.dataset_folder,path, 'labels.pt'),map_location='cpu').long()
         len_tubes   = torch.load(os.path.join(self.dataset_folder,path, 'tube_len.pt'),map_location='cpu').int()
 
+        # print('f_features.shape :',f_features.shape)
+        # print('features.shape :',features.shape)
+        # print('len_tubes :',len_tubes)
         n_tubes = features.size(0)
         # for b in range(features.size(0)):
         # print('len_tubes :',len_tubes)
 
+        # # ## in case of overload
+        # features = features[:12]
+        # n_tubes = 12
+        # len_tubes = len_tubes[:12]
 
-        # for b in range(features.size(0)):
-        for b in range(24):
+        # # ## in case of overload
+        # features = features[:4]
+        # n_tubes = 4
+        # len_tubes = len_tubes[:4]
+
+        # for b in range(4):
+
+        # # ## in case of overload
+        # features = features[:3]
+        # n_tubes = 3
+        # len_tubes = len_tubes[:3]
+
+        # for b in range(3):
+
+        # # ## in case of overload
+        # features = features[:8]
+        # n_tubes = 8
+        # len_tubes = len_tubes[:8]
+
+        # for b in range(8):
+
+        # # ## in case of overload
+        # features = features[:6]
+        # n_tubes = 6
+        # len_tubes = len_tubes[:6]
+
+        # for b in range(6):
+
+        # ## in case of overload
+
+        features = features[:self.max_n_tubes]
+        n_tubes = self.max_n_tubes
+        len_tubes = len_tubes[:self.max_n_tubes]
+
+        for b in range(self.max_n_tubes):
+
+        # # ## in case of overload
+        # features = features[:8]
+        # n_tubes = 8
+        # len_tubes = len_tubes[:8]
+
+        # for b in range(8):
+
+        # # ## in case of overload
+        # features = features[:6]
+        # n_tubes = 6
+        # len_tubes = len_tubes[:6]
+
+        # for b in range(6):
+            # print('f_features.shape :',f_features.shape)
 
             # f_features[b,:feat_len] = features[b]
+            # print('features[b].shpae :',features[b].shape)
+            # print('len_tubes[b,0] :',len_tubes[b,0].shape)
+            # print('len_tubes[b,0] :',len_tubes[b,0])
             f_features[b, :len_tubes[b,0]] = features[b]
             f_target_lbl[b] = target_lbl[b]
             # for j in range(features.size(1)):
@@ -647,8 +742,8 @@ class RNN_JHMDB(data.Dataset):
             #     if final_tubes[b,j,0] == -1:
             #         len_tubes[b] -= 1
             #         break
-
-        # return f_features, len_tubes,  f_target_lbl,
+        # print('f_features.shape :',f_features.shape)
+        # print('f_target_lbl :',f_target_lbl)
         return f_features, n_tubes, f_target_lbl, len_tubes
 
     def __len__(self):
@@ -680,9 +775,6 @@ if __name__ == "__main__":
                                  ToTensor(),
                                  Normalize(mean, [1, 1, 1])])
     temporal_transform = LoopPadding(sample_duration)
-
-    
-    
 
 
     data = Video(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,

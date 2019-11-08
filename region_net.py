@@ -253,6 +253,7 @@ class _RPN(nn.Module):
             self.rpn_loss_cls = rpn_loss_cls + rpn_loss_cls_3_4 + rpn_loss_cls_2 + rpn_loss_cls_4
             self.rpn_loss_box = rpn_loss_box + rpn_loss_box_3_4 + rpn_loss_box_2 + rpn_loss_box_4
 
+            
         return rois, None, self.rpn_loss_cls, self.rpn_loss_box, None, None
 
 

@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import json
+import argparse
 
 import torch
 import torch.nn as nn
@@ -126,6 +127,15 @@ if __name__ == '__main__':
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
+
+
+    parser = argparse.ArgumentParser(description='Train action_net, regression layer and RNN')
+
+    parser.add_argument('--linear_path', '-l', help='Path of linear model', default='./' )
+    # parser.add_argument('--n_1_1', help='Run only part 1.1, training action net only', action='store_true')
+    # parser.add_argument('--n_1_2', help='Run only part 1.2, training only regression layer', action='store_true')
+    # parser.add_argument('--n_2', help='Run only part 2, train only RNN', action='store_true')
+    args = parser.parse_args()
 
     dataset_folder = '../JHMDB-act-detector-frames'
     split_txt_path =  '../splits'

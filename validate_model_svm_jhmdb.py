@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import json
+import argparse
 
 import torch
 import torch.nn as nn
@@ -14,10 +15,13 @@ from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
 # from model import Model
-from model_all_svm import Model
+# from model_all_svm import Model
+# from model_par_all_svm import Model
+# from model_all_svm_v2 import Model
+from model_all_svm_v2_nms import Model
 from resize_rpn import resize_rpn, resize_tube
 from jhmdb_dataset import Video, video_names
-
+from conf import conf
 from box_functions import bbox_transform, tube_transform_inv, clip_boxes, tube_overlaps
 from mAP_function import calculate_mAP
 from plot import plot_tube_with_gt
@@ -53,18 +57,19 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     correct_preds = torch.zeros(1).long().to(device)
     n_preds = torch.zeros(1).long().to(device)
     preds = torch.zeros(1).long().to(device)
-
+    max_overlaps_sum = 0.0
     ## 2 rois : 1450
     tubes_sum = 0
 
     groundtruth_dic = {}
     detection_dic = {}
 
+    n_tubes = conf.ALL_SCORES_THRESH
     for step, data  in enumerate(data_loader):
 
         # if step == 20:
         #     break
-        # if step == 3:
+        # if step == 2:
         #     break
 
         print('step =>',step)
@@ -90,12 +95,13 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         # print('vid_names[vid_id] :',vid_names[vid_id])
         with torch.no_grad():
             tubes,  \
-            prob_out, n_tubes =  model(n_devs, dataset_folder, \
-                                    vid_names, clips, vid_id,  \
-                                    None, \
-                                    mode, cls2idx, None, n_frames, h, w)
+            prob_out, _ =  model(n_devs, dataset_folder, \
+                                       vid_names, clips, vid_id,  \
+                                       None, \
+                                       mode, cls2idx, None, n_frames, h, w, None)
 
 
+        print('prob_out.shape :',prob_out.shape)
 
         # print('out...')
         # get predictions
@@ -105,26 +111,27 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             _, cls_int = torch.max(prob_out[i],1)
 
             # print('cls_int :',cls_int)
-            f_prob = torch.zeros(n_tubes[i].long()).type_as(prob_out)
+            f_prob = torch.zeros(n_tubes).type_as(prob_out)
 
-            for j in range(n_tubes[i].long()):
+            for j in range(n_tubes):
                 f_prob[j] = prob_out[i,j,cls_int[j]]
             
-            cls_int = cls_int[:n_tubes[i].long()]
+            cls_int = cls_int[:n_tubes]
+
 
             keep_ = (f_prob.ge(confidence_thresh)) & cls_int.ne(0)
             keep_indices = keep_.nonzero().view(-1)
 
             if keep_indices.nelement() == 0:
-                print('no tube over thresh :', keep_,' f_prob :', f_prob)
+
                 keep_ =  cls_int.ne(0)
                 keep_indices = keep_.nonzero().view(-1)
                 if keep_indices.nelement() == 0:
                     f_tubes = torch.zeros((1,n_frames[i]+2))
-                    print('f_tubes.shape :',f_tubes.shape)
+
 
             f_tubes = torch.cat([cls_int.view(-1,1).type_as(tubes),f_prob.view(-1,1).type_as(tubes), \
-                                 tubes[i,:n_tubes[i].long(),:n_frames[i]].contiguous().view(-1,n_frames[i]*4)], dim=1)
+                                 tubes[i,:n_tubes,:n_frames[i]].contiguous().view(-1,n_frames[i]*4)], dim=1)
 
 
             f_tubes = f_tubes[keep_indices].contiguous()
@@ -156,14 +163,19 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             box = boxes[i,:n_actions[i].long(), :n_frames[i].long(),:4].contiguous()
             box = box.view(-1,n_frames[i]*4).contiguous().type_as(tubes)
 
-            overlaps = tube_overlaps(tubes[i,:n_tubes[i].long(),:n_frames[i].long()].view(-1,n_frames*4).float(),\
+            overlaps = tube_overlaps(tubes[i,:n_tubes,:n_frames[i].long()].view(-1,n_frames*4).float(),\
                                      box.view(-1,n_frames[i]*4).float())
             gt_max_overlaps, argmax_gt_overlaps = torch.max(overlaps, 0)
 
             non_empty_indices =  box.ne(0).any(dim=1).nonzero().view(-1)
             n_elems = non_empty_indices.nelement()
 
-            # print('gt_max_overlaps :',gt_max_overlaps )
+            print('gt_max_overlaps :',gt_max_overlaps )
+            print('gt_max_overlaps :',gt_max_overlaps.sum() )
+            max_overlaps_sum += gt_max_overlaps.sum().item()
+            print('max_overlaps_sum :',max_overlaps_sum)
+
+
             # print('argmax_gt_overlaps :',argmax_gt_overlaps)
             # print('prob_out[argmax_gt_overlaps] :',prob_out[i,argmax_gt_overlaps])
             # print('cls_int[argmax_gt_overlaps] :',cls_int[argmax_gt_overlaps])
@@ -189,7 +201,8 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             detected =  gt_max_overlaps_[non_empty_indices].ne(0).sum().item()
             true_pos_3 += detected
             false_neg_3 += n_elems - detected
-            
+
+    mabo      = max_overlaps_sum /  (true_pos    + false_neg)
     recall    = float(true_pos)     /  (true_pos    + false_neg)
     recall_4  = float(true_pos_4)  / (true_pos_4  + false_neg_4)
     recall_3  = float(true_pos_3)  / (true_pos_3  + false_neg_3)
@@ -217,8 +230,10 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     print('|                       |')
     print('| True_pos   --> {: >6} |\n| False_neg  --> {: >6} | \n| Recall     --> {: >6.4f} |'.format(
         true_pos_3, false_neg_3, recall_3))
-
-
+    print('|                       |')
+    print('| Mean Avg Best Overlap |')
+    print('|                       |')
+    print('| {: >6}    |'.format(float(mabo)))
     print(' -----------------------')
         
     print(' -----------------')
@@ -247,6 +262,14 @@ if __name__ == '__main__':
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
+
+    parser = argparse.ArgumentParser(description='Train action_net, regression layer and RNN')
+
+    parser.add_argument('--linear_path', '-l', help='Path of linear model', default='./' )
+    # parser.add_argument('--n_1_1', help='Run only part 1.1, training action net only', action='store_true')
+    # parser.add_argument('--n_1_2', help='Run only part 1.2, training only regression layer', action='store_true')
+    # parser.add_argument('--n_2', help='Run only part 2, train only RNN', action='store_true')
+    args = parser.parse_args()
 
     dataset_folder = '../JHMDB-act-detector-frames'
     split_txt_path =  '../splits'
@@ -290,8 +313,11 @@ if __name__ == '__main__':
 
     # linear_path = './linear_jhmdb.pwf'
     # linear_path = './linear_jhmdb_5.pwf'
-    linear_path = './'
+    linear_path = args.linear_path
 
+    print('action_model_path :',action_model_path)
+    print('linear_path :',linear_path)
+    
     model = Model(actions, sample_duration, sample_size)
 
     # model.load_part_model()

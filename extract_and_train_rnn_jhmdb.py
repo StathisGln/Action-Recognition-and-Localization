@@ -363,8 +363,8 @@ if __name__ == '__main__':
     boxes_file = '../poses.json'
 
     sample_size = 112
-    # sample_duration = 16  # len(images)
-    sample_duration = 8  # len(images)
+    sample_duration = 16  # len(images)
+    # sample_duration = 8  # len(images)
 
     n_devs = torch.cuda.device_count()
 
@@ -399,10 +399,8 @@ if __name__ == '__main__':
     print('|          - extract features -          |')
     print(' ----------------------------------------')
 
-    # action_model_path = './action_net_model_both_single_frm_jhmdb.pwf'
-
-    # action_model_path = './action_net_model_8frm_64_jhmdb.pwf'
-    action_model_path = './action_net_model_8frm_2_avg_jhmdb.pwf'
+    # action_model_path = './action_net_model_8frm_2_avg_jhmdb.pwf'
+    action_model_path = './action_net_model_16frm_max_jhmdb.pwf'
 
     # Init whole model
     model = Model(actions, sample_duration, sample_size)
@@ -418,8 +416,12 @@ if __name__ == '__main__':
     vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
                                               shuffle=True, num_workers=32, pin_memory=True)
-    # out_path = 'JHMDB-features-256-mod7'
-    out_path = 'JHMDB-features-256-7ver4'
+    # out_path = 'JHMDB-features-256-7-orig-roialign'
+    # out_path = 'JHMDB-features-64-7-orig-roialign'
+    # out_path = 'JHMDB-features-256-32-8'
+    # out_path = 'JHMDB-features-16-256-32-8'
+    out_path = 'JHMDB-features-16-256-16-4'
+    # out_path = 'JHMDB-features-256-7ver7-16-orig-roialign'
 
     mode = 'extract'
     for step, data  in enumerate(data_loader):

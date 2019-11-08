@@ -20,7 +20,6 @@ import numpy as np
 import glob
 from imdetect import im_detect, DummyNet, create_tubedb
 
-
 class SVMTrainer(object):
     """
     Trains post-hoc detection SVMs for all classes using the algorithm
@@ -28,7 +27,7 @@ class SVMTrainer(object):
     """
 
     def __init__(self, net, tube_db, num_classes, files_path,  im_detect=im_detect, #svmWeightsPath, svmBiassPath, svmFeatScalePath,
-                 svm_C=0.001, svm_B=10.0, svm_nrEpochs=2, svm_retrainLimit=2000, svm_evictThreshold=-1.1, svm_posWeight="balanced",
+                 svm_C=0.001, svm_B=10.0, svm_nrEpochs=2, svm_retrainLimit=1000, svm_evictThreshold=-1.1, svm_posWeight="balanced",
                  svm_targetNorm=20.0, svm_penality='l2', svm_loss='l1', svm_rngSeed=3):
 
         self.net = net
@@ -150,14 +149,17 @@ class SVMTrainer(object):
                 for j in range(1, self.num_classes):
 
                     # print('tube_db[i][\'labels\'][0] :',tube_db[i]['labels'][0])
-                    # print('j :', j)
-                    if j != tube_db[i]['labels'][0]:
-                        hard_inds = (scores[:,j].gt(self.hard_thresh) & tube_db[i]['labels'].ne(j) \
-                                     & tube_db[i]['labels'].ne(0)).nonzero().view(-1)
-                        # continue
-                    else:
-                        hard_inds = (scores[:,j].gt(self.hard_thresh) & tube_db[i]['labels'].eq(0)) \
-                        .nonzero().view(-1)
+                    # # print('j :', j)
+                    # # # # # # ## for 4 and 5
+                    # if j != tube_db[i]['labels'][0]:
+                    #     ## 4 method
+                    #     hard_inds = (scores[:,j].gt(self.hard_thresh) & tube_db[i]['labels'].ne(j) \
+                    #                  & tube_db[i]['labels'].ne(0)).nonzero().view(-1)
+                    #     # # ## 5 method
+                    #     # continue
+                    # else:
+                    #     hard_inds = (scores[:,j].gt(self.hard_thresh) & tube_db[i]['labels'].eq(0)) \
+                    #     .nonzero().view(-1)
 
                     ## TODO change overlaps because now use only background rois
                     # print('tube_db[i][\'labels\'] :',tube_db[i]['labels'])
@@ -168,14 +170,17 @@ class SVMTrainer(object):
                     # hard_inds = (scores[:,j].gt(self.hard_thresh) & tube_db[i]['labels'].ne(j) \
                     #              & tube_db[i]['labels'].ne(0)).nonzero().view(-1)
 
-
+                    # ## 3n only other pos  
                     # hard_inds = (scores[:,j].gt(self.hard_thresh) & tube_db[i]['labels'].ne(j) \
                     #              & tube_db[i]['labels'].ne(0)).nonzero().view(-1)
                     
 
+                    ## 1 general background + other pos
+                    hard_inds = (scores[:,j].gt(self.hard_thresh) & tube_db[i]['labels'].ne(j)).nonzero().view(-1)
 
-                    # hard_inds = (scores[:,j].gt(self.hard_thresh) & tube_db[i]['labels'].ne(j)).nonzero().view(-1)
+                    # ## 2 only general background
                     # hard_inds = (scores[:,j].gt(self.hard_thresh) & tube_db[i]['labels'].eq(0)).nonzero().view(-1)
+
                     # print('hard_inds :',hard_inds)
                     # exit(-1)
                     # hard_inds = \
@@ -336,15 +341,27 @@ class SVMClassTrainer(object):
 if __name__ == '__main__':
 
     #  files = glob.glob('./JHMDB-features-linear/*/*')
-    files = glob.glob('./JHMDB-features-256-7ver3/*/*')
+    # files = glob.glob('./JHMDB-features-64-7ver6/*/*')
+    # files = glob.glob('./JHMDB-features-256-7ver6/*/*')
+    # files = glob.glob('./JHMDB-features-256-modRoialign/*/*')
+    # files = glob.glob('./JHMDB-features-256-7ver7/*/*')
+    # files = glob.glob('./JHMDB-features-256-7ver7-16/*/*')
+    # files = glob.glob('./JHMDB-features-64-7-orig-roialign/*/*')
+    # files = glob.glob('./JHMDB-features-256-7-orig-roialign/*/*')
+    # files = glob.glob('./JHMDB-features-256-7ver5/*/*')
+    # files = glob.glob('./JHMDB-features-256-7ver3/*/*')
     # files = glob.glob('./JHMDB-features-256-7ver2/*/*')
-
-    # files = glob.glob('./JHMDB-features-64-7/*/*')
-
-    # files = glob.glob('./JHMDB-features-256-4/*/*')
-    # files = glob.glob('./JHMDB-features-256-2/*/*')
+    files = glob.glob('./JHMDB-features-256-8-2/*/*')
+    # files = glob.glob('./JHMDB-features-256-16-4/*/*')
+    # files = glob.glob('./JHMDB-features-256-32-8/*/*')
+    # files = glob.glob('./UCF-101-features-256-7/*/*')
     print('len(files) :',len(files))
     n_classes = 21+1
+
+
+    # print('torch.get_num_threads() :',torch.get_num_threads())
+    # torch.set_num_threads(4)
+    # print('torch.get_num_threads() :',torch.get_num_threads())
 
     # net = DummyNet(256*8,n_classes)
     # net = DummyNet(256*8*7*7,n_classes)
@@ -356,13 +373,23 @@ if __name__ == '__main__':
     # net = DummyNet(2*256*8*2*2,n_classes)
     # net = DummyNet(256*7*7,n_classes)
     # net = DummyNet(2*256*8*7*7,n_classes)
-    net = DummyNet(2*256*7*7,n_classes)
+    # net = DummyNet(2*256*7*7,n_classes)
+    # net = DummyNet(512*4*4,n_classes)
+    # net = DummyNet(20*256*7*7,n_classes)
     # net = DummyNet(2*64*7*7,n_classes)
-    # net = DummyNet(64*8*7,n_classes)
+    # net = DummyNet(64*8*7*7,n_classes)
     # net = DummyNet(128*8*7*7,n_classes)
     # net = DummyNet(256*8,n_classes)
     # net = DummyNet(256*8*4*4,n_classes)
     # net = DummyNet(2*128*8,n_classes)
+    # net = DummyNet(2*256*7*7,n_classes)
+    net = DummyNet(2*256*8*7*7,n_classes)
+    # net = DummyNet(256*8*7*7,n_classes)
+
+    # net = DummyNet(2*256*16*7*7,n_classes)
+    # net = DummyNet(256*16*7*7,n_classes)
+    # net = DummyNet(256*8*7*7,n_classes)
+
     # net = DummyNet(64*8*7*7,n_classes)
     # net = DummyNet(25088,n_classes)
     # net = DummyNet(15680,n_classes)

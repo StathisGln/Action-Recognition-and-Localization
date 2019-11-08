@@ -130,6 +130,9 @@ if __name__ == '__main__':
     print('im_info_.shape :',im_info_.shape)
     print('**********Starts**********')
     # exit(-1)
+    print('torch.get_num_threads() :',torch.get_num_threads())
+    print('torch.set_num_threads(2) :',torch.set_num_threads(2))
+    print('torch.get_num_threads() :',torch.get_num_threads())
     inputs = Variable(clips_)
     rois, feats, \
     rpn_loss_cls,  rpn_loss_bbox, \

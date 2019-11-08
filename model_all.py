@@ -45,6 +45,9 @@ class Model(nn.Module):
         self.sample_size = sample_size
 
         self.step = sample_duration
+        print('sample_duration :',sample_duration)
+
+
 
         # self.p_feat_size  = 64 # 128 # 256 # 512
         # self.p_feat_size  = 128 # 256 # 512
@@ -89,11 +92,11 @@ class Model(nn.Module):
                                                   shuffle=False)
 
         n_clips = data.__len__()
-        max_clips = 5
+        max_clips = n_clips
 
         features = torch.zeros(max_clips, rois_per_image, self.p_feat_size, self.sample_duration,self.POOLING_SIZE, self.POOLING_SIZE).type_as(clips)
         p_tubes = torch.zeros(max_clips, rois_per_image,  self.sample_duration*4).type_as(clips) # all the proposed tube-rois
-        
+
         actioness_score = torch.zeros(max_clips, rois_per_image).type_as(clips)
         overlaps_scores = torch.zeros(max_clips, rois_per_image, rois_per_image).type_as(clips)
 
@@ -145,9 +148,10 @@ class Model(nn.Module):
                                                             box_,
                                                             start_fr)
             tpn_time = time.time()
-
+            # print('pooled_feat.shape :',pooled_feat.shape)
             # print('tpn_time :',tpn_time-before_time)
             pooled_feat = pooled_feat.view(-1,rois_per_image,self.p_feat_size,self.sample_duration, self.POOLING_SIZE, self.POOLING_SIZE)
+            # print('pooled_feat.shape :',pooled_feat.shape)
 
             # # regression
             n_tubes = len(tubes)
@@ -158,13 +162,13 @@ class Model(nn.Module):
                 tubes = tubes.view(n_tubes,rois_per_image, self.sample_duration*4+2)
                 tubes[:,:,1:-1] = clip_boxes(tubes[:,:,1:-1], im_info, tubes.size(0))
 
+        
             idx_s = step * batch_size 
             idx_e = min(step * batch_size + batch_size, n_clips)
 
-            # print('idx_s :',idx_s)
-            # print('idx_e :',idx_e)
             # print('n_clips :',n_clips)
             # TODO uncomment
+            # print('features.shape :',features[idx_s:idx_e].shape)
             features[idx_s:idx_e] = pooled_feat
             p_tubes[idx_s:idx_e,] = tubes[:,:,1:-1]
             actioness_score[idx_s:idx_e] = tubes[:,:,-1]
@@ -202,7 +206,8 @@ class Model(nn.Module):
 
         # print('connect_time :',connect_time-conn_start)
         
-        # print('pos.shape :',pos)
+        # print('pos.shape :',pos.shape)
+        # print('conn_scores :',conn_scores.shape)
         # print('pos.shape :',pos.shape)
         # exit(-1)
 
@@ -228,6 +233,7 @@ class Model(nn.Module):
                 f_tubes.append(tub)
 
 
+
         ## NMS code
         # fin_tubes =final_tubes.view(-1,num_frames*4).contiguous()
         # # # print('final_tubes.shape :',fin_tubes.shape)
@@ -248,13 +254,18 @@ class Model(nn.Module):
         ###################################################
         if self.training:
 
-            tubes_per_video = 32
+            # tubes_per_video = 3
+            tubes_per_video = 16
+            # tubes_per_video = 32
             tubes_labels = torch.zeros(tubes_per_video).type_as(final_tubes)
             picked_tubes = torch.zeros(tubes_per_video, num_frames, 4).type_as(final_tubes)
 
-            fg_fraction = 0.25
-            fg_tubes_per_video = int(fg_fraction*tubes_per_video)
-            fg_tubes_per_video = 1 if fg_tubes_per_video == 0 else fg_tubes_per_video
+            # fg_fraction = 0.25
+            # fg_tubes_per_video = int(fg_fraction*tubes_per_video)
+            # fg_tubes_per_video = 1 if fg_tubes_per_video == 0 else fg_tubes_per_video
+            # fg_tubes_per_video = 2
+            fg_tubes_per_video = 4
+            # fg_tubes_per_video = 8
 
             boxes_ = boxes.permute(1,0,2).contiguous()
             boxes_ = boxes_[:,:,:4].contiguous().view(num_actions,-1)
@@ -277,7 +288,7 @@ class Model(nn.Module):
             max_overlaps = max_overlaps.clamp_(min=0)
 
             ## TODO change numbers
-            fg_tubes_indices = max_overlaps.ge(0.7).nonzero().view(-1)
+            fg_tubes_indices = max_overlaps.ge(0.8).nonzero().view(-1)
             fg_num_tubes = fg_tubes_indices.numel()
             bg_tubes_indices = torch.nonzero((max_overlaps >= 0.1 ) &
                                              (max_overlaps <  0.3 )).view(-1)
@@ -415,8 +426,9 @@ class Model(nn.Module):
 
             ret_tubes = torch.zeros(1,conf.UPDATE_THRESH, ret_n_frames,4).type_as(final_tubes).float() -1
             ret_prob_out = torch.zeros(1,conf.UPDATE_THRESH,self.n_classes).type_as(final_tubes).float() - 1
+
             ret_tubes[0,:final_tubes.size(0),:num_frames] = final_tubes
-            ret_prob_out[0,:final_tubes.size(0)] = prob_out
+            ret_prob_out[0,:prob_out.size(0)] = prob_out
 
             return ret_tubes, ret_prob_out, torch.Tensor([final_tubes.size(0)]).cuda()
         

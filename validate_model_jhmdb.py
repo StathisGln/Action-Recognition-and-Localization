@@ -13,8 +13,9 @@ from net_utils import adjust_learning_rate
 from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
+from model_old import Model
 # from model import Model
-from model_all import Model
+# from model_all import Model
 from resize_rpn import resize_rpn, resize_tube
 from jhmdb_dataset import Video, video_names
 
@@ -293,7 +294,7 @@ if __name__ == '__main__':
 
     # Init action_net
     # action_model_path = './action_net_model_16frm_max_jhmdb.pwf'
-    # action_model_path = './action_net_model_8frm_2_avg_jhmdb.pwf'
+    action_model_path = './action_net_model_8frm_2_avg_jhmdb.pwf'
     # action_model_path = './action_net_model_4frm_max_jhmdb.pwf'
 
     # linear_path = './linear_jhmdb.pwf'
@@ -303,18 +304,18 @@ if __name__ == '__main__':
 
     model = Model(actions, sample_duration, sample_size)
 
-    model.load_part_model()
-    # model.load_part_model(action_model_path=action_model_path, rnn_path=linear_path)
+    # model.load_part_model()
+    model.load_part_model(action_model_path=action_model_path, rnn_path=linear_path)
 
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
     model = nn.DataParallel(model)
     model.to(device)
 
-    model_path = './model_linear_mean_60epoch.pwf'
-    # model_path = './model.pwf'
-    model_data = torch.load(model_path)
-    model.load_state_dict(model_data)
+    # # model_path = './model_linear_mean_60epoch.pwf'
+    # # model_path = './model.pwf'
+    # model_data = torch.load(model_path)
+    # model.load_state_dict(model_data)
 
     model.eval()
  

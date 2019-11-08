@@ -14,10 +14,11 @@ from spatial_transforms import (
     Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
 from temporal_transforms import LoopPadding
 # from model import Model
-from model_all_restnet import Model
+# from model_all_restnet import Model
+from model_par_all import Model
 from resize_rpn import resize_rpn, resize_tube
 from jhmdb_dataset import Video, video_names
-
+from conf import conf
 from box_functions import bbox_transform, tube_transform_inv, clip_boxes, tube_overlaps
 from mAP_function import calculate_mAP
 from plot import plot_tube_with_gt
@@ -60,6 +61,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     groundtruth_dic = {}
     detection_dic = {}
 
+    n_tubes = conf.ALL_SCORES_THRESH
     for step, data  in enumerate(data_loader):
 
         # if step == 20:
@@ -91,33 +93,31 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         # print('vid_names[vid_id] :',vid_names[vid_id])
         with torch.no_grad():
             tubes,  \
-            prob_out, n_tubes =  model(n_devs, dataset_folder, \
-                                    vid_names, clips, vid_id,  \
-                                    None, \
-                                    mode, cls2idx, None, n_frames, h, w)
+            prob_out, _ =  model(n_devs, dataset_folder, \
+                                       vid_names, clips, vid_id,  \
+                                       None, \
+                                       mode, cls2idx, None, n_frames, h, w,None)
 
 
 
-        # print('out...')
+        print('out...')
         # get predictions
 
         for i in range(batch_size):
 
             _, cls_int = torch.max(prob_out[i],1)
 
-            # print('cls_int :',cls_int)
-            f_prob = torch.zeros(n_tubes[i].long()).type_as(prob_out)
 
-            for j in range(n_tubes[i].long()):
+            f_prob = torch.zeros(n_tubes).type_as(prob_out)
+
+            for j in range(n_tubes):
                 f_prob[j] = prob_out[i,j,cls_int[j]]
             
-            cls_int = cls_int[:n_tubes[i].long()]
-
             keep_ = (f_prob.ge(confidence_thresh)) & cls_int.ne(0)
             keep_indices = keep_.nonzero().view(-1)
 
             f_tubes = torch.cat([cls_int.view(-1,1).type_as(tubes),f_prob.view(-1,1).type_as(tubes), \
-                                 tubes[i,:n_tubes[i].long(),:n_frames[i]].contiguous().view(-1,n_frames[i]*4)], dim=1)
+                                 tubes[i,:n_tubes,:n_frames[i]].contiguous().view(-1,n_frames[i]*4)], dim=1)
 
 
             f_tubes = f_tubes[keep_indices].contiguous()
@@ -140,7 +140,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             #     json.dump(f_tubes.cpu().tolist(), f)
             # with open(os.path.join('outputs','groundtruth',v_name+'.json'), 'w') as f:
             #     json.dump(f_boxes.cpu().tolist(), f)
-
+        
 
         for i in range(clips.size(0)):
             # print('boxes.shape:',boxes.shape)
@@ -148,13 +148,18 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
             box = boxes[i,:n_actions[i].long(), :n_frames[i].long(),:4].contiguous()
             box = box.view(-1,n_frames[i]*4).contiguous().type_as(tubes)
 
-            overlaps = tube_overlaps(tubes[i,:n_tubes[i].long(),:n_frames[i].long()].view(-1,n_frames*4).float(),\
+            overlaps = tube_overlaps(tubes[i,:n_tubes,:n_frames[i].long()].view(-1,n_frames*4).float(),\
                                      box.view(-1,n_frames[i]*4).float())
             gt_max_overlaps, argmax_gt_overlaps = torch.max(overlaps, 0)
+
 
             non_empty_indices =  box.ne(0).any(dim=1).nonzero().view(-1)
             n_elems = non_empty_indices.nelement()
 
+            print('gt_max_overlaps :',gt_max_overlaps )
+            print('prob_out[i,argmax_gt_overlaps] :',prob_out[i,argmax_gt_overlaps])
+            print('prob_out[i,argmax_gt_overlaps] :',prob_out[i,argmax_gt_overlaps].max(dim=1)[1])
+            exit(-1)
             # print('gt_max_overlaps :',gt_max_overlaps )
             # print('argmax_gt_overlaps :',argmax_gt_overlaps)
             # print('prob_out[argmax_gt_overlaps] :',prob_out[i,argmax_gt_overlaps])
@@ -286,18 +291,18 @@ if __name__ == '__main__':
 
     model = Model(actions, sample_duration, sample_size)
 
-    # model.load_part_model()
-    model.load_part_model(action_model_path=action_model_path, rnn_path=linear_path)
+    model.load_part_model()
+    # model.load_part_model(action_model_path=action_model_path, rnn_path=linear_path)
 
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
     model = nn.DataParallel(model)
     model.to(device)
 
-    # model_path = './model_linear.pwf'
-    # # model_path = './model.pwf'
-    # model_data = torch.load(model_path)
-    # model.load_state_dict(model_data)
+    model_path = './model_jhmdb_epoch_20.pwf'
+    # model_path = './model.pwf'
+    model_data = torch.load(model_path)
+    model.load_state_dict(model_data)
 
     model.eval()
     

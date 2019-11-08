@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 
+import torch
 def validation():
 
     filename = './training_rnn.txt'
@@ -54,20 +55,22 @@ def validation():
 
 def plot_tube( clips, n_frames, tube, out_folder='output_vid'):
 
-    ...
-
-def plot_tube_with_gt(clips, n_frames, tube, gt_tube, out_folder='output_vid'):
-    
     print('clips.shape :',clips.shape)
-    print('gt_tube.shape :',gt_tube.shape)
     print('tube :',tube.shape)
     
     batch_size = clips.size(0)
-    num_actions = gt_tube.size(1)
     num_tubes = tube.size(0)
     tube = tube.contiguous().view(num_tubes,-1,4)
-    # tube = tube[:,2:].contiguous().view(num_tubes,-1,4)    
 
+    new_tube = torch.zeros(tube.shape)
+    print('new_tube.shape :',new_tube.shape)
+    new_tube[:,:,0] = 320/112 * tube[:,:,0]
+    new_tube[:,:,1] = 320/112 * tube[:,:,1]
+    new_tube[:,:,2] = 320/112 * tube[:,:,2]
+    new_tube[:,:,3] = 320/112 * tube[:,:,3]
+    print('tube[0,0,0] :',tube[0,0,0])
+    tube = new_tube
+    print('tube[0,0,0] :',tube[0,0,0])
 
     print('tube :',tube.shape)
     # rewrite folder for outputs
@@ -83,14 +86,166 @@ def plot_tube_with_gt(clips, n_frames, tube, gt_tube, out_folder='output_vid'):
         for j in range(n_frames[i]):
 
             img = clips[i,j].permute(1,2,0).cpu().numpy().copy()
+            top  = int(max(0, np.round((320 - 240) / 2)))
+            bottom = 320 - top - 240
+            img = cv2.copyMakeBorder(img, top, bottom, 0, 0,
+                              cv2.BORDER_CONSTANT, value=[114, 114, 114])
             
-            for z in range(num_actions):
-                cv2.rectangle(img,(gt_tube[i,z,j,0].int(),gt_tube[i,z,j,1].int()),(gt_tube[i,z,j,2].int(),gt_tube[i,z,j,3].int()),(255,0,0),1)
+            # for z in range(num_actions):
+            #     cv2.rectangle(img,(gt_tube[i,z,j,0].int(),gt_tube[i,z,j,1].int()),(gt_tube[i,z,j,2].int(),gt_tube[i,z,j,3].int()),(255,0,0),1)
             for z in range(num_tubes):
 
                 img_= img.copy()
-                cv2.rectangle(img_,(tube[z,j,0].int(),tube[z,j,1].int()),(tube[z,j,2].int(),tube[z,j,3].int()),(0,255,0),1)                
+                cv2.rectangle(img_,(tube[z,j,0].int(),tube[z,j,1].int()),(tube[z,j,2].int(),tube[z,j,3].int()),(0,255,0),3)                
                 cv2.imwrite(os.path.join(out_folder,'tube_{:0>3}'.format(z),'img_{:0>3}.jpg'.format(j)),img_)
+
+# def plot_tube( clips, n_frames, tube, out_folder='output_vid'):
+
+#     print('clips.shape :',clips.shape)
+#     print('tube :',tube.shape)
+    
+#     batch_size = clips.size(0)
+#     num_tubes = tube.size(0)
+#     tube = tube.contiguous().view(num_tubes,-1,4)
+
+#     new_tube = torch.zeros(tube.shape)
+#     print('new_tube.shape :',new_tube.shape)
+#     new_tube[:,:,0] = 320/112 * tube[:,:,0]
+#     new_tube[:,:,1] = 320/112 * tube[:,:,1]
+#     new_tube[:,:,2] = 320/112 * tube[:,:,2]
+#     new_tube[:,:,3] = 320/112 * tube[:,:,3]
+#     print('tube[0,0,0] :',tube[0,0,0])
+#     tube = new_tube
+#     print('tube[0,0,0] :',tube[0,0,0])
+
+#     print('tube :',tube.shape)
+#     # rewrite folder for outputs
+#     if os.path.exists(out_folder):
+#         shutil.rmtree(out_folder)
+
+#     os.makedirs(out_folder)
+
+#     for z in range(num_tubes):
+#         os.makedirs(os.path.join(out_folder, 'tube_{:0>3}'.format(z)))
+
+#     for i in range(batch_size):
+#         for j in range(n_frames[i]):
+
+#             img = clips[i,j].permute(1,2,0).cpu().numpy().copy()
+#             top  = int(max(0, np.round((320 - 240) / 2)))
+#             bottom = 320 - top - 240
+#             img = cv2.copyMakeBorder(img, top, bottom, 0, 0,
+#                               cv2.BORDER_CONSTANT, value=[114, 114, 114])
+            
+#             # for z in range(num_actions):
+#             #     cv2.rectangle(img,(gt_tube[i,z,j,0].int(),gt_tube[i,z,j,1].int()),(gt_tube[i,z,j,2].int(),gt_tube[i,z,j,3].int()),(255,0,0),1)
+#             for z in range(num_tubes):
+
+#                 img_= img.copy()
+#                 cv2.rectangle(img_,(tube[z,j,0].int(),tube[z,j,1].int()),(tube[z,j,2].int(),tube[z,j,3].int()),(0,255,0),3)                
+#                 cv2.imwrite(os.path.join(out_folder,'tube_{:0>3}'.format(z),'img_{:0>3}.jpg'.format(j)),img_)
+
+
+
+def plot_tube_with_gt(clips, n_frames, tube, gt_tube, out_folder='output_vid'):
+    
+    print('clips.shape :',clips.shape)
+    print('gt_tube.shape :',gt_tube.shape)
+    print('tube :',tube.shape)
+    
+    batch_size = clips.size(0)
+    num_actions = gt_tube.size(1)
+    num_tubes = tube.size(0)
+    tube = tube.contiguous().view(num_tubes,-1,4)
+    # tube = tube[:,2:].contiguous().view(num_tubes,-1,4)    
+
+    new_tube = torch.zeros(tube.shape)
+    print('new_tube.shape :',new_tube.shape)
+    new_tube[:,:,0] = 320/112 * tube[:,:,0]
+    new_tube[:,:,1] = 320/112 * tube[:,:,1]
+    new_tube[:,:,2] = 320/112 * tube[:,:,2]
+    new_tube[:,:,3] = 320/112 * tube[:,:,3]
+    print('tube[0,0,0] :',tube[0,0,0])
+    tube = new_tube
+    print('tube[0,0,0] :',tube[0,0,0])
+
+    new_tube = torch.zeros(gt_tube.shape)
+    print('new_tube.shape :',new_tube.shape)
+    new_tube[:,:,:,0] = 320/112 * gt_tube[:,:,:,0]
+    new_tube[:,:,:,1] = 320/112 * gt_tube[:,:,:,1]
+    new_tube[:,:,:,2] = 320/112 * gt_tube[:,:,:,2]
+    new_tube[:,:,:,3] = 320/112 * gt_tube[:,:,:,3]
+    print('tube[0,0,0] :',tube[0,0,0])
+    gt_tube = new_tube
+    print('tube[0,0,0] :',tube[0,0,0])
+
+
+    print('tube :',tube.shape)
+    # rewrite folder for outputs
+    if os.path.exists(out_folder):
+        shutil.rmtree(out_folder)
+
+    os.makedirs(out_folder)
+
+    for z in range(num_tubes):
+        os.makedirs(os.path.join(out_folder, 'tube_{:0>3}'.format(z)))
+
+    for i in range(batch_size):
+
+        for j in range(n_frames[i]):
+
+            img = clips[i,j].permute(1,2,0).cpu().numpy().copy()
+            top  = int(max(0, np.round((320 - 240) / 2)))
+            bottom = 320 - top - 240
+            img = cv2.copyMakeBorder(img, top, bottom, 0, 0,
+                              cv2.BORDER_CONSTANT, value=[114, 114, 114])
+
+            
+            for z in range(num_actions):
+                cv2.rectangle(img,(gt_tube[i,z,j,0].int(),gt_tube[i,z,j,1].int()),(gt_tube[i,z,j,2].int(),gt_tube[i,z,j,3].int()),(255,0,0),3)
+            for z in range(num_tubes):
+
+
+                img_= img.copy()
+                cv2.rectangle(img_,(tube[z,j,0].int(),tube[z,j,1].int()),(tube[z,j,2].int(),tube[z,j,3].int()),(0,255,0),3)                
+                cv2.imwrite(os.path.join(out_folder,'tube_{:0>3}'.format(z),'img_{:0>3}.jpg'.format(j)),img_)
+
+# def plot_tube_with_gt(clips, n_frames, tube, gt_tube, out_folder='output_vid'):
+    
+#     print('clips.shape :',clips.shape)
+#     print('gt_tube.shape :',gt_tube.shape)
+#     print('tube :',tube.shape)
+    
+#     batch_size = clips.size(0)
+#     num_actions = gt_tube.size(1)
+#     num_tubes = tube.size(0)
+#     tube = tube.contiguous().view(num_tubes,-1,4)
+#     # tube = tube[:,2:].contiguous().view(num_tubes,-1,4)    
+
+
+#     print('tube :',tube.shape)
+#     # rewrite folder for outputs
+#     if os.path.exists(out_folder):
+#         shutil.rmtree(out_folder)
+
+#     os.makedirs(out_folder)
+
+#     for z in range(num_tubes):
+#         os.makedirs(os.path.join(out_folder, 'tube_{:0>3}'.format(z)))
+
+#     for i in range(batch_size):
+#         for j in range(n_frames[i]):
+
+#             img = clips[i,j].permute(1,2,0).cpu().numpy().copy()
+            
+#             for z in range(num_actions):
+#                 cv2.rectangle(img,(gt_tube[i,z,j,0].int(),gt_tube[i,z,j,1].int()),(gt_tube[i,z,j,2].int(),gt_tube[i,z,j,3].int()),(255,0,0),1)
+#             for z in range(num_tubes):
+
+#                 img_= img.copy()
+#                 cv2.rectangle(img_,(tube[z,j,0].int(),tube[z,j,1].int()),(tube[z,j,2].int(),tube[z,j,3].int()),(0,255,0),1)                
+#                 cv2.imwrite(os.path.join(out_folder,'tube_{:0>3}'.format(z),'img_{:0>3}.jpg'.format(j)),img_)
+
 
     exit(-1)
 if __name__ == '__main__':

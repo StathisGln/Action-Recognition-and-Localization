@@ -6,15 +6,38 @@ import glob
 from easydict import EasyDict
 
 # def im_detect(net, folder_path, im, boxes, feature_scale=None, bboxIndices=None, boReturnClassifierScore=True, classifier = 'svm'): # trainers=None,
+
+# def temporal_pool(features, time=2):
+
+#     print('    features.shape :',    features.shape)
+#     indexes = torch.linspace(0, features.size(0), time+1).int()
+#     ret_feats = torch.zeros(time,features.size(1),  features.size(2),\
+#                             features.size(3))
+
+#     if features.size(0) < time:
+
+#         ret_feats[:features.size(0)] = features
+#         return ret_feats
+    
+#     for i in range(time):
+
+#         t = features[indexes[i]:indexes[i+1]].permute(1,0,2,3)
+#         t = t.view(t.size(0),t.size(1),-1)
+#         t = F.max_pool2d(t,kernel_size=(indexes[i+1]-indexes[i],1)).squeeze()
+
+#         ret_feats[i] = t.view(t.size(0),features.size(2),features.size(3))
+#     # print('ret_feats.shape :',ret_feats.shape)
+#     return ret_feats
+
 def temporal_pool(features, time=2):
 
     indexes = torch.linspace(0, features.size(0), time+1).int()
     ret_feats = torch.zeros(time,features.size(1),  features.size(2),\
                             features.size(3), features.size(4))
 
-    if features.size(0) < 2:
+    if features.size(0) < time:
 
-        ret_feats[0] = features
+        ret_feats[:features.size(0)] = features
         return ret_feats
     
     for i in range(time):
@@ -35,24 +58,42 @@ def im_detect(net, folder_path,  boxes=None, feature_scale=None, bboxIndices=Non
     # load cntk output for the given image
     featsOutputPath = os.path.join(folder_path, 'feats.pt')
     feats = torch.load(featsOutputPath).cpu()
-    
-    # print('feats.shape :',feats.shape)
-    # exit(-1)
+
     ###################################################
     ## edit feats max/mean
     f_feats = []
 
     # for i in range(feats.size(0)):
-    for i in range(24):
-        # f_feats.append(temporal_pool(feats[i]))
-        f_feats.append(temporal_pool(feats[i]).max(2)[0])
-        # f_feats.append(temporal_pool(feats[i]).mean(2))        
+    # # for i in range(32):
+
+    # for i in range(24):
+    # lim = 24
+    # lim = 12
+    # lim = 6
+    lim = 3
+    # print('im_detect lim :',lim)
+    for i in range(lim):
+        # f_feats.append(temporal_pool(feats[i],time=20))
+        # f_feats.append(temporal_pool(feats[i]).max(2)[0])
+        # f_feats.append(temporal_pool(feats[0,i]).mean(3).mean(2))
+        # f_feats.append(feats[0,i].mean(2).mean(1))
+        # f_feats.append(feats[0,i])
+        # print('feats.shape :',feats[i].shape)
+        # print('feats.shape :',feats[i].mean(0).shape)
+        # print('temporal_pool(feats[i]).shape :',temporal_pool(feats[i]).shape)
+        # print('temporal_pool(feats[i]).shape :',temporal_pool(feats[i]).mean(2).shape)
+        f_feats.append(temporal_pool(feats[i]))
+
+        # f_feats.append(temporal_pool(feats[i]).mean(2))
+        # f_feats.append(temporal_pool(feats[i]).max(2)[0])
+        # f_feats.append(feats[i].mean(0))
+        # f_feats.append(feats[i].max(0)[0])
+
         # f_feats.append(feats[i].mean(0).mean(-1).mean(-1))
         # f_feats.append(feats[i].max(2)[0].mean(0))
-        
+
+
     feats = torch.stack(f_feats).cpu()
-    # print('feats.shape :',feats.shape)
-    # exit(-1)
     feats = feats.view(feats.size(0), -1).contiguous()
 
     # ###################################################
@@ -85,8 +126,30 @@ def im_detect(net, folder_path,  boxes=None, feature_scale=None, bboxIndices=Non
         svmWeights = torch.from_numpy(net.params['cls_score'][0].data.transpose()).type_as(feats)
         scores     = torch.mm(feats * 1.0 / feature_scale, svmWeights) + svmBias
 
-        assert (np.unique(scores[:, 0]) == 0)  # svm always returns 0 for label 0
-    return scores, None, feats
+        # assert (np.unique(scores[:, 0]) == 0)  # svm always returns 0 for label 0
+    return scores, None, feats.detach()
+
+# def scoreTubes(feats, svmWeights, svmBias, svmFeatScale, roiDim=None, decisionThreshold = None):
+
+#     n_tubes = feats.size(0)
+#     ###################################################
+#     ## edit feats max/mean
+#     print('feats.shape :',feats.shape)
+#     # feats = feats.mean(3).mean(2)
+#     print('feats.shape :',feats.shape)
+#     feats = feats.view(feats.size(0), -1).contiguous()
+#     print('feats.shape :',feats.shape)
+#     # ###################################################
+
+#     # scores = torch.mm(svmWeights, feats.t() * 1.0 / svmFeatScale) + svmBias.view(-1,1).expand(svmWeights.size(0),feats.size(0))
+    
+#     # print('scores.shape :',scores.shape)
+#     # print('scores.shape :',scores.t().shape)
+
+#     scores = torch.mm( feats * 1.0 / svmFeatScale,svmWeights.t()) + svmBias
+
+#     return scores.cuda()
+#     # return scores.t()
 
 def scoreTubes(feats, svmWeights, svmBias, svmFeatScale, roiDim=None, decisionThreshold = None):
 
@@ -98,17 +161,18 @@ def scoreTubes(feats, svmWeights, svmBias, svmFeatScale, roiDim=None, decisionTh
 
     for i in range(feats.size(0)):
         
-        f_feats.append(temporal_pool(feats[i]).max(2)[0])
+        # f_feats.append(feats[i].mean(2).mean(1))
+        # f_feats.append(temporal_pool(feats[i]).max(2)[0])
+        # f_feats.append(temporal_pool(feats[i],time=20))
         # f_feats.append(temporal_pool(feats[i]).mean(2))
         # f_feats.append(temporal_pool(feats[i]))
-        # f_feats.append(feats[i].mean(0))
+        f_feats.append(feats[i].mean(0))
         # f_feats.append(feats[i].max(0)[0])
         # f_feats.append(feats[i].max(2)[0].mean(0))
 
     feats = torch.stack(f_feats).cuda()
-    print('feats :',feats.shape)
     feats = feats.view(feats.size(0), -1).contiguous()
-    print('feats :',feats.shape)
+
     # ###################################################
 
     # scores = torch.mm(svmWeights, feats.t() * 1.0 / svmFeatScale) + svmBias.view(-1,1).expand(svmWeights.size(0),feats.size(0))
@@ -166,6 +230,12 @@ class DummyNet(object):
 ## BACKUP implementation
 def create_tubedb(files_path):
 
+    # limit_tub = 16
+    # limit_tub = 24
+    # limit_tub = 12
+    # limit_tub = 6
+    limit_tub = 3
+    print('limit_tub :',limit_tub)
     tube_db = []
     bg_tubes = 0
     bg_tubes_lim = 40
@@ -177,11 +247,13 @@ def create_tubedb(files_path):
         tubes       = os.path.join(i,'tubes.pt')
         tube_dict['path']     = i
         lbls = torch.load(labels_path).cpu()
-        tube_dict['labels']   = lbls[:24]
+        # tube_dict['labels']   = lbls[0,:24]
+        tube_dict['labels']   = lbls[:limit_tub]
         # tube_dict['tubes']    = torch.load(tubes)
         tub_ln = torch.load(tube_len)
-        tube_dict['tube_len'] = tub_ln[24]
-
+        tube_dict['tube_len'] = tub_ln[:limit_tub]
+        # tube_dict['tube_len'] = tub_ln[0,:24]
+        # print('llbs :',tube_dict['labels'])
         tube_db.append(tube_dict)
 
     print('len(tub_db) :',len(tube_db))

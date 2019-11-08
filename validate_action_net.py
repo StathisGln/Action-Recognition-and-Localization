@@ -142,8 +142,8 @@ if __name__ == '__main__':
     split_txt_path = '/gpu-data2/sgal/UCF101_Action_detection_splits/'
 
     sample_size = 112
-    sample_duration = 8 # len(images)
-    # sample_duration = 16 # len(images)
+    # sample_duration = 8 # len(images)
+    sample_duration = 16 # len(images)
 
     batch_size = 1
     n_threads = 0
@@ -174,18 +174,15 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    # model_data = torch.load('./actio_net_model_both.pwf')
-    # model_data = torch.load('./action_net_model_both_without_avg.pwf')
-    # model_data = torch.load('./action_net_model_16frm_64.pwf')
-    # model_data = torch.load('./action_net_model_both_jhmdb.pwf')
-    model_data = torch.load('./action_net_model_8frm_conf_ucf.pwf')
 
-    # 
-    # model_data = torch.load('./action_net_model_part1_1_8frm.pwf')
+    # model_data = torch.load('./action_net_model_8frm_conf_ucf.pwf')
+
+    # Gia 16 frames
+    model_data = torch.load('./action_net_model_16frm_conf_ucf.pwf')
+
+    torch.set_num_threads(3)    # 
+
     model.load_state_dict(model_data)
-
-    # model_data = torch.load('./region_net_8frm.pwf')
-    # model.module.act_rpn.load_state_dict(model_data)
 
     model.eval()
 

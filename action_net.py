@@ -13,6 +13,7 @@ from torch.autograd import Variable
 
 from resnet_3D import resnet34
 from region_net import _RPN 
+
 # from human_reg import _Regression_Layer
 from human_reg_newedw import _Regression_Layer
 
@@ -57,10 +58,10 @@ class ACT_net(nn.Module):
 
     def forward(self, im_data, im_info, gt_tubes, gt_rois,  start_fr):
 
+
         batch_size = im_data.size(0)
         im_info = im_info.data
 
-        # feed image data to base model to obtain base feature map
         base_feat_1 = self.act_base_1(im_data)
         base_feat_2 = self.act_base_2(base_feat_1)
         # base_feat_3 = self.act_base_3(base_feat_2)
@@ -70,6 +71,7 @@ class ACT_net(nn.Module):
 
         rois, _, rpn_loss_cls, rpn_loss_bbox, \
             _, _ = self.act_rpn(base_feat_2, im_info, gt_tubes, gt_rois)
+
 
 
         if self.training:
@@ -92,7 +94,9 @@ class ACT_net(nn.Module):
             rpn_loss_bbox = 0
             
         # sgl_rois_bbox_pred, feats = self.reg_layer(base_feat_1, base_feat_3, rois[:,:,1:-1], gt_rois)
+        # sgl_rois_bbox_pred, feats = self.reg_layer(base_feat_1, base_feat_1, rois[:,:,1:-1], gt_rois)
         sgl_rois_bbox_pred, feats = self.reg_layer(base_feat_1, base_feat_2, rois[:,:,1:-1], gt_rois)
+
 
 
         if not self.training:

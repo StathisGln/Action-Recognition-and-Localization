@@ -191,16 +191,16 @@ def prepare_samples (vid_names, vid_id, sample_duration, step, n_frames):
     """
     dataset = []
 
-    video_path = vid_names[vid_id]
-    name = video_path.split('/')[-1]
+    # video_path = vid_names[vid_id]
+    # name = video_path.split('/')[-1]
     # n_actions = boxes.shape[0]
     # n_frames = boxes.shape[1]
 
     begin_t = 1
     end_t = n_frames
     sample = {
-        'video_path': video_path,
-        'video_name' : name,
+        # 'video_path': video_path,
+        # 'video_name' : name,
         'segment': [begin_t, end_t],
         'n_frames': n_frames,
     }
@@ -225,12 +225,10 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
     function preparing dataset containing all available videos
     """
     dataset = []
-
     classes = next(os.walk(dataset_path, True))[1]
 
     with open(boxes_file, 'rb') as fp:
         boxes_data = pickle.load(fp)
-
     file_names = get_file_names(spt_path, mode, split_number=1)
     max_frames = -1
     max_actions = -1
@@ -241,52 +239,102 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
     # for cls in ['TrampolineJumping']:
     # for cls in ['Basketball']:
         videos = next(os.walk(os.path.join(dataset_path,cls), True))[1]
+
         for vid in videos:
-        # for vid in [ 'v_Biking_g22_c03','v_Biking_g03_c03','v_Biking_g13_c03','v_Biking_g23_c02','v_Biking_g12_c03']:
-        # for vid in ['v_TrampolineJumping_g21_c02','v_TrampolineJumping_g10_c01','v_TrampolineJumping_g20_c02','v_TrampolineJumping_g09_c05' , 'v_TrampolineJumping_g10_c06','v_TrampolineJumping_g11_c05']:
-        # for vid in ['v_TrampolineJumping_g11_c05','v_TrampolineJumping_g21_c02','v_TrampolineJumping_g10_c01','v_TrampolineJumping_g20_c02','v_TrampolineJumping_g09_c05' , 'v_TrampolineJumping_g10_c06']:
-        # for vid in ['v_VolleyballSpiking_g14_c03','v_TrampolineJumping_g20_c02']: # empty rois
 
-        # for vid in [' v_VolleyballSpiking_g23_c01']:
-        # for vid in ['v_TrampolineJumping_g10_c06']:
-        # for vid in ['v_VolleyballSpiking_g14_c03','v_VolleyballSpiking_g23_c01']:
-        # for vid in ['v_GolfSwing_g17_c05','v_GolfSwing_g15_c05','v_GolfSwing_g14_c05','v_GolfSwing_g18_c05','v_GolfSwing_g19_c05','v_GolfSwing_g12_c05','v_GolfSwing_g11_c05']:
-
-            # if vid == 'v_IceDancing_g07_c01':
-            #     continue
-            if vid != 'v_BasketballDunk_g07_c02':
+            if vid == 'v_SkateBoarding_g20_c04':
                 continue
+            # if vid != 'v_LongJump_g03_c06':
+            #     continue
+            # if vid != 'v_CricketBowling_g11_c04':
+            #     continue
+            # if vid != 'v_GolfSwing_g10_c04':
+            #     continue
+            # if vid != 'v_Surfing_g09_c05':
+            #     continue
+            # if vid != 'v_RopeClimbing_g12_c01':
+            #     continue
+            # if vid != 'v_Diving_g03_c06':
+            #     continue
 
+
+            # if vid != 'v_BasketballDunk_g07_c02':
+            #     continue
+
+
+            # if vid != 'v_BasketballDunk_g07_c04':
+            #     continue
+
+
+            # if vid != 'v_BasketballDunk_g04_c04':
+            #     continue
+
+
+
+
+
+
+            # if vid != 'v_PoleVault_g23_c05':
+            #     continue
+
+            # if vid != 'v_Basketball_g16_c04':
+            #     continue
+
+            # v_Basketball_g10_c05
+            # if vid != 'v_Basketball_g10_c05':
+            #     continue
+
+
+            # if vid != 'v_Basketball_g19_c02':
+            #     continue
+
+            # if vid != 'v_Basketball_g11_c01':
+            #     continue
             video_path = os.path.join(cls,vid)
+
             if video_path not in boxes_data or not(vid in file_names):
 
                 # print('OXI to ',video_path)
                 continue
 
             values= boxes_data[video_path]
+
+
             n_frames = values['numf']
             annots = values['annotations']
             n_actions = len(annots)
+
             # if n_actions < 2:
             #     continue
-            if n_frames > 50:
-                continue
+            # if n_frames > 71:
+            #     continue
+
+            # if n_frames != 117 :
+            #     continue
+
             if n_frames > max_frames:
                 max_frames = n_frames
 
+            # if n_frames < 600:
+            #     continue
             # if n_frames < 800:
             #     continue
-            # if n_frames > 100:
+
+            # if n_frames > 50:
+            #     continue
+            # if n_frames != 204:
             #     continue
             # if n_actions < 2:
             #     continue
 
             if n_actions > max_actions:
                 max_actions = n_actions
+
             # # pos 0 --> starting frame, pos 1 --> ending frame
             # s_e_fr = np.zeros((n_actions, 2)) 
             rois = np.zeros((n_actions,n_frames,5))
             rois[:,:,4] = -1 
+
 
             for k  in range(n_actions):
                 sample = annots[k]
@@ -399,7 +447,6 @@ class single_video(data.Dataset):
         self.dataset_folder = dataset_folder
         self.data = prepare_samples(
                     vid_names, vid_id, frames_dur, step, n_frames)
-        vid_path = vid_names[vid_id]
         self.temporal_transform = LoopPadding_still(frames_dur)
         self.sample_duration = frames_dur
         self.sample_size = sample_size
@@ -413,12 +460,12 @@ class single_video(data.Dataset):
         Returns:
             tuple: (image, target) where target is class_index of the target class.
         """
-        name = self.data[index]['video_name']   # video path
-        path = self.data[index]['video_path']
+        # name = self.data[index]['video_name']   # video path
+        # path = self.data[index]['video_path']
         start_fr = self.data[index]['start_fr']
         n_frames = self.data[index]['n_frames']
         frame_indices = self.data[index]['frame_indices']
-        abs_path = os.path.join(self.dataset_folder, path)
+        # abs_path = os.path.join(self.dataset_folder, path)
         frame_indices = np.array(frame_indices) - 1
         frame_indices = np.array(self.temporal_transform(frame_indices.tolist()))
         
@@ -526,16 +573,21 @@ class Video_UCF(data.Dataset):
 class RNN_UCF(data.Dataset):
 
     def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader, \
-                 max_n_tubes = 19, max_len_tubes = 73):
-
+                 # max_n_tubes = 32, max_len_tubes = 120, sample_duration=16):
+                 # max_n_tubes = 24, max_len_tubes = 120, sample_duration=16):
+                 # max_n_tubes = 16, max_len_tubes = 120, sample_duration=16):
+                 max_n_tubes = 12, max_len_tubes = 120, sample_duration=16):
         self.dataset_folder = dataset_folder
+        self.sample_duration = sample_duration
         self.max_n_tubes = max_n_tubes
         self.max_len_tubes = max_len_tubes
         self.boxes_file = boxes_file
         self.vid2idx = vid2idx
+        self.POOLING_SIZE = 7
         self.mode = mode
         self.data, self.max_frames, self.max_actions = make_dataset( dataset_folder, spt_path, boxes_file, mode)
         self.loader = get_loader()
+        print('self.max_n_tubes :',self.max_n_tubes)
 
     def __getitem__(self, index):
         """
@@ -546,33 +598,52 @@ class RNN_UCF(data.Dataset):
         """
         path = self.data[index]['video']   # video path
 
-        # f_features = torch.zeros(self.max_n_tubes,self.max_len_tubes, 64, 16) - 1 
-        f_features = torch.zeros(self.max_n_tubes, 64, 16) - 1 
-        len_tubes = torch.zeros(self.max_n_tubes) 
+        # # f_features = torch.zeros(self.max_n_tubes,self.max_len_tubes, 64, 16) - 1 
+        # f_features = torch.zeros(self.max_n_tubes, 64, 16) - 1 
+        # len_tubes = torch.zeros(self.max_n_tubes) 
+        # f_target_lbl = torch.zeros(self.max_n_tubes) - 1
+
+        # f_features = torch.zeros(self.max_n_tubes, 5, 256, self.sample_duration, self.POOLING_SIZE, self.POOLING_SIZE) - 1 
+        f_features = torch.zeros(self.max_n_tubes, self.max_len_tubes, 256,  self.POOLING_SIZE, self.POOLING_SIZE) - 1 
+        f_len_tubes = torch.zeros(self.max_n_tubes) 
         f_target_lbl = torch.zeros(self.max_n_tubes) - 1
 
+        # print('f_features.shape :',f_features.shape)
         # f_features = np.zeros((self.max_n_tubes, 64, 16)) - 1 
         # len_tubes = np.zeros((self.max_n_tubes))
         # f_target_lbl = np.zeros((self.max_n_tubes)) - 1
 
         features    = torch.load(os.path.join(self.dataset_folder,path, 'feats.pt'),map_location='cpu')
         target_lbl  = torch.load(os.path.join(self.dataset_folder,path, 'labels.pt'),map_location='cpu')
-        n_tubes = features.size(0)
+        len_tubes   = torch.load(os.path.join(self.dataset_folder,path, 'tube_len.pt'),map_location='cpu').int()
+
+        # print('features.shape :',features.shape)
+        # print('len_tubes :',len_tubes)
+        # print('len_tubes :',len_tubes.shape)
+
+        # ## in case of overload
+        features = features[:self.max_n_tubes]
+        n_tubes = self.max_n_tubes
+        len_tubes = len_tubes[:self.max_n_tubes]
+
+        for b in range(self.max_n_tubes):
+
+
         # for b in range(features.size(0)):
 
-        for b in range(features.size(0)):
-
             # f_features[b,:feat_len] = features[b]
-            f_features[b] = features[b]
+            f_features[b,:features[b].size(0)] = features[b]
             f_target_lbl[b] = target_lbl[b]
+            f_len_tubes[b] = features[b].size(0)
             # for j in range(features.size(1)):
             #     len_tubes[b] += 1
             #     if final_tubes[b,j,0] == -1:
             #         len_tubes[b] -= 1
             #         break
 
+
         # return f_features, len_tubes,  f_target_lbl,
-        return f_features, n_tubes,   f_target_lbl,
+        return f_features, n_tubes,   f_target_lbl, len_tubes
 
     def __len__(self):
         return len(self.data)

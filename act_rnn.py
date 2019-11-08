@@ -10,10 +10,10 @@ class Act_RNN(nn.Module):
 
         self.n_inputs = n_inputs
         self.n_outputs = n_outputs
-        
-        self.basic_rnn = nn.RNN(self.n_inputs, self.n_neurons).cuda()
-        
-        self.FC = nn.Linear(self.n_neurons, self.n_outputs).cuda()
+
+        self.basic_rnn = nn.RNN(self.n_inputs, self.n_neurons)
+        self.FC = nn.Linear(self.n_neurons, self.n_outputs)
+
     #     self.hidden = self.init_hidden()
         
     # def init_hidden(self,):

@@ -310,8 +310,8 @@ def bbox_temporal_overlaps(anchors, gt_boxes):
     N = anchors.size(0)
     K = gt_boxes.size(0)
 
-    gt_boxes_area = gt_boxes[:,1] - gt_boxes[:,0]
-    anchors_area  = anchors[:,1]  - anchors[:,0]
+    gt_boxes_area = gt_boxes[:,1] - gt_boxes[:,0] + 1
+    anchors_area  = anchors[:,1]  - anchors[:,0] + 1
 
     gt_boxes_area = gt_boxes_area.view(1,K)
     anchors_area  = anchors_area.view(N,1)
@@ -828,7 +828,7 @@ if __name__ == '__main__':
         [ 0., 16.],
         [ 0., 16.],
         [ 0., 16.],
-        [ 0., 16.],
+        [ 6., 35.],
         [ 0., 16.],
         [ 0., 16.],
         [ 0., 16.],
@@ -840,3 +840,4 @@ if __name__ == '__main__':
         [ 0., 16.]])
     ret = bbox_temporal_overlaps(tubes_t, gt_tubes)
     print('ret.shape :',ret.shape)
+    print('ret.shape :',ret)

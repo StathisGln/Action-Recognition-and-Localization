@@ -19,12 +19,14 @@ from conf import conf
 from generate_anchors import generate_anchors
 # from bbox_transform import bbox_transform_inv, clip_boxes_3d, clip_boxes_batch, bbox_transform_inv_3d
 # from nms_3d.py_nms import py_cpu_nms_tubes as nms_cpu
-# from nms_3d.nms_gpu import nms_gpu
-from nms_8fr_3d.nms_gpu import nms_gpu
+from nms_3d.nms_gpu import nms_gpu
+# from nms_8fr_3d.nms_gpu import nms_gpu
+# from nms_8fr_3d_cuda9.nms_gpu import nms_gpu
 # from nms_4fr_3d.nms_gpu import nms_gpu
 
 # from nms_3d.nms_wrapper import nms
 
+# from soft_nms_3d.py_nms import py_cpu_softnms as nms_gpu
 
 from box_functions import bbox_transform_inv,clip_boxes
 import pdb
@@ -246,6 +248,7 @@ class _ProposalLayer(nn.Module):
 
         _, order = torch.sort(scores_all, 1, True)
 
+
         output = scores.new(batch_size, post_nms_topN, self.sample_duration*4+2).zero_()
         # print('output.shape :',output.shape)
         for i in range(batch_size):
@@ -265,30 +268,21 @@ class _ProposalLayer(nn.Module):
 
                 proposals_single = proposals_single[order_single, :]
                 scores_single = scores_single[order_single].view(-1,1)
-                # print('proposals_single :',proposals_single)
-                # print('proposals_single[11] :',proposals_single[[0]])
-                # print('proposals_single[12] :',proposals_single[48])
-                # print('scores_single :',scores_single[11])
-                # print('scores_single :',scores_single[12])
-                # print('scores_single:',scores_single)
-                # keep_idx_i = torch.Tensor(nms_cpu(torch.cat((proposals_single, scores_single), 1).cpu().numpy(), nms_thresh)).long()
 
-                # print('keep_idx_i :',keep_idx_i.cpu().numpy(), keep_idx_i.nelement())
                 keep_idx_i = nms_gpu(torch.cat((proposals_single, scores_single), 1),nms_thresh).type_as(scores_single)
+                # keep_idx_i =nms_gpu(proposals_single.view(-1, self.sample_duration, 4).contiguous(), \
+                #                     scores_single.squeeze(),nms_thresh, method=1).type_as(scores_single)
+
                 keep_idx_i = keep_idx_i.long().view(-1)
                 # print('keep_idx_i :',keep_idx_i.cpu().numpy(),keep_idx_i.nelement())
                 # exit(-1)
 
-
-
-                if post_nms_topN > 0:
-                    keep_idx_i = keep_idx_i[:post_nms_topN]
+                keep_idx_i = keep_idx_i[:post_nms_topN]
 
                 proposals_single = proposals_single[keep_idx_i, :]
                 # print('proposal_single :',proposals_single[:,:4].cpu().numpy())
                 # exit(-1)
                 scores_single = scores_single[keep_idx_i, :]
-
 
                 # adding score at the end.
                 num_proposal = proposals_single.size(0)
@@ -302,9 +296,10 @@ class _ProposalLayer(nn.Module):
                 proposals_single = proposals_keep[i]
                 scores_single = scores_keep[i]
                 order_single = order[i]
-
+                
                 proposals_single = proposals_single[order_single, :]
                 scores_single = scores_single[order_single].view(-1,1)
+
                 proposals_single = proposals_single[:post_nms_topN, :]
                 scores_single = scores_single[:post_nms_topN]
 

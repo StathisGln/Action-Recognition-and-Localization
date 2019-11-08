@@ -33,7 +33,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     iou_thresh_3 = 0.3 # Intersection Over Union thresh
 
     vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='test')
-    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=2*n_devs, pin_memory=True,
+    data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=n_devs, pin_memory=True,
                                               shuffle=True)    # reset learning rate
     # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1, num_workers=8*n_devs, pin_memory=True,
     #                                           shuffle=True)    # reset learning rate
@@ -365,8 +365,8 @@ if __name__ == '__main__':
     split_txt_path = '../UCF101_Action_detection_splits/'
 
     sample_size = 112
-    sample_duration = 8  # len(images)
-    # sample_duration = 16  # len(images)
+    # sample_duration = 8  # len(images)
+    sample_duration = 16  # len(images)
 
     n_devs = torch.cuda.device_count()
     # # get mean
@@ -400,7 +400,8 @@ if __name__ == '__main__':
     print('|          - extract features -          |')
     print(' ----------------------------------------')
 
-    action_model_path = './action_net_model_8frm_conf_ucf.pwf'
+    # action_model_path = './action_net_model_8frm_conf_ucf.pwf'
+    action_model_path = './action_net_model_16frm_conf_ucf.pwf'
 
     # Init whole model
     model = Model(actions, sample_duration, sample_size)
@@ -414,8 +415,12 @@ if __name__ == '__main__':
     batch_size = 1
     vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train')
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
-                                              shuffle=True, num_workers=32, pin_memory=True)
-    out_path = 'UCF-101-features'
+                                              shuffle=True, num_workers=2, pin_memory=True)
+    # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
+    #                                           shuffle=True, num_workers=32, pin_memory=True)
+
+    # out_path = 'UCF-101-features-256-7-32-8'
+    out_path = 'UCF-101-features-16-256-7-32-82'
     mode = 'extract'
     for step, data  in enumerate(data_loader):
 
@@ -427,6 +432,18 @@ if __name__ == '__main__':
 
         if not(os.path.exists(os.path.join(out_path, vid_names[vid_id]))):
             os.makedirs(os.path.join(out_path, vid_names[vid_id]))
+        ### TO REMOVE
+        else:
+            try:
+                print('Folder exists, trying to read from \'feats.pt\' file')
+                feats = torch.load(os.path.join(out_path, vid_names[vid_id],'feats.pt'))
+                print('feats.shape :',feats.shape)
+                print('feats.dim :',feats.dim())
+                if feats.size(0) == 36 and feats.dim() == 5:
+                    print('Ok this file...')
+                    continue
+            except:
+                print('Problem opening...')
 
         vid_id = vid_id.to(device)
         clips = clips.to(device)
@@ -435,6 +452,7 @@ if __name__ == '__main__':
         n_actions = n_actions.int().to(device)
         im_info = torch.stack([h,w],dim=1).to(device)
 
+        print('vid_names[vid_id] :',vid_names[vid_id])
         print('n_frames :',n_frames)
         feats, tubes, labels, tube_len =  model(n_devs, dataset_frames, \
                                                 vid_names, clips, vid_id,  \
@@ -444,76 +462,76 @@ if __name__ == '__main__':
         print('labels :',labels)
         print('tube_len :',tube_len)
         print('tubes :',tubes.shape)
-        
+
         torch.save(feats, os.path.join(out_path, vid_names[vid_id], 'feats.pt'))
         torch.save(labels, os.path.join(out_path, vid_names[vid_id], 'labels.pt'))
         torch.save(tube_len, os.path.join(out_path, vid_names[vid_id], 'tube_len.pt'))
         torch.save(tubes, os.path.join(out_path, vid_names[vid_id], 'tubes.pt'))
     exit(-1)
 
-    print(' ---------------------------------')
-    print('|          - train RNN -          |')
-    print(' ---------------------------------')
+    # print(' ---------------------------------')
+    # print('|          - train RNN -          |')
+    # print(' ---------------------------------')
 
-    dataset_frames = '../UCF-101-frames'
-    dataset_features = '../UCF-101-features-linear'
+    # dataset_frames = '../UCF-101-frames'
+    # dataset_features = '../UCF-101-features-linear'
 
 
-    lr = 0.1
-    lr_decay_step = 10
-    lr_decay_gamma = 0.1
+    # lr = 0.1
+    # lr_decay_step = 10
+    # lr_decay_gamma = 0.1
     
-    params = []
+    # params = []
 
-    model =_RNN_wrapper(64*sample_duration,128,len(actions))
-    model = nn.DataParallel(model)
-    model = model.to(device)
+    # model =_RNN_wrapper(64*sample_duration,128,len(actions))
+    # model = nn.DataParallel(model)
+    # model = model.to(device)
     
-    for key, value in dict(model.named_parameters()).items():
-        # print(key, value.requires_grad)
-        if value.requires_grad:
-            print('key :',key)
-            if 'bias' in key:
-                params += [{'params':[value],'lr':lr*(True + 1), \
-                            'weight_decay': False and 0.0005 or 0}]
-            else:
-                params += [{'params':[value],'lr':lr, 'weight_decay': 0.0005}]
+    # for key, value in dict(model.named_parameters()).items():
+    #     # print(key, value.requires_grad)
+    #     if value.requires_grad:
+    #         print('key :',key)
+    #         if 'bias' in key:
+    #             params += [{'params':[value],'lr':lr*(True + 1), \
+    #                         'weight_decay': False and 0.0005 or 0}]
+    #         else:
+    #             params += [{'params':[value],'lr':lr, 'weight_decay': 0.0005}]
 
-    lr = lr * 0.1
-    optimizer = torch.optim.Adam(params)
+    # lr = lr * 0.1
+    # optimizer = torch.optim.Adam(params)
 
-    epochs = 40
-    # epochs = 5
+    # epochs = 40
+    # # epochs = 5
 
-    file = open('train_loss_ucf_linear.txt', 'w')
+    # file = open('train_loss_ucf_linear.txt', 'w')
 
-    n_devs = torch.cuda.device_count()
-    for epoch in range(epochs):
-        print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
+    # n_devs = torch.cuda.device_count()
+    # for epoch in range(epochs):
+    #     print(' ============\n| Epoch {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
 
-        if epoch % (lr_decay_step + 1) == 0:
-            adjust_learning_rate(optimizer, lr_decay_gamma)
-            lr *= lr_decay_gamma
+    #     if epoch % (lr_decay_step + 1) == 0:
+    #         adjust_learning_rate(optimizer, lr_decay_gamma)
+    #         lr *= lr_decay_gamma
 
-        model, loss = training(epoch, device, model, dataset_features, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=4)
-        file.write('epoch :'+str(epoch)+' --> '+str(loss)+'\n')
+    #     model, loss = training(epoch, device, model, dataset_features, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=4)
+    #     file.write('epoch :'+str(epoch)+' --> '+str(loss)+'\n')
 
-        if ( epoch + 1 ) % 5 == 0:
-            torch.save(model.module.act_rnn.state_dict(), "linear_ucf.pwf".format(epoch+1))
+    #     if ( epoch + 1 ) % 5 == 0:
+    #         torch.save(model.module.act_rnn.state_dict(), "linear_ucf.pwf".format(epoch+1))
 
 
-    print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
-    # # Init whole model
-    action_model_path = './action_net_model_16frm_64_avgpool.pwf'
-    model = Model(actions, sample_duration, sample_size)
-    model.load_part_model(action_model_path=action_model_path, rnn_path= './linear_ucf.pwf')
+    # print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
+    # # # Init whole model
+    # action_model_path = './action_net_model_16frm_64_avgpool.pwf'
+    # model = Model(actions, sample_duration, sample_size)
+    # model.load_part_model(action_model_path=action_model_path, rnn_path= './linear_ucf.pwf')
 
-    model = nn.DataParallel(model)
-    model = model.to(device)
+    # model = nn.DataParallel(model)
+    # model = model.to(device)
 
     
-    validation(epoch, device, model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
+    # validation(epoch, device, model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
 
-    torch.save(model.module.act_rnn.state_dict(), "linear_ucf.pwf".format(epoch+1))
+    # torch.save(model.module.act_rnn.state_dict(), "linear_ucf.pwf".format(epoch+1))
 
 
