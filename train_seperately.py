@@ -32,7 +32,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     data = Video_UCF(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
                  temporal_transform=temporal_transform, json_file = boxes_file,
                  split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
-    data_loader = torch.utils.data.DataLoader(data, batch_size=4,
+    data_loader = torch.utils.data.DataLoader(data, batch_size=2,
                                               shuffle=True, num_workers=0, pin_memory=True)
     model.eval()
 

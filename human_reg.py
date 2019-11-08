@@ -7,6 +7,8 @@ from torch.autograd import Variable
 from config import cfg
 from proposal_layer import _ProposalLayer
 from anchor_target_layer_mine import _AnchorTargetLayer
+from resnet_3D import resnet34
+
 # from reg_target import _Regression_TargetLayer
 from roi_align.modules.roi_align  import RoIAlignAvg, RoIAlign
 from proposal_target_layer_cascade_original import _ProposalTargetLayer as _Regression_TargetLayer
@@ -27,21 +29,19 @@ class _Regression_Layer(nn.Module):
         self.pooling_size = 7
         self.spatial_scale = 1.0/16
 
-        self.Conv = nn.Conv3d(self.din, din, 1, stride=1, padding=0, bias=True)
+        # self.Conv = nn.Conv3d(self.din, din, 1, stride=1, padding=0, bias=True)
         self.head_to_tail_ = nn.Sequential(
             # nn.Linear(din*self.sample_duration *7*  7, 2048),
-            nn.Linear(din * 7 *  7, 2048),
+            nn.Linear(din * 2 * sample_duration * 4 * 4, 2048),
             nn.ReLU(True),
             nn.Dropout(0.8),
             nn.Linear(2048,512),
             nn.ReLU(True)
             )
             
-        # self.avg_pool = nn.AvgPool2d((7, 7), stride=1)
         self.bbox_pred = nn.Linear(512,self.sample_duration*4)
 
         self.roi_align = RoIAlign(self.pooling_size, self.pooling_size, self.spatial_scale)
-        # self.avg_pool = nn.AvgPool3d((int(sample_duration),1,1), stride=1)
         self.reg_target = _Regression_TargetLayer()
 
     def forward(self, base_feat, rois, gt_rois):
@@ -75,11 +75,46 @@ class _Regression_Layer(nn.Module):
                                                                       self.sample_duration, base_feat.size(4),base_feat.size(5))
         
         conv1_feats = self.Conv(base_feat)
-        conv1_feats = self.avg_pool(conv1_feats)
+        # conv1_feats = self.avg_pool(conv1_feats)
         conv1_feats = self.head_to_tail_(conv1_feats.view(conv1_feats.size(0),-1))
         bbox_pred = self.bbox_pred(conv1_feats) # regression layer
 
         return bbox_pred, base_feat
+
+    def _init_modules(self):
+
+        resnet_shortcut = 'A'
+        # resnet_shortcut = 'B'
+        
+        sample_size = 112
+
+        model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
+                         sample_size=sample_size, sample_duration=self.sample_duration,
+                         last_fc=False)
+        # model = resnet101(num_classes=400, shortcut_type=resnet_shortcut,
+        #                  sample_size=sample_size, sample_duration=self.sample_duration,
+        #                  )
+
+        model = nn.DataParallel(model, device_ids=None)
+        self.model_path = '../resnet-34-kinetics.pth'
+        # self.model_path = '../resnext-101-kinetics.pth'
+        print("Loading pretrained weights from %s" %(self.model_path))
+        model_data = torch.load(self.model_path)
+
+        model.load_state_dict(model_data['state_dict'])
+
+        # Build resnet.
+        self.Conv = nn.Sequential(model.module.layer4)
+
+        def set_bn_fix(m):
+          classname = m.__class__.__name__
+          if classname.find('BatchNorm') != -1:
+            for p in m.parameters(): p.requires_grad=False
+    
+        self.Conv.apply(set_bn_fix)
+
+
+
 
     
 if __name__ == '__main__':

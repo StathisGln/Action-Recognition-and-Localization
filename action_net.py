@@ -51,6 +51,7 @@ class ACT_net(nn.Module):
     def create_architecture(self):
         self._init_modules()
         self._init_weights()
+        self.reg_layer._init_modules()
 
     def forward(self, im_data, im_info, gt_tubes, gt_rois,  start_fr):
 
