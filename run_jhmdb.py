@@ -26,9 +26,9 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_folder = '/gpu-data2/sgal/JHMDB-act-detector-frames'
-    split_txt_path =  '/gpu-data2/sgal/splits'
-    boxes_file = '/gpu-data2/sgal/poses.json'
+    dataset_folder = '../JHMDB-act-detector-frames'
+    split_txt_path =  '../splits'
+    boxes_file = '../poses.json'
 
     sample_size = 112
     sample_duration = 16  # len(images)
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
 
     # generate model
-    classes = ['brush_hair', 'clap', 'golf', 'kick_ball', 'pour',
+    classes = ['__background__','brush_hair', 'clap', 'golf', 'kick_ball', 'pour',
                'push', 'shoot_ball', 'shoot_gun', 'stand', 'throw', 'wave',
                'catch','climb_stairs', 'jump', 'pick', 'pullup', 'run', 'shoot_bow', 'sit',
                'swing_baseball', 'walk' ]

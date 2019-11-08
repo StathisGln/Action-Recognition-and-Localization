@@ -18,112 +18,7 @@ from video_dataset import video_names
 from model import Model
 from resize_rpn import resize_tube
 
-torch.backends.cudnn.benchnark=True 
-def bbox_overlaps_batch_3d(tubes, gt_tubes):
-
-    """
-    tubes: (N, 6) ndarray of float
-    gt_tubes: (b, K, 5) ndarray of float
-
-    overlaps: (N, K) ndarray of overlap between boxes and query_boxes
-    """
-    batch_size = gt_tubes.size(0)
-
-    if tubes.dim() == 2:
-
-        N = tubes.size(0)
-        K = gt_tubes.size(1)
-
-        tubes = tubes[:,1:]
-        tubes = tubes.view(1, N, 6)
-        tubes = tubes.expand(batch_size, N, 6).contiguous()
-        gt_tubes = gt_tubes[:, :, :6].contiguous()
-
-        gt_tubes_x = (gt_tubes[:, :, 3] - gt_tubes[:, :, 0] + 1)
-        gt_tubes_y = (gt_tubes[:, :, 4] - gt_tubes[:, :, 1] + 1)
-        gt_tubes_t = (gt_tubes[:, :, 5] - gt_tubes[:, :, 2] + 1)
-
-        if batch_size == 1:  # only 1 video in batch:
-            gt_tubes_x = gt_tubes_x.unsqueeze(0)
-            gt_tubes_y = gt_tubes_y.unsqueeze(0)
-            gt_tubes_t = gt_tubes_t.unsqueeze(0)
-
-        gt_tubes_area = (gt_tubes_x * gt_tubes_y * gt_tubes_t)
-        gt_tubes_area_xy = gt_tubes_x * gt_tubes_y
-
-        tubes_boxes_x = (tubes[:, :, 3] - tubes[:, :, 0] + 1)
-        tubes_boxes_y = (tubes[:, :, 4] - tubes[:, :, 1] + 1)
-        tubes_boxes_t = (tubes[:, :, 5] - tubes[:, :, 2] + 1)
-
-        tubes_area = (tubes_boxes_x * tubes_boxes_y *
-                        tubes_boxes_t).view(batch_size, N, 1)  # for 1 frame
-        tubes_area_xy = (tubes_boxes_x * tubes_boxes_y).view(batch_size, N, 1)  # for 1 frame
-        
-        gt_area_zero = (gt_tubes_x == 1) & (gt_tubes_y == 1) & (gt_tubes_t == 1)
-        tubes_area_zero = (tubes_boxes_x == 1) & (tubes_boxes_y == 1) & (tubes_boxes_t == 1)
-
-        gt_area_zero_xy = (gt_tubes_x == 1) & (gt_tubes_y == 1) 
-        tubes_area_zero_xy = (tubes_boxes_x == 1) & (tubes_boxes_y == 1) 
-
-        gt_area_zero_t =  (gt_tubes_t == 1)
-        tubes_area_zero_t =  (tubes_boxes_t == 1)
-
-        boxes = tubes.view(batch_size, N, 1, 6)
-        boxes = boxes.expand(batch_size, N, K, 6)
-        query_boxes = gt_tubes.view(batch_size, 1, K, 6)
-        query_boxes = query_boxes.expand(batch_size, N, K, 6)
-
-        iw = (torch.min(boxes[:, :, :, 3], query_boxes[:, :, :, 3]) -
-              torch.max(boxes[:, :, :, 0], query_boxes[:, :, :, 0]) + 1)
-
-        iw[iw < 0] = 0
-
-        ih = (torch.min(boxes[:, :, :, 4], query_boxes[:, :, :, 4]) -
-              torch.max(boxes[:, :, :, 1], query_boxes[:, :, :, 1]) + 1)
-        ih[ih < 0] = 0
-
-        it = (torch.min(boxes[:, :, :, 5], query_boxes[:, :, :, 5]) -
-              torch.max(boxes[:, :, :, 2], query_boxes[:, :, :, 2]) + 1)
-        it[it < 0] = 0
-
-        ua = tubes_area + gt_tubes_area - (iw * ih * it)
-        ua_xy = tubes_area_xy + gt_tubes_area_xy - (iw * ih )
-        ua_t = tubes_boxes_t.unsqueeze(2) + gt_tubes_t - it
-
-        # print('ua.shape :',ua.shape)
-        # print('ua_xy.shape :',ua_xy.shape)
-        # print('tubes_boxes_t.shape :',tubes_boxes_t.shape)
-        # print('gt_tubes_t.shape :',gt_tubes_t.shape)
-        # print('it :',it.shape)
-        # print('ua_t :',ua_t.shape)
-        # print('tubes_area.shape :',tubes_area.shape)
-        # print('tubes_boxes_t.shape :',tubes_boxes_t.unsqueeze(2)
-        #       .shape)
-        # print('gt_tubes_area.shape :',gt_tubes_area.shape)
-        # print('gt_tubes_t.shape :', gt_tubes_t.shape)
-        overlaps = iw * ih * it / ua
-        overlaps_xy = iw * ih  / ua_xy
-        overlaps_t = it / ua_t
-
-        overlaps.masked_fill_(gt_area_zero.view(
-            batch_size, 1, K).expand(batch_size, N, K), 0)
-        overlaps.masked_fill_(tubes_area_zero.view(
-            batch_size, N, 1).expand(batch_size, N, K), -1)
-
-        overlaps_xy.masked_fill_(gt_area_zero.view(
-            batch_size, 1, K).expand(batch_size, N, K), 0)
-        overlaps_xy.masked_fill_(tubes_area_zero.view(
-            batch_size, N, 1).expand(batch_size, N, K), -1)
-
-        overlaps_t.masked_fill_(gt_area_zero.view(
-            batch_size, 1, K).expand(batch_size, N, K), 0)
-        overlaps_t.masked_fill_(tubes_area_zero.view(
-            batch_size, N, 1).expand(batch_size, N, K), -1)
-
-    else:
-        raise ValueError('tubes input dimension is not correct.')
-
-    return overlaps, overlaps_xy, overlaps_t
+# torch.backends.cudnn.benchnark=True 
 
 
 def validate_model(model,  val_data, val_data_loader):
@@ -190,9 +85,9 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_folder = '/gpu-data2/sgal/UCF-101-frames'
-    boxes_file = '/gpu-data2/sgal/pyannot.pkl'
-    spt_path = '/gpu-data2/sgal/UCF101_Action_detection_splits/'
+    dataset_folder = '../UCF-101-frames'
+    boxes_file = '../pyannot.pkl'
+    spt_path = '../UCF101_Action_detection_splits/'
 
     sample_size = 112
     sample_duration = 16  # len(images)
@@ -228,7 +123,7 @@ if __name__ == '__main__':
 
     model = Model(actions, sample_duration, sample_size)
     model.create_architecture()
-
+    model.deactivate_action_net_grad()
     # if torch.cuda.device_count() > 1:
 
     #     print('Using {} GPUs!'.format(torch.cuda.device_count()))

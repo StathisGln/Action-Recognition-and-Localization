@@ -1,0 +1,569 @@
+Device being used: cuda:0
+ -----------------------------------------------------
+|          Part 1-1 - train TPN - without reg         |
+ -----------------------------------------------------
+Loading pretrained weights from ../resnet-34-kinetics.pth
+Using 2 GPUs!
+key : module.act_rpn.RPN_Conv.weight
+key : module.act_rpn.RPN_Conv.bias
+key : module.act_rpn.RPN_cls_score.weight
+key : module.act_rpn.RPN_cls_score.bias
+key : module.act_rpn.RPN_cls_score_3_4.weight
+key : module.act_rpn.RPN_cls_score_3_4.bias
+key : module.act_rpn.RPN_cls_score_2.weight
+key : module.act_rpn.RPN_cls_score_2.bias
+key : module.act_rpn.RPN_cls_score_4.weight
+key : module.act_rpn.RPN_cls_score_4.bias
+key : module.act_rpn.RPN_bbox_pred.weight
+key : module.act_rpn.RPN_bbox_pred.bias
+key : module.act_rpn.RPN_bbox_pred_3_4.weight
+key : module.act_rpn.RPN_bbox_pred_3_4.bias
+key : module.act_rpn.RPN_bbox_pred_2.weight
+key : module.act_rpn.RPN_bbox_pred_2.bias
+key : module.act_rpn.RPN_bbox_pred_4.weight
+key : module.act_rpn.RPN_bbox_pred_4.bias
+key : module.act_base_2.1.0.conv1.weight
+key : module.act_base_2.1.0.conv2.weight
+key : module.act_base_2.1.1.conv1.weight
+key : module.act_base_2.1.1.conv2.weight
+key : module.act_base_2.1.2.conv1.weight
+key : module.act_base_2.1.2.conv2.weight
+key : module.act_base_2.1.3.conv1.weight
+key : module.act_base_2.1.3.conv2.weight
+key : module.act_base_2.1.4.conv1.weight
+key : module.act_base_2.1.4.conv2.weight
+key : module.act_base_2.1.5.conv1.weight
+key : module.act_base_2.1.5.conv2.weight
+ ============
+| Epoch 01/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 1 	Loss: 1.157977	 lr : 0.001000
+ ============
+| Epoch 02/40 |
+ ============
+660
+max_frames : 40
+/home/sgal/miniconda3/envs/pytorch_0_4/lib/python3.7/site-packages/torch/nn/parallel/_functions.py:58: UserWarning: Was asked to gather along dimension 0, but all input tensors were scalars; will instead unsqueeze and return a vector.
+  warnings.warn('Was asked to gather along dimension 0, but all '
+Train Epoch: 2 	Loss: 0.346896	 lr : 0.001000
+ ============
+| Epoch 03/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 3 	Loss: 0.306317	 lr : 0.001000
+ ============
+| Epoch 04/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 4 	Loss: 0.281530	 lr : 0.001000
+ ============
+| Epoch 05/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 5 	Loss: 0.248448	 lr : 0.001000
+ ============
+| Epoch 06/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 6 	Loss: 0.214083	 lr : 0.001000
+ ============
+| Epoch 07/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 7 	Loss: 0.182582	 lr : 0.001000
+ ============
+| Epoch 08/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 8 	Loss: 0.209786	 lr : 0.001000
+ ============
+| Epoch 09/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 9 	Loss: 0.163114	 lr : 0.001000
+ ============
+| Epoch 10/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 10 	Loss: 0.154614	 lr : 0.001000
+ ============
+| Epoch 11/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 11 	Loss: 0.149412	 lr : 0.001000
+ ============
+| Epoch 12/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 12 	Loss: 0.146810	 lr : 0.000100
+ ============
+| Epoch 13/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 13 	Loss: 0.119020	 lr : 0.000100
+ ============
+| Epoch 14/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 14 	Loss: 0.118121	 lr : 0.000100
+ ============
+| Epoch 15/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 15 	Loss: 0.109782	 lr : 0.000100
+ ============
+| Epoch 16/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 16 	Loss: 0.105358	 lr : 0.000100
+ ============
+| Epoch 17/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 17 	Loss: 0.109408	 lr : 0.000100
+ ============
+| Epoch 18/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 18 	Loss: 0.104249	 lr : 0.000100
+ ============
+| Epoch 19/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 19 	Loss: 0.102162	 lr : 0.000100
+ ============
+| Epoch 20/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 20 	Loss: 0.101168	 lr : 0.000100
+ ============
+| Epoch 21/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 21 	Loss: 0.096761	 lr : 0.000100
+ ============
+| Epoch 22/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 22 	Loss: 0.090811	 lr : 0.000100
+ ============
+| Epoch 23/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 23 	Loss: 0.086080	 lr : 0.000010
+ ============
+| Epoch 24/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 24 	Loss: 0.084279	 lr : 0.000010
+ ============
+| Epoch 25/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 25 	Loss: 0.083923	 lr : 0.000010
+ ============
+| Epoch 26/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 26 	Loss: 0.085902	 lr : 0.000010
+ ============
+| Epoch 27/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 27 	Loss: 0.085236	 lr : 0.000010
+ ============
+| Epoch 28/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 28 	Loss: 0.079371	 lr : 0.000010
+ ============
+| Epoch 29/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 29 	Loss: 0.077757	 lr : 0.000010
+ ============
+| Epoch 30/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 30 	Loss: 0.074476	 lr : 0.000010
+ ============
+| Epoch 31/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 31 	Loss: 0.079924	 lr : 0.000010
+ ============
+| Epoch 32/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 32 	Loss: 0.076235	 lr : 0.000010
+ ============
+| Epoch 33/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 33 	Loss: 0.077947	 lr : 0.000010
+ ============
+| Epoch 34/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 34 	Loss: 0.073519	 lr : 0.000001
+ ============
+| Epoch 35/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 35 	Loss: 0.070694	 lr : 0.000001
+ ============
+| Epoch 36/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 36 	Loss: 0.075801	 lr : 0.000001
+ ============
+| Epoch 37/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 37 	Loss: 0.077034	 lr : 0.000001
+ ============
+| Epoch 38/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 38 	Loss: 0.074433	 lr : 0.000001
+ ============
+| Epoch 39/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 39 	Loss: 0.076506	 lr : 0.000001
+ ============
+| Epoch 40/40 |
+ ============
+660
+max_frames : 40
+Train Epoch: 40 	Loss: 0.077340	 lr : 0.000001
+ ============
+| Validation 40/40 |
+ ============
+268
+max_frames : 40
+ -----------------------
+| Validation Epoch:  40 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| Single frame          |
+|                       |
+| In     66 steps    :  |
+|                       |
+| Threshold : 0.5       |
+|                       |
+| True_pos   -->    189 |
+| False_neg  -->     79 | 
+| Recall     --> 0.7052 |
+|                       |
+| Threshold : 0.4       |
+|                       |
+| True_pos   -->    214 |
+| False_neg  -->     54 | 
+| Recall     --> 0.7985 |
+|                       |
+| Threshold : 0.3       |
+|                       |
+| True_pos   -->    235 |
+| False_neg  -->     33 | 
+| Recall     --> 0.8769 |
+ -----------------------
+ --------------------------------------------------
+|          Part 1-2 - train TPN - only reg         |
+ --------------------------------------------------
+key : module.reg_layer.Conv.weight
+key : module.reg_layer.Conv.bias
+key : module.reg_layer.head_to_tail_.0.weight
+key : module.reg_layer.head_to_tail_.0.bias
+key : module.reg_layer.head_to_tail_.3.weight
+key : module.reg_layer.head_to_tail_.3.bias
+key : module.reg_layer.bbox_pred.weight
+key : module.reg_layer.bbox_pred.bias
+ ============
+| Epoch 01/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 1 	Loss: 170.930761	 lr : 0.001000
+ ============
+| Epoch 02/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 2 	Loss: 165.917264	 lr : 0.001000
+ ============
+| Epoch 03/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 3 	Loss: 155.744024	 lr : 0.001000
+ ============
+| Epoch 04/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 4 	Loss: 167.544189	 lr : 0.001000
+ ============
+| Epoch 05/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 5 	Loss: 160.122464	 lr : 0.001000
+ ============
+| Validation 05/20 |
+ ============
+268
+max_frames : 40
+ -----------------------
+| Validation Epoch:   5 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| Single frame          |
+|                       |
+| In     66 steps    :  |
+|                       |
+| Threshold : 0.5       |
+|                       |
+| True_pos   -->    196 |
+| False_neg  -->     72 | 
+| Recall     --> 0.7313 |
+|                       |
+| Threshold : 0.4       |
+|                       |
+| True_pos   -->    218 |
+| False_neg  -->     50 | 
+| Recall     --> 0.8134 |
+|                       |
+| Threshold : 0.3       |
+|                       |
+| True_pos   -->    240 |
+| False_neg  -->     28 | 
+| Recall     --> 0.8955 |
+ -----------------------
+ ============
+| Epoch 06/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 6 	Loss: 168.287774	 lr : 0.001000
+ ============
+| Epoch 07/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 7 	Loss: 163.835790	 lr : 0.000100
+ ============
+| Epoch 08/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 8 	Loss: 172.868410	 lr : 0.000100
+ ============
+| Epoch 09/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 9 	Loss: 170.805628	 lr : 0.000100
+ ============
+| Epoch 10/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 10 	Loss: 160.643478	 lr : 0.000100
+ ============
+| Validation 10/20 |
+ ============
+268
+max_frames : 40
+ -----------------------
+| Validation Epoch:  10 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| Single frame          |
+|                       |
+| In     66 steps    :  |
+|                       |
+| Threshold : 0.5       |
+|                       |
+| True_pos   -->    197 |
+| False_neg  -->     71 | 
+| Recall     --> 0.7351 |
+|                       |
+| Threshold : 0.4       |
+|                       |
+| True_pos   -->    226 |
+| False_neg  -->     42 | 
+| Recall     --> 0.8433 |
+|                       |
+| Threshold : 0.3       |
+|                       |
+| True_pos   -->    246 |
+| False_neg  -->     22 | 
+| Recall     --> 0.9179 |
+ -----------------------
+ ============
+| Epoch 11/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 11 	Loss: 172.660415	 lr : 0.000100
+ ============
+| Epoch 12/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 12 	Loss: 155.724381	 lr : 0.000100
+ ============
+| Epoch 13/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 13 	Loss: 167.257968	 lr : 0.000010
+ ============
+| Epoch 14/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 14 	Loss: 162.421005	 lr : 0.000010
+ ============
+| Epoch 15/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 15 	Loss: 176.391958	 lr : 0.000010
+ ============
+| Validation 15/20 |
+ ============
+268
+max_frames : 40
+ -----------------------
+| Validation Epoch:  15 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| Single frame          |
+|                       |
+| In     66 steps    :  |
+|                       |
+| Threshold : 0.5       |
+|                       |
+| True_pos   -->    195 |
+| False_neg  -->     73 | 
+| Recall     --> 0.7276 |
+|                       |
+| Threshold : 0.4       |
+|                       |
+| True_pos   -->    221 |
+| False_neg  -->     47 | 
+| Recall     --> 0.8246 |
+|                       |
+| Threshold : 0.3       |
+|                       |
+| True_pos   -->    245 |
+| False_neg  -->     23 | 
+| Recall     --> 0.9142 |
+ -----------------------
+ ============
+| Epoch 16/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 16 	Loss: 172.685730	 lr : 0.000010
+ ============
+| Epoch 17/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 17 	Loss: 162.153466	 lr : 0.000010
+ ============
+| Epoch 18/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 18 	Loss: 161.354553	 lr : 0.000010
+ ============
+| Epoch 19/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 19 	Loss: 174.823747	 lr : 0.000001
+ ============
+| Epoch 20/20 |
+ ============
+660
+max_frames : 40
+Train Epoch: 20 	Loss: 162.483337	 lr : 0.000001
+ ============
+| Validation 20/20 |
+ ============
+268
+max_frames : 40
+ -----------------------
+| Validation Epoch:  20 | 
+|                       |
+| Proposed Action Tubes |
+|                       |
+| Single frame          |
+|                       |
+| In     66 steps    :  |
+|                       |
+| Threshold : 0.5       |
+|                       |
+| True_pos   -->    195 |
+| False_neg  -->     73 | 
+| Recall     --> 0.7276 |
+|                       |
+| Threshold : 0.4       |
+|                       |
+| True_pos   -->    227 |
+| False_neg  -->     41 | 
+| Recall     --> 0.8470 |
+|                       |
+| Threshold : 0.3       |
+|                       |
+| True_pos   -->    246 |
+| False_neg  -->     22 | 
+| Recall     --> 0.9179 |
+ -----------------------

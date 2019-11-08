@@ -91,7 +91,7 @@ if __name__ == '__main__':
     #         exit(-1)
 
     # exit(-1)
-    vid_id, clips, boxes, n_frames, n_actions, h, w =vid_name_loader[14]
+    vid_id, clips, boxes, n_frames, n_actions, h, w, target =vid_name_loader[14]
     # vid_id, clips, boxes, n_frames, n_actions, h, w =vid_name_loader[209]
 
 
@@ -104,12 +104,12 @@ if __name__ == '__main__':
     mode = 'train'
     print('**********Starts**********')
 
-    tubes,  bbox_pred, \
-    prob_out, rpn_loss_cls, \
-    rpn_loss_bbox, act_loss_bbox,  cls_loss =  model(n_devs, dataset_frames, \
-                                                     vid_names, clips, vid_id,  \
-                                                     boxes, \
-                                                     mode, cls2idx, n_actions,n_frames, h, w)
+    tubes,  \
+    prob_out, cls_loss =  model(n_devs, dataset_frames, \
+                                vid_names, clips, vid_id,  \
+                                boxes, \
+                                mode, cls2idx, n_actions,n_frames, h, w)
+
 
     # rois,  bbox_pred, cls_prob, \
     # rpn_loss_cls,  rpn_loss_bbox, \
@@ -119,6 +119,9 @@ if __name__ == '__main__':
     #                                                  n_actions)
 
     print('**********VGIKE**********')
-    # print('rois.shape :',rois.shape)
-    # print('rois :',rois)
+    torch.set_printoptions(profile='full')
+    print('rois.shape :',tubes.shape)
+    # print('rois.shape :',tubes[:3])
+
+
 

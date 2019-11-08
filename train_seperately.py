@@ -20,7 +20,8 @@ from model import Model
 from action_net import ACT_net
 from resize_rpn import resize_boxes
 import argparse
-from box_functions import tube_overlaps, tube_transform_inv
+from box_functions import tube_overlaps, tube_transform_inv, clip_boxes
+
 
 np.random.seed(42)
 
@@ -66,12 +67,14 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
                                        im_info,
                                        None, None,
                                        None)
+
         batch_size = len(tubes)
 
-        tubes = tubes.view(-1, sample_duration*4+2)
-        tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
-                                           sgl_rois_bbox_pred.view(-1,sample_duration*4),(1.0,1.0,1.0,1.0))
+        # tubes = tubes.view(-1, sample_duration*4+2)
+        # tubes[:,1:-1] = tube_transform_inv(tubes[:,1:-1],\
+        #                                    sgl_rois_bbox_pred.view(-1,sample_duration*4),(1.0,1.0,1.0,1.0))
         tubes = tubes.view(batch_size,-1, sample_duration*4+2)
+        # tubes[:,:,1:-1] = clip_boxes(tubes[:,:,1:-1], im_info, tubes.size(0))
 
         for i in range(tubes.size(0)): # how many frames we have
             
@@ -248,14 +251,14 @@ if __name__ == '__main__':
     # act_model = nn.DataParallel(act_model)
 
     # act_model.to(device)
-
+    # # act_model.module.reg_layer.reg_to_device(device)
     # lr = 0.1
     # lr_decay_step = 10
     # lr_decay_gamma = 0.1
     
     # params = []
 
-    # for p in act_model.module.reg_layer.parameters() : p.requires_grad=False
+    # # for p in act_model.module.reg_layer.parameters() : p.requires_grad=False
 
     # for key, value in dict(act_model.named_parameters()).items():
     #     # print(key, value.requires_grad)
@@ -271,6 +274,7 @@ if __name__ == '__main__':
     # optimizer = torch.optim.Adam(params)
 
     # epochs = 40
+    # # epochs = 1
     # # epochs = 5
 
     # n_devs = torch.cuda.device_count()
@@ -282,25 +286,26 @@ if __name__ == '__main__':
     #         lr *= lr_decay_gamma
 
 
-    #     act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=4)
+    #     act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*8, 0, lr, mode=4)
 
-    #     if ( epoch + 1 ) % 5 == 0:
-    #         torch.save(act_model.state_dict(), "action_net_model_part1_1.pwf".format(epoch+1))
+    #     # if ( epoch + 1 ) % 5 == 0:
+    #     #     torch.save(act_model.state_dict(), "action_net_model_part1_1_8frm.pwf".format(epoch+1))
 
-    #     if (epoch + 1) % (5) == 0:
-    #         print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
-    #         validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
+            
+    # # validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*2, 0)
 
-    # torch.save(act_model.state_dict(), "action_net_model_part1_1.pwf")
+    # torch.save(act_model.module.act_rpn.state_dict(), "region_net_.pwf")
+    # torch.save(act_model.state_dict(), "all_model.pwf")
 
-    #####################################################
-    #          Part 1-2 - train TPN - only reg          #
-    #####################################################
+    # #####################################################
+    # #          Part 1-2 - train TPN - only reg          #
+    # #####################################################
 
     print(' --------------------------------------------------')
     print('|          Part 1-2 - train TPN - only reg         |')
     print(' --------------------------------------------------')
 
+    ### Only for second part training
     # Init action_net
     act_model = ACT_net(actions, sample_duration)
     act_model.create_architecture()
@@ -311,12 +316,18 @@ if __name__ == '__main__':
 
     act_model.to(device)
 
+    n_devs = torch.cuda.device_count()
+
     # model_data = torch.load('./action_net_model_part1_1.pwf')
-    model_data = torch.load('./region_net.pwf')
+    model_data = torch.load('./region_net_.pwf')
 
-
+    # act_model.load_state_dict(model_data)
     act_model.module.act_rpn.load_state_dict(model_data)
 
+    # validation(40, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*2, 0)
+    # exit(-1)
+
+    ### End of second part
     lr = 0.1
     lr_decay_step = 5
     lr_decay_gamma = 0.1
@@ -348,12 +359,12 @@ if __name__ == '__main__':
             adjust_learning_rate(optimizer, lr_decay_gamma)
             lr *= lr_decay_gamma
         act_model.module.act_rpn.eval()
-        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0, lr, mode=3)
+        act_model, loss = training(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*2, 0, lr, mode=3)
 
         if (epoch + 1) % 5 == 0:
             print(' ============\n| Validation {:0>2}/{:0>2} |\n ============'.format(epoch+1, epochs))
-            validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs, 0)
+            validation(epoch, device, act_model, dataset_frames, sample_duration, spatial_transform, temporal_transform, boxes_file, split_txt_path, cls2idx, n_devs*2, 0)
 
         if ( epoch + 1 ) % 5 == 0:
-            torch.save(act_model.state_dict(), "actio_net_model_both_without_avg.pwf".format(epoch+1))
-    torch.save(act_model.state_dict(), "actio_net_model_both_without_avg.pwf".format(epoch))
+            torch.save(act_model.state_dict(), "action_net_model_both.pwf".format(epoch+1))
+    torch.save(act_model.state_dict(), "action_net_model_both.pwf".format(epoch))

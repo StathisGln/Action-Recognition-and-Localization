@@ -40,6 +40,7 @@ if __name__ == '__main__':
     sample_size = 112
     sample_duration = 16  # len(images)
     # sample_duration = 8  # len(images)
+    # sample_duration = 4  # len(images)
 
     batch_size = 1
     n_threads = 0
@@ -73,7 +74,7 @@ if __name__ == '__main__':
 
     model = ACT_net(actions, sample_duration)
     model.create_architecture()
-
+    model = nn.DataParallel(model)
     model.to(device)
 
     data = Video_UCF(dataset_frames, frames_dur=sample_duration, spatial_transform=spatial_transform,
@@ -91,11 +92,11 @@ if __name__ == '__main__':
     #                            0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
     #                            0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
                                # 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]).shape)
-    gt_rois_[0,0,:,:4] =  torch.Tensor([43., 59., 55., 80., 43., 59., 55., 80., 44., 60., 56., 81., 44., 60.,
-                               56., 81., 32.,  32.,  21.,  21.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
-                               0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
-                               0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
-                                        0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]).view(16,4)
+    # gt_rois_[0,0,:,:4] =  torch.Tensor([43., 59., 55., 80., 43., 59., 55., 80., 44., 60., 56., 81., 44., 60.,
+    #                            56., 81., 32.,  32.,  21.,  21.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
+    #                            0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
+    #                            0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
+    #                                     0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]).view(16,4)
 
     n_actions_ = torch.from_numpy(n_actions).to(device)
     im_info_ = im_info.unsqueeze(0).to(device)
@@ -108,12 +109,12 @@ if __name__ == '__main__':
     im_info_2 = im_info2.unsqueeze(0).to(device)
     start_fr_2 = torch.zeros((1,1)).to(device)
 
-    clips_ = torch.cat((clips_,clips_2))
-    gt_tubes_r_ = torch.cat((gt_tubes_r_, gt_tubes_r_2))
-    gt_rois_ = torch.cat((gt_rois_, gt_rois_2))
-    n_actions_ = torch.cat((n_actions_, n_actions_2))
-    start_fr = torch.cat((start_fr,start_fr_2))
-    im_info_ = torch.Tensor([[112,112,16],[112,112,16]]).to(device)
+    clips_ = torch.cat((clips_,clips_2,clips_,clips_2))
+    gt_tubes_r_ = torch.cat((gt_tubes_r_, gt_tubes_r_2,gt_tubes_r_, gt_tubes_r_2))
+    gt_rois_ = torch.cat((gt_rois_, gt_rois_2,gt_rois_, gt_rois_2))
+    n_actions_ = torch.cat((n_actions_, n_actions_2,n_actions_, n_actions_2))
+    start_fr = torch.cat((start_fr,start_fr_2,start_fr,start_fr_2))
+    im_info_ = torch.Tensor([[112,112,16],[112,112,16],[112,112,16],[112,112,16]]).to(device)
 
     # clips_ = torch.cat((clips_,clips_2,clips_,clips_2))
     # gt_tubes_r_ = torch.cat((gt_tubes_r_, gt_tubes_r_2,gt_tubes_r_, gt_tubes_r_2))
@@ -122,6 +123,15 @@ if __name__ == '__main__':
     # start_fr = torch.cat((start_fr,start_fr_2,start_fr,start_fr_2))
     # im_info_ = torch.Tensor([[112,112,16],[112,112,16],[112,112,16],[112,112,16]]).to(device)
 
+    print('clips.shape :',clips.shape)
+    print('clips[0].shape :',clips[0].shape)
+    img = clips[:,0].permute(1,2,0).numpy().copy()
+    print('img.shape :',img.shape)
+    print('gt_rois.shape :',gt_rois.shape)
+    print('gt_rois[0,0]:',gt_rois[0,0])
+    # import cv2
+    # cv2.rectangle(img,(int(gt_rois[0,0,0]),int(gt_rois[0,0,1])),(int(gt_rois[0,0,2]),int(gt_rois[0,0,3])),(0,255,0),3)
+    # cv2.imwrite('test_img.jpg', img)
 
     print('gt_tubes_r_.shape :',gt_tubes_r_.shape)
     print('gt_rois_.shape :',gt_rois_.shape)

@@ -14,6 +14,10 @@ from torch.autograd import Variable
 from resnet_3D import resnet34
 from region_net import _RPN 
 from human_reg import _Regression_Layer
+# from human_reg_3d import _Regression_Layer
+# from human_reg_2d import _Regression_Layer
+
+
 
 from proposal_target_layer_cascade import _ProposalTargetLayer
 from proposal_target_layer_cascade_single_frame import _ProposalTargetLayer as _ProposalTargetLayer_single
@@ -35,9 +39,10 @@ class ACT_net(nn.Module):
         self.act_loss_cls = 0
         self.act_loss_bbox = 0
 
-        # cfg.POOLING_SIZE
-        self.pooling_size = 7
-        self.spatial_scale = 1.0/16
+        # # cfg.POOLING_SIZE
+        # self.pooling_size = 7
+        # # self.spatial_scale = 1.0/16
+        # self.spatial_scale = 1.0/4
     
         # define rpn
         self.act_rpn = _RPN(256, sample_duration).cuda()
@@ -46,7 +51,10 @@ class ACT_net(nn.Module):
 
         self.time_dim =sample_duration
         self.temp_scale = 1.0
+        # self.reg_layer = _Regression_Layer(64, self.sample_duration).cuda()
+        # self.reg_layer = _Regression_Layer(128, self.sample_duration).cuda()
         self.reg_layer = _Regression_Layer(256, self.sample_duration).cuda()
+        self.batch_norm = nn.BatchNorm3d(256)
 
     def create_architecture(self):
         self._init_modules()
@@ -58,25 +66,14 @@ class ACT_net(nn.Module):
         batch_size = im_data.size(0)
         im_info = im_info.data
 
-        if self.training:
-
-            gt_tubes = gt_tubes.data
-            gt_rois =  gt_rois.data
-
-            for i in range(batch_size):
-
-              gt_tubes[i,:,2] = gt_tubes[i,:,2] - start_fr[i].type_as(gt_tubes)
-              gt_tubes[i,:,5] = gt_tubes[i,:,5] - start_fr[i].type_as(gt_tubes)
-
-            gt_tubes[:,:,:-1] = gt_tubes[:,:,:-1].clamp_(min=0)
-
-
         # feed image data to base model to obtain base feature map
         base_feat_1 = self.act_base_1(im_data)
         base_feat_2 = self.act_base_2(base_feat_1)
+        base_feat_3 = self.act_base_3(base_feat_2)
+        base_feat_3 = self.batch_norm(base_feat_3)
 
         rois, _, rpn_loss_cls, rpn_loss_bbox, \
-            _, _ = self.act_rpn(base_feat_2, im_info, gt_tubes, gt_rois)
+            _, _ = self.act_rpn(base_feat_3, im_info, gt_tubes, gt_rois)
 
         if self.training:
 
@@ -97,14 +94,21 @@ class ACT_net(nn.Module):
             rpn_loss_cls = 0
             rpn_loss_bbox = 0
             
-        sgl_rois_bbox_pred, feats = self.reg_layer(base_feat_2,rois[:,:,1:-1], gt_rois)
+        # sgl_rois_bbox_pred, feats = self.reg_layer(base_feat_1,rois[:,:,1:-1], gt_rois)
+        sgl_rois_bbox_pred, feats = self.reg_layer(base_feat_3,rois[:,:,1:-1], gt_rois)
+
+        if not self.training:
+            sgl_rois_bbox_pred = Variable(sgl_rois_bbox_pred, requires_grad=False)
 
         if self.training:
 
             sgl_rois_bbox_loss = _smooth_l1_loss(sgl_rois_bbox_pred, rois_target, rois_inside_ws, rois_outside_ws,
-                                                 sigma=3, dim=[1])
+                                                 )
             sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(batch_size,-1, self.sample_duration*4)
+
             feats = feats.view(batch_size,-1, feats.size(1), feats.size(2), feats.size(3), feats.size(4))
+            rois_label =rois_label.view(batch_size,-1).long()
+
             # return rois,  None, rpn_loss_cls, rpn_loss_bbox, None,None, \
             #     None, None, None
             
@@ -114,9 +118,15 @@ class ACT_net(nn.Module):
         sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(batch_size,-1, self.sample_duration*4)
         feats = feats.view(batch_size,-1, feats.size(1), feats.size(2), feats.size(3), feats.size(4))
 
+        # # TODO remove after adding reg_layer
+        # if self.training:
+        #     return rois,  None, rpn_loss_cls, rpn_loss_bbox, None,None, \
+        #         None, None, None
 
+        # # TODO remove after adding reg_layer
         # return rois, None, None, None, None, None, \
         #     None, None, None,
+
         return rois, feats, None, None, None, None, \
             None, sgl_rois_bbox_pred, None,
 
@@ -137,10 +147,13 @@ class ACT_net(nn.Module):
         truncated = False
         normal_init(self.act_rpn.RPN_Conv, 0, 0.01, truncated)
         normal_init(self.act_rpn.RPN_cls_score, 0, 0.01, truncated)
+        normal_init(self.act_rpn.RPN_cls_score_3_4, 0, 0.01, truncated)
+        normal_init(self.act_rpn.RPN_cls_score_2, 0, 0.01, truncated)
+        normal_init(self.act_rpn.RPN_cls_score_4, 0, 0.01, truncated)
         normal_init(self.act_rpn.RPN_bbox_pred, 0, 0.01, truncated)
-        # normal_init(self.reg_layer.Conv, 0, 0.01, truncated)
-        # normal_init(self.reg_layer.bbox_pred, 0, 0.01, truncated)
-
+        normal_init(self.act_rpn.RPN_bbox_pred_3_4, 0, 0.01, truncated)
+        normal_init(self.act_rpn.RPN_bbox_pred_2, 0, 0.01, truncated)
+        normal_init(self.act_rpn.RPN_bbox_pred_4, 0, 0.01, truncated)
 
     def _init_modules(self):
 
@@ -158,7 +171,7 @@ class ACT_net(nn.Module):
 
         model = nn.DataParallel(model, device_ids=None)
         self.model_path = '../resnet-34-kinetics.pth'
-        # self.model_path = '../resnext-101-kinetics.pth'
+
         print("Loading pretrained weights from %s" %(self.model_path))
         model_data = torch.load(self.model_path)
 
@@ -166,18 +179,18 @@ class ACT_net(nn.Module):
 
         # Build resnet.
         self.act_base_1 = nn.Sequential(model.module.conv1, model.module.bn1, model.module.relu,
-          model.module.maxpool,model.module.layer1)
-        self.act_base_2 = nn.Sequential(model.module.layer2, model.module.layer3)
-
-        # self.act_top = nn.Sequential( model.module.layer3, model.module.layer4)
+                                        model.module.maxpool,model.module.layer1)
+        self.act_base_2 = nn.Sequential(model.module.layer2)
+        self.act_base_3 = nn.Sequential(model.module.layer3)
 
         # Fix blocks
         for p in self.act_base_1[0].parameters(): p.requires_grad=False
         for p in self.act_base_1[1].parameters(): p.requires_grad=False
 
         fixed_blocks = 3
-        # if fixed_blocks >= 3:
-        #   for p in self.act_base_3[0].parameters(): p.requires_grad=False
+        if fixed_blocks >= 3:
+          for p in self.act_base_3[0].parameters(): p.requires_grad=False
+          # for p in self.act_base_2[0].parameters(): p.requires_grad=False
         if fixed_blocks >= 2:
           for p in self.act_base_2[0].parameters(): p.requires_grad=False
         if fixed_blocks >= 1:
@@ -190,5 +203,5 @@ class ACT_net(nn.Module):
     
         self.act_base_1.apply(set_bn_fix)
         self.act_base_2.apply(set_bn_fix)
-        # self.act_base_3.apply(set_bn_fix)
+        self.act_base_3.apply(set_bn_fix)
 

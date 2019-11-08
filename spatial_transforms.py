@@ -48,6 +48,23 @@ def imresizeAndPad(img, width, height, pad_value=114):
     return cv2.copyMakeBorder(imgResized, top, bottom, left, right,
                               cv2.BORDER_CONSTANT, value=[pad_value, pad_value, pad_value])
 
+## This is thre resize without padding
+# def imresizeAndPad(img, width, height, pad_value=114):
+#     # resize image
+#     imgWidth, imgHeight = img.size
+#     img = np.array(img)
+#     scale = min(float(width) / float(imgWidth), float(height) / float(imgHeight))
+#     imgResized = cv2.resize(img, (width, height)) #, interpolation=cv2.INTER_NEAREST)
+
+#     return imgResized
+#     # # pad image
+#     # top  = int(max(0, np.round((height - resizedHeight) / 2)))
+#     # left = int(max(0, np.round((width - resizedWidth) / 2)))
+#     # bottom = height - top - resizedHeight
+#     # right  = width - left - resizedWidth
+#     # return cv2.copyMakeBorder(imgResized, top, bottom, left, right,
+#     #                           cv2.BORDER_CONSTANT, value=[pad_value, pad_value, pad_value])
+
 class ToTensor(object):
     """Convert a ``PIL.Image`` or ``numpy.ndarray`` to tensor.
     Converts a PIL.Image or numpy.ndarray (H x W x C) in the range

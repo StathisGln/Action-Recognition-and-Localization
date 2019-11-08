@@ -49,6 +49,10 @@ extern "C" {
             int wstart = fminf(floor(w), width - 2);
 
             int img_start = roi_batch_ind * channels * height * width;
+	    // if (index == 0){
+	    //   printf("bottom_rois[n * 5 + 0] %f, bottom_rois[n * 5 + 1] %f, bottom_rois[n * 5 + 2] %f, bottom_rois[n * 5 + 3] %f, bottom_rois[n * 5 + 4] %f\n", bottom_rois[n * 5 + 0], bottom_rois[n * 5 + 1], bottom_rois[n * 5 + 2], bottom_rois[n * 5 + 3], bottom_rois[n * 5 + 4]);
+	    //   printf("bottom_rois[n * 5 + 5] %f, bottom_rois[n * 5 + 6] %f, bottom_rois[n * 5 + 7] %f, bottom_rois[n * 5 + 8] %f, bottom_rois[n * 5 + 9] %f\n", bottom_rois[n * 5 + 5], bottom_rois[n * 5 + 6], bottom_rois[n * 5 + 7], bottom_rois[n * 5 + 8], bottom_rois[n * 5 + 9]);
+	    // }
 
             // bilinear interpolation
             if (h < 0 || h >= height || w < 0 || w >= width) {

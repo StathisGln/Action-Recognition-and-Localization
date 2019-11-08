@@ -16,6 +16,8 @@ import numpy.random as npr
 
 from conf import conf as  cfg
 from generate_anchors import generate_anchors
+from overlaps.module.calc import Tube_Overlaps
+
 from box_functions import bbox_transform, bbox_transform_inv, clip_boxes, tube_overlaps
 import pdb
 
@@ -67,7 +69,7 @@ class _AnchorTargetLayer(nn.Module):
         gt_rois = input[6][:,:,:,:4].contiguous()       ## gt rois for each frame
         
         ### Not sure about that
-        batch_size = gt_tubes.size(0)
+        batch_size = rpn_cls_score.size(0)
         height, width  = rpn_cls_score.size(3), rpn_cls_score.size(4)
         time = rpn_cls_score.size(2)
         time_3_4 = rpn_cls_score_3_4.size(2)
@@ -114,17 +116,19 @@ class _AnchorTargetLayer(nn.Module):
         inds_inside = torch.nonzero(keep).view(-1)
 
         # keep only inside anchors
-        anchors = anchors_all[inds_inside,].type_as(gt_tubes)
+        anchors = anchors_all[inds_inside,].type_as(gt_rois)
         anchors = anchors.view(anchors.size(0),-1)
 
         # label: 1 is positive, 0 is negative, -1 is dont care
-        labels = gt_tubes.new(batch_size, inds_inside.size(0)).fill_(-1)
+        labels = gt_rois.new(batch_size, inds_inside.size(0)).fill_(-1)
 
-        bbox_inside_weights = gt_tubes.new(batch_size, inds_inside.size(0)).zero_()
-        bbox_outside_weights = gt_tubes.new(batch_size, inds_inside.size(0)).zero_()
+        bbox_inside_weights = gt_rois.new(batch_size, inds_inside.size(0)).zero_()
+        bbox_outside_weights = gt_rois.new(batch_size, inds_inside.size(0)).zero_()
         overlaps = []
         for i in range(batch_size):
             overlaps.append(tube_overlaps(anchors.view(-1,self.sample_duration*4), gt_rois[i].view(-1,self.sample_duration*4)))
+            # overlaps.append(Tube_Overlaps()(anchors.view(-1,self.sample_duration*4), gt_rois[i].view(-1,self.sample_duration*4)))
+
 
         overlaps = torch.stack(overlaps).contiguous()
         # print('overlaps.shape :',overlaps.shape)
@@ -159,7 +163,7 @@ class _AnchorTargetLayer(nn.Module):
                 # See https://github.com/pytorch/pytorch/issues/1868 for more details.
                 # use numpy instead.
                 #rand_num = torch.randperm(fg_inds.size(0)).type_as(gt_boxes).long()
-                rand_num = torch.from_numpy(np.random.permutation(fg_inds.size(0))).type_as(gt_tubes).long()#.to(dev)
+                rand_num = torch.from_numpy(np.random.permutation(fg_inds.size(0))).type_as(gt_rois).long()#.to(dev)
                 disable_inds = fg_inds[rand_num[:fg_inds.size(0)-num_fg]]
                 labels[i][disable_inds] = -1
 
@@ -171,11 +175,11 @@ class _AnchorTargetLayer(nn.Module):
                 bg_inds = torch.nonzero(labels[i] == 0).view(-1)
                 #rand_num = torch.randperm(bg_inds.size(0)).type_as(gt_boxes).long()
 
-                rand_num = torch.from_numpy(np.random.permutation(bg_inds.size(0))).type_as(gt_tubes).long()#.to(dev)
+                rand_num = torch.from_numpy(np.random.permutation(bg_inds.size(0))).type_as(gt_rois).long()#.to(dev)
                 disable_inds = bg_inds[rand_num[:bg_inds.size(0)-num_bg]]
                 labels[i][disable_inds] = -1
 
-        offset = torch.arange(0, batch_size)*gt_tubes.size(1)
+        offset = torch.arange(0, batch_size)*gt_rois.size(1)
 
         argmax_overlaps = argmax_overlaps + offset.view(batch_size, 1).type_as(argmax_overlaps)#.to(dev)
         
