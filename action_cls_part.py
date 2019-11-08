@@ -18,25 +18,30 @@ class ACT_cls(nn.Module):
         self.sample_duration = sample_duration
         self.din = 256
 
+        self.avgpool = nn.AvgPool3d((1, 4, 4), stride=1)
         self.cls = nn.Linear(512,self.n_classes).cuda()
 
-
-    def forward(self, im_data, im_info, gt_tubes, gt_rois,  target):
+    def forward(self, im_data, im_info,  target):
 
         batch_size = im_data.size(0)
 
+        # model = resnet34_orig(num_classes=400, shortcut_type='A',
+        #                       sample_size=112, sample_duration=self.sample_duration,
+        #                       last_fc=False).cuda()
+
         cls_feats = self.base_net_1(im_data)
         cls_feats = self.base_net_2(cls_feats)
-        cls_feats = self.top_net(cls_feats).mean(4).mean(3).squeeze()
-        cls_scr = self.cls(cls_feats)
+        cls_feats = self.top_net(cls_feats)
+        cls_feats = self.avgpool(cls_feats)
+        cls_scr = self.cls(cls_feats.view(cls_feats.size(0), -1))
 
         if self.training:
 
-            cls_loss =  F.cross_entropy(cls_scr, target)
+            cls_loss =  F.cross_entropy(cls_scr, target.long())
 
             return  cls_scr, cls_loss
 
-        cls_scr = F.softmax(cls_scr, dim=1)
+        # cls_scr = F.softmax(cls_scr, dim=1)
 
         return  cls_scr, None
 
@@ -50,12 +55,11 @@ class ACT_cls(nn.Module):
         resnet_shortcut = 'A'
         sample_size = 112
 
-        model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
+        self.model_path = '../resnet-34-kinetics.pth'
+
+        model = resnet34_orig(num_classes=400, shortcut_type=resnet_shortcut,
                               sample_size=sample_size, sample_duration=self.sample_duration,
                               last_fc=False)
-
-
-        self.model_path = '../resnet-34-kinetics.pth'
 
         print("Loading pretrained weights from %s" %(self.model_path))
         model_data = torch.load(self.model_path)
@@ -68,13 +72,6 @@ class ACT_cls(nn.Module):
 
         self.base_net_1 = nn.Sequential(model.conv1, model.bn1, model.relu,
                                         model.maxpool,model.layer1)
-
-        model = resnet34_orig(num_classes=400, shortcut_type=resnet_shortcut,
-                              sample_size=sample_size, sample_duration=self.sample_duration,
-                              last_fc=False)
-
-        model.load_state_dict(new_state_dict)
-
         self.base_net_2 = nn.Sequential(model.layer2,model.layer3)
         self.top_net = nn.Sequential(model.layer4)
         

@@ -105,16 +105,10 @@ class ACT_net(nn.Module):
             sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(batch_size,-1, self.sample_duration*4)
             rois_label =rois_label.view(batch_size,-1).long()
 
-            # return rois,  None, rpn_loss_cls, rpn_loss_bbox, None,None, \
-            #     None, None, None
-            
             return rois, None, rpn_loss_cls, rpn_loss_bbox, None,None, \
                 rois_label, sgl_rois_bbox_pred, sgl_rois_bbox_loss
 
         sgl_rois_bbox_pred = sgl_rois_bbox_pred.view(batch_size,-1, self.sample_duration*4)
-
-        # return rois, None, None, None, None, None, \
-        #     None, None, None,
 
         return rois, None, None, None, None, None, \
             None, sgl_rois_bbox_pred, None,

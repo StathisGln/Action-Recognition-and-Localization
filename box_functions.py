@@ -226,6 +226,7 @@ def tube_overlaps(boxes, query_boxes):
             part, query_part)
         for part, query_part in zip(parts, query_parts)])
     # print('a :',a)
+
     non_zero = a.ne(-1.0).sum(0).float()
 
     sums = a.clamp_(min=0).sum(0)
@@ -282,6 +283,83 @@ def bbox_overlaps(anchors, gt_boxes):
     zero_area = (anchors_area_zero == 1) & (gt_area_zero == 1)
 
     overlaps.masked_fill_(zero_area, -1)
+
+    return overlaps
+
+def tube_overlaps_all(anchors, gt_boxes):
+
+    N = anchors.size(0)
+    K = gt_boxes.size(0)
+    n_frames = anchors.size(1) // 4
+    
+    zero_frames = anchors.view(N,-1,4).eq(0).all(dim=2)
+    zero_gt_frames = gt_boxes.view(K,-1,4).eq(0).all(dim=2)
+
+    ## temporal overlap
+    anchor_limits = torch.zeros(N,2).type_as(anchors)
+    gt_boxes_limits = torch.zeros(K,2).type_as(anchors)
+
+    t_ = torch.arange(n_frames).unsqueeze(0).expand(N,n_frames).type_as(anchors)
+    anchor_limits[:,0] = torch.min(t_.masked_fill_(zero_frames, 10000),dim=1)[0]
+    anchor_limits[:,1] = torch.max(t_.masked_fill_(zero_frames, -1),dim=1)[0]
+
+
+    t_ = torch.arange(n_frames).unsqueeze(0).expand(K,n_frames).type_as(anchors)
+    gt_boxes_limits[:,0] = torch.min(t_.masked_fill_(zero_gt_frames,1000), dim=1)[0]
+    gt_boxes_limits[:,1] = torch.max(t_.masked_fill_(zero_gt_frames,-1), dim=1)[0]
+
+    
+    gt_boxes_temp_area = gt_boxes_limits[:,1] - gt_boxes_limits[:,0] + 1
+    anchors_temp_area  = anchor_limits[:,1]  - anchor_limits[:,0] + 1
+
+    gt_boxes_temp_area = gt_boxes_temp_area.view(1,K)
+    anchors_temp_area  = anchors_temp_area.view(N,1)
+
+    temp_boxes = anchor_limits.view(N, 1, 2).expand(N, K, 2)
+    temp_query_boxes = gt_boxes_limits.view(1, K, 2).expand(N, K, 2)
+
+    it = (torch.min(temp_boxes[:, :, 1], temp_query_boxes[:, :, 1]) -
+          torch.max(temp_boxes[:, :, 0], temp_query_boxes[:, :, 0]) + 1)
+    it[it < 0] = 0
+
+    temp_ua = anchors_temp_area + gt_boxes_temp_area - it
+    temp_overlaps = it / temp_ua
+
+    ## spatial overlap
+    gt_boxes_x = (gt_boxes[ :, 2::4] - gt_boxes[ :, 0::4] + 1)
+    gt_boxes_y = (gt_boxes[ :, 3::4] - gt_boxes[ :, 1::4] + 1)
+    gt_boxes_area = (gt_boxes_x *
+                     gt_boxes_y).view(1,K,-1)
+    
+    anchors_boxes_x = (anchors[ :, 2::4] - anchors[ :, 0::4] + 1)
+    anchors_boxes_y = (anchors[ :, 3::4] - anchors[ :, 1::4] + 1)
+    anchors_area = (anchors_boxes_x *
+                    anchors_boxes_y).view(N, 1,-1)
+
+    boxes = anchors.view(N,1,n_frames*4).expand(N,K,n_frames*4)
+    query_boxes = gt_boxes.view(1,K,n_frames*4).expand(N,K,n_frames*4)
+
+    iw = (torch.min(boxes[:, :, 2::4], query_boxes[:, :, 2::4]) -
+          torch.max(boxes[:, :, 0::4], query_boxes[:, :, 0::4]) + 1)
+    iw[iw < 0] = 0
+
+    ih = (torch.min(boxes[:, :, 3::4], query_boxes[:, :, 3::4]) -
+          torch.max(boxes[:, :, 1::4], query_boxes[:, :, 1::4]) + 1)
+    ih[ih < 0] = 0
+
+    ua = anchors_area + gt_boxes_area - (iw * ih)
+    ovr = iw * ih /ua
+
+    zero_frames = zero_frames.view(N,1,n_frames).expand(N,K,n_frames)
+    zero_gt_frames = zero_gt_frames.view(1,K,-1).expand(N,K,n_frames)
+
+    zero_area = zero_frames | zero_gt_frames
+    non_empty = zero_area.eq(0)
+
+    ovr.masked_fill_(zero_area,0)    
+    
+    overlaps = ovr.sum(dim=2) / non_empty.sum(dim=2).type_as(ovr)
+    overlaps *= temp_overlaps
 
     return overlaps
 
@@ -356,12 +434,27 @@ if __name__ == '__main__':
         55., 39., 83., 96., 55., 39., 83., 96., 53., 40., 81., 96.,  0.,  0.,
          0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
          0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]).cuda()
-    print('t.shape :',t.shape)
-    print('t2.shape :',t2.shape)
+    # print('t.shape :',t.shape)
+    # print('t2.shape :',t2.shape)
+
+    t= torch.Tensor([[ 0.0000,  0.0000,  0.0000,  0.0000, 43.7361, 47.4909, 67.6074, 95.6055,
+        44.2393, 47.3382, 69.0198, 97.2738, 44.4253, 47.3524, 69.5094, 98.5110,
+        44.4442, 47.0763, 69.4218, 98.2143, 44.3546, 47.0369, 69.3444, 98.0293,
+        44.3203, 47.0062, 69.2900, 97.9983, 44.2808, 47.0073, 69.1253, 98.0898,
+        44.2668, 46.9421, 69.0010, 98.1167, 44.3624, 46.7785, 69.2948, 98.1204,
+        44.3021, 46.6683, 69.2503, 97.9528, 44.2225, 46.4407, 68.2397, 96.0861,
+        43.8322, 46.1068, 67.0424, 93.5073,  0.0000,  0.0000,  0.0000,  0.0000,
+         0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000]]).cuda()
+    t2 = torch.Tensor([ [34., 49., 64., 98., 35., 49., 65., 98., 36., 48., 66., 97., 37., 45.,
+        67., 94., 39., 47., 69., 96., 40., 47., 71., 96., 43., 47., 73., 96.,
+        45., 47., 76., 96., 46., 48., 76., 97., 48., 48., 78., 97., 50., 49.,
+        80., 98., 49., 49., 80., 98.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
+         0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]).cuda()
     scores = torch.Tensor([[0.7495],
                           [0.7391],
                           [0.6810]])
     overlaps= tube_overlaps(t,t2)
 
     print('overlaps :',overlaps)
-
+    overlaps= tube_overlaps_all(t,t2)
+    print('overlaps :',overlaps)

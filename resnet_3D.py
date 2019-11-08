@@ -192,8 +192,7 @@ class ResNet_orig(nn.Module):
         self.bn1 = nn.BatchNorm3d(64)
         self.relu = nn.ReLU(inplace=True)
         # stride from (2,2,2) goes to (1,2,2) in order to maintain all 16 pictures
-        self.maxpool = nn.MaxPool3d(kernel_size=(3, 3, 3), stride=(1,2,2), padding=1) 
-        # self.maxpool = nn.MaxPool3d(kernel_size=(3, 3, 3), stride=2, padding=1)
+        self.maxpool = nn.MaxPool3d(kernel_size=(3, 3, 3), stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0], shortcut_type)
         self.layer2 = self._make_layer(block, 128, layers[1], shortcut_type, stride=2) #
         self.layer3 = self._make_layer(block, 256, layers[2], shortcut_type, stride=2)
@@ -234,31 +233,23 @@ class ResNet_orig(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        print('first we have: ', x.shape)
+
         x = self.conv1(x)
-        print('after conv1: ', x.shape)
         x = self.bn1(x)
-        print('after bn1: ', x.shape)
         x = self.relu(x)
-        print('after relu: ', x.shape)
         x = self.maxpool(x)
-        print('after 1st maxpool shape: ', x.shape)
+
         x = self.layer1(x)
-        print('after layer1 :', x.shape)
         x = self.layer2(x)
-        print('after layer2 :', x.shape)
         x = self.layer3(x)
-        print('after layer3 :', x.shape)
-        # x = self.layer4(x)
-        # print('after layer4 :', x.shape)
-        
+        x = self.layer4(x)
 
-        # x = self.avgpool(x)
+        x = self.avgpool(x)
 
-        # x = x.view(x.size(0), -1)
+        x = x.view(x.size(0), -1)
 
-        # if self.last_fc:
-        #     x = self.fc(x)
+        if self.last_fc:
+            x = self.fc(x)
 
         return x
 

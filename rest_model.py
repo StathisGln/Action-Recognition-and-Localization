@@ -12,78 +12,88 @@ from resnet_3D import resnet34_rest
 
 class RestNet(nn.Module):
     """ action tube proposal """
-    def __init__(self, actions,sample_duration):
+    def __init__(self, actions,sample_duration, pooling_time=2):
         super(RestNet, self).__init__()
 
-        self.classes = actions
-        self.n_classes = len(actions)
+        self.n_classes = actions
         self.sample_duration = sample_duration
 
-        self.pooling_time = 2
+        self.pooling_time = pooling_time
         self.time_dim =sample_duration
-        self.cls = nn.Linear(512, self.n_classes)
-
+        # self.cls = nn.Linear(512, self.n_classes)
+        self.cls = nn.Linear(512*int(self.pooling_time/2), self.n_classes)
     def create_architecture(self):
         self._init_modules()
         self._init_weights()
 
     def temporal_pool(self, features):
 
-        batch_size = features.size(0)
-        n_filters = features.size(2)
-        x_axis = features.size(4)
-        y_axis = features.size(5)
+        n_filters = features.size(1)
+        x_axis = features.size(3)
+        y_axis = features.size(4)
         
-        indexes = torch.linspace(0, features.size(1), self.pooling_time+1).int()
-        ret_feats = torch.zeros(batch_size,self.pooling_time, n_filters,\
+        indexes = torch.linspace(0, features.size(0), self.pooling_time+1).int()
+        ret_feats = torch.zeros(self.pooling_time, n_filters,\
                                 self.sample_duration,x_axis, y_axis)
 
-        if features.size(1) < 2:
+        if features.size(0) < self.pooling_time:
 
-            ret_feats[0] = features
+            ret_feats[:features.size(0)] = features
             return ret_feats
     
         for i in range(self.pooling_time):
             
-            t = features[:,indexes[i]:indexes[i+1]].permute(0,2,1,3,4,5).\
-                contiguous().view(batch_size*n_filters,-1,self.sample_duration,x_axis,y_axis)
+            t = features[indexes[i]:indexes[i+1]].permute(1,0,2,3,4)
             t = t.view(t.size(0),t.size(1),t.size(2),-1)
             t = F.max_pool3d(t,kernel_size=(indexes[i+1]-indexes[i],1,1)).squeeze()
 
-            ret_feats[:,i] = t.view(batch_size,n_filters,self.sample_duration,x_axis,y_axis)
+            ret_feats[i] = t.view(t.size(0),t.size(1), features.size(3),features.size(4))
 
         return ret_feats
 
-    def forward(self, features, n_tubes, len_tubes, target):
+    def forward(self, features, combinations,  target, n_tubes):
 
-        
+
         self.cls_loss = 0
-        batch_size = features.size(0)
-        rois_per_image = features.size(1)
+        batch_size = combinations.size(0)
+        rois_per_image = combinations.size(1)
         n_filters = features.size(3)
         x_axis = features.size(5)
         y_axis = features.size(6)
+
         f_features = features.new(batch_size, rois_per_image, self.pooling_time, n_filters,\
-                                 x_axis, y_axis).zero_()
+                                 x_axis, y_axis).zero_().type_as(features)
         
-        for i in range(batch_size):
+        if self.training:
+        
+            batch_size = features.size(0)
+            rois_per_image = features.size(1)
 
-            f_features[i] = self.temporal_pool(features[i,:n_tubes[i],:len_tubes[i,0]]).max(3)[0]
+            f_features = features.new(batch_size, rois_per_image, self.pooling_time, n_filters,\
+                                      x_axis, y_axis).zero_().type_as(features)
 
-        f_features = f_features.permute(0,1,3,2,4,5).contiguous()
+            for b in range(batch_size):
+                for i in range(rois_per_image):
 
-        feats = self.top_net(f_features.view(batch_size*rois_per_image,\
-                                             n_filters, self.pooling_time, x_axis,y_axis)).\
-                                             mean(4).mean(3).squeeze()
-        cls_scr = self.cls(feats)
+                    f_features[b,i]  = self.temporal_pool(features[b,i,:combinations[b,i,0]]).max(2)[0]
+
+
+        else:
+            for b in range(batch_size):
+                for i in range(rois_per_image):
+                    t = combinations[b,i].ne(-1).all(dim=1).nonzero().view(-1)
+                    indices = combinations[b,i,t].long()
+                    f_features[b,i]  = self.temporal_pool(features[b,indices[:,0],indices[:,1]]).max(2)[0]
+                
+        f_features = f_features.permute(0,1,3,2,4,5)
+        feats = self.top_net(f_features.contiguous().view(batch_size*rois_per_image,\
+                                             n_filters, self.pooling_time, x_axis,y_axis)).mean(4).mean(3)
+
+        cls_scr = self.cls(feats.view(feats.size(0),-1))
 
         if self.training:
 
             target = target.view(-1).contiguous()
-            # non_zero_tubes = target.nonzero().view(-1)
-
-            # cls_scr = cls_scr[non_zero_tubes]
-            # target = target[non_zero_tubes]
 
             self.cls_loss =  F.cross_entropy(cls_scr, target.long())
 
@@ -94,6 +104,7 @@ class RestNet(nn.Module):
 
         
 
+    
     def _init_weights(self):
 
         def normal_init(m, mean, stddev, ptruncated=False):
@@ -144,3 +155,29 @@ class RestNet(nn.Module):
             for p in m.parameters(): p.requires_grad=False
 
         self.top_net.apply(set_bn_fix)
+
+if __name__ == '__main__':
+
+    actions = ['__background__', 'Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
+               'Diving','Fencing','FloorGymnastics','GolfSwing','HorseRiding','IceDancing',
+               'LongJump','PoleVault','RopeClimbing','SalsaSpin','SkateBoarding','Skiing',
+               'Skijet','SoccerJuggling','Surfing','TennisSwing','TrampolineJumping',
+               'VolleyballSpiking','WalkingWithDog']
+
+    comb =  torch.Tensor([[[[ 0.,  5.], [ 1.,  1.],  [ 2.,  0.],  [ 3.,  0.], [ 4.,  0.],  [ 5.,  0.],  [ 6.,  0.], [ 7.,  0.],
+                           [ 8.,  0.],  [ 9.,  0.],  [10.,  0.],  [11.,  0.],  [12.,  0.]],
+                          [[ 0.,  0.],  [ 1.,  0.], [ 2.,  0.], [ 3.,  0.], [ 4.,  9.], [ 5.,  0.], [ 6.,  0.], [ 7.,  0.], [ 8.,  0.],
+                            [ 9.,  0.], [10.,  0.], [11.,  0.], [12.,  0.]],
+                          [[ 0.,  0.], [ 1.,  0.], [ 2.,  0.], [ 3.,  0.], [ 4.,  0.], [ 5.,  0.], [ 6.,  0.], [ 7., 12.], [ 8.,  0.],
+                            [ 9.,  0.], [10.,  0.], [11.,  0.], [-1., -1.]]]])
+    target=torch.Tensor([[12., 12., 12., 12., 12., 12., 12., 12., 12., 12., 12., 12.,  0.,  0.,
+                          0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
+                          0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+                         [ 4.,  4.,  4.,  4.,  4.,  4.,  4.,  4.,  4.,  4.,  4.,  4.,  4.,  4.,
+                           4.,  4.,  4.,  4.,  4.,  4.,  4.,  4.,  4.,  4.,  4.,  4.,  4.,  4.,
+                           4.,  4.,  4.,  4.,  4.,  4.,  4.,  4.]])
+    features = torch.rand([2, 13, 16, 256, 8, 7, 7])
+
+    rest = RestNet(actions,8,8)
+    rest.create_architecture()
+    ret = rest(features, comb, target)
