@@ -34,33 +34,29 @@ class _Regression_Layer(nn.Module):
 
         # self.Conv = nn.Conv3d(self.din, din, 1, stride=1, padding=0, bias=True)
         self.head_to_tail_ = nn.Sequential(
-<<<<<<< HEAD
+# <<<<<<< HEAD
             # nn.Linear(din*self.sample_duration *7*  7, 2048),
             nn.Linear(din * 2 * sample_duration * 4 * 4, 2048),
-=======
-            # nn.Linear(din*7*7 , 2048),
-            nn.Linear(din*self.sample_duration*7*7 , 2048),
-
->>>>>>> ce8539256b0c5d8b08d928a7af613292f0a59f21
+# =======
+#             # nn.Linear(din*7*7 , 2048),
+#             nn.Linear(din*self.sample_duration*7*7 , 2048),
+#
+# >>>>>>> ce8539256b0c5d8b08d928a7af613292f0a59f21
             nn.ReLU(True),
             nn.Dropout(0.5),
             nn.Linear(2048,512),
             nn.ReLU(True)
             )
             
-<<<<<<< HEAD
-=======
+
         self.avg_pool = nn.AvgPool3d((sample_duration, 1, 1), stride=1)
->>>>>>> ce8539256b0c5d8b08d928a7af613292f0a59f21
         self.bbox_pred = nn.Linear(512,self.sample_duration*4)
 
         # self.batch_norm = nn.BatchNorm3d(self.din,7,7)
         self.batch_norm = nn.BatchNorm3d(self.din)
         self.roi_align = RoIAlign(self.pooling_size, self.pooling_size, self.spatial_scale)
-<<<<<<< HEAD
-=======
         self.max_pool = nn.MaxPool3d((1,7,7), stride=1)
->>>>>>> ce8539256b0c5d8b08d928a7af613292f0a59f21
+
         self.reg_target = _Regression_TargetLayer()
 
         self.init_head_to_tail_weights()

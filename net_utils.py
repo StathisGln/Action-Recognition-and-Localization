@@ -1,3 +1,4 @@
+import sys
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,7 +11,9 @@ import cv2
 import pdb
 import random
 
-np.set_printoptions(threshold=np.nan)
+# np.set_printoptions(threshold=np.nan)
+np.set_printoptions(threshold=sys.maxsize)
+
 def save_net(fname, net):
     import h5py
     h5f = h5py.File(fname, mode='w')
