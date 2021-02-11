@@ -1,4 +1,5 @@
 import os
+import sys
 import numpy as np
 import glob
 
@@ -18,7 +19,8 @@ from temporal_transforms import LoopPadding
 
 from model import Model
 
-np.set_printoptions(threshold=np.nan)
+# np.set_printoptions(threshold=np.nan)
+np.set_printoptions(threshold=sys.maxsize)
 np.random.seed(42)
 
 if __name__ == '__main__':
