@@ -12,3 +12,9 @@
 *.pkl
 nohup.out
 *.json
+/data/
+/data_jhmdb/
+/data_ucf/
+/dataset/
+/dataset_frames/
+.idea
