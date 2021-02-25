@@ -14,8 +14,8 @@ import torch.nn as nn
 import numpy as np
 import numpy.random as npr
 from config import cfg
-from bbox_transform import bbox_overlaps_batch_3d, bbox_transform_batch_3d
-import pdb
+from lib.utils.bbox_transform import bbox_overlaps_batch_3d, bbox_transform_batch_3d
+
 
 class _Regression_Target(nn.Module):
     """

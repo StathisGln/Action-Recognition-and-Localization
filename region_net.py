@@ -4,17 +4,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-from config import cfg
-from proposal_layer import _ProposalLayer
-from proposal_layer_xy import _ProposalLayer_xy
-from anchor_target_layer_mine import _AnchorTargetLayer
-from anchor_target_layer_xy import _AnchorTargetLayer_xy
-from net_utils import _smooth_l1_loss, get_number_of_combinations
+from lib.models.proposal_layer import _ProposalLayer
+from lib.models.anchor_target_layer_mine import _AnchorTargetLayer
+from lib.utils.net_utils import _smooth_l1_loss
 
-import numpy as np
-import math
-import pdb
-import time
 
 class _RPN(nn.Module):
     """ region proposal network """

@@ -4,13 +4,13 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-from ucf_dataset import Video_UCF
+from lib.dataloaders.ucf_dataset import Video_UCF
 
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding
-from action_net import ACT_net
-from box_functions import tube_overlaps
+from lib.models.action_net import ACT_net
+from lib.utils.box_functions import tube_overlaps
 
 np.random.seed(42)
 

@@ -4,13 +4,13 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from ucf_dataset import  video_names
+from lib.dataloaders.ucf_dataset import  video_names
 
 from create_video_id import get_vid_dict
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding
-from model import Model
+from lib.models.model import Model
 
 import json
 np.random.seed(42)

@@ -3,12 +3,12 @@ import numpy as np
 import torch
 from torch.autograd import Variable
 
-from jhmdb_dataset import Video
+from lib.dataloaders.jhmdb_dataset import Video
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding
 
-from action_net import ACT_net
+from lib.models.action_net import ACT_net
 
 np.random.seed(42)
 

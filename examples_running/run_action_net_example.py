@@ -1,16 +1,25 @@
 import os
+import sys
 import numpy as np
 
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-from ucf_dataset import Video_UCF
+### if file is inside "exaples_running" folder, add folder path to sys
+dir_path = os.path.dirname(os.path.realpath(__file__))
+if os.path.basename(dir_path) == 'examples_running':
+    path_2_append = os.path.dirname(dir_path)
+else:
+    path_2_append = dir_path
+print('--------------------\n'+f'APPENDING TO PATH : \n{path_2_append}\n'+'--------------------\n')
+sys.path.append(path_2_append)
 
+from lib.dataloaders.ucf_dataset import Video_UCF
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding
-from action_net import ACT_net
+from lib.models.action_net import ACT_net
 
 np.random.seed(42)
 
@@ -22,7 +31,9 @@ if __name__ == '__main__':
     print("Device being used:", device)
 
     # data_root_dir = os.getcwd()
-    data_root_dir = '../../thesis_code/sgal/empty'
+    data_root_dir = '../../thesis_code/sgal/'
+
+    model_path = os.path.abspath(os.path.join(data_root_dir, 'resnet-34-kinetics.pth'))
     dataset_frames = os.path.abspath(os.path.join(data_root_dir,'../UCF-101-frames'))
     boxes_file = os.path.abspath(os.path.join(data_root_dir,'../pyannot.pkl'))
     split_txt_path = os.path.abspath(os.path.join(data_root_dir, '../UCF101_Action_detection_splits/'))
@@ -68,7 +79,7 @@ if __name__ == '__main__':
     # Init action_net
 
     model = ACT_net(actions, sample_duration)
-    model.create_architecture()
+    model.create_architecture(model_path)
     model = nn.DataParallel(model)
     model.to(device)
 
@@ -77,7 +88,7 @@ if __name__ == '__main__':
                  split_txt_path=split_txt_path, mode='train', classes_idx=cls2idx)
 
 
-b    clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data[14]
+    clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data[14]
     clips2, h2, w2, gt_tubes_r2, gt_rois2, n_actions2, n_frames2, im_info2 = data[15]
     clips_ = clips.unsqueeze(0).to(device)
     gt_tubes_r_ = gt_tubes_r.unsqueeze(0).to(device)

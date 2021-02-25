@@ -2,7 +2,7 @@ import numpy as np
 
 import torch
 
-from ucf_dataset import Video_UCF
+from lib.dataloaders.ucf_dataset import Video_UCF
 
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)

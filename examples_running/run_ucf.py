@@ -11,7 +11,7 @@ from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding
 
-from model import Model
+from lib.models.model import Model
 
 # np.set_printoptions(threshold=np.nan)
 np.set_printoptions(threshold=sys.maxsize)

@@ -3,11 +3,11 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from simple_dataset import Video
+from lib.dataloaders.simple_dataset import Video
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding
-from model import Model
+from lib.models.model import Model
 
 np.random.seed(42)
 

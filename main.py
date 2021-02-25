@@ -5,13 +5,13 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-from jhmdb_dataset import Video
+from lib.dataloaders.jhmdb_dataset import Video
 
-from net_utils import adjust_learning_rate
+from lib.utils.net_utils import adjust_learning_rate
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding
-from model import Model
+from lib.models.model import Model
 
 np.random.seed(42)
 

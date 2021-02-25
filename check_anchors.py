@@ -5,7 +5,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-from ucf_dataset import Video_UCF
+from lib.dataloaders.ucf_dataset import Video_UCF
 
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
@@ -13,7 +13,7 @@ from lib.utils.temporal_transforms import LoopPadding
 
 from create_video_id import get_vid_dict
 
-from action_net import ACT_net
+from lib.models.action_net import ACT_net
 import argparse
 
 np.random.seed(42)
