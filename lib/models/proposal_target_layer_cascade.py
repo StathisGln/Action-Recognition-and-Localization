@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import numpy.random as npr
-from conf import conf
+from config.conf import conf
 from lib.utils.box_functions import tube_overlaps, bbox_transform
 
 

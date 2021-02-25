@@ -7,8 +7,8 @@ import functools
 import glob
 import json
 from itertools import groupby
-from create_tubes_from_boxes import create_tube
-from resize_rpn import resize_rpn
+from lib.utils.create_tubes_from_boxes import create_tube
+from lib.utils.resize_rpn import resize_rpn
 
 from lib.utils.spatial_transforms import (Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding

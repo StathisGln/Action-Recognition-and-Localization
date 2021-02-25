@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from conf import conf
+from config.conf import conf
 from generate_anchors import generate_anchors
 # from bbox_transform import bbox_transform_inv, clip_boxes_3d, clip_boxes_batch, bbox_transform_inv_3d
 # from nms_3d.py_nms import py_cpu_nms_tubes as nms_cpu

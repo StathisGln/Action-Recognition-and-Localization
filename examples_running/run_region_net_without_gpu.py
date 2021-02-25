@@ -7,7 +7,7 @@ from lib.dataloaders.ucf_dataset import Video_UCF
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding
-from region_net import _RPN
+from lib.models.region_net import _RPN
 
 np.random.seed(42)
 

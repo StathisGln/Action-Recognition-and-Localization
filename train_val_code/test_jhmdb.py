@@ -6,7 +6,7 @@ from lib.dataloaders.jhmdb_dataset import Video
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding
-from resize_rpn import resize_tube
+from lib.utils.resize_rpn import resize_tube
 
 from lib.models.action_net import ACT_net
 from lib.utils.bbox_transform import bbox_transform_inv, clip_boxes

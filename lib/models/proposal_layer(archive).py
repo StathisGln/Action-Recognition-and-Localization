@@ -12,7 +12,7 @@ from __future__ import absolute_import
 import torch
 import torch.nn as nn
 import numpy as np
-from config import cfg
+from config.config import cfg
 from generate_anchors import generate_anchors
 from lib.utils.bbox_transform import bbox_transform_inv, clip_boxes
 from lib.nms_packages.nms.nms_wrapper import nms

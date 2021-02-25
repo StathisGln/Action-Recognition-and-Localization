@@ -1,11 +1,8 @@
-import os
 import numpy as np
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 
-from create_tubes_from_boxes import create_tube_from_tubes
+from lib.utils.create_tubes_from_boxes import create_tube_from_tubes
 
 def bbox_overlaps_batch_3d(tubes, tubes_curr):
     """

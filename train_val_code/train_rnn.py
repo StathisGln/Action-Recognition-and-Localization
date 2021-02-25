@@ -12,7 +12,7 @@ from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding_still
 
-from create_video_id import get_vid_dict
+from lib.utils.create_video_id import get_vid_dict
 from lib.utils.net_utils import adjust_learning_rate
 
 from lib.models.model import Model

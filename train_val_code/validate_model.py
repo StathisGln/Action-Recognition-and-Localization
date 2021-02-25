@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from create_video_id import get_vid_dict
+from lib.utils.create_video_id import get_vid_dict
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding

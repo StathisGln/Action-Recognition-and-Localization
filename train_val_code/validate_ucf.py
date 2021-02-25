@@ -5,10 +5,10 @@ from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding
 
-from create_tubes_from_boxes import create_video_tube
+from lib.utils.create_tubes_from_boxes import create_video_tube
 
-from resize_rpn import resize_tube
-from create_video_id import get_vid_dict
+from lib.utils.resize_rpn import resize_tube
+from lib.utils.create_video_id import get_vid_dict
 from lib.dataloaders.video_dataset import video_names
 from lib.models.model import Model
 

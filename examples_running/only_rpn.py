@@ -6,7 +6,7 @@ from lib.dataloaders.video_dataset import Video
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding
-from region_net import _RPN
+from lib.models.region_net import _RPN
 
 if __name__ == '__main__':
 

@@ -10,7 +10,7 @@ from lib.utils.spatial_transforms import (
 from lib.utils.temporal_transforms import LoopPadding
 from lib.models.model import Model
 
-from create_video_id import get_vid_dict
+from lib.utils.create_video_id import get_vid_dict
 
 np.random.seed(42)
 

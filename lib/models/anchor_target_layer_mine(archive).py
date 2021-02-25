@@ -14,7 +14,7 @@ import torch.nn as nn
 import numpy as np
 import numpy.random as npr
 
-from config import cfg
+from config.config import cfg
 from generate_anchors import generate_anchors  
 # from bbox_transform import clip_boxes, bbox_overlaps_batch, bbox_overlaps_time, bbox_transform_batch
 from lib.utils.bbox_transform import bbox_overlaps_time, bbox_transform_batch, bbox_overlaps_rois

@@ -8,12 +8,12 @@ import copy
 import json
 import pickle
 from itertools import groupby
-from create_tubes_from_boxes import create_tube_list
+from lib.utils.create_tubes_from_boxes import create_tube_list
 
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding_still
-from resize_rpn import resize_boxes_np
+from lib.utils.resize_rpn import resize_boxes_np
 
 np.random.seed(42)
 

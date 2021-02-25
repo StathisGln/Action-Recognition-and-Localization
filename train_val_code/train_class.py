@@ -8,8 +8,8 @@ from lib.utils.spatial_transforms import (
 from lib.utils.temporal_transforms import LoopPadding
 from lib.dataloaders.simple_dataset import Video
 from lib.utils.net_utils import adjust_learning_rate
-from resize_rpn import resize_rpn
-from create_tubes_from_boxes import  create_tube
+from lib.utils.resize_rpn import resize_rpn
+from lib.utils.create_tubes_from_boxes import  create_tube
 from lib.models.tcn_net import tcn_net
 # torch.set_default_tensor_type('torch.cuda.FloatTensor')
 

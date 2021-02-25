@@ -4,14 +4,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from conf import conf
+from config.conf import conf
 from lib.models.action_net import ACT_net
 from lib.models.act_rnn import Act_RNN
 from lib.calc_score.calc import Calculator
 
 from lib.dataloaders.ucf_dataset import single_video
 
-from config import cfg
+from config.config import cfg
 from collections import OrderedDict
 from lib.utils.box_functions import tube_overlaps
 

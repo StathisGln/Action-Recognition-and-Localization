@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from lib.nms_packages.nms_tubes import py_cpu_nms_tubes
-from conf import conf
+from config.conf import conf
 from lib.models.action_net import ACT_net
 from lib.calc_score.calc import Calculator
 

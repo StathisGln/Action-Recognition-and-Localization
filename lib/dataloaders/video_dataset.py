@@ -9,9 +9,9 @@ import glob
 import json
 import pickle
 from itertools import groupby
-from create_tubes_from_boxes import create_tube_list,create_tube_with_frames_np
+from lib.utils.create_tubes_from_boxes import create_tube_list,create_tube_with_frames_np
 
-from resize_rpn import resize_boxes_np
+from lib.utils.resize_rpn import resize_boxes_np
 
 np.random.seed(42)
 
