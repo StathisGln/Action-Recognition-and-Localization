@@ -28,9 +28,11 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_frames = '../UCF-101-frames'
-    boxes_file = '../pyannot.pkl'
-    split_txt_path = '../UCF101_Action_detection_splits/'
+    # data_root_dir = os.getcwd()
+    data_root_dir = '../../thesis_code/sgal/empty'
+    dataset_frames = os.path.abspath(os.path.join(data_root_dir,'../UCF-101-frames'))
+    boxes_file = os.path.abspath(os.path.join(data_root_dir,'../pyannot.pkl'))
+    split_txt_path = os.path.abspath(os.path.join(data_root_dir, '../UCF101_Action_detection_splits/'))
 
     # dataset_frames = '../UCF-101-frames'
     # boxes_file = '../pyannot.pkl'
@@ -81,7 +83,8 @@ if __name__ == '__main__':
                  temporal_transform=temporal_transform, json_file = boxes_file,
                  split_txt_path=split_txt_path, mode='train', classes_idx=cls2idx)
 
-    clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data[14]
+
+b    clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data[14]
     clips2, h2, w2, gt_tubes_r2, gt_rois2, n_actions2, n_frames2, im_info2 = data[15]
     clips_ = clips.unsqueeze(0).to(device)
     gt_tubes_r_ = gt_tubes_r.unsqueeze(0).to(device)
