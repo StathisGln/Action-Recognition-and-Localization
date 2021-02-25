@@ -1,21 +1,15 @@
-import os
-import glob
-
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.autograd import Variable
 
-from spatial_transforms import (
-    Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
-from temporal_transforms import LoopPadding
+from lib.utils.spatial_transforms import (
+    Compose, Normalize, Scale, ToTensor)
+from lib.utils.temporal_transforms import LoopPadding
 
 from create_tubes_from_boxes import create_video_tube
 
 from resize_rpn import resize_tube
 from create_video_id import get_vid_dict
-from video_dataset import video_names
+from lib.dataloaders.video_dataset import video_names
 from model import Model
 
 def bbox_overlaps_batch_3d(tubes, gt_tubes):

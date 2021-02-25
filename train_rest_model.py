@@ -1,20 +1,14 @@
-import os
-import numpy as np
-
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.autograd import Variable
 
-from spatial_transforms import (
-    Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
-from temporal_transforms import LoopPadding
+from lib.utils.spatial_transforms import (
+    Compose, Normalize, Scale, ToTensor)
+from lib.utils.temporal_transforms import LoopPadding
 
 from net_utils import adjust_learning_rate
 
 from create_video_id import get_vid_dict
-from ucf_dataset import Video_UCF, video_names
+from ucf_dataset import video_names
 
 from model import Model
 from resize_rpn import resize_tube

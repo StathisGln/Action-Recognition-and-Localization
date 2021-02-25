@@ -1,21 +1,15 @@
-import os
 import sys
 import numpy as np
-import glob
-
-from  tqdm import tqdm
 
 import torch
-import torch.nn as nn
-from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-from video_dataset import video_names
+from lib.dataloaders.video_dataset import video_names
 from create_video_id import get_vid_dict
 
-from spatial_transforms import (
-    Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
-from temporal_transforms import LoopPadding
+from lib.utils.spatial_transforms import (
+    Compose, Normalize, Scale, ToTensor)
+from lib.utils.temporal_transforms import LoopPadding
 
 from model import Model
 

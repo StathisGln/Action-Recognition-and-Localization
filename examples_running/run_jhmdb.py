@@ -1,22 +1,13 @@
-import os
 import numpy as np
-import glob
-
-from  tqdm import tqdm
 
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
-from torch.utils.data import DataLoader
 
-from resnet_3D import resnet34
 from simple_dataset import Video
-from spatial_transforms import (
-    Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
-from temporal_transforms import LoopPadding
+from lib.utils.spatial_transforms import (
+    Compose, Normalize, Scale, ToTensor)
+from lib.utils.temporal_transforms import LoopPadding
 from model import Model
-from resize_rpn import resize_rpn, resize_tube
-import pdb
 
 np.random.seed(42)
 

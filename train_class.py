@@ -1,22 +1,15 @@
-import os
 import numpy as np
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
 from torch.autograd import Variable
 
-from spatial_transforms import (
-    Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
-from temporal_transforms import LoopPadding
+from lib.utils.spatial_transforms import (
+    Compose, Normalize, Scale, ToTensor)
+from lib.utils.temporal_transforms import LoopPadding
 from simple_dataset import Video
 from net_utils import adjust_learning_rate
-from resize_rpn import resize_rpn, resize_tube
+from resize_rpn import resize_rpn
 from create_tubes_from_boxes import  create_tube
-from resnet_3D import resnet34
-from roi_align_3d.modules.roi_align  import RoIAlignAvg
-from tcn import TCN
 from tcn_net import tcn_net
 # torch.set_default_tensor_type('torch.cuda.FloatTensor')
 

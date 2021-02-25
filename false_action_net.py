@@ -1,20 +1,15 @@
 from __future__ import absolute_import
 
-import os
-import numpy as np
-import glob
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn.functional import avg_pool3d
 from torch.autograd import Variable
 
 from resnet_3D import resnet34
 from region_net import _RPN
 from proposal_target_layer_cascade_rois import _ProposalTargetLayer
 
-from roi_align.modules.roi_align  import RoIAlignAvg
+from lib.roi_packages.roi_align.modules.roi_align import RoIAlignAvg
 from net_utils import _smooth_l1_loss
 
 class ACT_net(nn.Module):

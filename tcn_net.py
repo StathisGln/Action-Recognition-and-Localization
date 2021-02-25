@@ -1,14 +1,9 @@
-import os
-import numpy as np
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 from resnet_3D import resnet34
-from roi_align_3d.modules.roi_align  import RoIAlignAvg, RoIAlign
-from tcn import TCN
-from act_rnn import Act_RNN
+from lib.roi_packages.roi_align_3d import RoIAlignAvg
 
 
 class tcn_net(nn.Module):

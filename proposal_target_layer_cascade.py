@@ -14,9 +14,8 @@ import torch.nn as nn
 import numpy as np
 import numpy.random as npr
 from conf import conf
-from overlaps.module.calc import Tube_Overlaps
 from box_functions import tube_overlaps, bbox_transform
-import pdb
+
 
 class _ProposalTargetLayer(nn.Module):
     """

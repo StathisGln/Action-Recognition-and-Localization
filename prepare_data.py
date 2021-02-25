@@ -3,18 +3,10 @@ import glob
 from PIL import Image
 import functools
 
-import numpy as np
-import json
-import pickle
-
-from itertools import groupby
-from create_tubes_from_boxes import create_tube_list,create_tube_with_frames
-
 import torch
-import torch.utils.data as data
 
-from spatial_transforms import (
-    Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
+from lib.utils.spatial_transforms import (
+    Compose, Normalize, Scale, ToTensor)
 
 def pil_loader(path):
     # open path as file to avoid ResourceWarning (https://github.com/python-pillow/Pillow/issues/835)
@@ -31,7 +23,6 @@ def accimage_loader(path):
 def get_default_image_loader():
     from torchvision import get_image_backend
     if get_image_backend() == 'accimage':
-        import accimage
         return accimage_loader
     else:
         return pil_loader

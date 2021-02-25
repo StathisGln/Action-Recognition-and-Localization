@@ -3,16 +3,14 @@ import torch.utils.data as data
 from PIL import Image
 import numpy as np
 import os
-import math
 import functools
-import copy
 import glob
 import json
 from create_tubes_from_boxes import create_tube_numpy as create_tube
-from resize_rpn import resize_rpn, resize_tube, resize_rpn_np
+from resize_rpn import resize_rpn_np
 
-from spatial_transforms import (Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
-from temporal_transforms import LoopPadding
+from lib.utils.spatial_transforms import (Compose, Normalize, Scale, ToTensor)
+from lib.utils.temporal_transforms import LoopPadding
 
 np.random.seed(42) #
 
@@ -34,7 +32,6 @@ def accimage_loader(path):
 def get_default_image_loader():
     from torchvision import get_image_backend
     if get_image_backend() == 'accimage':
-        import accimage
         return accimage_loader
     else:
         return pil_loader

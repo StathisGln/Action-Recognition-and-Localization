@@ -16,10 +16,8 @@ import numpy.random as npr
 
 from conf import conf as  cfg
 from generate_anchors import generate_anchors
-from overlaps.module.calc import Tube_Overlaps
 
-from box_functions import bbox_transform, bbox_transform_inv, clip_boxes, tube_overlaps
-import pdb
+from box_functions import bbox_transform, tube_overlaps
 
 DEBUG = False
 

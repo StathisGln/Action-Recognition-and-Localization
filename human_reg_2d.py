@@ -2,18 +2,11 @@ from __future__ import absolute_import, print_function
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 
-from config import cfg
-from proposal_layer import _ProposalLayer
-from anchor_target_layer_mine import _AnchorTargetLayer
 # from reg_target import _Regression_TargetLayer
-from roi_align.modules.roi_align  import RoIAlignAvg, RoIAlign
+from lib.roi_packages.roi_align.modules.roi_align import RoIAlign
 from proposal_target_layer_cascade_original import _ProposalTargetLayer as _Regression_TargetLayer
-from net_utils import _smooth_l1_loss, from_tubes_to_rois
 
-
-import numpy as np
 
 class _Regression_Layer(nn.Module):
     """

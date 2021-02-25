@@ -1,27 +1,18 @@
-import os
 import numpy as np
-import glob
 from functools import reduce
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 
-from nms_tubes.py_nms import py_cpu_nms_tubes
+from lib.nms_packages.nms_tubes import py_cpu_nms_tubes
 from conf import conf
 from action_net import ACT_net
-from act_rnn import Act_RNN
 from calc_score.calc import Calculator
-
-from create_tubes_from_boxes import create_video_tube, create_tube_from_tubes, create_tube_with_frames
-from connect_tubes import connect_tubes, get_gt_tubes_feats_label, get_tubes_feats_label
-from resize_rpn import resize_boxes, resize_tube
 
 from ucf_dataset import single_video
 
-from bbox_transform import bbox_overlaps_connect
 from collections import OrderedDict
-from box_functions import bbox_transform, tube_transform_inv, clip_boxes, tube_overlaps
+from box_functions import tube_transform_inv, clip_boxes, tube_overlaps
 
 
 class Model(nn.Module):

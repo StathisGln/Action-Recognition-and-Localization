@@ -1,8 +1,8 @@
 *.pyc
 *.pyx
 /__pycache__/
-/nms/
-/roi_crop/
+/lib/nms_packages/nms/
+/lib/roi_packages/roi_crop/
 /out_frames/
 *~
 *#
@@ -11,3 +11,4 @@
 *.pwf
 *.pkl
 nohup.out
+*.json

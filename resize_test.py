@@ -1,23 +1,11 @@
-import os
-import numpy as np
-import glob
-import json
-
 import torch
-import torch.nn as nn
-from torch.autograd import Variable
-from torch.utils.data import DataLoader
-
 
 # from video_dataset import Video
-from video_dataset import Video
-from spatial_transforms import (
-    Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
-from temporal_transforms import LoopPadding
-from resize_rpn import resize_rpn, resize_tube
+from lib.dataloaders.video_dataset import Video
+from lib.utils.spatial_transforms import (
+    Compose, Scale, ToTensor)
+from lib.utils.temporal_transforms import LoopPadding
 
-from action_net import ACT_net
-from bbox_transform import bbox_transform_inv, clip_boxes_3d, clip_boxes_batch, bbox_transform_inv_3d
 import cv2
 
 if __name__ == '__main__':

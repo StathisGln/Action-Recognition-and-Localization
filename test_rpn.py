@@ -1,18 +1,15 @@
 import os
-import numpy as np
-import glob
 import json
 
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
-from torch.utils.data import DataLoader
 
 from resnet_3D import resnet34
-from video_dataset import Video
-from spatial_transforms import (
-    Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
-from temporal_transforms import LoopPadding
+from lib.dataloaders.video_dataset import Video
+from lib.utils.spatial_transforms import (
+    Compose, Normalize, Scale, ToTensor)
+from lib.utils.temporal_transforms import LoopPadding
 from region_net import _RPN
 import cv2
 

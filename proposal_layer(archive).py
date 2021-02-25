@@ -12,14 +12,10 @@ from __future__ import absolute_import
 import torch
 import torch.nn as nn
 import numpy as np
-import math
-import yaml
 from config import cfg
 from generate_anchors import generate_anchors
-from bbox_transform import bbox_transform_inv, clip_boxes, clip_boxes_batch
-from nms.nms_wrapper import nms
-
-import pdb
+from bbox_transform import bbox_transform_inv, clip_boxes
+from lib.nms_packages.nms.nms_wrapper import nms
 
 DEBUG = False
 

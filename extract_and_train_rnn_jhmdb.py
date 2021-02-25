@@ -1,27 +1,22 @@
-import os
 import numpy as np
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from jhmdb_dataset import  video_names, RNN_JHMDB
 
-from spatial_transforms import (
-    Compose, Normalize, Scale, CenterCrop, ToTensor, Resize)
-from temporal_transforms import LoopPadding, LoopPadding_still
+from lib.utils.spatial_transforms import (
+    Compose, Normalize, Scale, ToTensor)
+from lib.utils.temporal_transforms import LoopPadding_still
 
 from create_video_id import get_vid_dict
 from net_utils import adjust_learning_rate
-from resize_rpn import resize_rpn, resize_tube
 
 from model import Model
-from action_net import ACT_net
-from resize_rpn import resize_boxes
 import argparse
-from box_functions import tube_overlaps, tube_transform_inv
+from box_functions import tube_overlaps
 from act_rnn_wrapper import _RNN_wrapper
 
 np.random.seed(42)
