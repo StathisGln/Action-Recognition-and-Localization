@@ -79,13 +79,15 @@ if __name__ == '__main__':
     thresh = 0.5
     class_num = 1
 
+    # model = torchvision.models.VGG(123)
     model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
     model = model.to('cuda')
     model.eval()
 
     annots_dict = {}
+    output_temp = '../../{}.json'
 
-    dataset_root_path = '../../dataset_frames/'
+    dataset_root_path = '../../dataset_frames/walking/'
     _, folders, _ = next(os.walk(dataset_root_path).__iter__())
     num_folders = len(folders)
     for i, cur_fld in enumerate(folders):
@@ -97,11 +99,16 @@ if __name__ == '__main__':
         # cur_dict = detect_multi_image(images, prefix_path=cur_fld_path)
         # annots_dict.update(cur_dict)
 
+        curr_dict = {}
         for step, cur_img in enumerate(tqdm(images)):
             
             img_path = os.path.join(cur_fld_path, cur_img)
             bboxes_list = detect_one_image(img_path, thresh=thresh, class_num=class_num)
-            annots_dict[cur_img] = {'img_path':img_path, 'bbox' : bboxes_list}
+            curr_dict[cur_img] = {'img_path':img_path, 'bbox' : bboxes_list}
+        with open(output_temp.format(cur_fld),'w') as fp:
+            json.dump(curr_dict, fp)
+        
+        annots_dict[cur_fld] = curr_dict
 
     with open(output_file_path, 'w') as fp:
         json.dump(annots_dict,fp)

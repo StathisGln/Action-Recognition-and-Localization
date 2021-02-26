@@ -15,7 +15,7 @@ import numpy as np
 import numpy.random as npr
 
 from config.conf import conf as  cfg
-from generate_anchors import generate_anchors
+from .generate_anchors import generate_anchors
 
 from lib.utils.box_functions import bbox_transform, tube_overlaps
 

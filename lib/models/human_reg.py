@@ -2,10 +2,10 @@ from __future__ import absolute_import, print_function
 import torch
 import torch.nn as nn
 
-from resnet_3D import resnet34
+from .resnet_3D import resnet34
 
 from lib.roi_packages.roi_align.modules.roi_align import RoIAlign
-from proposal_target_layer_cascade_original import _ProposalTargetLayer as _Regression_TargetLayer
+from .proposal_target_layer_cascade_original import _ProposalTargetLayer as _Regression_TargetLayer
 
 
 class _Regression_Layer(nn.Module):

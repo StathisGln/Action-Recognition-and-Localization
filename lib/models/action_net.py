@@ -4,15 +4,15 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-from resnet_3D import resnet34
-from region_net import _RPN 
+from .resnet_3D import resnet34
+from .region_net import _RPN
 from .human_reg import _Regression_Layer
 # from .human_reg_3d import _Regression_Layer
 # from .human_reg_2d import _Regression_Layer
 
 
 
-from proposal_target_layer_cascade import _ProposalTargetLayer
+from .proposal_target_layer_cascade import _ProposalTargetLayer
 # from roi_align_3d.modules.roi_align  import RoIAlignAvg, RoIAlign
 from lib.utils.net_utils import _smooth_l1_loss
 

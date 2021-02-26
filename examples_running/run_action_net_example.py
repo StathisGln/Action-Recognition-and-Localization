@@ -15,7 +15,7 @@ else:
 print('--------------------\n'+f'APPENDING TO PATH : \n{path_2_append}\n'+'--------------------\n')
 sys.path.append(path_2_append)
 
-from lib.dataloaders.ucf_dataset import Video_UCF
+from lib.dataloaders.ucf_dataset import Video_Dataset
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding
@@ -83,9 +83,9 @@ if __name__ == '__main__':
     model = nn.DataParallel(model)
     model.to(device)
 
-    data = Video_UCF(dataset_frames, frames_dur=sample_duration, spatial_transform=spatial_transform,
-                 temporal_transform=temporal_transform, json_file = boxes_file,
-                 split_txt_path=split_txt_path, mode='train', classes_idx=cls2idx)
+    data = Video_Dataset(dataset_frames, frames_dur=sample_duration, spatial_transform=spatial_transform,
+                         temporal_transform=temporal_transform, bboxes_file= boxes_file,
+                         split_txt_path=split_txt_path, mode='train', classes_idx=cls2idx)
 
 
     clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data[14]

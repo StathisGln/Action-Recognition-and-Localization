@@ -114,7 +114,7 @@ def get_file_names(spt_path, mode, split_number=1):
 
         lines = fp.readlines()
         files = [i.split()[0][:-4] for i in lines]
-
+data
     data =  [ i.split('/') for i in files]
     file_names = [i[1] for i in data]
     classes = list(set([i[0] for i in data]))
@@ -424,21 +424,21 @@ class single_video(data.Dataset):
 
 
 
-class Video_UCF(data.Dataset):
+class Video_Dataset(data.Dataset):
 
     def __init__(self, video_path, frames_dur=16, split_txt_path=None, sample_size=112,
-                 spatial_transform=None, temporal_transform=None, json_file=None,
+                 spatial_transform=None, temporal_transform=None, bboxes_file=None,
                  get_loader=get_default_video_loader, mode='train', classes_idx=None):
 
         self.mode = mode
         self.data, self.max_sim_actions, max_frames = make_correct_ucf_dataset(
-                    video_path, json_file, split_txt_path, self.mode)
+                    video_path, bboxes_file, split_txt_path, self.mode)
         self.spatial_transform = spatial_transform
         self.temporal_transform = temporal_transform
         self.loader = get_loader()
         self.sample_duration = frames_dur
         self.sample_size = sample_size
-        self.json_file = json_file
+        self.json_file = bboxes_file
         self.classes_idx = classes_idx
 
     def __getitem__(self, index):
