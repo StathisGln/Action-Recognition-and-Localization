@@ -1,6 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+
+
+
 if __name__ == '__main__':
 
     filename = '../../images_etc/training_rnn.txt'

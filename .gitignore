@@ -4,6 +4,8 @@
 /lib/nms_packages/nms/
 /lib/roi_packages/roi_crop/
 /out_frames/
+/runs/
+/train_val_code/runs/
 *~
 *#
 *.json

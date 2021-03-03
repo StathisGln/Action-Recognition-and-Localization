@@ -19,9 +19,10 @@ from lib.utils.net_utils import _smooth_l1_loss
 
 class ACT_net(nn.Module):
     """ action tube proposal """
-    def __init__(self, actions,sample_duration):
+    def __init__(self, actions,sample_duration, device='cuda'):
         super(ACT_net, self).__init__()
 
+        print(f'Using device : {device}')
         self.classes = actions
         self.n_classes = len(actions)
         self.sample_duration = sample_duration
@@ -36,15 +37,16 @@ class ACT_net(nn.Module):
         # self.spatial_scale = 1.0/4
     
         # define rpn
-        self.act_rpn = _RPN(256, sample_duration).cuda()
+        self.act_rpn = _RPN(256, sample_duration).to(device)
 
-        self.act_proposal_target = _ProposalTargetLayer(sample_duration).cuda() ## background/ foreground
+        self.act_proposal_target = _ProposalTargetLayer(sample_duration).to(device) ## background/ foreground
 
         self.time_dim =sample_duration
         self.temp_scale = 1.0
         # self.reg_layer = _Regression_Layer(64, self.sample_duration).cuda()
         # self.reg_layer = _Regression_Layer(128, self.sample_duration).cuda()
         self.reg_layer = _Regression_Layer(256, self.sample_duration).cuda()
+        print(f'self.reg_layer.device {self.reg_layer.type()}')
         self.batch_norm = nn.BatchNorm3d(256)
 
     def create_architecture(self, model_path='../../../resnet-34-kinetics.pth'):

@@ -185,8 +185,8 @@ if __name__ == '__main__':
 
     generate_bboxes = False
 
-    bboxes_output_file_path = '../../dataset_annots.json'
-    output_file_path  = '../../dataset_actions_annots.json'
+    bboxes_output_file_path = '../../../dataset_annots.json'
+    output_file_path  = '../../../dataset_actions_annots.json'
     actions_txt = '../../00sequences.txt'
     thresh = 0.5
     class_num = 1
@@ -194,7 +194,7 @@ if __name__ == '__main__':
     annots_dict = {}
     output_temp = '../../{}.json'
 
-    dataset_root_path = '../../dataset_frames/walking/'
+    dataset_root_path = '../../../dataset_frames/walking/'
     _, folders, _ = next(os.walk(dataset_root_path).__iter__())
     num_folders = len(folders)
 
