@@ -17,6 +17,17 @@ from lib.utils.resize_rpn import resize_boxes_np
 
 np.random.seed(42)
 
+def get_classes():
+    '''
+
+    :return: a list of all the classes in UCF dataset
+    '''
+    return ['__background__', 'Basketball', 'BasketballDunk', 'Biking', 'CliffDiving', 'CricketBowling',
+    'Diving', 'Fencing', 'FloorGymnastics', 'GolfSwing', 'HorseRiding', 'IceDancing',
+    'LongJump', 'PoleVault', 'RopeClimbing', 'SalsaSpin', 'SkateBoarding', 'Skiing',
+    'Skijet', 'SoccerJuggling', 'Surfing', 'TennisSwing', 'TrampolineJumping',
+    'VolleyballSpiking', 'WalkingWithDog']
+
 def preprocess_boxes(boxes, h, w, sample_size):
 
     boxes[..., 2] = boxes[..., 0] + boxes[..., 2]
@@ -114,7 +125,7 @@ def get_file_names(spt_path, mode, split_number=1):
 
         lines = fp.readlines()
         files = [i.split()[0][:-4] for i in lines]
-data
+
     data =  [ i.split('/') for i in files]
     file_names = [i[1] for i in data]
     classes = list(set([i[0] for i in data]))

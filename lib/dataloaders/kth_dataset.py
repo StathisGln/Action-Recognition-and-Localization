@@ -2,43 +2,27 @@ import os
 import pickle
 import json
 import torch
+import numpy as np
 import torch.utils.data as data
-from PIL import Image
-import functools
+from itertools import groupby
+
+from lib.utils.dataloader_utils import  *
+from torchvision.transforms import  Compose, Normalize, ToTensor
 
 
-def pil_loader(path):
-    # open path as file to avoid ResourceWarning (https://github.com/python-pillow/Pillow/issues/835)
-    with open(path, 'rb') as f:
-        with Image.open(f) as img:
-            return img.convert('RGB')
+def get_file_names(mode):
 
+    TRAIN_PEOPLE_ID = {11, 12, 13, 14, 15, 16, 17, 18}
+    DEV_PEOPLE_ID = {19, 20, 21, 23, 24, 25, 1, 4}
+    TEST_PEOPLE_ID = {22, 2, 3, 5, 6, 7, 8, 9, 10}
 
-def get_default_image_loader():
-    from torchvision import get_image_backend
-    if get_image_backend() == 'accimage':
-        raise('No accimage available, please implement accimage image loader...')
+    if mode.upper() == 'TRAIN':
+        people_id = TRAIN_PEOPLE_ID
+    elif mode.upper() == 'VAL':
+        people_id = DEV_PEOPLE_ID
     else:
-        return pil_loader
-
-def video_loader(video_dir_path, frame_indices, image_loader):
-    video = []
-    for i in frame_indices:
-        image_path = os.path.join(video_dir_path, 'image_{:05d}.jpg'.format(i))
-        # image_path = os.path.join(video_dir_path, '{:05d}.jpg'.format(i))
-        # image_path = os.path.join(video_dir_path, '{:05d}.png'.format(i))
-        if os.path.exists(image_path):
-            video.append(image_loader(image_path))
-        else:
-            print('image_path {} doesn\'t exist'.format(image_path))
-            return video
-
-    return video
-
-
-def get_default_video_loader():
-    image_loader = get_default_image_loader()
-    return functools.partial(video_loader, image_loader=image_loader)
+        people_id = TEST_PEOPLE_ID
+    return people_id
 
 def make_correct_dataset(dataset_path, boxes_file, split_txt_path, mode='train'):
 
@@ -56,14 +40,14 @@ def make_correct_dataset(dataset_path, boxes_file, split_txt_path, mode='train')
 
     max_sim_actions = -1
     max_frames = -1
-    file_names = get_file_names(split_txt_path, mode, split_number=1)
+    people_ids = get_file_names( mode )
 
-    for vid, values in boxes_data.items():
+    for vid_name, values in boxes_data.items():
         # print('vid :',vid)
-        vid_name = vid.split('/')[-1]
-        if vid_name not in file_names:
+        person_id = int(vid_name.split('_')[0][-2:])
+        if person_id not in people_ids:
             continue
-        name = vid.split('/')[-1]
+        name = vid_name.split('/')[-1]
         n_frames = values['numf']
         annots = values['annotations']
         n_actions = len(annots)
@@ -92,10 +76,10 @@ def make_correct_dataset(dataset_path, boxes_file, split_txt_path, mode='train')
         # name = vid.split('/')[-1].split('.')[0]
         video_sample = {
             'video_name': name,
-            'abs_path': os.path.join(dataset_path, vid),
+            'abs_path': os.path.join(dataset_path, values['abs_path']),
             'class': cls,
             'n_frames': n_frames,
-            'rois': rois
+            'boxes': rois
         }
         dataset.append(video_sample)
 
@@ -108,11 +92,11 @@ def make_correct_dataset(dataset_path, boxes_file, split_txt_path, mode='train')
 class Video_Dataset(data.Dataset):
 
     def __init__(self, video_path, frames_dur=16, split_txt_path=None, sample_size=112,
-                 spatial_transform=None, temporal_transform=None, bboxes_file=None,
+                 spatial_transform=None, temporal_transform=None, bboxes_file=None, scale=1,
                  get_loader=get_default_video_loader, mode='train', classes_idx=None):
 
         self.mode = mode
-        self.data, self.max_sim_actions, max_frames = make_correct_dataset(
+        self.data, self.max_sim_actions, self.max_frames = make_correct_dataset(
                     video_path, bboxes_file, split_txt_path, self.mode)
         self.spatial_transform = spatial_transform
         self.temporal_transform = temporal_transform
@@ -121,11 +105,89 @@ class Video_Dataset(data.Dataset):
         self.sample_size = sample_size
         self.bboxes_file = bboxes_file
         self.classes_idx = classes_idx
+        self.scale = scale
+
+    def __len__(self):
+
+        return  len(self.data)
+
+    def __getitem__(self, index):
+
+        vid_name  = self.data[index]['video_name']
+        boxes = self.data[index]['boxes']
+        path      = self.data[index]['abs_path']
+        class_num = self.data[index]['class']
+        n_frames  = self.data[index]['n_frames']
+
+        
+        ## get  random frames from the video
+
+        ## TODO change way to get time index
+        ## TODO create function to do so
+
+        time_index = np.random.randint(
+            0, n_frames - self.sample_duration - 1) + 1
+        frame_indices = list(
+            range(time_index, time_index + self.sample_duration))  # get the corresponding frames
+
+        clip = self.loader(path, frame_indices)
+        w, h = clip[0].size
+        clip = [self.spatial_transform(img) for img in clip]
+        clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
+
+        ## get bboxes and create gt_tubes
+        boxes = preprocess_boxes(boxes, h, w, self.sample_size)
+        boxes = boxes[:, np.array(frame_indices), :5]
+
+        final_rois =  get_all_actions_in_current_clip(boxes=boxes, sample_duration=self.sample_duration)
+
+        n_acts = final_rois.shape[0]
+        # ret_tubes = torch.zeros(self.max_sim_actions, 7)
+        # ret_tubes[:n_acts, :] = gt_tubes
+
+        f_rois = torch.zeros(self.max_sim_actions, self.sample_duration, 5)
+        f_rois[:n_acts, :, :] = final_rois[:n_acts]
+
+        im_info = torch.Tensor([self.sample_size, self.sample_size, self.sample_duration])
+
+        sample = {
+            'clip' : clip,
+            'h' : np.array([h], dtype=np.int),
+            'w' : np.array([w], dtype=np.int),
+            'gt_tubes' : torch.zeros(1,7),
+            'bboxes' : f_rois,
+            'n_acts' : np.array([n_acts], dtype=np.int),
+            'n_frames' : np.array([n_frames], dtype=np.int),
+            'im_info' : im_info,
+        }
+        return  sample
+
 
 if __name__ == '__main__':
 
     # from IPython import embed
-    dataset_folder = '../../dataset'
-    boxes_file = '../../dataset_annots.json'
+    import sys
+    sys.path.append('../')
+    from utils.get_dataset_mean import get_dataset_mean_and_std
 
-    data = Video_Dataset(video_path=dataset_folder, bboxes_file=boxes_file)
+    np.random.seed(42)
+    dataset_folder = '../../dataset'
+    boxes_file = '../../dataset_actions_annots.json'
+    split_txt = '../../00sequences.txt'
+
+
+
+    scale = 1
+    rev_scale = 255 if scale == 1 else 1
+    mean, std = get_dataset_mean_and_std('kth', scale = 1)
+
+    std = (0.5,0.5,0.5)
+    mean = (0.5,0.5,0.5)
+    print(f'mean {mean}, {std} std')
+    spatial_transform = Compose([ToTensor(),
+                                 Normalize(mean, std)])
+    data = Video_Dataset(video_path=dataset_folder, bboxes_file=boxes_file,
+                         split_txt_path=split_txt, spatial_transform=spatial_transform, scale=scale)
+
+    ret = data[5]
+    print(f'ret : {ret}')
