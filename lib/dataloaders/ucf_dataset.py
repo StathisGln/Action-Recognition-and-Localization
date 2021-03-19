@@ -8,6 +8,9 @@ import copy
 import json
 import pickle
 from itertools import groupby
+
+from lib.utils.dataloader_utils import  *
+
 from lib.utils.create_tubes_from_boxes import create_tube_list
 
 from lib.utils.spatial_transforms import (
@@ -19,7 +22,6 @@ np.random.seed(42)
 
 def get_classes():
     '''
-
     :return: a list of all the classes in UCF dataset
     '''
     return ['__background__', 'Basketball', 'BasketballDunk', 'Biking', 'CliffDiving', 'CricketBowling',
@@ -27,79 +29,6 @@ def get_classes():
     'LongJump', 'PoleVault', 'RopeClimbing', 'SalsaSpin', 'SkateBoarding', 'Skiing',
     'Skijet', 'SoccerJuggling', 'Surfing', 'TennisSwing', 'TrampolineJumping',
     'VolleyballSpiking', 'WalkingWithDog']
-
-def preprocess_boxes(boxes, h, w, sample_size):
-
-    boxes[..., 2] = boxes[..., 0] + boxes[..., 2]
-    boxes[..., 3] = boxes[..., 1] + boxes[..., 3]
-
-    for i in range(boxes.shape[0]):
-        boxes[i] = resize_boxes_np(np.expand_dims( boxes[i], axis=0), h,w,sample_size)
-
-    fr_tensor = np.expand_dims( np.expand_dims( np.arange(0,boxes.shape[-2]), axis=1), axis=0)
-    fr_tensor = np.repeat(fr_tensor, boxes.shape[0], axis=0)
-
-    boxes = np.concatenate((boxes, fr_tensor), axis=-1)
-
-    return boxes
-
-
-def pil_loader(path):
-    # open path as file to avoid ResourceWarning (https://github.com/python-pillow/Pillow/issues/835)
-    with open(path, 'rb') as f:
-        with Image.open(f) as img:
-            return img.convert('RGB')
-
-
-def accimage_loader(path):
-    try:
-        return accimage.Image(path)
-    except IOError:
-        # Potentially a decoding problem, fall back to PIL.Image
-        return pil_loader(path)
-
-
-def get_default_image_loader():
-    from torchvision import get_image_backend
-    if get_image_backend() == 'accimage':
-        return accimage_loader
-    else:
-        return pil_loader
-
-
-def video_loader(video_dir_path, frame_indices, image_loader):
-    video = []
-    for i in frame_indices:
-        image_path = os.path.join(video_dir_path, 'image_{:05d}.jpg'.format(i))
-        # image_path = os.path.join(video_dir_path, '{:05d}.jpg'.format(i))
-        # image_path = os.path.join(video_dir_path, '{:05d}.png'.format(i))
-        if os.path.exists(image_path):
-            video.append(image_loader(image_path))
-        else:
-            print('image_path {} doesn\'t exist'.format(image_path))
-            return video
-
-    return video
-
-
-def get_default_video_loader():
-    image_loader = get_default_image_loader()
-    return functools.partial(video_loader, image_loader=image_loader)
-
-
-def load_annotation_data(data_file_path):
-    with open(data_file_path, 'r') as data_file:
-        return json.load(data_file)
-
-
-def get_class_labels(data):
-    class_labels_map = {}
-    index = 0
-    for class_label in data['labels']:
-        class_labels_map[class_label] = index
-        index += 1
-    return class_labels_map
-
 
 def get_video_names_and_annotations(data, subset):
     video_names = []
@@ -314,22 +243,19 @@ def make_dataset(dataset_path, spt_path, boxes_file, mode):
     print('max_frames :',max_frames)
     return dataset, max_frames, max_actions
 
-class video_names(data.Dataset):
-    def __init__(self, dataset_folder, spt_path,  boxes_file, vid2idx, mode='train',get_loader=get_default_video_loader,
-                 sample_size=112, classes_idx=None):
+class Video_Dataset_whole_video(data.Dataset):
+    def __init__(self, video_path, split_txt_path=None, bboxes_file=None, vid2idx=None,
+                 mode='train', get_loader=get_default_video_loader,
+                 sample_size=112, classes_idx=None, spatial_transform=None):
 
-        self.dataset_folder = dataset_folder
+        self.dataset_folder = video_path
         self.sample_size = sample_size
-        self.boxes_file = boxes_file
+        self.boxes_file = bboxes_file
         self.vid2idx = vid2idx
         self.mode = mode
-        self.data, self.max_frames, self.max_actions = make_dataset( dataset_folder, spt_path, boxes_file, mode)
+        self.data, self.max_frames, self.max_actions = make_dataset(video_path, split_txt_path, bboxes_file, mode)
         self.loader = get_loader()
         self.classes_idx = classes_idx
-        mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
-        spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
-                                     ToTensor(),
-                                     Normalize(mean, [1, 1, 1])])
         self.spatial_transform=spatial_transform
         # self.loader = get_loader()
         
@@ -340,10 +266,9 @@ class video_names(data.Dataset):
         boxes = self.data[index]['boxes']
         n_frames = self.data[index]['n_frames']
         cls = self.data[index]['class']
-        # abs_path = os.path.join(self.dataset_folder, vid_name)
         w, h = 320, 240
 
-        boxes = preprocess_boxes(boxes, h, w, self.sample_size)
+        boxes = preprocess_boxes(boxes, h, w, self.sample_size, add_frames=True)
 
         boxes_lst = boxes.tolist()
         rois_fr = [[z+[j] for j,z in enumerate(boxes_lst[i])] for i in range(len(boxes_lst))]
@@ -368,7 +293,6 @@ class video_names(data.Dataset):
 
         vid_id = np.array([self.vid2idx[vid_name]],dtype=np.int64)
         n_frames_np = np.array([n_frames], dtype=np.int64)
-        # print('vid_name :', vid_name, ' n_frames :',n_frames_np)
         n_actions_np = np.array([n_actions], dtype=np.int64)
 
         frame_indices= list(
@@ -391,7 +315,6 @@ class video_names(data.Dataset):
     def __len__(self):
 
         return len(self.data)
-
 
 class single_video(data.Dataset):
     def __init__(self, dataset_folder, h, w, vid_names, vid_id,frames_dur=16, sample_size=112, 
@@ -433,9 +356,7 @@ class single_video(data.Dataset):
     def __len__(self):
         return len(self.data)
 
-
-
-class Video_Dataset(data.Dataset):
+class Video_Dataset_small_clip(data.Dataset):
 
     def __init__(self, video_path, frames_dur=16, split_txt_path=None, sample_size=112,
                  spatial_transform=None, temporal_transform=None, bboxes_file=None,
@@ -586,7 +507,7 @@ if __name__ == '__main__':
     dataset_folder = '/gpu-data2/sgal/UCF2-101-frames'
     boxes_file = '/gpu-data/sgal/pyannot.pkl'
 
-    data = video_names(dataset_folder=dataset_folder, boxes_file=boxes_file)
+    data = Video_Dataset_whole_video(video_path=dataset_folder, bboxes_file=boxes_file)
     # ret = data[40]
     ret = data[500]
     # # dataset_folder = '/gpu-data/sgal/UCF-101-frames'

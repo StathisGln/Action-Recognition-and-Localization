@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-from lib.dataloaders.ucf_dataset import Video_Dataset
+from lib.dataloaders.ucf_dataset import Video_Dataset_small_clip
 
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
@@ -75,9 +75,9 @@ if __name__ == '__main__':
     # model.load_state_dict(model_data)
     model.eval()
 
-    data = Video_Dataset(dataset_frames, frames_dur=sample_duration, spatial_transform=spatial_transform,
-                         temporal_transform=temporal_transform, bboxes_file= boxes_file,
-                         split_txt_path=split_txt_path, mode='train', classes_idx=cls2idx)
+    data = Video_Dataset_small_clip(dataset_frames, frames_dur=sample_duration, spatial_transform=spatial_transform,
+                                    temporal_transform=temporal_transform, bboxes_file= boxes_file,
+                                    split_txt_path=split_txt_path, mode='train', classes_idx=cls2idx)
 
     clips, h, w, gt_tubes_r, gt_rois, n_actions, n_frames, im_info = data[14]
     clips2, h2, w2, gt_tubes_r2, gt_rois2, n_actions2, n_frames2, im_info2 = data[15]

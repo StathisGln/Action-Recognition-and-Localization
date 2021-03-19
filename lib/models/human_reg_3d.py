@@ -4,7 +4,7 @@ import torch.nn as nn
 
 # from reg_target import _Regression_TargetLayer
 from lib.roi_packages.roi_align.modules.roi_align import RoIAlignAvg
-from proposal_target_layer_cascade_original import _ProposalTargetLayer as _Regression_TargetLayer
+from .proposal_target_layer_cascade_original import _ProposalTargetLayer as _Regression_TargetLayer
 
 
 class _Regression_Layer(nn.Module):

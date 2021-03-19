@@ -4,12 +4,12 @@ import json
 def get_vid_dict(dataset_path):
 
     vid_names = []
-    
+    print('dataset_path')
     classes = next(os.walk(dataset_path, True))[1]
-
+    print('classes ', classes)
     for cls in classes:
         videos = next(os.walk(os.path.join(dataset_path,cls), True))[1]
-
+        print('videos: ', videos)
         for vid in videos:
             video_path = os.path.join(cls,vid)
             vid_names.append(video_path)

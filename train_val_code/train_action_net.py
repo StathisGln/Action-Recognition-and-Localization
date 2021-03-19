@@ -41,9 +41,9 @@ def validation(epoch, device, model, data_loader,  n_threads):
     iou_thresh = 0.5 # Intersection Over Union thresh
     iou_thresh_4 = 0.4 # Intersection Over Union thresh
     iou_thresh_3 = 0.3 # Intersection Over Union thresh
-    data = Video_Dataset(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
-                         temporal_transform=temporal_transform, bboxes_file= boxes_file,
-                         split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
+    data = Video_Dataset_small_clip(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
+                                    temporal_transform=temporal_transform, bboxes_file= boxes_file,
+                                    split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(data, batch_size=4,
                                               shuffle=True, num_workers=0, pin_memory=True)
     model.eval()
@@ -238,9 +238,9 @@ if __name__ == '__main__':
     set_dataset(dataset)
 
     if dataset.upper().startswith('UCF'):
-        from lib.dataloaders.ucf_dataset import Video_Dataset
+        from lib.dataloaders.ucf_dataset import Video_Dataset_small_clip
     elif dataset.upper().startswith('KTH'):
-        from lib.dataloaders.kth_dataset import Video_Dataset
+        from lib.dataloaders.kth_dataset import Video_Dataset_small_clip
     else:
         raise('Unknown Dataset')
 
@@ -278,9 +278,9 @@ if __name__ == '__main__':
     print(' -----------------------------------------------------')
 
     ## Define Dataloaders
-    train_data = Video_Dataset(video_path=dataset_frames, frames_dur=sample_duration, spatial_transform=spatial_transform,
-                               temporal_transform=temporal_transform, bboxes_file=boxes_file,
-                               split_txt_path=split_txt_path, mode='train', classes_idx=cls2idx)
+    train_data = Video_Dataset_small_clip(video_path=dataset_frames, frames_dur=sample_duration, spatial_transform=spatial_transform,
+                                          temporal_transform=temporal_transform, bboxes_file=boxes_file,
+                                          split_txt_path=split_txt_path, mode='train', classes_idx=cls2idx)
     train_data_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size,
                                                     shuffle=True, num_workers=2, pin_memory=True)
 

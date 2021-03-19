@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from lib.dataloaders.ucf_dataset import video_names
+from lib.dataloaders.ucf_dataset import Video_Dataset_whole_video
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding
@@ -65,7 +65,7 @@ if __name__ == '__main__':
         model = nn.DataParallel(model)
 
     model.to(device)
-    vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train')
+    vid_name_loader = Video_Dataset_whole_video(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train')
 
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
                                               shuffle=True)    # reset learning rate

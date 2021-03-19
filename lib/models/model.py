@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from lib.nms_packages.nms_tubes import py_cpu_nms_tubes
+from lib.nms_packages.nms_tubes.py_nms import py_cpu_nms_tubes
 from config.conf import conf
 from lib.models.action_net import ACT_net
 from lib.calc_score.calc import Calculator
@@ -459,7 +459,7 @@ class Model(nn.Module):
         # for key, value in dict(self.named_parameters()).items():
         #     print(key, value.requires_grad)
 
-    def load_part_model(self, action_model_path=None, rnn_path=None):
+    def load_part_model(self, resnet_path=None, action_model_path=None, rnn_path=None):
 
         # load action net
         if action_model_path != None:
@@ -476,15 +476,21 @@ class Model(nn.Module):
                 new_state_dict[name] = v
 
             act_net = ACT_net(self.classes,self.sample_duration)
-
-            act_net.create_architecture()
+            if resnet_path is not None:
+                act_net.create_architecture(model_path=resnet_path)
+            else:
+                act_net.create_architecture()
             act_net.load_state_dict(new_state_dict)
             self.act_net = act_net
 
         else:
             self.act_net = ACT_net(self.classes,self.sample_duration)
-            self.act_net.create_architecture()
-            
+            if resnet_path is not None:
+                self.act_net.create_architecture(model_path=resnet_path)
+            else:
+                self.act_net.create_architecture()
+
+
         # load lstm
         if rnn_path != None:
 

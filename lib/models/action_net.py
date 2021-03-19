@@ -45,8 +45,9 @@ class ACT_net(nn.Module):
         self.temp_scale = 1.0
         # self.reg_layer = _Regression_Layer(64, self.sample_duration).cuda()
         # self.reg_layer = _Regression_Layer(128, self.sample_duration).cuda()
-        self.reg_layer = _Regression_Layer(256, self.sample_duration).cuda()
-        print(f'self.reg_layer.device {self.reg_layer.type()}')
+        # self.reg_layer = _Regression_Layer(256, self.sample_duration).cuda()
+        self.reg_layer = _Regression_Layer(256, self.sample_duration)
+        # print(f'self.reg_layer.device {self.reg_layer.type()}')
         self.batch_norm = nn.BatchNorm3d(256)
 
     def create_architecture(self, model_path='../../../resnet-34-kinetics.pth'):

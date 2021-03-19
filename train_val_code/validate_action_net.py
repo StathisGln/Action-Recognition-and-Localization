@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from lib.dataloaders.ucf_dataset import Video_Dataset
+from lib.dataloaders.ucf_dataset import Video_Dataset_small_clip
 
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
@@ -19,9 +19,9 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
 
     iou_thresh = 0.5 # Intersection Over Union thresh
     # iou_thresh = 0.1 # Intersection Over Union thresh
-    data = Video_Dataset(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
-                         temporal_transform=temporal_transform, bboxes_file= boxes_file,
-                         split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
+    data = Video_Dataset_small_clip(dataset_folder, frames_dur=sample_duration, spatial_transform=spatial_transform,
+                                    temporal_transform=temporal_transform, bboxes_file= boxes_file,
+                                    split_txt_path=splt_txt_path, mode='test', classes_idx=cls2idx)
     data_loader = torch.utils.data.DataLoader(data, batch_size=16,
                                               shuffle=True, num_workers=0, pin_memory=True)
     # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size*4,

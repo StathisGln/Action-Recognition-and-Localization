@@ -15,7 +15,7 @@ else:
 print('--------------------\n'+f'APPENDING TO PATH : \n{path_2_append}\n'+'--------------------\n')
 sys.path.append(path_2_append)
 
-
+from lib.utils.dataloader_utils import  get_vid_dict
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding
@@ -27,7 +27,6 @@ if __name__ == '__main__':
 
     from config.dataset_config import cfg as dataset_cfg, set_dataset
 
-    # torch.cuda.device_count()
     print('++++++++++++++++++++++++++++')
     dataset = 'KTH'
     set_dataset(dataset)
@@ -35,22 +34,18 @@ if __name__ == '__main__':
     # from lib.dataloaders.ucf_dataset import Video_Dataset
 
     print('Running for KTH Dataset')
-    from lib.dataloaders.kth_dataset import  Video_Dataset
+    from lib.dataloaders.kth_dataset import  Video_Dataset_small_clip
 
     print('++++++++++++++++++++++++++++')
-
-
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    # data_root_dir = os.getcwd()
     ## TODO fix paths
     data_root_dir = '../../thesis_code/sgal/'
     data_root_dir2  = './'
 
     model_path = os.path.abspath(os.path.join(data_root_dir, 'resnet-34-kinetics.pth'))
-
     dataset_frames = os.path.abspath(os.path.join(data_root_dir2,dataset_cfg.dataset.dataset_frames_folder))
 
     boxes_file = os.path.abspath(os.path.join(data_root_dir2,dataset_cfg.dataset.boxes_file))
@@ -71,32 +66,30 @@ if __name__ == '__main__':
     # mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
     mean = (0.5,0.5,0.5)
     std  = (0.5,0.5,0.5)
+
     # generate model
-    last_fc = False
+    # last_fc = False
 
     actions = dataset_cfg.dataset.classes
-
     cls2idx = {actions[i]: i for i in range(0, len(actions))}
 
     ### get videos id
+    vid2idx,vid_names = get_vid_dict(dataset_frames)
 
     spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
                                  ToTensor(),
                                  Normalize(mean, std)])
     temporal_transform = LoopPadding(sample_duration)
 
-    n_classes = len(actions)
-
     # Init action_net
-
     model = ACT_net(actions, sample_duration)
     model.create_architecture(model_path)
     model = nn.DataParallel(model)
     model.to(device)
 
-    data = Video_Dataset(dataset_frames, frames_dur=sample_duration, spatial_transform=spatial_transform,
-                         temporal_transform=temporal_transform, bboxes_file= boxes_file,
-                         split_txt_path=split_txt_path, mode='train', classes_idx=cls2idx)
+    data = Video_Dataset_small_clip(dataset_frames, frames_dur=sample_duration, spatial_transform=spatial_transform,
+                                    temporal_transform=temporal_transform, bboxes_file= boxes_file,
+                                    split_txt_path=split_txt_path, mode='train', classes_idx=cls2idx)
 
     # data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size,
     #                                           shuffle=False, num_workers=n_threads, pin_memory=True)
@@ -107,17 +100,6 @@ if __name__ == '__main__':
     clips_ = clips.unsqueeze(0).to(device)
     gt_tubes_r_ = gt_tubes_r.unsqueeze(0).to(device)
     gt_rois_ = gt_rois.unsqueeze(0).to(device)
-    # print('gt_rois_[0,0] :',gt_rois_[0,0,:,:4].shape)
-    # print(torch.Tensor([43., 59., 55., 80., 43., 59., 55., 80., 44., 60., 56., 81., 44., 60.,
-    #                            56., 81., 32.,  32.,  21.,  21.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
-    #                            0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
-    #                            0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
-                               # 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]).shape)
-    # gt_rois_[0,0,:,:4] =  torch.Tensor([43., 59., 55., 80., 43., 59., 55., 80., 44., 60., 56., 81., 44., 60.,
-    #                            56., 81., 32.,  32.,  21.,  21.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
-    #                            0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
-    #                            0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
-    #                                     0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]).view(16,4)
 
     n_actions_ = torch.from_numpy(n_actions).to(device)
     im_info_ = im_info.unsqueeze(0).to(device)

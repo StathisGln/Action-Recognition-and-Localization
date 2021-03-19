@@ -1,28 +1,42 @@
+import os
 import numpy as np
 
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-
-from lib.dataloaders.ucf_dataset import video_names
+from lib.utils.dataloader_utils import get_vid_dict
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
 from lib.utils.temporal_transforms import LoopPadding
 from lib.models.model import Model
 
-from lib.utils.create_video_id import get_vid_dict
-
 np.random.seed(42)
 
 if __name__ == '__main__':
+
+    from config.dataset_config import cfg as dataset_cfg, set_dataset
+    print('++++++++++++++++++++++++++++')
+    dataset = 'KTH'
+    set_dataset(dataset)
+    # print('Running for UCF101 Dataset')
+    # from lib.dataloaders.ucf_dataset import Video_Dataset_whole_video
+    print('Running for KTH Dataset')
+    from lib.dataloaders.kth_dataset import  Video_Dataset_whole_video
+    print('++++++++++++++++++++++++++++')
 
     # torch.cuda.device_count()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device being used:", device)
 
-    dataset_frames = '../UCF-101-frames'
-    boxes_file = '../pyannot.pkl'
-    split_txt_path = '../UCF101_Action_detection_splits/'
+    ## TODO fix paths
+    data_root_dir = '../../thesis_code/sgal/'
+    data_root_dir2  = './'
+
+    model_path = os.path.abspath(os.path.join(data_root_dir, 'resnet-34-kinetics.pth'))
+    dataset_frames = os.path.abspath(os.path.join(data_root_dir2,dataset_cfg.dataset.dataset_frames_folder))
+
+    boxes_file = os.path.abspath(os.path.join(data_root_dir2,dataset_cfg.dataset.boxes_file))
+    split_txt_path = os.path.abspath(os.path.join(data_root_dir2, dataset_cfg.dataset.split_txt_path))
 
     n_devs = torch.cuda.device_count()
     sample_size = 112
@@ -32,41 +46,28 @@ if __name__ == '__main__':
     n_threads = 0
 
     # # get mean
-    # mean =  [103.75581543 104.79421473  91.16894564] # jhmdb
-    # mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
-    mean = [112.07945832, 112.87372333, 106.90993363]  # ucf-101 24 classes
+    mean = (0.5,0.5,0.5)
+    std  = (0.5,0.5,0.5)
 
     # generate model
-    last_fc = False
-
-    actions = ['__background__', 'Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
-               'Diving','Fencing','FloorGymnastics','GolfSwing','HorseRiding','IceDancing',
-               'LongJump','PoleVault','RopeClimbing','SalsaSpin','SkateBoarding','Skiing',
-               'Skijet','SoccerJuggling','Surfing','TennisSwing','TrampolineJumping',
-               'VolleyballSpiking','WalkingWithDog']
-
+    actions = dataset_cfg.dataset.classes
     cls2idx = {actions[i]: i for i in range(0, len(actions))}
 
     ### get videos id
     vid2idx,vid_names = get_vid_dict(dataset_frames)
-
     spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
                                  ToTensor(),
                                  Normalize(mean, [1, 1, 1])])
-    temporal_transform = LoopPadding(sample_duration)
-
-    n_classes = len(actions)
-
     # Init action_net
     model = Model(actions, sample_duration, sample_size)
-    model.load_part_model()
+    model.load_part_model(resnet_path=model_path)
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs!'.format(torch.cuda.device_count()))
         model = nn.DataParallel(model)
 
     model.to(device)
-    vid_name_loader = video_names(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train')
-
+    vid_name_loader = Video_Dataset_whole_video(dataset_frames, split_txt_path, boxes_file, vid2idx, mode='train',
+                                                spatial_transform=spatial_transform)
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
                                               shuffle=True)    # reset learning rate
 
@@ -84,7 +85,7 @@ if __name__ == '__main__':
     #         exit(-1)
 
     # exit(-1)
-    vid_id, clips, boxes, n_frames, n_actions, h, w, target =vid_name_loader[14]
+    vid_id, clips, boxes, n_frames, n_actions, h, w, target =vid_name_loader[14].values()
     # vid_id, clips, boxes, n_frames, n_actions, h, w =vid_name_loader[209]
 
 

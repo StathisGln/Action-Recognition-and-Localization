@@ -8,7 +8,7 @@ from lib.utils.temporal_transforms import LoopPadding
 from lib.utils.net_utils import adjust_learning_rate
 
 from lib.utils.create_video_id import get_vid_dict
-from lib.dataloaders.ucf_dataset import video_names
+from lib.dataloaders.ucf_dataset import Video_Dataset_whole_video
 
 from lib.models.model import Model
 from lib.utils.resize_rpn import resize_tube
@@ -151,7 +151,7 @@ if __name__ == '__main__':
     #          Train starts here          #
     #######################################
 
-    vid_name_loader = video_names(dataset_folder, spt_path, boxes_file, vid2idx, mode='train')
+    vid_name_loader = Video_Dataset_whole_video(dataset_folder, spt_path, boxes_file, vid2idx, mode='train')
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
                                               shuffle=True)
 
@@ -224,7 +224,7 @@ if __name__ == '__main__':
         ep+1,loss_temp/step, lr))
         
         if ( ep + 1 ) % 5 == 0: # validation time
-            val_name_loader = video_names(dataset_folder, spt_path, boxes_file, vid2idx, mode='test')
+            val_name_loader = Video_Dataset_whole_video(dataset_folder, spt_path, boxes_file, vid2idx, mode='test')
             val_loader = torch.utils.data.DataLoader(val_name_loader, batch_size=batch_size,
                                               shuffle=True)
 

@@ -1,13 +1,18 @@
 import json
+'''
+We don't use this file anymore
+For debuggin purposes only
+'''
+## TODO update code in this file or delete it
 
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
 from lib.models.resnet_3D import resnet34
-from lib.dataloaders.video_dataset import Video
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
+
 from lib.utils.temporal_transforms import LoopPadding
 from lib.models.region_net import _RPN
 
@@ -34,19 +39,7 @@ if __name__ == '__main__':
     mean = [103.29825354, 104.63845484,  90.79830328]  # jhmdb from .png
 
     # generate model
-    last_fc = False
 
-    # classes = ['basketballdunk', 'basketballshooting','cliffdiving', 'cricketbowling', 'fencing', 'floorgymnastics',
-    #            'icedancing', 'longjump', 'polevault', 'ropeclimbing', 'salsaspin', 'skateboarding',
-    #            'skiing', 'skijet', 'surfing', 'biking', 'diving', 'golfswing', 'horseriding',
-    #            'soccerjuggling', 'tennisswing', 'trampolinejumping', 'volleyballspiking', 'walking']
-    actions = ['Basketball','BasketballDunk','Biking','CliffDiving','CricketBowling',
-               'Diving','Fencing','FloorGymnastics','GolfSwing','HorseRiding','IceDancing',
-               'LongJump','PoleVault','RopeClimbing','SalsaSpin','SkateBoarding','Skiing',
-               'Skijet','SoccerJuggling','Surfing','TennisSwing','TrampolineJumping',
-               'VolleyballSpiking','WalkingWithDog']
-
-    cls2idx = {actions[i]: i for i in range(0, len(actions))}
 
     spatial_transform = Compose([Scale(sample_size),  # [Resize(sample_size),
                                  ToTensor(),

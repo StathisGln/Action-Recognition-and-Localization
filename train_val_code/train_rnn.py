@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-from lib.dataloaders.ucf_dataset import  video_names
+from lib.dataloaders.ucf_dataset import  Video_Dataset_whole_video
 
 from lib.utils.spatial_transforms import (
     Compose, Normalize, Scale, ToTensor)
@@ -27,7 +27,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
     iou_thresh_4 = 0.4 # Intersection Over Union thresh
     iou_thresh_3 = 0.3 # Intersection Over Union thresh
 
-    vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='test')
+    vid_name_loader = Video_Dataset_whole_video(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='test')
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=n_devs, num_workers=8*n_devs, pin_memory=True,
                                               shuffle=True)    # reset learning rate
     # data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=1, num_workers=8*n_devs, pin_memory=True,
@@ -306,7 +306,7 @@ def validation(epoch, device, model, dataset_folder, sample_duration, spatial_tr
         
 def training(epoch, device, model, dataset_folder, sample_duration, spatial_transform, temporal_transform, boxes_file, splt_txt_path, cls2idx, batch_size, n_threads, lr, mode = 1):
 
-    vid_name_loader = video_names(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='train')
+    vid_name_loader = Video_Dataset_whole_video(dataset_folder, split_txt_path, boxes_file, vid2idx, mode='train')
     data_loader = torch.utils.data.DataLoader(vid_name_loader, batch_size=batch_size,
                                               shuffle=True, num_workers=32, pin_memory=True)
     # data_loader = torch.utils.data.DataLoader(data, batch_size=2,

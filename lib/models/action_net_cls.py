@@ -4,13 +4,13 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-from resnet_3D import resnet34
-from region_net import _RPN 
+from .resnet_3D import resnet34
+from .region_net import _RPN
 # from human_reg import _Regression_Layer
-from human_reg_3d import _Regression_Layer
+from .human_reg_3d import _Regression_Layer
 # from human_reg_2d import _Regression_Layer
 
-from proposal_target_layer_cascade import _ProposalTargetLayer
+from .proposal_target_layer_cascade import _ProposalTargetLayer
 # from roi_align_3d.modules.roi_align  import RoIAlignAvg, RoIAlign
 from lib.utils.net_utils import _smooth_l1_loss
 
@@ -28,15 +28,10 @@ class ACT_net(nn.Module):
         self.act_loss_cls = 0
         self.act_loss_bbox = 0
 
-        # # cfg.POOLING_SIZE
-        # self.pooling_size = 7
-        # # self.spatial_scale = 1.0/16
-        # self.spatial_scale = 1.0/4
-    
         self.din = 256
+
         # define rpn
         self.act_rpn = _RPN(256, sample_duration).cuda()
-
         self.act_proposal_target = _ProposalTargetLayer(sample_duration).cuda() ## background/ foreground
 
         self.time_dim =sample_duration
@@ -55,9 +50,11 @@ class ACT_net(nn.Module):
             )
 
         self.cls = nn.Linear(512,self.n_classes)
-    def create_architecture(self):
+    def create_architecture(self,model_path='../../../resnet-34-kinetics.pth'):
+        self.model_path = model_path
         self._init_modules()
         self._init_weights()
+
 
     def forward(self, im_data, im_info, gt_tubes, gt_rois,  start_fr):
 
@@ -168,8 +165,6 @@ class ACT_net(nn.Module):
     def _init_modules(self):
 
         resnet_shortcut = 'A'
-        # resnet_shortcut = 'B'
-        
         sample_size = 112
 
         model = resnet34(num_classes=400, shortcut_type=resnet_shortcut,
@@ -180,8 +175,6 @@ class ACT_net(nn.Module):
         #                  )
 
         model = nn.DataParallel(model, device_ids=None)
-        self.model_path = '../../../resnet-34-kinetics.pth'
-
         print("Loading pretrained weights from %s" %(self.model_path))
         model_data = torch.load(self.model_path)
 
